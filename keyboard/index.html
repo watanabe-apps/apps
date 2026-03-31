@@ -231,17 +231,11 @@
     const synth = window.speechSynthesis;
 
     function spk(str) {
-        // 最初の操作で音声を初期化（ブラウザ制限回避）
-        if (!isInit) {
-            let u = new SpeechSynthesisUtterance("");
-            u.volume = 0;
-            synth.speak(u);
-            isInit = true;
-        }
-        synth.cancel();
+        if (isInit) synth.cancel();
         let u = new SpeechSynthesisUtterance(str);
         u.lang = 'ja-JP';
         synth.speak(u);
+        isInit = true;
     }
 
     function spkFull() { spk(txt); }
