@@ -19,9 +19,13 @@
         .eh-source, .eh-target { border-width: 4px; border-color: #ef4444; }
         .eh-preview, .eh-ghost-edge { background-color: #ef4444; line-color: #ef4444; target-arrow-color: #ef4444; source-arrow-color: #ef4444; }
         .eh-ghost-edge.eh-preview-active { opacity: 0; }
-        .tippy-box[data-theme~='edu-dark'] { background-color: #1e293b; color: #f8fafc; font-size: 0.8rem; border-radius: 6px; padding: 4px; max-width: 260px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .tippy-box[data-theme~='edu-dark'] { background-color: #1e293b; color: #f8fafc; font-size: 0.8rem; border-radius: 6px; padding: 4px; max-width: 260px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); pointer-events: auto; }
         #export-modal { display: none; position: absolute; top: 80px; right: 20px; width: 320px; background: white; padding: 16px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 50; }
         #export-text { width: 100%; height: 200px; font-family: monospace; font-size: 10px; margin-top: 8px; resize: none; border: 1px solid #cbd5e1; padding: 4px; border-radius: 4px; }
+        
+        .tooltip-content { display: flex; flex-direction: column; gap: 4px; }
+        .app-link { color: #60a5fa; text-decoration: none; font-size: 0.75rem; background: #334155; padding: 4px 8px; border-radius: 4px; display: inline-block; align-self: flex-start; margin-top: 4px; transition: background 0.2s; pointer-events: auto; }
+        .app-link:hover { background: #475569; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -53,7 +57,6 @@
     </div>
 
     <script>
-        // 背景ノードの定義 (7つの枠)
         const bgData = [
             { id: 'bg1', name: '聞くこと・話すこと', color: '#fef2f2' },
             { id: 'bg2', name: '書くこと', color: '#fffbeb' },
@@ -76,7 +79,6 @@
             grabbable: false
         }));
 
-        // ベースのメタデータ（表示名や目標など）
         const appNodes = [
             { id: 's_look', name: '○○を探せ', stage: 1, type: 'support', goal: 'マッチング。視覚的に複数の情報から必要な情報を取り出す' },
             { id: 'm_dist', name: 'くばろう', stage: 1, type: 'math', goal: '1対1対応の基礎' },
@@ -91,67 +93,66 @@
             { id: 'm_cat', name: 'カテゴリー分類', stage: 2, type: 'math', goal: 'イラストを機能、色、形等で分類' },
             { id: 'm_flag', name: 'はたをつくろう', stage: 2, type: 'math', goal: '縦線、横線、四角等をかく' },
             { id: 'm_shape', name: '図形組み合わせ', stage: 2, type: 'math', goal: '図形を楽しく扱う' },
-            { id: 'j_find', name: 'ひらがなさがし', stage: 2, type: 'jp', goal: '文字の識別。似た文字を見分ける' },
+            { id: 'j_find', name: '平仮名さがし', stage: 2, type: 'jp', goal: '文字の識別。似た文字を見分ける' },
             { id: 'j_one', name: '一文字の平仮名', stage: 2, type: 'jp', goal: '平仮名と音が結びついていることの理解' },
             { id: 's_pos', name: '位置マッチング', stage: 2, type: 'support', goal: '緩やかな空間概念(上下、左右?)' },
             { id: 's_dot', name: '点', stage: 2, type: 'support', goal: '空間概念。鏡文字に関連' },
-            { id: 's_ice', name: 'アイス並べ', stage: 2, type: 'support', goal: '空間概念(上下)。見比べる' },
+            { id: 's_ice', name: 'アイスならべ', stage: 2, type: 'support', goal: '空間概念(上下)。見比べる', url: 'https://scratch.mit.edu/projects/846717854/fullscreen/' },
             { id: 's_maze', name: '迷路', stage: 2, type: 'support', goal: '運筆。複雑な線を見分ける。目と手の高度な協応' },
             { id: 'm_count2', name: 'かずをかぞえよう', stage: 2.5, type: 'math', goal: '数を数える。数字→具体物。15程度まで' },
             { id: 'm_which', name: 'なんばんめ？', stage: 2.5, type: 'math', goal: '順序数の理解' },
             { id: 'm_t_tap', name: '数字タッチ', stage: 2.5, type: 'math', goal: '数字の順の理解。視認知向上' },
             { id: 'm_t_arr', name: '数字ならべ', stage: 2.5, type: 'math', goal: '数字の系列・順序の理解' },
             { id: 'j_karuta', name: 'カルタ', stage: 2.5, type: 'jp', goal: '平仮名の読み。視覚性語彙の増大' },
-            { id: 'j_kbd', name: 'ひらがなキーボード', stage: 2.5, type: 'jp', goal: '平仮名の読み。音韻意識（分解、語頭音等）' },
-            { id: 'j_pict', name: 'ひらがな図鑑', stage: 2.5, type: 'jp', goal: '平仮名への興味。なぞり書き。読みのきっかけ' },
-            { id: 'j_trace', name: 'ひらがななぞり', stage: 2.5, type: 'jp', goal: '平仮名の書き。なぞり書き、写書き' },
+            { id: 'j_kbd', name: '平仮名キーボード', stage: 2.5, type: 'jp', goal: '平仮名の読み。音韻意識（分解、語頭音等）', url: 'https://watanabe-apps.github.io/apps/keyboard/index.html' },
+            { id: 'j_pict', name: '平仮名図鑑', stage: 2.5, type: 'jp', goal: '平仮名への興味。なぞり書き。読みのきっかけ' },
+            { id: 'j_trace', name: '平仮名なぞり', stage: 2.5, type: 'jp', goal: '平仮名の書き。なぞり書き、写書き' },
             { id: 's_lines', name: '点つなぎ', stage: 2.5, type: 'support', goal: '図地弁別' },
             { id: 's_memory', name: '神経衰弱', stage: 2.5, type: 'support', goal: '視覚的短期記憶' },
             { id: 'm_math1', name: 'いくつといくつ', stage: 3, type: 'math', goal: '数の合成・分解。足し算、引き算の前段階' },
             { id: 'm_clock', name: '時計（時・分）', stage: 3, type: 'math', goal: '時計の読みの習得' },
             { id: 'j_50', name: '50音表', stage: 3, type: 'jp', goal: '平仮名の読み・書き。語頭音と結びつけた読み' },
             { id: 'j_order', name: '書き順', stage: 3, type: 'jp', goal: '平仮名の書き順の視覚的提示' },
-            { id: 'j_write', name: 'ひらがな書き', stage: 3, type: 'jp', goal: '平仮名の単語の書き' },
-            { id: 'j_quiz', name: 'ひらがな単語クイズ', stage: 3, type: 'jp', goal: '平仮名の単語の読みの定着' }
+            { id: 'j_write', name: '平仮名書き', stage: 3, type: 'jp', goal: '平仮名の単語の書き' },
+            { id: 'j_quiz', name: '平仮名単語クイズ', stage: 3, type: 'jp', goal: '平仮名の単語の読みの定着' }
         ];
 
-        // ユーザー提供のJSONデータ
         const importedData = [
           { "group": "nodes", "data": { "id": "s_look" }, "position": { "x": 380.11854199683034, "y": 31.916323296354996 } },
-          { "group": "nodes", "data": { "id": "m_dist" }, "position": { "x": 1002.2206022187006, "y": 120.25610142630742 } },
-          { "group": "nodes", "data": { "id": "m_match" }, "position": { "x": 1374.7473851030115, "y": 24.088748019017434 } },
-          { "group": "nodes", "data": { "id": "m_count_s" }, "position": { "x": 1113.2405705229799, "y": 27.44342313787639 } },
+          { "group": "nodes", "data": { "id": "m_dist" }, "position": { "x": 1065.8697913675774, "y": 53.71376731611819 } },
+          { "group": "nodes", "data": { "id": "m_match" }, "position": { "x": 1510.7251982847026, "y": 21.195603057704858 } },
+          { "group": "nodes", "data": { "id": "m_count_s" }, "position": { "x": 1255.004673627296, "y": 105.55833709331593 } },
           { "group": "nodes", "data": { "id": "s_tap" }, "position": { "x": 610.6307448494453, "y": 34.152773375594286 } },
-          { "group": "nodes", "data": { "id": "m_base" }, "position": { "x": 1195.594611727417, "y": 208.4280507131538 } },
-          { "group": "nodes", "data": { "id": "m_puz1" }, "position": { "x": 1389.2053882725831, "y": 113.37892234548337 } },
-          { "group": "nodes", "data": { "id": "m_dish" }, "position": { "x": 1027.0583201267827, "y": 210.66450079239303 } },
-          { "group": "nodes", "data": { "id": "m_puz2" }, "position": { "x": 1616.520760697306, "y": 120.08827258320127 } },
-          { "group": "nodes", "data": { "id": "s_shape" }, "position": { "x": 763.7486529318542, "y": 170.40839936608558 } },
-          { "group": "nodes", "data": { "id": "m_cat" }, "position": { "x": 1372.353090332805, "y": 208.26022187004762 } },
-          { "group": "nodes", "data": { "id": "m_flag" }, "position": { "x": 1615.1657686212366, "y": 332.3832012678288 } },
+          { "group": "nodes", "data": { "id": "m_base" }, "position": { "x": 1262.1369458376064, "y": 211.32119567446637 } },
+          { "group": "nodes", "data": { "id": "m_puz1" }, "position": { "x": 1426.8162727696467, "y": 119.16521226810852 } },
+          { "group": "nodes", "data": { "id": "m_dish" }, "position": { "x": 1053.096624778596, "y": 217.89736319567447 } },
+          { "group": "nodes", "data": { "id": "m_puz2" }, "position": { "x": 1616.5207606973058, "y": 128.76770746713896 } },
+          { "group": "nodes", "data": { "id": "s_shape" }, "position": { "x": 633.5571296727884, "y": 234.0575885149622 } },
+          { "group": "nodes", "data": { "id": "m_cat" }, "position": { "x": 1693.492181038501, "y": 214.0465117926728 } },
+          { "group": "nodes", "data": { "id": "m_flag" }, "position": { "x": 1610.8260511792678, "y": 332.38320126782884 } },
           { "group": "nodes", "data": { "id": "m_shape" }, "position": { "x": 1443.1169572107765, "y": 331.26497622820926 } },
-          { "group": "nodes", "data": { "id": "j_find" }, "position": { "x": 153.78922345483363, "y": 307.78225039619656 } },
-          { "group": "nodes", "data": { "id": "j_one" }, "position": { "x": 322.7990491283677, "y": 304.4275752773376 } },
-          { "group": "nodes", "data": { "id": "s_pos" }, "position": { "x": 575.6500792393025, "y": 236.21584786053876 } },
-          { "group": "nodes", "data": { "id": "s_dot" }, "position": { "x": 652.9654516640253, "y": 289.89064976228207 } },
-          { "group": "nodes", "data": { "id": "s_ice" }, "position": { "x": 412.7049128367667, "y": 231.74294770206023 } },
-          { "group": "nodes", "data": { "id": "s_maze" }, "position": { "x": 377.07955625990473, "y": 354.747702060222 } },
-          { "group": "nodes", "data": { "id": "m_count2" }, "position": { "x": 1272.7521394611726, "y": 327.74247226624396 } },
-          { "group": "nodes", "data": { "id": "m_which" }, "position": { "x": 891.5952456418383, "y": 414.9640253565768 } },
-          { "group": "nodes", "data": { "id": "m_t_tap" }, "position": { "x": 1055.0139461172737, "y": 412.7275752773375 } },
-          { "group": "nodes", "data": { "id": "m_t_arr" }, "position": { "x": 1013.797464342314, "y": 336.68827258320124 } },
-          { "group": "nodes", "data": { "id": "j_karuta" }, "position": { "x": 49.63645007923932, "y": 572.6337559429477 } },
-          { "group": "nodes", "data": { "id": "j_kbd" }, "position": { "x": 201.87290015847864, "y": 437.3285261489699 } },
-          { "group": "nodes", "data": { "id": "j_pict" }, "position": { "x": 541.9711568938194, "y": 574.870206022187 } },
-          { "group": "nodes", "data": { "id": "j_trace" }, "position": { "x": 500.7546751188588, "y": 439.5649762282092 } },
-          { "group": "nodes", "data": { "id": "s_lines" }, "position": { "x": 740.1870047543581, "y": 346.7522979397781 } },
+          { "group": "nodes", "data": { "id": "j_find" }, "position": { "x": 911.7932033187286, "y": 297.6562430316025 } },
+          { "group": "nodes", "data": { "id": "j_one" }, "position": { "x": 765.4502282091918, "y": 300.08785783536865 } },
+          { "group": "nodes", "data": { "id": "s_pos" }, "position": { "x": 470.0502881513933, "y": 249.23500018644532 } },
+          { "group": "nodes", "data": { "id": "s_dot" }, "position": { "x": 514.0944935210217, "y": 308.6960920108138 } },
+          { "group": "nodes", "data": { "id": "s_ice" }, "position": { "x": 380.88031826232833, "y": 188.34577328237157 } },
+          { "group": "nodes", "data": { "id": "s_maze" }, "position": { "x": 330.7892368789035, "y": 367.7668543861286 } },
+          { "group": "nodes", "data": { "id": "m_count2" }, "position": { "x": 1265.5192770578913, "y": 317.61646490165 } },
+          { "group": "nodes", "data": { "id": "m_which" }, "position": { "x": 1085.435958049781, "y": 539.3692586930175 } },
+          { "group": "nodes", "data": { "id": "m_t_tap" }, "position": { "x": 1180.8657519343708, "y": 467.69732954227635 } },
+          { "group": "nodes", "data": { "id": "m_t_arr" }, "position": { "x": 1089.019233336441, "y": 364.1731497156707 } },
+          { "group": "nodes", "data": { "id": "j_karuta" }, "position": { "x": 833.6787345949473, "y": 585.6529082688543 } },
+          { "group": "nodes", "data": { "id": "j_kbd" }, "position": { "x": 650.310369161928, "y": 451.7942509555328 } },
+          { "group": "nodes", "data": { "id": "j_pict" }, "position": { "x": 568.0094615456326, "y": 631.2865327677822 } },
+          { "group": "nodes", "data": { "id": "j_trace" }, "position": { "x": 413.96032627948154, "y": 456.92384599608465 } },
+          { "group": "nodes", "data": { "id": "s_lines" }, "position": { "x": 514.5216977719772, "y": 367.0043126689661 } },
           { "group": "nodes", "data": { "id": "s_memory" }, "position": { "x": 199.12393026941365, "y": 168.95451664025353 } },
-          { "group": "nodes", "data": { "id": "m_math1" }, "position": { "x": 1216.998732171157, "y": 500.8995245641838 } },
+          { "group": "nodes", "data": { "id": "m_math1" }, "position": { "x": 1267.6287689941273, "y": 616.6253230166868 } },
           { "group": "nodes", "data": { "id": "m_clock" }, "position": { "x": 1410.6095087163233, "y": 496.42662440570524 } },
-          { "group": "nodes", "data": { "id": "j_50" }, "position": { "x": 31.74484944532491, "y": 360.00316957210777 } },
-          { "group": "nodes", "data": { "id": "j_order" }, "position": { "x": 492.611410459588, "y": 671.9879556259905 } },
-          { "group": "nodes", "data": { "id": "j_write" }, "position": { "x": 337.3359746434231, "y": 573.5841521394611 } },
-          { "group": "nodes", "data": { "id": "j_quiz" }, "position": { "x": 14.326782884310678, "y": 440.5153724247226 } },
+          { "group": "nodes", "data": { "id": "j_50" }, "position": { "x": 655.2175886081851, "y": 365.78945949473297 } },
+          { "group": "nodes", "data": { "id": "j_order" }, "position": { "x": 525.8825775146827, "y": 728.4042823715857 } },
+          { "group": "nodes", "data": { "id": "j_write" }, "position": { "x": 395.1988738696746, "y": 630.0004788850564 } },
+          { "group": "nodes", "data": { "id": "j_quiz" }, "position": { "x": 890.949706162021, "y": 440.5153724247226 } },
           { "group": "edges", "data": { "id": "07ed4e46-09ba-4579-acaa-dabfd535aaad", "source": "s_maze", "target": "j_trace" } },
           { "group": "edges", "data": { "id": "68db12c3-41fb-472c-a96b-e25ab24945ab", "source": "j_trace", "target": "j_write" } },
           { "group": "edges", "data": { "id": "95b2ace3-be5e-4c7f-a235-d9155e4a22c8", "source": "j_find", "target": "j_kbd" } },
@@ -163,14 +164,14 @@
           { "group": "edges", "data": { "id": "b22f3782-cfc0-4357-95fc-6df3cbe40ca2", "source": "j_kbd", "target": "j_write" } },
           { "group": "edges", "data": { "id": "9feb0d6f-769a-4975-ba88-6647c96c19c6", "source": "s_lines", "target": "j_trace" } },
           { "group": "edges", "data": { "id": "8ed7ff85-b9a5-49c5-8551-c648a712f910", "source": "s_pos", "target": "j_trace" } },
-          { "group": "edges", "data": { "id": "448373fe-ab9f-4804-9005-023d7527fa16", "source": "s_dot", "target": "j_trace" } },
+          { "group": "edges", "data": { "id": "ecabc485-2420-4a4e-9d2f-2667ba61e1cf", "source": "j_write", "target": "j_pict" } },
           { "group": "edges", "data": { "id": "da5e9273-1641-452f-9c58-70bdf9b0e36d", "source": "s_shape", "target": "s_lines" } },
           { "group": "edges", "data": { "id": "a05bda42-4622-45e2-9c0a-78feaafab762", "source": "s_shape", "target": "s_dot" } },
           { "group": "edges", "data": { "id": "68926cea-db53-4225-bf47-5161f22ae8c1", "source": "m_count_s", "target": "m_base" } },
           { "group": "edges", "data": { "id": "ccc12f4c-8269-489a-8f79-6be4db487e9b", "source": "m_dish", "target": "m_base" } },
           { "group": "edges", "data": { "id": "4233e79b-9e3b-42d9-9fd8-0766c34129b9", "source": "m_base", "target": "m_dish" } },
-          { "group": "edges", "data": { "id": "d3303c4f-1328-4240-90ab-7f6698c41bd5", "source": "m_puz2", "target": "m_cat" } },
-          { "group": "edges", "data": { "id": "0658bce3-f19e-4e72-9195-ab3e086fadca", "source": "m_puz1", "target": "m_cat" } },
+          { "group": "edges", "data": { "id": "510dfa1b-c679-435b-9078-fd6e0175642c", "source": "s_dot", "target": "bg2" } },
+          { "group": "edges", "data": { "id": "bc0189b9-a9f4-4e3f-89d8-d81bf624a44f", "source": "s_lines", "target": "bg2" } },
           { "group": "edges", "data": { "id": "bf747eaa-cf46-4118-9bd1-089574faa952", "source": "m_base", "target": "m_count2" } },
           { "group": "edges", "data": { "id": "6d86b823-f62f-4448-b3b2-d7850912bbae", "source": "m_base", "target": "m_t_arr" } },
           { "group": "edges", "data": { "id": "bbd87b31-97f7-40d2-bb05-d6507dccdfc9", "source": "m_t_arr", "target": "m_which" } },
@@ -184,10 +185,10 @@
           { "group": "edges", "data": { "id": "7a356379-c9c4-4a11-bcaf-7b927fd5d538", "source": "m_puz2", "target": "m_puz1" } },
           { "group": "edges", "data": { "id": "ea939353-c1cd-4905-b10f-d16c9907dce4", "source": "m_cat", "target": "m_count2" } },
           { "group": "edges", "data": { "id": "5e205d24-c5d2-47d6-8f9d-853b139d140d", "source": "j_pict", "target": "j_write" } },
-          { "group": "edges", "data": { "id": "ecabc485-2420-4a4e-9d2f-2667ba61e1cf", "source": "j_write", "target": "j_pict" } }
+          { "group": "edges", "data": { "id": "3af94eb2-b27d-4bb5-92b2-50582fb6556f", "source": "s_dot", "target": "bg2" } },
+          { "group": "edges", "data": { "id": "7ec04556-81d2-4d4a-9a0c-74c48b2bd570", "source": "s_dot", "target": "bg2" } }
         ];
 
-        // データの結合
         const initialElements = [...bgElements];
         appNodes.forEach(n => {
             const importedNode = importedData.find(item => item.group === 'nodes' && item.data.id === n.id);
@@ -200,6 +201,7 @@
                     goal: n.goal, 
                     stage: n.stage,
                     type: n.type,
+                    url: n.url,
                     color: n.type === 'jp' ? '#f43f5e' : (n.type === 'support' ? '#10b981' : '#3b82f6')
                 },
                 position: position
@@ -207,10 +209,12 @@
         });
         importedData.forEach(item => {
             if (item.group === 'edges') {
-                initialElements.push({
-                    group: 'edges',
-                    data: { id: item.data.id, source: item.data.source, target: item.data.target }
-                });
+                if(!item.data.source.startsWith('bg') && !item.data.target.startsWith('bg')){
+                    initialElements.push({
+                        group: 'edges',
+                        data: { id: item.data.id, source: item.data.source, target: item.data.target }
+                    });
+                }
             }
         });
 
@@ -222,7 +226,7 @@
                     {
                         selector: 'node',
                         style: {
-                            'label': 'data(name)',
+                            'label': function(ele) { return ele.data('url') ? ele.data('name') + ' 🔗' : ele.data('name'); },
                             'width': '140px',
                             'height': '36px',
                             'background-color': 'data(color)',
@@ -234,6 +238,7 @@
                             'shape': 'round-rectangle',
                             'border-width': 2,
                             'border-color': '#fff',
+                            'z-index-compare': 'manual',
                             'z-index': 10
                         }
                     },
@@ -253,7 +258,9 @@
                             'color': '#94a3b8',
                             'border-width': 1,
                             'border-color': '#e2e8f0',
-                            'z-index': 1
+                            'z-index-compare': 'manual',
+                            'z-index': 1,
+                            'events': 'no' 
                         }
                     },
                     {
@@ -264,13 +271,14 @@
                             'target-arrow-color': '#94a3b8',
                             'target-arrow-shape': 'triangle',
                             'curve-style': 'bezier',
+                            'z-index-compare': 'manual',
                             'z-index': 5
                         }
                     },
-                    { selector: '.eh-handle', style: { 'background-color': '#ef4444', 'width': 10, 'height': 10, 'shape': 'ellipse', 'overlay-opacity': 0, 'border-width': 8, 'border-opacity': 0, 'z-index': 20 } },
-                    { selector: '.eh-source', style: { 'border-width': 4, 'border-color': '#ef4444' } },
-                    { selector: '.eh-target', style: { 'border-width': 4, 'border-color': '#ef4444' } },
-                    { selector: '.eh-preview, .eh-ghost-edge', style: { 'background-color': '#ef4444', 'line-color': '#ef4444', 'target-arrow-color': '#ef4444', 'source-arrow-color': '#ef4444', 'z-index': 15 } },
+                    { selector: '.eh-handle', style: { 'background-color': '#ef4444', 'width': 10, 'height': 10, 'shape': 'ellipse', 'overlay-opacity': 0, 'border-width': 8, 'border-opacity': 0, 'z-index-compare': 'manual', 'z-index': 20 } },
+                    { selector: '.eh-source', style: { 'border-width': 4, 'border-color': '#ef4444', 'z-index-compare': 'manual', 'z-index': 15 } },
+                    { selector: '.eh-target', style: { 'border-width': 4, 'border-color': '#ef4444', 'z-index-compare': 'manual', 'z-index': 15 } },
+                    { selector: '.eh-preview, .eh-ghost-edge', style: { 'background-color': '#ef4444', 'line-color': '#ef4444', 'target-arrow-color': '#ef4444', 'source-arrow-color': '#ef4444', 'z-index-compare': 'manual', 'z-index': 15 } },
                     { selector: '.eh-ghost-edge.eh-preview-active', style: { 'opacity': 0 } }
                 ],
                 layout: { name: 'preset' }
@@ -278,33 +286,87 @@
 
             cy.fit(null, 50);
 
-            cy.nodes().forEach(node => {
-                if(node.data('type') === 'bg') return;
-                let tippyInstance = null;
-                node.on('mouseover', () => {
-                    const popperRef = node.popperRef();
-                    if (!tippyInstance) {
-                        const dummyDom = document.createElement('div');
-                        tippyInstance = tippy(dummyDom, {
-                            getReferenceClientRect: popperRef.getBoundingClientRect,
-                            content: `<div class="font-bold text-[10px] border-b border-slate-600 mb-1 pb-1">段階: ${node.data('stage')}</div><div class="text-xs">🎯 ${node.data('goal')}</div>`,
-                            allowHTML: true,
-                            theme: 'edu-dark',
-                            placement: 'top',
-                            trigger: 'manual',
-                            animation: 'shift-away'
-                        });
-                    }
-                    tippyInstance.setProps({ getReferenceClientRect: popperRef.getBoundingClientRect });
-                    tippyInstance.show();
-                });
-                node.on('mouseout', () => { if (tippyInstance) tippyInstance.hide(); });
-            });
-
             let eh = null;
             if (typeof cy.edgehandles === 'function') {
-                eh = cy.edgehandles({ snap: true, noEdgeEventsInDraw: true, disableBrowserGestures: true });
+                eh = cy.edgehandles({ 
+                    snap: true, 
+                    noEdgeEventsInDraw: true, 
+                    disableBrowserGestures: true,
+                    handleNodes: 'node[type != "bg"]'
+                });
             }
+
+            const activeTippies = [];
+
+            cy.nodes().forEach(node => {
+                if(node.data('type') === 'bg') return;
+                
+                const dummyDom = document.createElement('div');
+                const urlHtml = node.data('url') ? `<a href="${node.data('url')}" target="_blank" class="app-link">🔗 アプリを開く</a>` : '';
+                
+                const tippyInstance = tippy(dummyDom, {
+                    getReferenceClientRect: node.popperRef().getBoundingClientRect,
+                    content: `
+                        <div class="tooltip-content">
+                            <div class="font-bold text-[10px] border-b border-slate-600 pb-1">段階: ${node.data('stage')}</div>
+                            <div class="text-xs mb-1">🎯 ${node.data('goal')}</div>
+                            ${urlHtml}
+                        </div>
+                    `,
+                    allowHTML: true,
+                    theme: 'edu-dark',
+                    placement: 'top',
+                    trigger: 'manual', 
+                    animation: 'shift-away',
+                    interactive: true,
+                    hideOnClick: false,
+                    appendTo: document.body
+                });
+                
+                activeTippies.push(tippyInstance);
+
+                const showTippy = (e) => {
+                    if (isDrawMode) return; 
+                    
+                    if (tippyInstance.state.isVisible) {
+                        tippyInstance.hide();
+                        return;
+                    }
+                    
+                    activeTippies.forEach(t => { if(t !== tippyInstance) t.hide(); });
+                    tippyInstance.setProps({ getReferenceClientRect: node.popperRef().getBoundingClientRect });
+                    tippyInstance.show();
+                    
+                    if (e && (e.type === 'tap' || e.type === 'click')) {
+                        setTimeout(() => {
+                            document.addEventListener('click', hideTippyOnClickOutside);
+                        }, 10);
+                    }
+                };
+
+                const hideTippyOnClickOutside = (event) => {
+                    const isClickInsideTippy = event.target.closest('.tippy-box');
+                    const isClickOnNode = event.target.closest('canvas');
+                    
+                    if (!isClickInsideTippy && !isClickOnNode) {
+                         tippyInstance.hide();
+                         document.removeEventListener('click', hideTippyOnClickOutside);
+                    }
+                };
+
+                node.on('tap', showTippy);
+
+                node.on('mouseover', () => {
+                    if(node.data('url')) node.style('cursor', 'pointer');
+                });
+
+                node.on('position drag zoom pan', () => {
+                   if (tippyInstance.state.isVisible) {
+                       tippyInstance.setProps({ getReferenceClientRect: node.popperRef().getBoundingClientRect });
+                   }
+                });
+            });
+
 
             const btnEdit = document.getElementById('btn-edit');
             const btnView = document.getElementById('btn-view');
@@ -320,6 +382,7 @@
                 isDrawMode = !isDrawMode;
                 if (isDrawMode) {
                     eh.enableDrawMode();
+                    activeTippies.forEach(t => t.hide());
                     btnToggleDraw.innerText = "移動モードにする";
                     btnToggleDraw.classList.replace('bg-indigo-600', 'bg-amber-600');
                     btnToggleDraw.classList.replace('hover:bg-indigo-500', 'hover:bg-amber-500');
