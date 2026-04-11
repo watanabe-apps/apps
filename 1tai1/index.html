@@ -53,7 +53,7 @@
             background-color: #ffffff;
         }
         #start-btn {
-            font-size: 5rem; /* サイズアップ */
+            font-size: 5rem;
             padding: 1.5rem 5rem;
             border: none;
             border-radius: 60px;
@@ -80,7 +80,7 @@
         .score-badge {
             background-color: #ff9800;
             color: white;
-            font-size: 3rem; /* サイズアップ */
+            font-size: 3rem;
             padding: 0.6rem 2.5rem;
             border-radius: 20px;
             border: 5px solid #e65100;
@@ -93,12 +93,12 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            gap: 3vh; /* 余白を少し広めに */
+            gap: 3vh;
             padding: 30px;
             padding-bottom: 6vh;
         }
         #items-container {
-            height: 42vh; /* 少し高さを確保 */
+            height: 42vh;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -116,9 +116,9 @@
             width: 100%;
         }
 
-        /* オブジェクトのサイズ調整（全体的に大きく） */
+        /* オブジェクトのサイズ */
         .plate {
-            width: clamp(100px, 22vw, 240px); /* 全体的に大きく */
+            width: clamp(100px, 22vw, 240px);
             aspect-ratio: 2 / 1;
             position: relative;
         }
@@ -138,7 +138,7 @@
         }
 
         .item-slot {
-            width: clamp(70px, 16vw, 160px); /* アイテムも大きく */
+            width: clamp(70px, 16vw, 160px);
             aspect-ratio: 1 / 1;
             position: relative;
         }
@@ -285,6 +285,7 @@
                     <label><input type="radio" name="setting-item-type" value="apple"> りんご</label>
                     <label><input type="radio" name="setting-item-type" value="orange"> みかん</label>
                     <label><input type="radio" name="setting-item-type" value="grape"> ぶどう</label>
+                    <label><input type="radio" name="setting-item-type" value="strawberry"> いちご</label>
                     <label><input type="radio" name="setting-item-type" value="red-circle"> 赤い丸</label>
                     <label><input type="radio" name="setting-item-type" value="random"> ランダム</label>
                 </div>
@@ -404,6 +405,15 @@
                     <circle cx="65" cy="55" r="12" fill="#7B1FA2"/>
                     <circle cx="50" cy="70" r="12" fill="#7B1FA2"/>
                 </svg>`;
+            } else if (type === 'strawberry') {
+                return `<svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <path d="M 50 20 L 40 10 L 50 15 L 60 10 Z" fill="#4CAF50" />
+                    <path d="M 50 20 C 20 20 25 80 50 90 C 75 80 80 20 50 20 Z" fill="#FF5252" stroke="#D32F2F" stroke-width="2"/>
+                    <circle cx="40" cy="40" r="1" fill="#FFF"/>
+                    <circle cx="60" cy="45" r="1" fill="#FFF"/>
+                    <circle cx="50" cy="60" r="1" fill="#FFF"/>
+                    <circle cx="45" cy="75" r="1" fill="#FFF"/>
+                </svg>`;
             } else if (type === 'red-circle') {
                 return `<svg viewBox="0 0 100 100" width="100%" height="100%">
                     <circle cx="50" cy="50" r="35" fill="#F44336" stroke="#D32F2F" stroke-width="2"/>
@@ -441,7 +451,7 @@
 
             currentItemType = settings.itemType;
             if (currentItemType === 'random') {
-                const types = ['apple', 'orange', 'grape', 'red-circle'];
+                const types = ['apple', 'orange', 'grape', 'strawberry', 'red-circle'];
                 currentItemType = types[Math.floor(Math.random() * types.length)];
             }
 
@@ -526,8 +536,11 @@
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
 
-            activeItem.style.width = rect.width + 'px';
-            activeItem.style.height = rect.height + 'px';
+            // レイアウト上のサイズを維持
+            const layoutWidth = activeItem.offsetWidth;
+            const layoutHeight = activeItem.offsetHeight;
+            activeItem.style.width = layoutWidth + 'px';
+            activeItem.style.height = layoutHeight + 'px';
             activeItem.style.position = 'fixed';
             activeItem.style.left = rect.left + 'px';
             activeItem.style.top = rect.top + 'px';
@@ -556,6 +569,8 @@
             document.removeEventListener('pointerup', handlePointerUp);
             document.removeEventListener('pointercancel', handlePointerUp);
 
+            const itemWidth = activeItem.offsetWidth;
+            const itemHeight = activeItem.offsetHeight;
             const itemRect = activeItem.getBoundingClientRect();
             const itemCenterX = itemRect.left + itemRect.width / 2;
             const itemCenterY = itemRect.top + itemRect.height / 2;
@@ -577,9 +592,10 @@
                     plate.dataset.hasItem = "true";
                     activeItem.dataset.snappedPlate = plate.dataset.index;
                     
+                    // 中央配置のための計算修正
                     activeItem.style.transition = 'left 0.2s, top 0.2s';
-                    activeItem.style.left = (plateCenterX - itemRect.width / 2) + 'px';
-                    activeItem.style.top = (plateCenterY - itemRect.height / 2 - (plateRect.height * 0.2)) + 'px'; 
+                    activeItem.style.left = (plateCenterX - itemWidth / 2) + 'px';
+                    activeItem.style.top = (plateCenterY - itemHeight / 2 - (plateRect.height * 0.2)) + 'px'; 
                     
                     AudioController.play('snap');
 
@@ -709,7 +725,10 @@
             document.querySelector(`input[name="setting-style"][value="${settings.plateStyle}"]`).checked = true;
             document.querySelector(`input[name="setting-sound"][value="${settings.soundType}"]`).checked = true;
             
-            if(!settings.itemType || settings.itemType === 'star' || settings.itemType === 'blue-circle') settings.itemType = 'apple';
+            // 古い設定データの救済
+            if(!settings.itemType || ['star', 'blue-circle'].includes(settings.itemType)) {
+                settings.itemType = 'apple';
+            }
             document.querySelector(`input[name="setting-item-type"][value="${settings.itemType}"]`).checked = true;
             
             document.getElementById('settings-modal').classList.remove('hidden');
