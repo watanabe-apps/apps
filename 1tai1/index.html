@@ -50,7 +50,7 @@
         #start-screen {
             justify-content: center;
             align-items: center;
-            background-color: #ffffff;
+            background-color: #ffffff; /* 白に変更 */
         }
         #start-btn {
             font-size: 4rem;
@@ -87,7 +87,7 @@
             font-weight: bold;
         }
 
-        /* 2列レイアウト用のコンテナ */
+        /* レイアウト用のコンテナ */
         #plates-container {
             flex: 1; /* 上半分を広く取る */
             display: flex;
@@ -105,7 +105,7 @@
             gap: 2vh;
             padding: 20px;
             padding-top: 5vh;
-            background-color: rgba(240, 240, 240, 0.5); /* うっすらグレーを敷いて境界をわかりやすく */
+            background-color: rgba(240, 240, 240, 0.5); /* 境界をわかりやすく */
             border-top: 4px dashed #ccc;
         }
 
@@ -118,7 +118,7 @@
 
         /* オブジェクトのサイズ調整 */
         .plate {
-            width: clamp(60px, 16vw, 180px); /* 10個（1列5個）でも収まるサイズ */
+            width: clamp(60px, 16vw, 180px);
             aspect-ratio: 2 / 1;
             position: relative;
         }
@@ -134,12 +134,11 @@
             width: 60%;
             height: 60%;
             pointer-events: none;
-            /* シルエット化 */
             filter: brightness(0) invert(0.3) opacity(0.6);
         }
 
         .item-slot {
-            width: clamp(40px, 11vw, 110px); /* 皿より少し小さめ */
+            width: clamp(40px, 11vw, 110px);
             aspect-ratio: 1 / 1;
             position: relative;
         }
@@ -157,7 +156,7 @@
             cursor: grabbing;
         }
         .item.dragging {
-            transform: scale(1.15); /* ドラッグ中は少し大きく */
+            transform: scale(1.15);
             filter: drop-shadow(0 15px 15px rgba(0,0,0,0.3));
             z-index: 1000;
         }
@@ -250,7 +249,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            opacity: 0.2; /* うっすら見える程度 */
+            opacity: 0.2;
             cursor: pointer;
         }
         #settings-trigger svg {
@@ -276,6 +275,10 @@
             <div class="setting-item">
                 <label>皿の数: <span id="plate-count-disp">3</span></label>
                 <input type="range" id="setting-count" min="1" max="10" value="3">
+            </div>
+            <div class="setting-item">
+                <label>問題数: <span id="round-total-disp">5</span></label>
+                <input type="range" id="setting-total-rounds" min="1" max="20" value="5">
             </div>
             <div class="setting-item">
                 <label>のせるもの (汎化)</label>
@@ -314,7 +317,7 @@
     <!-- プレイ画面 -->
     <div id="play-screen" class="screen hidden">
         <div id="score-board">
-            <div id="round-count" class="score-badge">0</div>
+            <div id="round-count" class="score-badge">1 / 5</div>
         </div>
         <div id="plates-container"></div>
         <div id="items-container"></div>
@@ -324,12 +327,13 @@
         // --- 状態管理と初期設定 ---
         const defaultSettings = {
             plateCount: 3,
+            totalRounds: 5,
             plateStyle: 'normal',
             soundType: 'se',
             itemType: 'apple'
         };
         let settings = JSON.parse(localStorage.getItem('1to1Settings')) || defaultSettings;
-        let round = 0;
+        let round = 1;
         let activeItem = null;
         let offsetX = 0;
         let offsetY = 0;
@@ -415,13 +419,22 @@
             AudioController.init();
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('play-screen').classList.remove('hidden');
-            round = 0;
-            document.getElementById('round-count').innerText = round;
+            round = 1;
+            updateScoreDisplay();
             initRound();
         }
 
+        function updateScoreDisplay() {
+            document.getElementById('round-count').innerText = `${round} / ${settings.totalRounds}`;
+        }
+
+        function returnToHome() {
+            document.getElementById('play-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
         function initRound() {
-            // バグ修正: body直下に残ってしまったアイテム（ドラッグ中にクリア判定等になったもの）を確実に全消去
+            // バグ修正: body直下に残ってしまったアイテムを全消去
             document.querySelectorAll('.item').forEach(el => el.remove());
 
             const pContainer = document.getElementById('plates-container');
@@ -632,12 +645,20 @@
 
             if (allFilled) {
                 AudioController.play('clear');
-                round++;
-                document.getElementById('round-count').innerText = round;
                 
-                setTimeout(() => {
-                    initRound();
-                }, 2000);
+                if (round >= settings.totalRounds) {
+                    // 全問題クリア
+                    setTimeout(() => {
+                        returnToHome();
+                    }, 2000);
+                } else {
+                    // 次の問題へ
+                    round++;
+                    setTimeout(() => {
+                        updateScoreDisplay();
+                        initRound();
+                    }, 2000);
+                }
             }
         }
 
@@ -688,18 +709,24 @@
         // --- 設定モーダル制御 ---
         const slider = document.getElementById('setting-count');
         const countDisp = document.getElementById('plate-count-disp');
+        const totalRoundsSlider = document.getElementById('setting-total-rounds');
+        const totalRoundsDisp = document.getElementById('round-total-disp');
 
         slider.addEventListener('input', (e) => {
             countDisp.innerText = e.target.value;
+        });
+        totalRoundsSlider.addEventListener('input', (e) => {
+            totalRoundsDisp.innerText = e.target.value;
         });
 
         function openSettings() {
             slider.value = settings.plateCount;
             countDisp.innerText = settings.plateCount;
+            totalRoundsSlider.value = settings.totalRounds || 5;
+            totalRoundsDisp.innerText = settings.totalRounds || 5;
             document.querySelector(`input[name="setting-style"][value="${settings.plateStyle}"]`).checked = true;
             document.querySelector(`input[name="setting-sound"][value="${settings.soundType}"]`).checked = true;
             
-            // 下位互換対応 (古い設定データにitemTypeがない場合)
             if(!settings.itemType) settings.itemType = 'apple';
             document.querySelector(`input[name="setting-item-type"][value="${settings.itemType}"]`).checked = true;
             
@@ -708,6 +735,7 @@
 
         document.getElementById('close-settings-btn').addEventListener('click', () => {
             settings.plateCount = parseInt(slider.value);
+            settings.totalRounds = parseInt(totalRoundsSlider.value);
             settings.plateStyle = document.querySelector('input[name="setting-style"]:checked').value;
             settings.soundType = document.querySelector('input[name="setting-sound"]:checked').value;
             settings.itemType = document.querySelector('input[name="setting-item-type"]:checked').value;
@@ -716,6 +744,7 @@
             document.getElementById('settings-modal').classList.add('hidden');
             
             if (!document.getElementById('play-screen').classList.contains('hidden')) {
+                updateScoreDisplay();
                 initRound();
             }
         });
