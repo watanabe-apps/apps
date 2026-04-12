@@ -2,10 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>数えよう基礎</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
+
+    /* --- 共通の誤操作防止とレイアウト要件 --- */
+    :root {
+        --vh: 1vh;
+    }
 
     * {
         -webkit-user-select: none;
@@ -14,24 +19,57 @@
         user-select: none;
         -webkit-touch-callout: none;
     }
-    input, select, textarea {
+    
+    input, select, textarea, button, label {
         -webkit-user-select: auto;
         -moz-user-select: auto;
         -ms-user-select: auto;
         user-select: auto;
     }
 
-    body { 
+    html, body { 
+        height: calc(var(--vh, 1vh) * 100);
+        overflow: hidden; 
+        margin: 0; padding: 0; 
+        display: flex; flex-direction: column; 
+        background: #fff; 
         font-family: "UD Digi Kyokasho N-R", "UD Digi Kyokasho N-B", "UDデジタル教科書体 N-R", "UDデジタル教科書体 N-B", "Klee One", sans-serif; 
-        margin: 0; padding: 0; display: flex; flex-direction: column; height: 100dvh; background: #fff; touch-action: none; overflow: hidden; 
     }
+    
     .hidden { display: none !important; }
     
-    #header { display: flex; justify-content: flex-end; padding: 10px; height: 70px; box-sizing: border-box; position: absolute; top: 0; right: 0; width: 100%; z-index: 10; pointer-events: none; }
-    .btn { pointer-events: auto; font-size: 20px; padding: 5px 20px; cursor: pointer; border-radius: 8px; border: 1px solid #ccc; background: #f9f9f9; font-family: inherit; line-height: 1.2; text-align: center; }
-    .btn-subtext { font-size: 12px; color: #aaa; font-weight: normal; }
+    /* --- UIコンポーネント --- */
+    #header { 
+        display: flex; align-items: flex-start; padding: 10px; height: 70px; 
+        box-sizing: border-box; position: absolute; top: 0; left: 0; right: 0; width: 100%; 
+        z-index: 100; pointer-events: none; 
+    }
+    .btn { 
+        pointer-events: auto; font-size: 20px; padding: 5px 20px; cursor: pointer; 
+        border-radius: 8px; border: 1px solid #ccc; background: #f9f9f9; 
+        font-family: inherit; line-height: 1.2; text-align: center; 
+    }
     
-    #game-area { flex-grow: 1; position: relative; width: 100vw; height: 100dvh; }
+    /* ホーム画面 */
+    #home-screen {
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #fff; z-index: 50;
+    }
+    .home-title {
+        font-weight: bold; color: #333; text-align: center;
+    }
+    .btn-ios-text {
+        color: #007aff; background: transparent; border: none;
+        font-weight: normal; cursor: pointer; padding: 15px; font-family: inherit;
+        pointer-events: auto; letter-spacing: 2px;
+    }
+    .btn-ios-text:active {
+        opacity: 0.3;
+    }
+
+    /* プレイ領域のみ touch-action: none を指定してスワイプを防止 */
+    #game-area { flex-grow: 1; position: relative; width: 100vw; touch-action: none; }
     
     .square { position: absolute; border: 5px solid black; box-sizing: border-box; background: transparent; }
     .square.filled { background: yellow; }
@@ -39,76 +77,141 @@
     
     #quiz-target-text { position: absolute; width: 100%; text-align: center; font-size: 10vh; font-weight: bold; top: 5vh; font-family: inherit; }
     #quiz-box { position: absolute; border: 5px solid blue; background: rgba(0, 0, 255, 0.1); border-radius: 10px; box-sizing: border-box; }
-    #btn-quiz-done { position: absolute; top: 8vh; left: 2vw; background: orange; color: white; border: none; font-size: 3vh; font-weight: bold; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; pointer-events: auto; font-family: inherit; }
+    #btn-quiz-done { 
+        position: absolute; top: 8vh; left: 2vw; background: orange; color: white; border: none; 
+        font-size: 3vh; font-weight: bold; padding: 15px 30px; border-radius: 15px; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; pointer-events: auto; font-family: inherit; 
+    }
     
-    .piece { position: absolute; border-radius: 50%; background: red; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; touch-action: none; z-index: 5; box-sizing: border-box; font-family: inherit; }
+    .piece { 
+        position: absolute; border-radius: 50%; background: red; display: flex; align-items: center; 
+        justify-content: center; font-weight: bold; color: white; touch-action: none; 
+        z-index: 5; box-sizing: border-box; font-family: inherit; 
+    }
     .piece.placed { border: 2px solid white; }
     .piece.dragging { z-index: 100; opacity: 0.8; }
     
-    #feedback-layer { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(255,255,255,0.5); z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #feedback-layer { 
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100%; 
+        background: rgba(255,255,255,0.5); z-index: 200; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center; 
+    }
     .mark-circle { width: 15vh; height: 15vh; border: 10px solid red; border-radius: 50%; background: rgba(255,255,255,0.8); margin-bottom: 10vh; }
     .mark-cross { width: 15vh; height: 15vh; position: relative; margin-bottom: 10vh; }
     .mark-cross::before, .mark-cross::after { content: ''; position: absolute; width: 10px; height: 100%; background: blue; top: 0; left: 50%; transform: translateX(-50%) rotate(45deg); }
     .mark-cross::after { transform: translateX(-50%) rotate(-45deg); }
     #btn-next { font-size: 4vh; padding: 15px 40px; border-radius: 50px; background: yellow; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-family: inherit; }
     
-    #setting-view { position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; background: white; z-index: 300; display: flex; flex-direction: column; }
+    /* --- 設定画面 --- */
+    #setting-view { 
+        position: absolute; top: 0; left: 0; width: 100vw; height: 100%; 
+        background: white; z-index: 300; display: flex; flex-direction: column; 
+    }
     .setting-header { font-size: 24px; font-weight: bold; padding: 20px; border-bottom: 1px solid #ccc; text-align: center; flex-shrink: 0; }
     
-    .setting-body { display: flex; flex-direction: row; flex-grow: 1; overflow: hidden; padding: 20px; gap: 20px; box-sizing: border-box; }
+    .setting-body { 
+        display: flex; flex-direction: row; flex-grow: 1; overflow: hidden; 
+        padding: 20px; gap: 20px; box-sizing: border-box; 
+    }
     .setting-left { display: flex; flex-direction: column; flex: 1; gap: 20px; min-width: 0; }
-    .setting-right { flex: 1; overflow-y: auto; background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eee; -webkit-overflow-scrolling: touch; min-width: 0; }
+    
+    /* スクロール領域に -webkit-overflow-scrolling: touch; とセーフエリア余白を指定 */
+    .setting-right { 
+        flex: 1; overflow-y: auto; background: #fafafa; 
+        padding: 20px 20px calc(80px + env(safe-area-inset-bottom)) 20px; 
+        border-radius: 10px; border: 1px solid #eee; 
+        -webkit-overflow-scrolling: touch; min-width: 0; 
+    }
+    
     .setting-common { background: #fafafa; padding: 20px; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
 
-    #preview-wrapper { flex-grow: 1; background: #f0f8ff; display: flex; justify-content: center; align-items: center; border-radius: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; min-height: 200px; overflow: hidden; }
-    #setting-preview-container { background: white; border: 1px solid #ddd; position: relative; overflow: hidden; pointer-events: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    #preview-wrapper { 
+        flex-grow: 1; background: #f0f8ff; display: flex; justify-content: center; align-items: center; 
+        border-radius: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; 
+        min-height: 200px; overflow: hidden; 
+    }
+    #setting-preview-container { 
+        background: white; border: 1px solid #ddd; position: relative; 
+        overflow: hidden; pointer-events: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+    }
     
     .setting-section-title { font-size: 18px; font-weight: bold; color: #666; margin-bottom: 15px; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
     
-    .segmented-control { display: flex; width: 100%; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 30px; }
+    .segmented-control { display: flex; width: 100%; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin-bottom: 30px; flex-shrink: 0; }
     .segmented-control input[type="radio"] { display: none; }
     .segmented-control label { flex: 1; text-align: center; padding: 12px 0; cursor: pointer; font-size: 18px; color: #555; transition: background-color 0.2s, color 0.2s; border-right: 1px solid #ccc; }
     .segmented-control label:last-child { border-right: none; }
     .segmented-control input[type="radio"]:checked + label { background-color: #007aff; color: white; font-weight: bold; }
 
     .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-    .setting-row input[type="number"] { width: 60px; font-size: 20px; text-align: center; font-family: inherit; }
+    .setting-row input[type="number"] { width: 60px; font-size: 20px; text-align: center; font-family: inherit; border: 1px solid #ccc; border-radius: 5px; padding: 5px;}
     #btn-save { margin: 20px; padding: 15px; font-size: 24px; background: blue; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
 
+    /* --- レスポンシブ --- */
     @media (max-width: 768px) {
-        .setting-body { flex-direction: column; overflow-y: auto; }
+        .setting-body { 
+            flex-direction: column; overflow-y: auto; 
+            padding: 20px 20px calc(80px + env(safe-area-inset-bottom)) 20px; 
+            -webkit-overflow-scrolling: touch; 
+        }
         .setting-left { flex: none; }
-        .setting-right { flex: none; overflow-y: visible; }
+        .setting-right { flex: none; overflow-y: visible; padding: 0; background: transparent; border: none; }
         #preview-wrapper { min-height: 30vh; }
     }
 </style>
 </head>
 <body>
 
+<!-- ヘッダー -->
 <div id="header">
-    <button class="btn" id="btn-setting">
-        <div>設定</div>
-        <div class="btn-subtext">トリプルタップ</div>
-    </button>
+    <button class="btn hidden" id="btn-home" onclick="goHome()">ホームに戻る</button>
 </div>
 
-<div id="game-area">
+<!-- ホーム画面 -->
+<div id="home-screen">
+    <!-- ホーム画面のモード選択セグメント -->
+    <div class="segmented-control" style="width: 80%; max-width: 400px; margin-bottom: 5vh;">
+        <input type="radio" name="home-mode" id="hmode-normal" value="normal">
+        <label for="hmode-normal">ノーマル</label>
+        <input type="radio" name="home-mode" id="hmode-quizAuto" value="quizAuto">
+        <label for="hmode-quizAuto">クイズ(自動)</label>
+        <input type="radio" name="home-mode" id="hmode-quizManual" value="quizManual">
+        <label for="hmode-quizManual">クイズ(手動)</label>
+    </div>
+
+    <!-- シンプルなiOS風ボタン -->
+    <button class="btn-ios-text" onclick="startGame()" style="font-size: 5vh; margin-bottom: 2vh;">スタート</button>
+    <button class="btn-ios-text" id="btn-home-setting" style="font-size: 3vh;">設定</button>
+</div>
+
+<!-- プレイ画面 -->
+<div id="game-area" class="hidden">
     <div id="quiz-target-text" class="hidden"></div>
     <div id="quiz-box" class="hidden"></div>
     <button id="btn-quiz-done" class="hidden" onclick="checkQuizManual()">できた！</button>
 </div>
 
+<!-- フィードバック画面 -->
 <div id="feedback-layer" class="hidden">
     <div id="feedback-mark"></div>
     <button id="btn-next" class="hidden" onclick="nextQuestion()">つぎへ</button>
 </div>
 
+<!-- 設定画面 -->
 <div id="setting-view" class="hidden">
     <div class="setting-header">設定</div>
     <div class="setting-body">
         <div class="setting-left">
             <div class="setting-common">
                 <div class="setting-section-title">共通設定</div>
+                <div class="setting-row">
+                    <label>問題数</label>
+                    <input type="number" id="s-question-count" min="1" max="50">
+                </div>
+                <div class="setting-row">
+                    <label>ホームに戻るボタンを表示</label>
+                    <input type="checkbox" id="s-show-back-button">
+                </div>
                 <div class="setting-row">
                     <label>効果音（正解・不正解）</label>
                     <input type="checkbox" id="s-se">
@@ -167,15 +270,57 @@
 </div>
 
 <script>
+    // --- 1. 確実な画面高さの取得とCSS変数へのセット ---
+    function updateVh() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    window.addEventListener('resize', updateVh);
+    window.addEventListener('orientationchange', updateVh);
+    updateVh();
+
+    // --- 2. スワイプ・スクロール制御（誤操作防止） ---
     document.addEventListener('touchmove', function(e) {
         if (!e.target.closest('.setting-body') && !e.target.closest('.setting-right') && !e.target.closest('.setting-left')) {
             e.preventDefault();
         }
     }, { passive: false });
 
+    // --- モード同期処理 (ホーム画面と設定画面のセグメントを連動) ---
+    function syncMode(mode) {
+        editingMode = mode;
+        state.currentMode = mode;
+        
+        // 設定画面のラジオボタンを更新
+        const settingRadio = document.querySelector(`input[name="mode"][value="${mode}"]`);
+        if (settingRadio) settingRadio.checked = true;
+        
+        // ホーム画面のラジオボタンを更新
+        const homeRadio = document.querySelector(`input[name="home-mode"][value="${mode}"]`);
+        if (homeRadio) homeRadio.checked = true;
+
+        updateSettingUI(mode);
+    }
+
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            saveCurrentTabSettings(editingMode);
+            syncMode(e.target.value);
+        });
+    });
+
+    document.querySelectorAll('input[name="home-mode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            syncMode(e.target.value);
+            // ホーム画面でモードを変えたら即座に設定を保存する
+            localStorage.setItem('appSetting_v3', JSON.stringify(state));
+        });
+    });
+
+    // --- 設定トリプルタップ判定（ホーム画面の「設定」ボタンに適用） ---
     let tapCount = 0;
     let tapTimeout = null;
-    document.getElementById('btn-setting').addEventListener('pointerdown', function(e) {
+    document.getElementById('btn-home-setting').addEventListener('pointerdown', function(e) {
         initAudio();
         tapCount++;
         if (tapCount === 1) {
@@ -188,31 +333,32 @@
         }
     });
 
+    // --- 排他制御 (音声読み上げと上部の数字表示) ---
     document.getElementById('s-voice-question').addEventListener('change', function(e) {
         if (!this.checked && !document.getElementById('s-show-number').checked) {
             this.checked = true;
         }
     });
-    
     document.getElementById('s-show-number').addEventListener('change', function(e) {
         if (!this.checked && !document.getElementById('s-voice-question').checked) {
             this.checked = true;
         }
     });
 
+    // --- 状態管理 ---
     const defaultModeSettings = () => ({
         min: 1, max: 5, pieces: 5, setFromLeft: true, overlay: true, showNumber: true
     });
 
     const state = {
         currentMode: 'normal',
-        common: { se: true, voiceQuestion: true, voicePlacement: true },
+        common: { se: true, voiceQuestion: true, voicePlacement: true, questionCount: 5, showBackButton: true },
         settings: {
             normal: defaultModeSettings(),
             quizAuto: defaultModeSettings(),
             quizManual: defaultModeSettings()
         },
-        targetNumber: 0, currentOrder: 1, isProcessing: false, piecesData: [], targetsData: []
+        targetNumber: 0, currentOrder: 1, currentQuestionIndex: 0, isProcessing: false, piecesData: [], targetsData: []
     };
 
     let editingMode = 'normal';
@@ -221,6 +367,7 @@
         return state.settings[state.currentMode];
     }
 
+    // --- 音声・読み上げ機能 (Web Audio API & SpeechSynthesis) ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
 
@@ -297,6 +444,45 @@
         synth.speak(u);
     }
 
+    // --- 画面制御 ---
+    function goHome() {
+        state.isProcessing = false;
+        document.getElementById('home-screen').classList.remove('hidden');
+        document.getElementById('game-area').classList.add('hidden');
+        document.getElementById('feedback-layer').classList.add('hidden');
+        document.getElementById('quiz-box').classList.add('hidden');
+        document.getElementById('btn-quiz-done').classList.add('hidden');
+        
+        // ヘッダーの戻るボタンを隠す
+        document.getElementById('btn-home').classList.add('hidden');
+        
+        // 盤面クリア
+        const gameArea = document.getElementById('game-area');
+        gameArea.querySelectorAll('.square, .piece').forEach(e => e.remove());
+
+        // ホーム画面に戻った際にモード同期状態を確実に反映
+        syncMode(state.currentMode);
+    }
+
+    function startGame() {
+        initAudio();
+        initSpk();
+        
+        state.currentQuestionIndex = 0;
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('game-area').classList.remove('hidden');
+        
+        // ヘッダーのボタン表示切替
+        if (state.common.showBackButton) {
+            document.getElementById('btn-home').classList.remove('hidden');
+        } else {
+            document.getElementById('btn-home').classList.add('hidden');
+        }
+        
+        resetGame();
+    }
+
+    // --- 設定の保存と読み込み ---
     function loadSetting() {
         const saved = localStorage.getItem('appSetting_v3');
         if (saved) {
@@ -304,6 +490,9 @@
             ['normal', 'quizAuto', 'quizManual'].forEach(m => {
                 if (!state.settings[m]) state.settings[m] = defaultModeSettings();
             });
+            // 新規追加項目のフォールバック
+            if (state.common.questionCount === undefined) state.common.questionCount = 5;
+            if (state.common.showBackButton === undefined) state.common.showBackButton = true;
         } else {
             const oldSaved = localStorage.getItem('appSetting_v2');
             if (oldSaved) {
@@ -326,6 +515,8 @@
                 });
             }
         }
+        // 読み込み完了時にセグメントを同期させる
+        syncMode(state.currentMode);
     }
 
     function updatePreviewLayout() {
@@ -353,6 +544,8 @@
     }
 
     function updateSettingUI(mode) {
+        document.getElementById('s-question-count').value = state.common.questionCount;
+        document.getElementById('s-show-back-button').checked = state.common.showBackButton;
         document.getElementById('s-se').checked = state.common.se;
         document.getElementById('s-voice-question').checked = state.common.voiceQuestion;
         document.getElementById('s-voice-placement').checked = state.common.voicePlacement;
@@ -375,6 +568,8 @@
     }
 
     function saveCurrentTabSettings(mode) {
+        state.common.questionCount = parseInt(document.getElementById('s-question-count').value) || 5;
+        state.common.showBackButton = document.getElementById('s-show-back-button').checked;
         state.common.se = document.getElementById('s-se').checked;
         state.common.voiceQuestion = document.getElementById('s-voice-question').checked;
         state.common.voicePlacement = document.getElementById('s-voice-placement').checked;
@@ -394,15 +589,7 @@
         }
     }
 
-    document.querySelectorAll('input[name="mode"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            saveCurrentTabSettings(editingMode);
-            editingMode = e.target.value;
-            updateSettingUI(editingMode);
-        });
-    });
-
-    const settingInputs = document.querySelectorAll('#setting-view input:not([name="mode"])');
+    const settingInputs = document.querySelectorAll('#setting-view input:not([name="mode"]):not([name="home-mode"])');
     settingInputs.forEach(input => {
         input.addEventListener('input', renderPreview);
         input.addEventListener('change', renderPreview);
@@ -410,11 +597,8 @@
 
     function openSetting() {
         loadSetting();
-        editingMode = state.currentMode;
-        document.querySelector(`input[name="mode"][value="${editingMode}"]`).checked = true;
         document.getElementById('setting-view').classList.remove('hidden');
         updatePreviewLayout();
-        updateSettingUI(editingMode);
         
         setTimeout(renderPreview, 10);
     }
@@ -424,9 +608,10 @@
         state.currentMode = editingMode;
         localStorage.setItem('appSetting_v3', JSON.stringify(state));
         document.getElementById('setting-view').classList.add('hidden');
-        resetGame();
+        goHome(); // 設定変更後はホームに戻る
     }
 
+    // --- プレビューの描画 ---
     function renderPreview() {
         const container = document.getElementById('setting-preview-container');
         if(!container || container.clientWidth === 0) return;
@@ -540,6 +725,7 @@
         }
     }
 
+    // --- ゲームのメインロジック ---
     const gameArea = document.getElementById('game-area');
     let pieceSize = 0;
     let draggingPiece = null;
@@ -580,7 +766,7 @@
         state.piecesData = [];
         
         const s = getSettings();
-        let spacing = pieceSize - 5; 
+        let spacing = pieceSize - 5; // 四角の重なりを防ぐ調整
         if (spacing * state.targetNumber > w * 0.9) {
             spacing = (w * 0.9) / state.targetNumber;
             pieceSize = spacing + 5; 
@@ -700,6 +886,7 @@
         return p;
     }
 
+    // --- ドラッグ＆ドロップ制御 ---
     let dragStartX, dragStartY, initialLeft, initialTop;
 
     function onPointerDown(e) {
@@ -839,6 +1026,7 @@
         }
     }
 
+    // --- フィードバックとリセット ---
     function showSuccess() {
         playCorrectSound();
         const layer = document.getElementById('feedback-layer');
@@ -865,9 +1053,15 @@
     }
 
     function nextQuestion() {
-        resetGame();
+        state.currentQuestionIndex++;
+        if (state.currentQuestionIndex >= state.common.questionCount) {
+            goHome();
+        } else {
+            resetGame();
+        }
     }
 
+    // リサイズ時の再描画（デバウンス処理）
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -876,12 +1070,15 @@
                 updatePreviewLayout();
                 renderPreview();
             }
-            resetGame();
+            if (document.getElementById('home-screen').classList.contains('hidden')) {
+                resetGame(); // プレイ中なら盤面を再描画
+            }
         }, 200);
     });
     
+    // --- 初期化処理 ---
     loadSetting();
-    resetGame();
+    goHome(); // 初期状態はホーム画面
 </script>
 </body>
 </html>
