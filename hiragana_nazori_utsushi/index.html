@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>平仮名なぞり・写し書き</title>
-    <!-- Klee Oneフォントの読み込み (Regular:400, SemiBold:600) -->
+    <!-- Klee Oneフォントの読み込み (Regularのみ) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet">
     
     <style>
         /* =========================================
            1. 確実な画面高さの取得＆誤操作防止
         ========================================= */
         :root {
-            /* Mac標準の「Klee」とGoogle Fontsの「Klee One」を両方指定。font-weight:600でSemiBoldが適用されます */
-            --main-font: 'UD Digi Kyokasho N-R', 'UD デジタル 教科書体 N-R', 'Klee One', 'Klee', 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', sans-serif;
+            /* MacローカルのKleeを外し、全環境で確実にWebフォントのKlee Oneを読むようにします */
+            --main-font: 'UD Digi Kyokasho N-R', 'UD デジタル 教科書体 N-R', 'Klee One', 'Hiragino Maru Gothic ProN', 'Rounded M+ 1c', sans-serif;
         }
 
         * {
@@ -51,7 +51,7 @@
         }
         .setting-btn { font-size: clamp(20px, 4vh, 28px); padding: 5px; cursor: pointer; color: #666; border-radius: 50%; transition: background 0.2s;}
         .setting-btn:active { background: #eee; }
-        .setting-hint { font-size: 9px; color: #aaa; margin-top: -5px; font-weight: 600; letter-spacing: -0.5px;}
+        .setting-hint { font-size: 9px; color: #aaa; margin-top: -5px; letter-spacing: -0.5px;}
 
         /* タブのサイズと余白を縮小 */
         .tabs { display: flex; justify-content: center; padding-top: 5px; margin-bottom: 5px; flex-shrink: 0; }
@@ -61,7 +61,7 @@
             background: #eee; border: 2px solid #ccc; border-radius: 12px 12px 0 0; margin: 0 3px; 
             cursor: pointer; white-space: nowrap; 
         }
-        .tab-btn.active { background: #fff; border-bottom-color: #fff; font-weight: 600; }
+        .tab-btn.active { background: #fff; border-bottom-color: #fff; }
         
         .keyboard-wrapper {
             display: flex; flex-direction: row; gap: clamp(10px, 3vw, 40px); padding: 5px 15px; 
@@ -84,7 +84,6 @@
             width: clamp(40px, 14vw, 70px);
             aspect-ratio: 1; 
             display: flex; justify-content: center; align-items: center;
-            font-weight: 600; /* Klee OneのSemiBoldを指定 */
         }
         .key-btn:active { background: #e0e0e0; transform: scale(0.95); }
         .key-btn.empty { visibility: hidden; pointer-events: none; }
@@ -96,9 +95,9 @@
             flex-shrink: 0; 
         }
         .selected-text-container { display: flex; align-items: center; gap: 10px; font-size: clamp(16px, 4vw, 24px); min-height: 30px; flex-wrap: wrap; justify-content: center;}
-        .selected-letters { display: flex; gap: 5px; color: #666; font-weight: 600; }
+        .selected-letters { display: flex; gap: 5px; color: #666; }
         .del-btn { font-size: clamp(16px, 4vw, 24px); color: #ff5252; padding: 4px 15px; border: 2px solid #ff5252; border-radius: 8px; background: #fff; cursor: pointer;}
-        .start-btn { font-size: clamp(16px, 4vw, 24px); padding: 8px 40px; border-radius: 30px; background: #4CAF50; color: white; border: none; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer;}
+        .start-btn { font-size: clamp(16px, 4vw, 24px); padding: 8px 40px; border-radius: 30px; background: #4CAF50; color: white; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer;}
         .start-btn:disabled { background: #ccc; box-shadow: none; pointer-events: none;}
 
         /* =========================================
@@ -108,7 +107,7 @@
         .saved-images-list { display: flex; gap: 8px; align-items: center; }
         .saved-image-item { height: 45px; width: auto; border: 1px solid #999; background: #fff; object-fit: contain; cursor: pointer; transition: transform 0.2s;}
         .saved-image-item:active { transform: scale(0.95); }
-        .saved-images-title { font-size: 11px; font-weight: 600; color: #666; margin-bottom: 2px; }
+        .saved-images-title { font-size: 11px; color: #666; margin-bottom: 2px; }
 
         /* =========================================
            練習画面
@@ -118,10 +117,10 @@
         .tool-btn { font-size: clamp(24px, 5vw, 32px); padding: 6px; border-radius: 10px; border: 3px solid transparent; background: #f0f0f0; opacity: 0.5; cursor: pointer;}
         .tool-btn.active { border-color: #ff5252; opacity: 1; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         
-        .done-btn { font-size: clamp(20px, 5vw, 28px); padding: 6px 20px; border-radius: 30px; border: 3px solid #ccc; background: #fff; color: #ccc; transition: 0.3s; font-weight: 600;}
+        .done-btn { font-size: clamp(20px, 5vw, 28px); padding: 6px 20px; border-radius: 30px; border: 3px solid #ccc; background: #fff; color: #ccc; transition: 0.3s; }
         .done-btn.active { border-color: #4CAF50; color: #4CAF50; background: #e8f5e9; box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);}
 
-        .main-letter { font-size: clamp(60px, 15vh, 150px); text-align: center; font-weight: 600; margin-bottom: 0; line-height: 1; cursor: pointer; flex-shrink: 0;}
+        .main-letter { font-size: clamp(60px, 15vh, 150px); text-align: center; margin-bottom: 0; line-height: 1; cursor: pointer; flex-shrink: 0;}
         
         .canvas-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 5px 15px calc(15px + env(safe-area-inset-bottom)); width: 100%; height: 100%; overflow: hidden; touch-action: none; }
         
@@ -154,25 +153,25 @@
             display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
             max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; 
         }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; font-size: clamp(16px, 3vh, 24px); font-weight: 600;}
+        .setting-row { display: flex; justify-content: space-between; align-items: center; font-size: clamp(16px, 3vh, 24px); }
         .stepper { display: flex; align-items: center; gap: 10px; }
         .step-btn { width: clamp(40px, 6vh, 50px); height: clamp(40px, 6vh, 50px); font-size: clamp(24px, 4vh, 30px); border-radius: 50%; border: none; background: #e0e0e0; cursor: pointer; display: flex; justify-content: center; align-items: center;}
         .step-btn:active { background: #ccc; }
         .step-val { font-size: clamp(24px, 4vh, 30px); width: 40px; text-align: center; }
         
-        .sample-preview-title { font-size: 16px; text-align: center; margin-top: 5px; color: #666; font-weight: 600;}
+        .sample-preview-title { font-size: 16px; text-align: center; margin-top: 5px; color: #666; }
         .sample-grid-wrapper { display: flex; justify-content: center; background: #f5f5f5; padding: 10px; border-radius: 8px; border: 2px solid #ddd; max-height: 20vh;}
         
         .sample-grid { display: grid; gap: 2px; background: #666; border: 2px solid #666; height: 100%; max-width: 100%; }
         .sample-cell { background: #fff; border: none; border-radius: 0; display: flex; justify-content: center; align-items: center; }
         .sample-cell span { font-size: 24px; color: #aaa; }
 
-        .close-modal-btn { font-size: 20px; padding: 12px; margin-top: 10px; background: #333; color: #fff; border-radius: 10px; border: none; font-weight: 600; cursor: pointer;}
+        .close-modal-btn { font-size: 20px; padding: 12px; margin-top: 10px; background: #333; color: #fff; border-radius: 10px; border: none; cursor: pointer;}
         
         #modal-image-view .modal { width: auto; max-width: 95vw; padding: 20px; align-items: center; justify-content: center;}
         #large-image { max-width: 100%; max-height: 60vh; border: 2px solid #ccc; }
         .modal-actions { display: flex; gap: 15px; margin-top: 15px; width: 100%; justify-content: center; flex-wrap: wrap;}
-        .del-image-btn { font-size: 18px; padding: 12px 25px; background: #ff5252; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;}
+        .del-image-btn { font-size: 18px; padding: 12px 25px; background: #ff5252; color: white; border: none; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -749,8 +748,7 @@ function captureGrid() {
              ctx.fillStyle = `rgba(170, 170, 170, ${opacity})`;
              const fontSize = window.getComputedStyle(textSpan).fontSize;
              const fontFamily = window.getComputedStyle(textSpan).fontFamily;
-             const fontWeight = window.getComputedStyle(textSpan).fontWeight;
-             ctx.font = `${fontWeight} ${fontSize} ${fontFamily}`;
+             ctx.font = `${fontSize} ${fontFamily}`; // fontWeightの設定を削除
              ctx.textAlign = 'center';
              ctx.textBaseline = 'middle';
              ctx.fillText(textSpan.textContent, x + w/2, y + h/2 + (parseFloat(fontSize) * 0.05)); 
