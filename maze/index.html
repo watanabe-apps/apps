@@ -53,7 +53,12 @@
   #play-view.pos-下 { flex-direction: column-reverse; }
 
   /* 迷路プレイ部分だけはブラウザのスワイプ戻り等を禁止する */
-  #maze-container { flex: 1; position: relative; touch-action: none; }
+  #maze-container { 
+    flex: 1; 
+    position: relative; 
+    touch-action: none; 
+    margin: 10px 10px 20px 10px; /* ★上・左右に10px、下に20pxの余白を追加してOSジェスチャーとの競合を防止 */
+  }
   canvas { display: block; position: absolute; top: 0; left: 0; }
   
   #buttons-area { display: flex; align-items: center; justify-content: space-between; padding: 20px; }
