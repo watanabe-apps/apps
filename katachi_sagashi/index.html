@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>形さがし</title>
+<title>形探し</title>
 <style>
     /* ========== 共通設定・誤操作防止 ========== */
     :root {
@@ -323,16 +323,14 @@ document.getElementById('open-settings-btn').addEventListener('pointerdown', (e)
     const now = Date.now();
     settingsTapTimestamps.push(now);
     
-    // 過去のタップ履歴を整理
     if (settingsTapTimestamps.length > 3) {
         settingsTapTimestamps.shift();
     }
     
-    // 3回タップされており、かつ最初と最後が600ms以内か判定
     if (settingsTapTimestamps.length === 3 && (now - settingsTapTimestamps[0]) <= 600) {
         loadSettings();
         document.getElementById('settings-modal').style.display = 'flex';
-        settingsTapTimestamps = []; // リセット
+        settingsTapTimestamps = []; 
     }
 });
 
@@ -350,10 +348,9 @@ function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // 【重要】iOS Safariのオーディオ制限を解除するため、ユーザーアクション時に一瞬だけ無音を鳴らす
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    gain.gain.value = 0; // 無音
+    gain.gain.value = 0; 
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.start(0);
@@ -369,8 +366,8 @@ function playChime() {
     osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
     
     osc1.type = 'sine'; osc2.type = 'sine';
-    osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime); // G5
-    osc2.frequency.setValueAtTime(987.77, audioCtx.currentTime); // B5
+    osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime); 
+    osc2.frequency.setValueAtTime(987.77, audioCtx.currentTime); 
     
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
     gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
@@ -384,11 +381,9 @@ function playChime() {
  * 5. 画面遷移とゲーム管理
  */
 document.getElementById('start-btn').addEventListener('pointerdown', () => {
-    // pointerdownイベントでオーディオを初期化（iOS制限対策）
     initAudio();
     document.getElementById('start-screen').style.display = 'none';
     
-    // ゲームの初期化
     numOfClear = 0;
     currentRectCount = settings.initialRects;
     startGame();
@@ -544,14 +539,13 @@ function attachDrag(el, type) {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist <= 50) {
-            // ピタッとハマる
             el.style.left = `${target.x}px`;
             el.style.top = `${target.y}px`;
             el.classList.add('fitted');
             piecesState[type].isFit = true;
             
-            // ハマったピースをターゲット(z-index:5)の後ろ(z-index:3)に送る
-            el.style.zIndex = 3; 
+            // ★最背面に送る（ノイズの z-index:1 よりも後ろの 0 に設定）
+            el.style.zIndex = 0; 
 
             checkClear();
         }
@@ -561,15 +555,13 @@ function attachDrag(el, type) {
 function checkClear() {
     const allFit = Object.values(piecesState).every(p => p.isFit);
     if (allFit) {
-        playChime(); // サウンド再生
+        playChime(); 
         setTimeout(() => {
             numOfClear++;
             if (numOfClear >= settings.maxQuestions) {
-                // 目標問題数に達したらクリア画面へ
                 scoreDisplay.innerText = `${numOfClear} / ${settings.maxQuestions}`;
                 document.getElementById('clear-screen').style.display = 'flex';
             } else {
-                // 次の問題へ
                 currentRectCount += settings.rectsIncrement;
                 startGame();
             }

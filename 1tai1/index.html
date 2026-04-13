@@ -335,6 +335,7 @@
         let offsetX = 0;
         let offsetY = 0;
         let currentItemType = 'apple';
+        let isClearing = false; // クリア演出中の操作無効化フラグ
 
         // --- 音声・効果音コントローラー ---
         const AudioController = {
@@ -437,11 +438,13 @@
         }
 
         function returnToHome() {
+            isClearing = false;
             document.getElementById('play-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
         }
 
         function initRound() {
+            isClearing = false;
             document.querySelectorAll('.item').forEach(el => el.remove());
 
             const pContainer = document.getElementById('plates-container');
@@ -520,7 +523,7 @@
 
         // --- ドラッグ＆ドロップ処理 ---
         function handlePointerDown(e) {
-            if (activeItem || !e.isPrimary) return; 
+            if (activeItem || !e.isPrimary || isClearing) return; 
             e.preventDefault();
             AudioController.init();
 
@@ -639,6 +642,8 @@
         }
 
         function checkClear() {
+            if (isClearing) return;
+
             const plates = document.querySelectorAll('.plate');
             let allFilled = true;
             for (let p of plates) {
@@ -649,6 +654,7 @@
             }
 
             if (allFilled) {
+                isClearing = true;
                 AudioController.play('clear');
                 
                 if (round >= settings.totalRounds) {
