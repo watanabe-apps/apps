@@ -33,6 +33,14 @@
     * { box-sizing: border-box; }
     .hidden { display: none !important; }
 
+    /* === iOSタップ遅延防止・操作性向上 === */
+    button, .btn, .btn-home, .btn-header, .key, .col-checkbox, .char-box, .tab, .word-item {
+        touch-action: manipulation; /* ダブルタップズーム待機を無効化し、即座に反応させる */
+    }
+    .key, .col-checkbox, .char-box, .tab {
+        cursor: pointer;
+    }
+
     #home-screen, #play-screen {
         height: 100%;
         width: 100%;
@@ -77,7 +85,6 @@
         border: none;
         font-weight: bold;
         box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
-        cursor: pointer;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -124,7 +131,6 @@
         font-weight: bold;
         color: #555;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        cursor: pointer;
         font-family: inherit;
         display: flex;
         align-items: center;
@@ -208,7 +214,6 @@
         font-family: inherit;
         font-size: min(3vh, 3.5vw); 
         padding: 1.5vh 3vw; 
-        cursor: pointer; 
         border-radius: 10px; 
         background: #f9f9f9; 
         border: 2px solid #ccc; 
