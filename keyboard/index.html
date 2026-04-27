@@ -226,6 +226,7 @@
 </div>
 
 <script>
+    // テキストエリア外のスクロールのみ防ぐ（アプリ全体がバウンスするのを防止）
     document.addEventListener('touchmove', function(e) {
         if (!e.target.closest('#text')) e.preventDefault();
     }, { passive: false });
@@ -239,32 +240,29 @@
     const numberCols = [["1","2","3","4","5"],["6","7","8","9","0"]];
     
     let txt = "";
-    const synth = window.speechSynthesis;
 
-    // ★iOS/iPadOSの音声制限を解除するための魔法のコード★
+    // ★iOSのロックを解除するためのダミー音声★
     const unlockAudio = () => {
-        let u = new SpeechSynthesisUtterance('');
+        let u = new SpeechSynthesisUtterance('あ');
         u.volume = 0;
-        synth.speak(u);
-        // 一度解除したら不要なのでイベントリスナーを削除
+        u.rate = 10;
+        window.speechSynthesis.speak(u);
         window.removeEventListener('touchstart', unlockAudio);
         window.removeEventListener('pointerdown', unlockAudio);
         window.removeEventListener('click', unlockAudio);
     };
-    // ユーザーが画面のどこかに初めて触れた瞬間に実行
     window.addEventListener('touchstart', unlockAudio, { passive: true });
     window.addEventListener('pointerdown', unlockAudio, { passive: true });
     window.addEventListener('click', unlockAudio, { passive: true });
 
     function spk(str) {
-        // ★iOSバグ回避: 無闇にcancelせず、実際に発話中・待機中の音声がある時だけcancelする
-        if (synth.speaking || synth.pending) {
-            synth.cancel();
-        }
+        // ★iOSダンマリバグの最強の回避策: cancel直後にresumeを呼んで強制リセット
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume(); 
         
         let u = new SpeechSynthesisUtterance(str);
         u.lang = 'ja-JP';
-        synth.speak(u);
+        window.speechSynthesis.speak(u);
     }
 
     function spkFull() { spk(txt); }
@@ -323,16 +321,15 @@
         buildKeyboard();
     }
 
-    // 各種操作ボタンのイベントバインディング (pointerdownで即時反応)
-    document.getElementById('btn-del').addEventListener('pointerdown', (e) => { e.preventDefault(); del(); });
-    document.getElementById('btn-clr').addEventListener('pointerdown', (e) => { e.preventDefault(); clr(); });
-    document.getElementById('btn-spk').addEventListener('pointerdown', (e) => { e.preventDefault(); spkFull(); });
+    // ★e.preventDefault() を削除し、iOSが「ユーザーのタップ」と正しく認識できるように修正
+    document.getElementById('btn-del').addEventListener('pointerdown', () => { del(); });
+    document.getElementById('btn-clr').addEventListener('pointerdown', () => { clr(); });
+    document.getElementById('btn-spk').addEventListener('pointerdown', () => { spkFull(); });
     
     // 設定ボタンはトリプルタップで起動
     let tapCount = 0;
     let tapTimer = null;
-    document.getElementById('btn-settings').addEventListener('pointerdown', (e) => {
-        e.preventDefault();
+    document.getElementById('btn-settings').addEventListener('pointerdown', () => {
         tapCount++;
         if (tapCount === 1) {
             tapTimer = setTimeout(() => { tapCount = 0; }, 600);
@@ -345,7 +342,7 @@
     });
 
     // 設定保存ボタン
-    document.getElementById('btn-save').addEventListener('pointerdown', (e) => { e.preventDefault(); saveSettings(); });
+    document.getElementById('btn-save').addEventListener('pointerdown', () => { saveSettings(); });
 
     function buildKeyboard() {
         const kb = document.getElementById('keyboard');
@@ -375,8 +372,7 @@
             cb.className = 'col-checkbox active';
             
             // 枠の表示非表示切替（シングルタップ）
-            cb.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            cb.addEventListener('pointerdown', () => {
                 cb.classList.toggle('active');
                 colDiv.querySelectorAll('.key').forEach(k => {
                     if (!k.classList.contains('empty')) k.classList.toggle('disabled-key', !cb.classList.contains('active'));
@@ -391,9 +387,8 @@
                 if (char === "␣") btn.style.fontSize = "calc(var(--key-size) * 0.35)";
                 
                 if (char !== " ") {
-                    // タップした瞬間に即入力されるように変更
-                    btn.addEventListener('pointerdown', (e) => {
-                        e.preventDefault();
+                    // ★e.preventDefault() を削除
+                    btn.addEventListener('pointerdown', () => {
                         resetClr();
                         txt += char === "␣" ? "　" : char;
                         spk(char === "␣" ? "スペース" : char);
