@@ -203,7 +203,10 @@
         <button class="btn" id="btn-del">⌫</button>
         <button class="btn" id="btn-clr">🗑</button>
         <button class="btn" id="btn-spk">🔊</button>
-        <button class="btn" id="btn-settings">⚙️</button>
+        <button class="btn" id="btn-settings" style="flex-direction: column; gap: 0.2vh;">
+            <span>⚙️</span>
+            <span style="font-size: 1vh; line-height: 1; color: #666;">トリプルタップ</span>
+        </button>
     </div>
 </div>
 
@@ -242,23 +245,23 @@
     let txt = "";
 
     // ★iOSのロックを解除するためのダミー音声★
-    const unlockAudio = () => {
-        let u = new SpeechSynthesisUtterance('あ');
-        u.volume = 0;
-        u.rate = 10;
-        window.speechSynthesis.speak(u);
-        window.removeEventListener('touchstart', unlockAudio);
-        window.removeEventListener('pointerdown', unlockAudio);
-        window.removeEventListener('click', unlockAudio);
-    };
-    window.addEventListener('touchstart', unlockAudio, { passive: true });
-    window.addEventListener('pointerdown', unlockAudio, { passive: true });
-    window.addEventListener('click', unlockAudio, { passive: true });
+    // ユーザーが画面のどこかを初めて「click」した瞬間に発動
+    let isUnlocked = false;
+    document.addEventListener('click', () => {
+        if (!isUnlocked) {
+            let u = new SpeechSynthesisUtterance('');
+            u.volume = 0;
+            window.speechSynthesis.speak(u);
+            isUnlocked = true;
+        }
+    }, { once: true });
 
     function spk(str) {
-        // ★iOSダンマリバグの最強の回避策: cancel直後にresumeを呼んで強制リセット
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.resume(); 
+        // ★iOSダンマリバグ回避: 音声が再生中の時だけcancelし、念のためresumeを呼ぶ
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.resume(); 
+        }
         
         let u = new SpeechSynthesisUtterance(str);
         u.lang = 'ja-JP';
@@ -321,15 +324,15 @@
         buildKeyboard();
     }
 
-    // ★e.preventDefault() を削除し、iOSが「ユーザーのタップ」と正しく認識できるように修正
-    document.getElementById('btn-del').addEventListener('pointerdown', () => { del(); });
-    document.getElementById('btn-clr').addEventListener('pointerdown', () => { clr(); });
-    document.getElementById('btn-spk').addEventListener('pointerdown', () => { spkFull(); });
+    // ★iOSで音声を許可させるため、pointerdown ではなく 全て click イベントに変更
+    document.getElementById('btn-del').addEventListener('click', () => { del(); });
+    document.getElementById('btn-clr').addEventListener('click', () => { clr(); });
+    document.getElementById('btn-spk').addEventListener('click', () => { spkFull(); });
     
     // 設定ボタンはトリプルタップで起動
     let tapCount = 0;
     let tapTimer = null;
-    document.getElementById('btn-settings').addEventListener('pointerdown', () => {
+    document.getElementById('btn-settings').addEventListener('click', () => {
         tapCount++;
         if (tapCount === 1) {
             tapTimer = setTimeout(() => { tapCount = 0; }, 600);
@@ -342,7 +345,7 @@
     });
 
     // 設定保存ボタン
-    document.getElementById('btn-save').addEventListener('pointerdown', () => { saveSettings(); });
+    document.getElementById('btn-save').addEventListener('click', () => { saveSettings(); });
 
     function buildKeyboard() {
         const kb = document.getElementById('keyboard');
@@ -371,8 +374,8 @@
             const cb = document.createElement('div');
             cb.className = 'col-checkbox active';
             
-            // 枠の表示非表示切替（シングルタップ）
-            cb.addEventListener('pointerdown', () => {
+            // 枠の表示非表示切替
+            cb.addEventListener('click', () => {
                 cb.classList.toggle('active');
                 colDiv.querySelectorAll('.key').forEach(k => {
                     if (!k.classList.contains('empty')) k.classList.toggle('disabled-key', !cb.classList.contains('active'));
@@ -387,8 +390,8 @@
                 if (char === "␣") btn.style.fontSize = "calc(var(--key-size) * 0.35)";
                 
                 if (char !== " ") {
-                    // ★e.preventDefault() を削除
-                    btn.addEventListener('pointerdown', () => {
+                    // ★iOSで音声を許可させるため click に変更
+                    btn.addEventListener('click', () => {
                         resetClr();
                         txt += char === "␣" ? "　" : char;
                         spk(char === "␣" ? "スペース" : char);
