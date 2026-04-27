@@ -32,7 +32,7 @@
 
     <header class="bg-slate-900 text-slate-100 p-4 shadow-xl z-10 flex justify-between items-center border-b border-slate-700">
         <div>
-            <h1 class="text-xl font-bold tracking-tight">段階別教科アプリ系統マップ（エディタ）</h1>
+            <h1 class="text-xl font-bold tracking-tight">段階別教育アプリ系統マップ（エディタ）</h1>
             <p id="mode-desc" class="text-xs text-rose-400 font-bold">移動中：ノードをドラッグして配置を調整できます</p>
         </div>
         <div class="flex gap-4 text-sm font-bold items-center">
@@ -82,45 +82,47 @@
 
         // アプリノードの定義
         const appNodes = [
-            { id: 'm_dist', name: 'くばろう', stage: 1, type: 'math', goal: '1対1対応の基礎' },
-            { id: 'm_dist_one', name: '一つずつ配ろう', stage: 1, type: 'math', goal: '1対1対応の実践', url: 'https://watanabe-apps.github.io/apps/1tai1/index.html' },
-            { id: 'm_match', name: 'マッチング', stage: 1, type: 'math', goal: '同じの理解' },
-            { id: 'm_count_s', name: '数唱', stage: 1, type: 'math', goal: '数唱への意欲付け' },
-            { id: 's_tap', name: '点タップ', stage: 1, type: 'support', goal: '具体物に気づく、タッチする' },
-            { id: 'm_base', name: 'かぞえよう基礎', stage: 1.5, type: 'math', goal: '数を数える基礎。1対1対応。左から並べる', url: 'https://watanabe-apps.github.io/apps/kazoeyou_kiso/' },
-            { id: 'm_puz1', name: '絵あわせパズル', stage: 1.5, type: 'math', goal: '分割した絵カードを組み合わせる' },
-            { id: 'm_dish', name: '皿に○個ずつ', stage: 1.5, type: 'math', goal: '1対1対応の繰り返しによって同じ数ずつ配る' },
-            { id: 'm_puz2', name: '分割パズル', stage: 1.5, type: 'math', goal: '分割した絵カードを組み合わせる（基本）' },
-            { id: 's_shape', name: '形探し', stage: 1.5, type: 'support', goal: '図地弁別。複雑な背景から特定の形を探す', url: 'https://watanabe-apps.github.io/apps/katachi_sagashi/index.html' },
-            { id: 'm_cat', name: 'カテゴリー分類', stage: 2, type: 'math', goal: 'イラストを機能、色、形等で分類' },
-            { id: 'm_flag', name: 'はたをつくろう', stage: 2, type: 'math', goal: '縦線、横線、四角等をかく' },
-            { id: 'm_shape', name: '図形組み合わせ', stage: 2, type: 'math', goal: '図形を楽しく扱う' },
-            { id: 'j_find', name: '平仮名さがし', stage: 2, type: 'jp', goal: '文字の識別。似た文字を見分ける' },
-            { id: 'j_one', name: '一文字の平仮名', stage: 2, type: 'jp', goal: '平仮名と音が結びついていることの理解' },
-            { id: 's_pos', name: '位置マッチング', stage: 2, type: 'support', goal: '緩やかな空間概念(上下、左右?)', url: 'https://watanabe-apps.github.io/apps/ichi_matching/index.html' },
-            { id: 's_dot', name: '点', stage: 2, type: 'support', goal: '空間概念。鏡文字に関連' },
-            { id: 's_ice', name: 'アイスならべ', stage: 2, type: 'support', goal: '空間概念(上下)。見比べる', url: 'https://scratch.mit.edu/projects/846717854/fullscreen/' },
-            { id: 's_maze', name: '迷路', stage: 2, type: 'support', goal: '運筆。複雑な線を見分ける。目と手の高度な協応', url: 'https://watanabe-apps.github.io/apps/maze/index.html' },
-            { id: 'm_count2', name: 'かずをかぞえよう', stage: 2.5, type: 'math', goal: '数を数える。数字→具体物。15程度まで' },
-            { id: 'm_which', name: 'なんばんめ？', stage: 2.5, type: 'math', goal: '順序数の理解' },
-            { id: 'm_t_tap', name: '数字タッチ', stage: 2.5, type: 'math', goal: '数字の順の理解。視認知向上' },
-            { id: 'm_t_arr', name: '数字ならべ', stage: 2.5, type: 'math', goal: '数字の系列・順序の理解' },
-            { id: 'j_karuta', name: 'カルタ', stage: 2.5, type: 'jp', goal: '平仮名の読み。視覚性語彙の増大' },
-            { id: 'j_kbd', name: '平仮名キーボード', stage: 2.5, type: 'jp', goal: '平仮名の読み。音韻意識（分解、語頭音等）', url: 'https://watanabe-apps.github.io/apps/keyboard/index.html' },
-            { id: 'j_kbd_quiz', name: 'ひらがなキーボードクイズ', stage: 3, type: 'jp', goal: '平仮名キーボードを使った単語入力クイズ。音韻意識の定着。', url: 'https://watanabe-apps.github.io/apps/keyboard_quiz/index.html' },
-            { id: 'j_pict', name: '平仮名図鑑', stage: 2.5, type: 'jp', goal: '平仮名への興味。なぞり書き。読みのきっかけ' },
-            { id: 'j_trace', name: '平仮名なぞり・写し書き', stage: 2.5, type: 'jp', goal: '平仮名の書き。なぞり書き、写書き', url: 'https://watanabe-apps.github.io/apps/hiragana_nazori_utsushi/index.html' },
-            { id: 's_lines', name: '点つなぎ', stage: 2.5, type: 'support', goal: '図地弁別', url: 'https://watanabe-apps.github.io/apps/ten_tsunagi/index.html' },
-            { id: 's_memory', name: '神経衰弱', stage: 2.5, type: 'support', goal: '視覚的短期記憶' },
-            { id: 'm_math1', name: 'いくつといくつ', stage: 3, type: 'math', goal: '数の合成・分解。足し算、引き算の前段階' },
-            { id: 'm_clock', name: '時計（時・分）', stage: 3, type: 'math', goal: '時計の読みの習得' },
-            { id: 'j_50', name: '50音表', stage: 3, type: 'jp', goal: '平仮名の読み・書き。語頭音と結びつけた読み' },
-            { id: 'j_write', name: '平仮名書き', stage: 3, type: 'jp', goal: '平仮名の単語の書き' },
-            { id: 'j_quiz', name: '平仮名単語クイズ', stage: 3, type: 'jp', goal: '平仮名の単語の読みの定着' }
+            { id: 's_listen_mem', name: '聞いて覚えよう', type: 'support', goal: '聴覚的ワーキングメモリの向上、聴覚の図地弁別（雑音下での聞き取り）', url: 'https://watanabe-apps.github.io/apps/kiite_oboeyou/index.html' },
+            { id: 'm_dist', name: 'くばろう', type: 'math', goal: '1対1対応の基礎' },
+            { id: 'm_dist_one', name: '一つずつ配ろう', type: 'math', goal: '1対1対応の実践', url: 'https://watanabe-apps.github.io/apps/1tai1/index.html' },
+            { id: 'm_match', name: 'マッチング', type: 'math', goal: '同じの理解' },
+            { id: 'm_count_s', name: '数唱', type: 'math', goal: '数唱への意欲付け' },
+            { id: 's_tap', name: '点タップ', type: 'support', goal: '具体物に気づく、タッチする' },
+            { id: 'm_base', name: 'かぞえよう基礎', type: 'math', goal: '数を数える基礎。1対1対応。左から並べる', url: 'https://watanabe-apps.github.io/apps/kazoeyou_kiso/' },
+            { id: 'm_puz1', name: '絵あわせパズル', type: 'math', goal: '分割した絵カードを組み合わせる' },
+            { id: 'm_dish', name: '皿に○個ずつ', type: 'math', goal: '1対1対応の繰り返しによって同じ数ずつ配る' },
+            { id: 'm_puz2', name: '分割パズル', type: 'math', goal: '分割した絵カードを組み合わせる（基本）' },
+            { id: 's_shape', name: '形探し', type: 'support', goal: '図地弁別。複雑な背景から特定の形を探す', url: 'https://watanabe-apps.github.io/apps/katachi_sagashi/index.html' },
+            { id: 'm_cat', name: 'カテゴリー分類', type: 'math', goal: 'イラストを機能、色、形等で分類' },
+            { id: 'm_flag', name: 'はたをつくろう', type: 'math', goal: '縦線、横線、四角等をかく' },
+            { id: 'm_shape', name: '図形組み合わせ', type: 'math', goal: '図形を楽しく扱う' },
+            { id: 'j_find', name: '平仮名さがし', type: 'jp', goal: '文字の識別。似た文字を見分ける' },
+            { id: 'j_one', name: '一文字の平仮名', type: 'jp', goal: '平仮名と音が結びついていることの理解' },
+            { id: 's_pos', name: '位置マッチング', type: 'support', goal: '緩やかな空間概念(上下、左右?)', url: 'https://watanabe-apps.github.io/apps/ichi_matching/index.html' },
+            { id: 's_dot', name: '点', type: 'support', goal: '空間概念。鏡文字に関連' },
+            { id: 's_ice', name: 'アイスならべ', type: 'support', goal: '空間概念(上下)。見比べる', url: 'https://scratch.mit.edu/projects/846717854/fullscreen/' },
+            { id: 's_maze', name: '迷路', type: 'support', goal: '運筆。複雑な線を見分ける。目と手の高度な協応', url: 'https://watanabe-apps.github.io/apps/maze/index.html' },
+            { id: 'm_count2', name: 'かずをかぞえよう', type: 'math', goal: '数を数える。数字→具体物。15程度まで' },
+            { id: 'm_which', name: 'なんばんめ？', type: 'math', goal: '順序数の理解' },
+            { id: 'm_t_tap', name: '数字タッチ', type: 'math', goal: '数字の順の理解。視認知向上' },
+            { id: 'm_t_arr', name: '数字ならべ', type: 'math', goal: '数字の系列・順序の理解', url: 'https://watanabe-apps.github.io/apps/suuji_narabe/index.html' },
+            { id: 'j_karuta', name: 'カルタ', type: 'jp', goal: '平仮名の読み。視覚性語彙の増大' },
+            { id: 'j_kbd', name: '平仮名キーボード', type: 'jp', goal: '平仮名の読み。音韻意識（分解、語頭音等）', url: 'https://watanabe-apps.github.io/apps/keyboard/index.html' },
+            { id: 'j_kbd_quiz', name: 'ひらがなキーボードクイズ', type: 'jp', goal: '平仮名キーボードを使った単語入力クイズ。音韻意識の定着。', url: 'https://watanabe-apps.github.io/apps/keyboard_quiz/index.html' },
+            { id: 'j_pict', name: '平仮名図鑑', type: 'jp', goal: '平仮名への興味。なぞり書き。読みのきっかけ' },
+            { id: 'j_trace', name: '平仮名なぞり・写し書き', type: 'jp', goal: '平仮名の書き。なぞり書き、写書き', url: 'https://watanabe-apps.github.io/apps/hiragana_nazori_utsushi/index.html' },
+            { id: 's_lines', name: '点つなぎ', type: 'support', goal: '図地弁別', url: 'https://watanabe-apps.github.io/apps/ten_tsunagi/index.html' },
+            { id: 's_memory', name: '神経衰弱', type: 'support', goal: '視覚的短期記憶' },
+            { id: 'm_math1', name: 'いくつといくつ', type: 'math', goal: '数の合成・分解。足し算、引き算の前段階' },
+            { id: 'm_clock', name: '時計（時・分）', type: 'math', goal: '時計の読みの習得' },
+            { id: 'j_50', name: '50音表', type: 'jp', goal: '平仮名の読み・書き。語頭音と結びつけた読み' },
+            { id: 'j_write', name: '平仮名書き', type: 'jp', goal: '平仮名の単語の書き' },
+            { id: 'j_quiz', name: '平仮名単語クイズ', type: 'jp', goal: '平仮名の単語の読みの定着' }
         ];
 
-        // 最新の座標・エッジデータ
+        // 座標とエッジ（線の繋がり）のデータ
         const importedData = [
+          { "group": "nodes", "data": { "id": "s_listen_mem" }, "position": { "x": 125, "y": 367 } },
           { "group": "nodes", "data": { "id": "m_dist" }, "position": { "x": 1060.9142358120218, "y": 105.74710064945151 } },
           { "group": "nodes", "data": { "id": "m_dist_one" }, "position": { "x": 1060.9142358120218, "y": 18.411111111111104 } },
           { "group": "nodes", "data": { "id": "m_match" }, "position": { "x": 1510.7251982847026, "y": 21.195603057704858 } },
@@ -201,7 +203,6 @@
                     id: n.id, 
                     name: n.name, 
                     goal: n.goal, 
-                    stage: n.stage,
                     type: n.type,
                     url: n.url,
                     color: n.type === 'jp' ? '#f43f5e' : (n.type === 'support' ? '#10b981' : '#3b82f6')
@@ -316,12 +317,16 @@
                 const dummyDom = document.createElement('div');
                 const urlHtml = node.data('url') ? `<a href="${node.data('url')}" target="_blank" class="app-link">🔗 アプリを開く</a>` : '';
                 
+                // 教科名マッピング
+                const typeMap = { 'jp': '国語', 'math': '算数', 'support': '自立活動' };
+                const category = typeMap[node.data('type')] || '';
+
                 const tippyInstance = tippy(dummyDom, {
                     getReferenceClientRect: node.popperRef().getBoundingClientRect,
                     content: `
                         <div class="tooltip-content">
-                            <div class="font-bold text-[10px] border-b border-slate-600 pb-1">段階: ${node.data('stage')}</div>
-                            <div class="text-xs mb-1">🎯 ${node.data('goal')}</div>
+                            <div class="font-bold text-[10px] border-b border-slate-600 pb-1">区分: ${category}</div>
+                            <div class="text-xs mb-1 pt-1">🎯 ${node.data('goal')}</div>
                             ${urlHtml}
                         </div>
                     `,
