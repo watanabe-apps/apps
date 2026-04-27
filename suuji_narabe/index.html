@@ -12,7 +12,7 @@
         --vh: 1vh;
         --primary-color: #007AFF;
         --bg-color: #ffffff;
-        --side-padding: 24px; /* 左右の余白を少し広めに確保 */
+        --side-padding: 24px;
     }
 
     body, html {
@@ -169,15 +169,52 @@
         opacity: 0.8;
     }
 
-    /* グリッド領域 */
-    #grid-container {
-        width: 100%;
+    /* プレイエリアのフレキシブルコンテナ */
+    #play-content {
         display: flex;
-        flex-wrap: wrap;
-        margin-top: 60px; 
-        padding: 0 var(--side-padding);
+        flex: 1;
+        width: 100%;
+        margin-top: 50px; /* ヘッダーUIを避ける */
+        padding: 10px var(--side-padding);
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
         box-sizing: border-box;
+        align-items: center; /* コンテナ全体を中央寄せ */
+        justify-content: center;
     }
+
+    /* 自動レイアウト：上下分割パターン */
+    #play-content.layout-vertical {
+        flex-direction: column;
+        gap: 30px; /* トレイとカード置き場の隙間 */
+    }
+    #play-content.layout-vertical #grid-container { order: 1; }
+    #play-content.layout-vertical #tray-container { 
+        order: 2; 
+        margin-bottom: calc(40px + env(safe-area-inset-bottom)); /* 下の余白確保 */
+    }
+
+    /* 自動レイアウト：左右分割パターン */
+    #play-content.layout-horizontal {
+        flex-direction: row;
+        gap: 40px; /* 左右の隙間 */
+    }
+    #play-content.layout-horizontal #grid-container { order: 1; } /* 左にトレイ(四角) */
+    #play-content.layout-horizontal #tray-container { order: 2; margin-bottom: 0; } /* 右にカード */
+
+    /* トレイとカード置き場の共通スタイル */
+    #grid-container, #tray-container {
+        position: relative;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* トレイ(四角)をCSS Grid化して絶対に10列で折り返すように固定 */
+    #grid-container {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+    }
+    
     .grid-cell {
         box-sizing: border-box;
         border: 1px solid #333;
@@ -196,19 +233,7 @@
         color: #888;
     }
 
-    /* 初期配置領域（画面下部） */
-    #tray-container {
-        flex: 1;
-        position: relative;
-        width: 100%;
-        margin-top: 20px;
-        padding: 0 var(--side-padding);
-        box-sizing: border-box;
-        /* 下部のセーフエリアとボタンを考慮した余白 */
-        margin-bottom: calc(60px + env(safe-area-inset-bottom));
-    }
-
-    /* ドラッグする数字ブロック */
+    /* ドラッグする数字ブロック（カード） */
     .number-block {
         position: absolute;
         box-sizing: border-box;
@@ -241,7 +266,7 @@
     #overlay-ui {
         display: none;
         position: absolute;
-        bottom: calc(20px + env(safe-area-inset-bottom));
+        bottom: calc(40px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         z-index: 1000;
@@ -307,8 +332,12 @@
         <button class="btn back-btn" id="play-back-btn" onclick="quitGame()">もどる</button>
         <div id="question-label" class="question-label">1/5</div>
         
-        <div id="grid-container"></div>
-        <div id="tray-container"></div>
+        <div id="play-content">
+            <!-- トレイ（カードがはまる四角） -->
+            <div id="grid-container"></div>
+            <!-- カード置き場 -->
+            <div id="tray-container"></div>
+        </div>
         
         <div id="correct-mark">○</div>
         
@@ -423,30 +452,49 @@
         document.getElementById('correct-mark').classList.remove('show');
         document.getElementById('overlay-ui').style.display = 'none';
         
-        // --- 画面に収めるためのサイズ動的計算 ---
-        const playScreen = document.getElementById('play-screen');
-        const screenRect = playScreen.getBoundingClientRect();
+        // --- ★ 画面に収めるための最適レイアウト自動判定 ---
+        const playContent = document.getElementById('play-content');
+        playContent.className = ''; // 計算のために一旦リセット
+        const contentRect = playContent.getBoundingClientRect();
         
-        // グリッドとトレイの行数を計算
-        const gridRows = Math.floor((settings.max - 1) / 10) + 1;
+        const cols = 10;
+        const gridRows = Math.floor((settings.max - 1) / cols) + 1;
         const itemCount = settings.max - settings.min + 1;
-        const trayRows = Math.ceil(itemCount / 10);
-        const totalRows = gridRows + trayRows;
+        const trayRows = Math.ceil(itemCount / cols);
 
-        // 利用可能な幅と高さ（余白分を差し引く）
-        const availW = screenRect.width - (SIDE_PADDING * 2);
-        // 上部UI(60px)、間隔、下部ボタン領域(100px)等を考慮
-        const reservedH = 180; 
-        const availH = screenRect.height - reservedH;
+        // 利用可能な幅と高さ
+        const availW = contentRect.width;
+        const availH = contentRect.height;
 
-        // 横幅基準のサイズ
-        const sizeByWidth = Math.floor(availW / 10);
-        // 高さ基準のサイズ（全ての行が収まるように）
-        const sizeByHeight = Math.floor(availH / totalRows);
+        // 【パターンA】 上下配置 (Gap: 30px想定)
+        const sizeA_W = Math.floor(availW / cols);
+        const sizeA_H = Math.floor((availH - 30) / (gridRows + trayRows));
+        const cellSizeA = Math.max(20, Math.min(sizeA_W, sizeA_H));
 
-        // 小さい方を採用し、一画面に収める
-        cellSize = Math.min(sizeByWidth, sizeByHeight);
-        if (cellSize < 20) cellSize = 20; // 最小サイズ担保
+        // 【パターンB】 左右配置 (Gap: 40px想定)
+        const sizeB_W = Math.floor((availW - 40) / (cols * 2));
+        const sizeB_H = Math.floor(availH / Math.max(gridRows, trayRows));
+        const cellSizeB = Math.max(20, Math.min(sizeB_W, sizeB_H));
+
+        let layout = 'vertical';
+        cellSize = cellSizeA;
+
+        // 左右に分けたほうがセルが大きくなる（=見やすい）場合は自動的に左右分割を採用！
+        if (cellSizeB > cellSizeA * 1.1) {
+            layout = 'horizontal';
+            cellSize = cellSizeB;
+        }
+
+        playContent.className = layout === 'horizontal' ? 'layout-horizontal' : 'layout-vertical';
+
+        const gridContainer = document.getElementById('grid-container');
+        const trayContainer = document.getElementById('tray-container');
+
+        gridContainer.style.width = `${cellSize * cols}px`;
+        gridContainer.style.height = `${cellSize * gridRows}px`;
+
+        trayContainer.style.width = `${cellSize * cols}px`;
+        trayContainer.style.height = `${cellSize * trayRows}px`;
         
         buildGrid();
         setTimeout(() => {
@@ -472,21 +520,32 @@
         blocks = [];
     }
 
+    // トレイ（四角）の構築
     function buildGrid() {
         const gridContainer = document.getElementById('grid-container');
         gridContainer.innerHTML = '';
         panels = [];
         
-        const yCount = Math.floor((settings.max - 1) / 10) + 1;
+        const cols = 10;
+        const yCount = Math.floor((settings.max - 1) / cols) + 1;
         
         for (let y = 0; y < yCount; y++) {
-            for (let x = 1; x <= 10; x++) {
+            for (let x = 1; x <= cols; x++) {
                 const targetNum = y * 10 + x;
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.style.width = `${cellSize}px`;
                 cell.style.height = `${cellSize}px`;
-                cell.style.fontSize = `${cellSize * 0.5}px`; 
+                
+                // 桁数に応じたフォントサイズ調整（はみ出し防止）
+                const numStr = String(targetNum);
+                let gridFontSizeRatio = 0.5; // 基本はマスの半分のサイズ
+                if (numStr.length >= 3) {
+                    gridFontSizeRatio = 0.35; // 3桁なら小さく
+                } else if (numStr.length === 2) {
+                    gridFontSizeRatio = 0.45; // 2桁
+                }
+                cell.style.fontSize = `${cellSize * gridFontSizeRatio}px`; 
                 
                 if (targetNum >= settings.min && targetNum <= settings.max) {
                     cell.classList.add('target');
@@ -502,6 +561,7 @@
         }
     }
 
+    // カード（数字ブロック）の構築
     function buildBlocks() {
         const tray = document.getElementById('tray-container');
         panels.forEach(p => {
@@ -510,26 +570,20 @@
             p.y = rect.top;
         });
         const trayRect = tray.getBoundingClientRect();
-        
-        // カードサイズはトレイの1マス幅と同じ（＝計算済みのcellSize）
         const blockSize = cellSize; 
+        const cols = 10; // カード置き場も常に10列固定
 
         let startPoints = [];
         const itemCount = settings.max - settings.min + 1;
         for (let i = 0; i < itemCount; i++) {
-            const col = i % 10;
-            const row = Math.floor(i / 10);
+            const col = i % cols;
+            const row = Math.floor(i / cols);
             startPoints.push({
-                x: col * cellSize,
-                y: row * cellSize
+                x: col * blockSize,
+                y: row * blockSize
             });
         }
         startPoints.sort(() => Math.random() - 0.5);
-
-        // トレイ内の全カードの高さを計算し、下側に寄せる
-        const trayRows = Math.ceil(itemCount / 10);
-        const trayContentHeight = trayRows * cellSize;
-        const trayTopOffset = trayRect.height - trayContentHeight; 
 
         let pointIndex = 0;
         for (let i = settings.min; i <= settings.max; i++) {
@@ -541,11 +595,20 @@
             blockEl.innerText = blockNum;
             blockEl.style.width = `${blockSize}px`;
             blockEl.style.height = `${blockSize}px`;
-            // 文字サイズをカードの8割に設定
-            blockEl.style.fontSize = `${blockSize * 0.8}px`; 
+            
+            // 桁数に応じたフォントサイズ調整（はみ出し防止）
+            const numStr = String(blockNum);
+            let fontSizeRatio = 0.8; // 基本はカードの8割
+            if (numStr.length >= 3) {
+                fontSizeRatio = 0.55; // 3桁なら55%に縮小して確実に収める
+            } else if (numStr.length === 2) {
+                fontSizeRatio = 0.7; // 2桁
+            }
+            blockEl.style.fontSize = `${blockSize * fontSizeRatio}px`; 
 
-            const startX = trayRect.left + SIDE_PADDING + startPoints[pointIndex].x;
-            const startY = trayRect.top + trayTopOffset + startPoints[pointIndex].y;
+            // カード置き場の座標から計算
+            const startX = trayRect.left + startPoints[pointIndex].x;
+            const startY = trayRect.top + startPoints[pointIndex].y;
             pointIndex++;
 
             let initialX, initialY;
