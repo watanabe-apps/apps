@@ -34,10 +34,10 @@
     .hidden { display: none !important; }
 
     /* === iOSタップ遅延防止・操作性向上 === */
-    button, .btn, .btn-home, .btn-header, .key, .col-checkbox, .char-box, .tab, .word-item {
+    button, .btn, .btn-home, .btn-header, .key, .col-checkbox, .char-box, .tab, .word-item, #emoji-display {
         touch-action: manipulation; /* ダブルタップズーム待機を無効化し、即座に反応させる */
     }
-    .key, .col-checkbox, .char-box, .tab {
+    .key, .col-checkbox, .char-box, .tab, #emoji-display {
         cursor: pointer;
     }
 
@@ -166,6 +166,10 @@
         font-size: min(20vw, 12vh); /* 上下の余裕を持たせるため微縮小 */
         line-height: 1;
         filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        transition: transform 0.1s;
+    }
+    #emoji-display:active {
+        transform: scale(0.92);
     }
 
     /* マス目のデザイン */
@@ -449,7 +453,7 @@
 <div id="play-screen" class="hidden">
     <!-- プレイ画面ヘッダー -->
     <div id="play-header">
-        <button id="btn-back-home" class="btn-header" onclick="backToHome()">🏠</button>
+        <button id="btn-back-home" class="btn-header" onpointerdown="backToHome(event)">🏠</button>
         <button id="btn-play-settings" class="btn-header" style="margin-left: auto; font-size: min(3vw, 2vh); padding: 0.5vh 2vw; border-color: transparent; background: transparent; color: #ccc;" onpointerdown="handlePlaySettingsTripleTap(event)">
             ⚙️<br><span style="font-size: 0.5em;">トリプルタップ</span>
         </button>
@@ -457,14 +461,15 @@
 
     <div id="display">
         <div id="question-area">
-            <div id="emoji-display">🍎</div>
+            <!-- イラストタップで音声再生 -->
+            <div id="emoji-display" onpointerdown="spkCurrentWord(event)">🍎</div>
             <div id="boxes-area"></div>
         </div>
         <div class="controls-grid">
-            <button class="btn" onclick="spkCurrentWord()" style="font-size: min(4vh, 4vw);">🔊</button>
-            <button class="btn" onclick="del()" style="font-size: min(4vh, 4vw);">⌫</button>
-            <button class="btn" id="btn-dekita" onclick="doCheck()">できた</button>
-            <button class="btn hidden" id="btn-next" onclick="nextQuestion()">つぎへ</button>
+            <!-- 🔊ボタンを削除し、他の操作ボタンをpointerdownで即時反応化 -->
+            <button class="btn" onpointerdown="del(event)" style="font-size: min(4vh, 4vw);">⌫</button>
+            <button class="btn" id="btn-dekita" onpointerdown="doCheck(event)">できた</button>
+            <button class="btn hidden" id="btn-next" onpointerdown="nextQuestion(event)">つぎへ</button>
         </div>
     </div>
     <div id="keyboard-wrapper">
@@ -923,7 +928,9 @@
         updateBoxes();
     }
 
-    function del() {
+    function del(e) {
+        if (e) e.preventDefault();
+        
         if (currentInput[cursorIndex]?.char && !currentInput[cursorIndex]?.locked) {
             currentInput[cursorIndex] = null;
         } else {
@@ -946,8 +953,11 @@
         else btn.classList.remove('ready');
     }
 
-    async function doCheck() {
+    async function doCheck(e) {
+        if (e) e.preventDefault();
         const btn = document.getElementById('btn-dekita');
+        if (btn.disabled) return;
+        
         btn.disabled = true; btn.classList.remove('ready');
         document.getElementById('keyboard-wrapper').style.pointerEvents = 'none';
 
@@ -1007,7 +1017,9 @@
         document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
     }
 
-    function nextQuestion() {
+    function nextQuestion(e) {
+        if (e) e.preventDefault();
+        
         currentQuestionIndex++;
         let limit = appSettings.questionCount === 'all' ? activeQuestions.length : parseInt(appSettings.questionCount);
         
@@ -1018,7 +1030,8 @@
         }
     }
 
-    function backToHome() {
+    function backToHome(e) {
+        if (e) e.preventDefault();
         saveSessionAndGoHome();
     }
 
@@ -1040,7 +1053,8 @@
         saveSettingsLocal();
     }
 
-    function spkCurrentWord() {
+    function spkCurrentWord(e) {
+        if (e) e.preventDefault();
         speakText(currentWordObj.word);
     }
 
@@ -1089,7 +1103,8 @@
                 btn.innerText = char === "␣" ? "空白" : (char === " " ? "" : char);
                 if (char === "␣") btn.style.fontSize = "calc(var(--key-size) * 0.35)";
                 if (char !== " ") {
-                    btn.addEventListener('click', () => {
+                    btn.addEventListener('pointerdown', (e) => {
+                        e.preventDefault(); // タップ遅延やフォーカス移動を防止して即座に反応
                         let inputC = char === "␣" ? "　" : char;
                         inputChar(inputC);
                         spkFast(char === "␣" ? "スペース" : char);
