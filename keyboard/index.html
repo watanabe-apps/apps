@@ -37,6 +37,44 @@
     }
     .hidden { display: none !important; }
 
+    /* === スタート画面（音声ロック解除用） === */
+    #start-screen {
+        position: absolute;
+        top: 0; left: 0; width: 100vw; height: 100%;
+        background: #f4f7f6;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+    }
+    .title-logo {
+        font-size: min(8vw, 6vh);
+        color: #333;
+        margin-bottom: 8vh;
+        font-weight: bold;
+        text-align: center;
+    }
+    .btn-home {
+        background: #007AFF;
+        color: white;
+        border-radius: 14px;
+        padding: 2vh 0;
+        width: 60vw;
+        max-width: 320px;
+        font-size: min(5vw, 3.5vh);
+        border: none;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+        font-family: inherit;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    .btn-home:active {
+        transform: scale(0.96);
+        opacity: 0.9;
+    }
+
     #display { 
         display: flex; 
         justify-content: space-between; 
@@ -199,6 +237,12 @@
 </head>
 <body>
 
+<!-- スタート画面 -->
+<div id="start-screen">
+    <div class="title-logo">平仮名キーボード</div>
+    <button class="btn-home" id="btn-start">スタート</button>
+</div>
+
 <div id="display">
     <div id="text"></div>
     <div class="controls-grid">
@@ -248,25 +292,23 @@
     let txt = "";
     const synth = window.speechSynthesis;
 
-    // ★iOS音声制限解除の最重要ロジック★
-    // クイズアプリと同様、最初の操作時に無音を再生してエンジンを「起こす」
-    let isAudioInitialized = false;
-    function initAudioOnFirstTouch() {
-        if (isAudioInitialized) return;
-        const u = new SpeechSynthesisUtterance(" ");
+    // ★iOS音声制限解除の決定版★
+    // スタートボタンの click で確実にエンジンを起こす
+    document.getElementById('btn-start').addEventListener('click', () => {
+        synth.resume();
+        synth.cancel();
+        let u = new SpeechSynthesisUtterance('あ');
         u.volume = 0;
+        u.rate = 10;
         synth.speak(u);
-        isAudioInitialized = true;
-        // 一度実行したらイベントを解除
-        window.removeEventListener('pointerdown', initAudioOnFirstTouch);
-        window.removeEventListener('touchstart', initAudioOnFirstTouch);
-    }
-    window.addEventListener('pointerdown', initAudioOnFirstTouch);
-    window.addEventListener('touchstart', initAudioOnFirstTouch);
+        
+        // スタート画面を隠す
+        document.getElementById('start-screen').classList.add('hidden');
+    });
 
     function spk(str) {
         if (!str) return;
-        // クイズアプリの成功例にならい、resumeしてからcancel、そしてspeak
+        // iOSダンマリ対策
         synth.resume();
         synth.cancel();
         
@@ -332,7 +374,7 @@
         buildKeyboard();
     }
 
-    // 各種ボタンのイベント（pointerdownで即座に反応）
+    // 各種操作ボタン（e.preventDefault() を復活させサクサク即時反応に）
     document.getElementById('btn-del').addEventListener('pointerdown', (e) => { e.preventDefault(); del(); });
     document.getElementById('btn-clr').addEventListener('pointerdown', (e) => { e.preventDefault(); clr(); });
     document.getElementById('btn-spk').addEventListener('pointerdown', (e) => { e.preventDefault(); spkFull(); });
@@ -398,6 +440,7 @@
                 if (char === "␣") btn.style.fontSize = "calc(var(--key-size) * 0.35)";
                 
                 if (char !== " ") {
+                    // ★ e.preventDefault() を復活させて遅延のないサクサク入力を実現
                     btn.addEventListener('pointerdown', (e) => {
                         e.preventDefault();
                         resetClr();
