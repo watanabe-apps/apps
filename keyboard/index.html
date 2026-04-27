@@ -239,15 +239,28 @@
     const numberCols = [["1","2","3","4","5"],["6","7","8","9","0"]];
     
     let txt = "";
-    let isInit = false;
     const synth = window.speechSynthesis;
 
+    // ★iOS/iPadOSの音声制限を解除するための魔法のコード★
+    const unlockAudio = () => {
+        let u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        synth.speak(u);
+        // 一度解除したら不要なのでイベントリスナーを削除
+        window.removeEventListener('touchstart', unlockAudio);
+        window.removeEventListener('pointerdown', unlockAudio);
+        window.removeEventListener('click', unlockAudio);
+    };
+    // ユーザーが画面のどこかに初めて触れた瞬間に実行
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+
     function spk(str) {
-        // iOS特有の「まだ一度も喋っていないのにcancelするとその後全く喋らなくなるバグ」を回避
-        if (isInit) {
+        // ★iOSバグ回避: 無闇にcancelせず、実際に発話中・待機中の音声がある時だけcancelする
+        if (synth.speaking || synth.pending) {
             synth.cancel();
         }
-        isInit = true;
         
         let u = new SpeechSynthesisUtterance(str);
         u.lang = 'ja-JP';
@@ -361,7 +374,7 @@
             const cb = document.createElement('div');
             cb.className = 'col-checkbox active';
             
-            // 枠の表示非表示切替（シングルタップに変更）
+            // 枠の表示非表示切替（シングルタップ）
             cb.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 cb.classList.toggle('active');
