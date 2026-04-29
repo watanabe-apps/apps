@@ -535,6 +535,7 @@
     let cellSize = 0;
     let zIndexCounter = 10;
     const SIDE_PADDING = 24; 
+    let isCleared = false; // クリア状態を管理するフラグ
 
     function startGame() {
         initAudio();
@@ -551,6 +552,7 @@
 
     function prepareQuestion() {
         clearBlocks(); 
+        isCleared = false; // 毎問ごとにフラグをリセット
         document.getElementById('question-label').innerText = `${currentQuestion}/${settings.maxQuestions}`;
         document.getElementById('play-back-btn').style.display = settings.showBackButton ? 'block' : 'none';
         document.getElementById('correct-mark').classList.remove('show');
@@ -759,16 +761,6 @@
             if (!isLocked) {
                 setupDrag(blockObj, blockSize);
             }
-
-            blockEl.addEventListener('click', (e) => {
-                if (blockObj.isPlacedCorrectly && !blockObj.isLocked) {
-                    const panel = panels.find(p => p.answer === blockObj.num);
-                    if (panel) panel.answer = null;
-                    blockObj.isPlacedCorrectly = false;
-                    blockEl.classList.remove('correct');
-                    moveBlockTo(blockObj, blockObj.startX, blockObj.startY);
-                }
-            });
         }
         
         if (panels.every(p => p.answer !== null)) {
@@ -858,6 +850,7 @@
             }
         });
         if (allCorrect) {
+            isCleared = true; // すべて正解したらクリア状態にする
             playCorrectSound();
             document.getElementById('correct-mark').classList.add('show');
             const btn = document.getElementById('next-btn');

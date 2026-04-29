@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>数字ならべ（◯ずつ増える）</title>
+<!-- Klee Oneをフォールバックとして導入 -->
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
 <style>
     /* 共通要件: 確実な画面高さの取得とスクロール制御 */
@@ -311,6 +312,7 @@
 </head>
 <body>
 
+    <!-- ホーム画面 -->
     <div id="home-screen" class="screen active">
         <button class="btn" onclick="startGame()">スタート</button>
         <button class="btn" style="background-color: #8E8E93; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 30px;" onclick="handleSettingTap()">
@@ -319,6 +321,7 @@
         </button>
     </div>
 
+    <!-- 設定画面 -->
     <div id="setting-screen" class="screen">
         <div class="setting-header">
             <button class="btn" style="padding: 5px 15px; font-size: 16px;" onclick="showScreen('home-screen')">もどる</button>
@@ -385,6 +388,7 @@
         </div>
     </div>
 
+    <!-- プレイ画面 -->
     <div id="play-screen" class="screen">
         <button class="btn back-btn" id="play-back-btn" onclick="quitGame()">もどる</button>
         <div id="question-label" class="question-label">1/5</div>
@@ -413,15 +417,15 @@
 
     // --- 2. 設定の管理 ---
     const settings = {
-        min: parseInt(localStorage.getItem('num-min')) || 1,
-        max: parseInt(localStorage.getItem('num-max')) || 10,
-        stepMin: parseInt(localStorage.getItem('num-stepMin')) || 2, // 追加: 倍率の最小値
-        stepMax: parseInt(localStorage.getItem('num-stepMax')) || 5, // 追加: 倍率の最大値
-        mode: localStorage.getItem('num-mode') || 'all',
-        partialFixed: parseInt(localStorage.getItem('num-partialFixed')) || 1,
-        partialEmpty: parseInt(localStorage.getItem('num-partialEmpty')) || 2,
-        maxQuestions: parseInt(localStorage.getItem('num-maxQuestions')) || 5,
-        showBackButton: localStorage.getItem('num-showBackButton') !== 'false'
+        min: parseInt(localStorage.getItem('skip-num-min')) || 1,
+        max: parseInt(localStorage.getItem('skip-num-max')) || 10,
+        stepMin: parseInt(localStorage.getItem('skip-num-stepMin')) || 2, 
+        stepMax: parseInt(localStorage.getItem('skip-num-stepMax')) || 5, 
+        mode: localStorage.getItem('skip-num-mode') || 'all',
+        partialFixed: parseInt(localStorage.getItem('skip-num-partialFixed')) || 1,
+        partialEmpty: parseInt(localStorage.getItem('skip-num-partialEmpty')) || 2,
+        maxQuestions: parseInt(localStorage.getItem('skip-num-maxQuestions')) || 5,
+        showBackButton: localStorage.getItem('skip-num-showBackButton') !== 'false'
     };
 
     function initSettingsUI() {
@@ -444,7 +448,6 @@
     }
     document.getElementById('set-mode').addEventListener('change', togglePartialSettings);
 
-    // サンプルビューの更新処理
     function updateSampleView() {
         const container = document.getElementById('sample-view');
         container.innerHTML = '';
@@ -452,16 +455,14 @@
         const fixed = parseInt(document.getElementById('set-partial-fixed').value) || 1;
         const empty = parseInt(document.getElementById('set-partial-empty').value) || 1;
         const minVal = parseInt(document.getElementById('set-min').value) || 1;
-        // プレビュー表示用に設定中の最小倍率を使用
         const previewStep = parseInt(document.getElementById('set-step-min').value) || 1; 
         const cycle = fixed + empty;
         
         for (let i = 0; i < 10; i++) {
-            const num = (minVal + i) * previewStep; // ベース数値 × 倍率
+            const num = (minVal + i) * previewStep; 
             const cell = document.createElement('div');
             cell.className = 'sample-cell';
             
-            // パターン判定 (0 から cycle-1 の間で判定)
             if (i % cycle < fixed) {
                 cell.classList.add('locked');
                 cell.innerText = num;
@@ -488,21 +489,20 @@
             document.getElementById('set-max').value = settings.max;
         }
         
-        // 最大値が最小値を下回らないように補正
         if(settings.stepMin > settings.stepMax) {
             settings.stepMax = settings.stepMin;
             document.getElementById('set-step-max').value = settings.stepMax;
         }
 
-        localStorage.setItem('num-min', settings.min);
-        localStorage.setItem('num-max', settings.max);
-        localStorage.setItem('num-stepMin', settings.stepMin);
-        localStorage.setItem('num-stepMax', settings.stepMax);
-        localStorage.setItem('num-mode', settings.mode);
-        localStorage.setItem('num-partialFixed', settings.partialFixed);
-        localStorage.setItem('num-partialEmpty', settings.partialEmpty);
-        localStorage.setItem('num-maxQuestions', settings.maxQuestions);
-        localStorage.setItem('num-showBackButton', settings.showBackButton);
+        localStorage.setItem('skip-num-min', settings.min);
+        localStorage.setItem('skip-num-max', settings.max);
+        localStorage.setItem('skip-num-stepMin', settings.stepMin);
+        localStorage.setItem('skip-num-stepMax', settings.stepMax);
+        localStorage.setItem('skip-num-mode', settings.mode);
+        localStorage.setItem('skip-num-partialFixed', settings.partialFixed);
+        localStorage.setItem('skip-num-partialEmpty', settings.partialEmpty);
+        localStorage.setItem('skip-num-maxQuestions', settings.maxQuestions);
+        localStorage.setItem('skip-num-showBackButton', settings.showBackButton);
         
         updateSampleView();
     }
@@ -528,19 +528,15 @@
         }
     }
 
-    // --- トリプルタップ設定 ---
     let settingTapCount = 0;
     let settingTapTimer = null;
-
     function handleSettingTap() {
         settingTapCount++;
         if (settingTapCount === 1) {
-            // 1回目のタップでタイマーをスタート（600ms以内に3回）
             settingTapTimer = setTimeout(() => {
                 settingTapCount = 0;
             }, 600);
         }
-        
         if (settingTapCount === 3) {
             clearTimeout(settingTapTimer);
             settingTapCount = 0;
@@ -550,11 +546,12 @@
 
     // --- 4. ゲームロジック ---
     let currentQuestion = 1;
-    let currentStep = 1; // 現在の問題の倍率
+    let currentStep = 1;
     let panels = []; 
     let blocks = []; 
     let cellSize = 0;
     let zIndexCounter = 10;
+    let isCleared = false; // ★クリア状態を管理するフラグを追加
 
     function startGame() {
         initAudio();
@@ -571,15 +568,15 @@
 
     function prepareQuestion() {
         clearBlocks(); 
+        isCleared = false; // ★問題開始時にクリア状態をリセット
+        
         document.getElementById('question-label').innerText = `${currentQuestion}/${settings.maxQuestions}`;
         document.getElementById('play-back-btn').style.display = settings.showBackButton ? 'block' : 'none';
         document.getElementById('correct-mark').classList.remove('show');
         document.getElementById('overlay-ui').style.display = 'none';
         
-        // ★出題ごとに、設定された範囲(stepMin 〜 stepMax)の中からランダムな倍率を決定
         currentStep = Math.floor(Math.random() * (settings.stepMax - settings.stepMin + 1)) + settings.stepMin;
         
-        // --- ★ 画面に収めるための最適レイアウト自動判定 ---
         const playContent = document.getElementById('play-content');
         playContent.className = ''; 
         const contentRect = playContent.getBoundingClientRect();
@@ -587,7 +584,6 @@
         const cols = 10;
         const gridRows = Math.floor((settings.max - 1) / cols) + 1;
         
-        // 一部空きモードの場合、トレイ（カード置き場）に必要なカード数だけから行数を計算
         const cycle = settings.partialFixed + settings.partialEmpty;
         let emptyCount = 0;
         if (settings.mode === 'partial') {
@@ -599,16 +595,13 @@
         }
         const trayRows = Math.max(1, Math.ceil(emptyCount / cols));
 
-        // 利用可能な幅と高さ
         const availW = contentRect.width;
         const availH = contentRect.height;
 
-        // 【パターンA】 上下配置
         const sizeA_W = Math.floor(availW / cols);
         const sizeA_H = Math.floor((availH - 30) / (gridRows + trayRows));
         const cellSizeA = Math.max(20, Math.min(sizeA_W, sizeA_H));
 
-        // 【パターンB】 左右配置
         const sizeB_W = Math.floor((availW - 40) / (cols * 2));
         const sizeB_H = Math.floor(availH / Math.max(gridRows, trayRows));
         const cellSizeB = Math.max(20, Math.min(sizeB_W, sizeB_H));
@@ -656,7 +649,6 @@
         blocks = [];
     }
 
-    // トレイ（四角）の構築
     function buildGrid() {
         const gridContainer = document.getElementById('grid-container');
         gridContainer.innerHTML = '';
@@ -667,15 +659,14 @@
         
         for (let y = 0; y < yCount; y++) {
             for (let x = 1; x <= cols; x++) {
-                const baseNum = y * 10 + x; // 内部的な位置（1, 2, 3...）
-                const displayNum = baseNum * currentStep; // 画面に表示される実際の数字（倍数）
+                const baseNum = y * 10 + x; 
+                const displayNum = baseNum * currentStep; 
                 
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.style.width = `${cellSize}px`;
                 cell.style.height = `${cellSize}px`;
                 
-                // 3桁以上の大きな数字でもはみ出さないように文字サイズを調整
                 const numStr = String(displayNum);
                 let gridFontSizeRatio = 0.5;
                 if (numStr.length >= 3) {
@@ -687,7 +678,7 @@
                 
                 if (baseNum >= settings.min && baseNum <= settings.max) {
                     cell.classList.add('target');
-                    cell.dataset.num = displayNum; // 判定には表示上の数字(倍数)を使う
+                    cell.dataset.num = displayNum; 
                     gridContainer.appendChild(cell);
                     panels.push({ num: displayNum, el: cell, answer: null });
                 } else {
@@ -699,7 +690,6 @@
         }
     }
 
-    // カード（数字ブロック）の構築
     function buildBlocks() {
         const tray = document.getElementById('tray-container');
         panels.forEach(p => {
@@ -732,7 +722,7 @@
         let pointIndex = 0;
         for (let i = 0; i < (settings.max - settings.min + 1); i++) {
             const baseNum = settings.min + i;
-            const blockNum = baseNum * currentStep; // ブロックにも倍率をかける
+            const blockNum = baseNum * currentStep; 
             
             const isLocked = (settings.mode === 'partial') && ((i % cycle) < settings.partialFixed);
 
@@ -787,16 +777,6 @@
             if (!isLocked) {
                 setupDrag(blockObj, blockSize);
             }
-
-            blockEl.addEventListener('click', (e) => {
-                if (blockObj.isPlacedCorrectly && !blockObj.isLocked) {
-                    const panel = panels.find(p => p.answer === blockObj.num);
-                    if (panel) panel.answer = null;
-                    blockObj.isPlacedCorrectly = false;
-                    blockEl.classList.remove('correct');
-                    moveBlockTo(blockObj, blockObj.startX, blockObj.startY);
-                }
-            });
         }
         
         if (panels.every(p => p.answer !== null)) {
@@ -809,6 +789,7 @@
         let offsetX, offsetY;
 
         block.el.addEventListener('pointerdown', (e) => {
+            if (isCleared) return; // ★クリア後はドラッグ操作も無効化
             if (block.isPlacedCorrectly) return; 
             isDragging = true;
             block.el.classList.remove('animating');
@@ -886,6 +867,7 @@
             }
         });
         if (allCorrect) {
+            isCleared = true; // ★全問正解したらフラグを立てて操作をロックする
             playCorrectSound();
             document.getElementById('correct-mark').classList.add('show');
             const btn = document.getElementById('next-btn');
