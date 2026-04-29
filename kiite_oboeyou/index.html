@@ -45,7 +45,7 @@
         #play-screen { padding-bottom: env(safe-area-inset-bottom); padding-top: 10px; justify-content: flex-start; }
         .top-bar { width: 100%; padding: 10px 20px; display: flex; justify-content: space-between; position: absolute; top: 0; }
         .message-area { 
-            font-size: 26px; font-weight: bold; height: 50px; margin-top: 50px; color: #333;
+            height: 50px; margin-top: 50px;
             display: flex; align-items: center; justify-content: center; gap: 15px;
         }
         
@@ -141,7 +141,6 @@
         </div>
         
         <div class="message-area" id="message-container">
-            <span id="message" style="width: 250px; text-align: center;">よくきいてね...</span>
             <button id="replay-btn" onclick="replayAudio()" style="background:none; border:none; font-size:40px; cursor:pointer; padding: 0; touch-action: manipulation;">🔈</button>
         </div>
 
@@ -464,13 +463,10 @@
             document.getElementById('mark-overlay').style.opacity = "0";
             document.getElementById('question-counter').innerText = `${currentQuestionCount + 1} / ${config.totalQuestions}問`;
             
-            const msg = document.getElementById('message');
             const keypad = document.getElementById('keypad');
             const btn = document.getElementById('action-btn');
             const replayBtn = document.getElementById('replay-btn');
             
-            msg.innerText = "よくきいてね...";
-            msg.style.color = "#333";
             keypad.style.opacity = "0.3";
             keypad.style.pointerEvents = "none";
             btn.style.display = "none";
@@ -490,7 +486,6 @@
 
             await readQuestions(questionIds);
 
-            msg.innerText = "にゅうりょく してね";
             keypad.style.opacity = "1";
             keypad.style.pointerEvents = "auto";
             replayBtn.style.opacity = "1";
@@ -505,11 +500,9 @@
             speechSynthesis.resume();
             await new Promise(r => setTimeout(r, 100));
             
-            const msg = document.getElementById('message');
             const keypad = document.getElementById('keypad');
             const replayBtn = document.getElementById('replay-btn');
             
-            msg.innerText = "もういちど きいてね...";
             keypad.style.opacity = "0.3";
             keypad.style.pointerEvents = "none";
             replayBtn.style.opacity = "0.3";
@@ -517,7 +510,6 @@
             
             await readQuestions(questionIds);
             
-            msg.innerText = "にゅうりょく してね";
             keypad.style.opacity = "1";
             keypad.style.pointerEvents = "auto";
             replayBtn.style.opacity = "1";
@@ -562,7 +554,6 @@
         }
 
         function checkAnswer() {
-            const msg = document.getElementById('message');
             const keypad = document.getElementById('keypad');
             const btn = document.getElementById('action-btn');
             const mark = document.getElementById('mark-overlay');
@@ -574,7 +565,6 @@
 
             if (isCorrectAll) {
                 playTone('correct');
-                msg.innerText = ""; 
                 mark.innerText = "⭕️";
                 mark.style.color = "#FF3B30"; 
                 mark.style.opacity = "1";
@@ -592,22 +582,26 @@
                 
             } else {
                 playTone('wrong');
-                msg.innerText = "ざんねん！";
-                msg.style.color = "#F44336";
                 mark.innerText = "❌";
                 mark.style.color = "#007AFF"; 
                 mark.style.opacity = "1";
                 
-                setTimeout(() => {
+                setTimeout(async () => {
+                    if (!document.getElementById('play-screen').classList.contains('active')) return;
+                    
                     mark.style.opacity = "0";
                     userInputIds = userInputIds.map((v, i) => questionIds[i] === v ? v : null);
                     activeIndex = userInputIds.indexOf(null);
-                    msg.innerText = "なおしてね";
-                    msg.style.color = "#333";
+                    
+                    renderBoxes();
+                    
+                    await readQuestions(questionIds);
+                    
+                    if (!document.getElementById('play-screen').classList.contains('active')) return;
+                    
                     keypad.style.opacity = "1";
                     keypad.style.pointerEvents = "auto";
                     document.getElementById('replay-btn').style.pointerEvents = "auto";
-                    renderBoxes();
                 }, 1500);
             }
         }
