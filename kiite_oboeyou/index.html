@@ -70,7 +70,7 @@
             height: 90px; flex: 1; font-size: 40px; font-weight: bold; color: #333;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer;
-            touch-action: manipulation; /* サクサク反応させるため */
+            touch-action: manipulation; /* サクサク反応＆ズーム防止 */
         }
         .key:active { background-color: #eee; transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
@@ -85,7 +85,9 @@
 
         /* --- 設定画面 --- */
         #setting-screen { 
-            touch-action: pan-y; -webkit-overflow-scrolling: touch; 
+            /* ダブルタップ拡大をCSSレベルでも強力に禁止 */
+            touch-action: pan-y manipulation; 
+            -webkit-overflow-scrolling: touch; 
             justify-content: flex-start; padding: 15px; 
             padding-bottom: calc(80px + env(safe-area-inset-bottom)); overflow-y: auto; 
             display: none;
@@ -110,9 +112,13 @@
             padding: 10px 15px; border-bottom: 2px solid #e5e5ea; gap: 8px;
         }
         .form-row:last-child { border-bottom: none; }
-        .form-row label { font-size: 15px; font-weight: bold; color: #333; flex: 1; }
+        
+        /* 【重要】フォントサイズを16px以上にしないとiOSが勝手に強制ズームします */
+        .form-row label { font-size: 16px; font-weight: bold; color: #333; flex: 1; }
         .form-row select, .form-row input[type="number"] { 
-            padding: 6px; font-size: 15px; border: 2px solid #ccc; border-radius: 6px; width: 130px; text-align: center;
+            padding: 6px; 
+            font-size: 16px; /* 16px以上に修正。これでズームされません */
+            border: 2px solid #ccc; border-radius: 6px; width: 130px; text-align: center;
         }
         .form-row input[type="range"] { flex: 1; cursor: pointer; }
     </style>
@@ -120,7 +126,6 @@
 <body>
     <div id="home-screen" class="screen active">
         <div class="home-menu">
-            <!-- スタートボタンはclickに変更 -->
             <button class="btn" onclick="startSession()" style="touch-action: manipulation;">スタート</button>
             <div style="margin-top: 40px; text-align: center;">
                 <button class="btn" style="background-color: #78909C; font-size: 20px; padding: 12px 20px; width: 160px; margin: 0; touch-action: manipulation;" id="center-setting-btn">設定</button>
@@ -131,7 +136,6 @@
 
     <div id="play-screen" class="screen">
         <div class="top-bar">
-            <!-- もどるボタンはclickに変更 -->
             <button class="btn btn-outline" style="font-size: 18px; touch-action: manipulation;" onclick="showHome()">もどる</button>
             <div style="font-size: 18px; font-weight: bold; color: #666;" id="question-counter">1 / 5問</div>
         </div>
@@ -217,7 +221,6 @@
                 </div>
             </div>
 
-            <!-- 保存ボタンはclickに変更 -->
             <button class="btn" style="margin-top: 10px; background-color: #333; font-size: 20px; touch-action: manipulation;" onclick="saveSettingsAndClose()">保存して戻る</button>
         </div>
     </div>
@@ -230,12 +233,18 @@
 
         let tapCount = 0;
         let tapTimer = null;
-        // 設定ボタンはclickに変更
         document.getElementById('center-setting-btn').addEventListener('click', (e) => {
             tapCount++;
             if (tapCount === 1) { tapTimer = setTimeout(() => { tapCount = 0; }, 600); }
             if (tapCount >= 3) { clearTimeout(tapTimer); tapCount = 0; showSetting(); }
         });
+
+        // ピンチズーム（2本指拡大）を防止
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
 
         // ダブルタップによるズームを防止
         document.addEventListener('dblclick', function(event) {
@@ -301,7 +310,6 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isReading = false; 
 
-        // ★ iOSの音声ロック解除処理
         let isAudioUnlocked = false;
         function unlockAudio() {
             if (isAudioUnlocked) return;
@@ -435,7 +443,6 @@
                 let btn = document.createElement('div');
                 btn.className = 'key';
                 btn.innerText = currentItems[i].label;
-                // キー入力はサクサク反応させるため onpointerdown のまま
                 btn.onpointerdown = (e) => {
                     e.preventDefault(); 
                     inputNum(i);
@@ -444,9 +451,8 @@
             }
         }
 
-        // スタートボタン（onclick）から呼ばれる
         function startSession() {
-            unlockAudio(); // ここで無音再生し、OSに許可させる
+            unlockAudio(); 
             currentQuestionCount = 0;
             startGame();
         }
@@ -492,7 +498,6 @@
             renderBoxes();
         }
 
-        // スピーカーボタン（onclick）から呼ばれる
         async function replayAudio() {
             if (isReading) return;
             
@@ -529,7 +534,6 @@
                 div.className = `box ${i === activeIndex ? 'active' : ''}`;
                 div.innerText = userInputIds[i] !== null ? currentItems[userInputIds[i]].label : "";
                 
-                // マス目もサクサク反応させるため onpointerdown のまま
                 div.onpointerdown = () => {
                     if(document.getElementById('keypad').style.pointerEvents === 'auto') {
                         activeIndex = i;
@@ -551,7 +555,6 @@
                     document.getElementById('keypad').style.pointerEvents = "none";
                     document.getElementById('keypad').style.opacity = "0.5";
                     document.getElementById('replay-btn').style.pointerEvents = "none";
-                    // アクションボタンはclickに変更
                     document.getElementById('action-btn').onclick = checkAnswer;
                     setTimeout(checkAnswer, 400); 
                 }
@@ -580,10 +583,10 @@
 
                 if (currentQuestionCount >= config.totalQuestions) {
                     btn.innerText = "ホームへ";
-                    btn.onclick = showHome; // onclickに変更
+                    btn.onclick = showHome; 
                 } else {
                     btn.innerText = "つぎへ";
-                    btn.onclick = startGame; // onclickに変更
+                    btn.onclick = startGame; 
                 }
                 btn.style.display = "block";
                 
