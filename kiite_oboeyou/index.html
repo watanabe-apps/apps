@@ -291,6 +291,30 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isReading = false; 
 
+        // ★ iOSの音声ロックを確実に突破するための魔法の処理 ★
+        let isAudioUnlocked = false;
+        function unlockAudio() {
+            if (isAudioUnlocked) return;
+            
+            // Web Audio API のロック解除
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Web Speech API のロック解除
+            // 【重要】ボタンに触れたその瞬間のプログラム内で同期的に実行する必要があります
+            speechSynthesis.cancel();
+            speechSynthesis.resume();
+            let u = new SpeechSynthesisUtterance(''); // 何も喋らない無音の音声
+            u.volume = 0;
+            speechSynthesis.speak(u);
+            
+            isAudioUnlocked = true;
+        }
+
+        // 画面内のどこかをタッチした瞬間に、念のためロック解除を仕込んでおく
+        ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+            document.addEventListener(evt, unlockAudio, { once: true });
+        });
+
         function playTone(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
@@ -355,6 +379,8 @@
                 u.onerror = finish;
                 
                 speechSynthesis.speak(u);
+                
+                // 万が一再生完了イベントが発火しなかった場合の安全装置
                 setTimeout(finish, (text.length * 500) / rate + 300);
             });
         }
@@ -416,8 +442,9 @@
             }
         }
 
+        // 「スタート」ボタンがタップされた瞬間に同期的に実行される関数
         function startSession() {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+            unlockAudio(); // ここで無音を再生し、OSに音声利用を許可させる
             currentQuestionCount = 0;
             startGame();
         }
@@ -450,6 +477,9 @@
                 userInputIds.push(null);
             }
             renderBoxes();
+
+            // 画面が切り替わってから少しだけ間を空けて読み上げ開始（ロック解除済みなので音が鳴る）
+            await new Promise(r => setTimeout(r, 600));
 
             await readQuestions(questionIds);
 
