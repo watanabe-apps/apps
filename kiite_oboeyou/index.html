@@ -237,6 +237,11 @@
             if (tapCount >= 3) { clearTimeout(tapTimer); tapCount = 0; showSetting(); }
         });
 
+        // ダブルタップによるズームを防止
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
         const ITEMS = {
             number: [
                 { id: 0, label: "0", yomi: "ゼロ" }, { id: 1, label: "1", yomi: "いち" },
