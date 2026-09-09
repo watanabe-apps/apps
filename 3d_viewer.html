@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>3D Model Staging & Multi-AR Viewer</title>
+  <title>3D Model Staging & Multi-AR Viewer (Smooth Hand Occlusion)</title>
   <style>
     body {
       margin: 0;
@@ -236,8 +236,8 @@
       </div>
     </div>
 
-    <!-- Meta Quest / Android用 WebXRボタン -->
-    <button id="xr-btn" class="btn-action">パススルーARを起動 (Meta Quest)</button>
+    <!-- Meta Quest用 WebXR パススルーARボタン -->
+    <button id="xr-btn" class="btn-action">パススルーAR起動（連続ハンドオクルージョン）</button>
 
     <!-- iOS / 汎用 USDZ出力ボタン -->
     <button id="btn-build" class="btn-action">USDZを生成する</button>
@@ -288,7 +288,7 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.xr.enabled = true; // WebXRの有効化
+    renderer.xr.enabled = true;
     document.body.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -378,7 +378,58 @@
       humanFigure.visible = e.target.checked;
     });
 
-    // WebXR対応判定（Meta Quest Browser / Android Chrome）
+    // -------------------------------------------------------------
+    // Meta Quest ハンドオクルージョン（骨格カプセル・円柱接続）
+    // -------------------------------------------------------------
+    const handOcclusionGroup = new THREE.Group();
+    scene.add(handOcclusionGroup);
+
+    const handOcclusionMaterial = new THREE.MeshBasicMaterial({
+      colorWrite: false,
+      depthWrite: true
+    });
+
+    // WebXR Hand Jointインデックス接続定義（指の連続ボーンおよび手のひら）
+    const BONE_CONNECTIONS = [
+      // 親指
+      [0, 1], [1, 2], [2, 3], [3, 4],
+      // 人差し指
+      [0, 5], [5, 6], [6, 7], [7, 8], [8, 9],
+      // 中指
+      [0, 10], [10, 11], [11, 12], [12, 13], [13, 14],
+      // 薬指
+      [0, 15], [15, 16], [16, 17], [17, 18], [18, 19],
+      // 小指
+      [0, 20], [20, 21], [21, 22], [22, 23], [23, 24],
+      // 手のひら中手骨間の肉付け
+      [1, 5], [5, 10], [10, 15], [15, 20]
+    ]; // 片手あたり28本のシリンダー
+
+    // 関節球体プール（25関節 × 2手 = 50個）
+    const sphereGeom = new THREE.SphereGeometry(1, 12, 8);
+    const jointSpheres = [];
+    for (let i = 0; i < 50; i++) {
+      const mesh = new THREE.Mesh(sphereGeom, handOcclusionMaterial);
+      mesh.renderOrder = -1;
+      mesh.matrixAutoUpdate = false;
+      mesh.visible = false;
+      handOcclusionGroup.add(mesh);
+      jointSpheres.push(mesh);
+    }
+
+    // ボーン接続用円柱プール（28本 × 2手 = 56個）
+    const cylinderGeom = new THREE.CylinderGeometry(1, 1, 1, 12);
+    const boneCylinders = [];
+    for (let i = 0; i < 56; i++) {
+      const mesh = new THREE.Mesh(cylinderGeom, handOcclusionMaterial);
+      mesh.renderOrder = -1;
+      mesh.visible = false;
+      handOcclusionGroup.add(mesh);
+      boneCylinders.push(mesh);
+    }
+
+    let currentXRSession = null;
+
     if ('xr' in navigator && !isIOS) {
       navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
         if (supported) {
@@ -393,7 +444,6 @@
     let items = [];
     let selectedIndex = -1;
 
-    // SkinnedMesh姿勢ベイク
     function convertSkinnedToStatic(root) {
       root.updateMatrixWorld(true);
       const replacements = [];
@@ -480,7 +530,6 @@
       return box;
     }
 
-    // ファイル追加
     fileInput.addEventListener('change', async (e) => {
       const files = Array.from(e.target.files);
       if (files.length === 0) return;
@@ -769,19 +818,20 @@
     });
 
     // -------------------------------------------------------------
-    // Meta Quest / Android 用 WebXR パススルーAR
+    // Meta Quest WebXR パススルーAR起動
     // -------------------------------------------------------------
     xrBtn.addEventListener('click', async () => {
       if (!navigator.xr) return;
       try {
         const session = await navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['local-floor']
+          requiredFeatures: ['local-floor'],
+          optionalFeatures: ['hand-tracking']
         });
 
+        currentXRSession = session;
         renderer.xr.setReferenceSpaceType('local-floor');
         await renderer.xr.setSession(session);
 
-        // パススルー表示のための背景透過と目印非表示
         scene.background = null;
         grid.visible = false;
         humanFigure.visible = false;
@@ -789,11 +839,15 @@
         document.getElementById('ui-container').style.display = 'none';
 
         session.addEventListener('end', () => {
+          currentXRSession = null;
           scene.background = new THREE.Color(0x1a1a1a);
           grid.visible = true;
           humanFigure.visible = toggleHuman.checked;
           if (selectedIndex !== -1) selectionRing.visible = true;
           document.getElementById('ui-container').style.display = 'block';
+
+          jointSpheres.forEach(m => { m.visible = false; });
+          boneCylinders.forEach(m => { m.visible = false; });
         });
       } catch (err) {
         alert('WebXR起動エラー: ' + err.message);
@@ -809,7 +863,7 @@
         return;
       }
 
-      statusText.innerText = 'USDZ形式に統合変換中...\n（人型目印とリングを除外して出力）';
+      statusText.innerText = 'USDZ形式に統合変換中...\n（テクスチャ最適化と姿勢ベイク）';
       hideOutputs();
 
       const canvas = document.createElement('canvas');
@@ -882,7 +936,96 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    renderer.setAnimationLoop(() => {
+    // -------------------------------------------------------------
+    // レンダリングループ（骨格カプセル追従オクルージョン）
+    // -------------------------------------------------------------
+    const scaleMatrix = new THREE.Matrix4();
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const boneDir = new THREE.Vector3();
+    const boneMid = new THREE.Vector3();
+
+    renderer.setAnimationLoop((timestamp, frame) => {
+      if (frame && currentXRSession) {
+        const refSpace = renderer.xr.getReferenceSpace();
+        let sphereBaseIdx = 0;
+        let cylinderBaseIdx = 0;
+
+        for (const inputSource of currentXRSession.inputSources) {
+          if (inputSource.hand) {
+            const jointPositions = [];
+            const jointRadii = [];
+
+            // 1. 各関節の姿勢取得 & 球体配置
+            let jIdx = 0;
+            for (const jointSpace of inputSource.hand.values()) {
+              const jointPose = frame.getJointPose(jointSpace, refSpace);
+              const sphereMesh = jointSpheres[sphereBaseIdx + jIdx];
+
+              if (jointPose) {
+                const pos = new THREE.Vector3(
+                  jointPose.transform.position.x,
+                  jointPose.transform.position.y,
+                  jointPose.transform.position.z
+                );
+                const r = (jointPose.radius || 0.010) * 1.15; // 指の肉付きマージン
+
+                jointPositions[jIdx] = pos;
+                jointRadii[jIdx] = r;
+
+                sphereMesh.matrix.fromArray(jointPose.transform.matrix);
+                scaleMatrix.makeScale(r, r, r);
+                sphereMesh.matrix.multiply(scaleMatrix);
+                sphereMesh.visible = true;
+              } else {
+                jointPositions[jIdx] = null;
+                jointRadii[jIdx] = 0;
+                sphereMesh.visible = false;
+              }
+              jIdx++;
+            }
+
+            // 2. 関節間を繋ぐ円柱（ボーンセグメント）の生成・姿勢更新
+            for (let c = 0; c < BONE_CONNECTIONS.length; c++) {
+              const [idxA, idxB] = BONE_CONNECTIONS[c];
+              const cylMesh = boneCylinders[cylinderBaseIdx + c];
+
+              const pA = jointPositions[idxA];
+              const pB = jointPositions[idxB];
+
+              if (pA && pB) {
+                boneDir.subVectors(pB, pA);
+                const len = boneDir.length();
+
+                if (len > 0.002) {
+                  boneMid.addVectors(pA, pB).multiplyScalar(0.5);
+                  cylMesh.position.copy(boneMid);
+                  cylMesh.quaternion.setFromUnitVectors(yAxis, boneDir.clone().normalize());
+
+                  const avgR = (jointRadii[idxA] + jointRadii[idxB]) * 0.5;
+                  cylMesh.scale.set(avgR, len, avgR);
+                  cylMesh.visible = true;
+                } else {
+                  cylMesh.visible = false;
+                }
+              } else {
+                cylMesh.visible = false;
+              }
+            }
+
+            sphereBaseIdx += 25;
+            cylinderBaseIdx += BONE_CONNECTIONS.length;
+          }
+        }
+
+        // 未使用のプール要素を非表示化
+        for (let i = sphereBaseIdx; i < jointSpheres.length; i++) {
+          jointSpheres[i].visible = false;
+        }
+        for (let i = cylinderBaseIdx; i < boneCylinders.length; i++) {
+          boneCylinders[i].visible = false;
+        }
+      }
+
       controls.update();
       renderer.render(scene, camera);
     });

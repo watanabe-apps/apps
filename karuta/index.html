@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="img.png">
@@ -37,6 +37,12 @@
             -webkit-user-select: none;
         }
 
+        /* iOSの自動ズーム・文字拡大を完全防止 */
+        input, select, textarea, button {
+            font-family: var(--font-family);
+            font-size: 16px !important; /* 16px未満だとiOSが勝手に画面をズームする */
+        }
+
         body, html {
             margin: 0;
             padding: 0;
@@ -47,8 +53,12 @@
             position: fixed;
             top: 0;
             left: 0;
+            right: 0;
+            bottom: 0;
             overscroll-behavior: none;
             touch-action: none;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
             font-family: var(--font-family);
             background-color: var(--bg-color);
             color: #333;
@@ -83,8 +93,7 @@
         }
 
         .btn-start {
-            font-family: var(--font-family);
-            font-size: 2.2rem;
+            font-size: 2.2rem !important;
             padding: 14px 44px;
             background: #f0f0f5;
             border: 2px solid var(--primary-color);
@@ -150,14 +159,13 @@
         }
 
         .btn-back {
-            font-size: 0.95rem;
-            font-family: var(--font-family);
             background: #fff;
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 6px 14px;
             color: #333;
             cursor: pointer;
+            font-size: 14px !important;
         }
 
         .btn-back:active {
@@ -192,7 +200,7 @@
         .icon-btn-inline {
             background: none;
             border: none;
-            font-size: 1.8rem;
+            font-size: 1.8rem !important;
             color: var(--primary-color);
             cursor: pointer;
             padding: 0;
@@ -401,11 +409,10 @@
 
         .tab-btn {
             flex: 1;
-            padding: 6px;
+            padding: 8px 6px;
             border: none;
             background: none;
-            font-size: 0.92rem;
-            font-family: var(--font-family);
+            font-size: 14px !important;
             cursor: pointer;
             border-radius: 6px;
         }
@@ -554,13 +561,13 @@
         }
 
         .stepper-btn {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             border: 1px solid var(--primary-color);
             background: #fff;
             color: var(--primary-color);
-            font-size: 1.1rem;
+            font-size: 1.2rem !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -572,23 +579,20 @@
         }
 
         .select-menu {
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 6px;
             border: 1px solid #c6c6c8;
             background: #f8f8fa;
-            font-family: var(--font-family);
-            font-size: 0.85rem;
             outline: none;
             max-width: 180px;
         }
 
         .btn-pos-selector {
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 6px;
             border: 1px solid #c6c6c8;
             background: #fff;
-            font-family: var(--font-family);
-            font-size: 0.85rem;
+            font-size: 14px !important;
             font-weight: 600;
             color: var(--primary-color);
             cursor: pointer;
@@ -645,8 +649,7 @@
             background: #fff;
             border: 1px solid #d1d1d6;
             border-radius: 6px;
-            font-family: var(--font-family);
-            font-size: 0.8rem;
+            font-size: 14px !important;
             color: #333;
             cursor: pointer;
             display: flex;
@@ -663,12 +666,11 @@
 
         .btn-action {
             padding: 6px 12px;
-            font-size: 0.85rem;
+            font-size: 14px !important;
             border-radius: 6px;
             border: 1px solid #c6c6c8;
             background: #fff;
             cursor: pointer;
-            font-family: var(--font-family);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -676,8 +678,8 @@
         }
 
         .btn-action.small {
-            padding: 3px 8px;
-            font-size: 0.75rem;
+            padding: 4px 8px;
+            font-size: 12px !important;
         }
 
         .btn-action.primary {
@@ -747,7 +749,7 @@
 
         .card-list-item {
             background: #fff;
-            padding: 3px 8px;
+            padding: 4px 8px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -763,7 +765,6 @@
             background: #f0f7ff;
         }
 
-        /* 停止中の行全体グレーアウト */
         .card-list-item.inactive-row {
             background: #f8f8fa;
             color: #8e8e93;
@@ -779,8 +780,8 @@
         }
 
         .item-checkbox {
-            width: 17px;
-            height: 17px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
         }
 
@@ -812,7 +813,7 @@
         }
 
         .item-name-text {
-            font-size: 0.92rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
 
@@ -821,7 +822,7 @@
             border: none;
             color: #8e8e93;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 14px !important;
             padding: 2px;
         }
 
@@ -832,13 +833,12 @@
         }
 
         .btn-audio {
-            padding: 2px 5px;
-            font-size: 0.72rem;
+            padding: 4px 6px;
+            font-size: 12px !important;
             border-radius: 4px;
             border: 1px solid #c6c6c8;
             background: #f9f9f9;
             cursor: pointer;
-            font-family: var(--font-family);
         }
 
         .btn-audio.recording {
@@ -855,12 +855,11 @@
         }
 
         .item-status-btn {
-            padding: 2px 7px;
+            padding: 4px 8px;
             border-radius: 10px;
-            font-size: 0.72rem;
+            font-size: 12px !important;
             border: none;
             cursor: pointer;
-            font-family: var(--font-family);
             font-weight: 600;
         }
 
@@ -878,7 +877,7 @@
             background: none;
             border: none;
             color: #ff3b30;
-            font-size: 0.95rem;
+            font-size: 16px !important;
             cursor: pointer;
             padding: 2px;
         }
@@ -1044,11 +1043,10 @@
         }
 
         .edit-dialog-input {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-family: var(--font-family);
-            font-size: 1rem;
+            width: 100%;
         }
 
         .edit-dialog-btns {
@@ -1102,7 +1100,6 @@
         <!-- 1. 設定タブ -->
         <div class="settings-content-wrapper" id="tab-settings">
             <div class="settings-scroll-pane">
-                <!-- 枚数・出題設定 -->
                 <div class="setting-card">
                     <div class="setting-card-title">📐 枚数・出題設定</div>
                     <div class="setting-row">
@@ -1127,7 +1124,6 @@
                     </div>
                 </div>
 
-                <!-- カードの表示・配置設定 -->
                 <div class="setting-card">
                     <div class="setting-card-title">🎴 カードの表示・配置設定</div>
                     <div class="setting-row">
@@ -1171,11 +1167,10 @@
                     </div>
                     <div class="setting-row" id="row-pic-pos">
                         <span class="setting-label-text">絵の配置</span>
-                        <button class="btn-pic-pos-selector" id="btn-pic-pos" onclick="openPosModal('picture')">右下 ▾</button>
+                        <button class="btn-pos-selector" id="btn-pic-pos" onclick="openPosModal('picture')">右下 ▾</button>
                     </div>
                 </div>
 
-                <!-- サイズ比率調整 -->
                 <div class="setting-card">
                     <div class="setting-card-title">🔍 サイズ比率調整</div>
                     <div class="setting-row" id="row-slider-char-size">
@@ -1188,7 +1183,6 @@
                     </div>
                 </div>
 
-                <!-- データ管理 -->
                 <div class="setting-card">
                     <div class="setting-card-title">💾 データ管理 (バックアップ)</div>
                     <div class="compact-filter-bar" style="margin-top: 6px;">
@@ -1199,7 +1193,7 @@
                 </div>
             </div>
 
-            <!-- 右側：画面全体リアルタイムサンプルビュー -->
+            <!-- サンプルビュー -->
             <div class="preview-pane">
                 <div class="preview-header-label">
                     <span>📺 プレイ画面サンプル (全体)</span>
@@ -1221,7 +1215,7 @@
         <!-- 2. 単語リストタブ -->
         <div class="words-content-pane" id="tab-words" style="display: none;">
             <div class="compact-filter-bar">
-                <input type="text" id="new-word-input" placeholder="新しい単語 (例: ぶどう)" style="flex:1; padding:4px 8px; border:1px solid #ccc; border-radius:6px; font-family:var(--font-family); font-size:0.85rem;">
+                <input type="text" id="new-word-input" placeholder="新しい単語 (例: ぶどう)" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
                 <input type="file" id="new-word-file" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
                 <button class="btn-action" onclick="document.getElementById('new-word-file').click()">画像選択</button>
                 <button class="btn-action primary" onclick="addNewCard()">追加</button>
@@ -1288,7 +1282,7 @@
         </div>
     </div>
 
-    <!-- 9位置配置選択ポップアップモーダル -->
+    <!-- 9位置配置ポップアップ -->
     <div id="pos-modal-overlay" class="pos-modal-overlay" onclick="closePosModal(event)">
         <div class="pos-popup-card" onclick="event.stopPropagation()">
             <h4 class="pos-popup-title" id="pos-modal-title">配置の選択</h4>
@@ -1325,13 +1319,11 @@
         <div id="loading-text" style="font-size:0.95rem; font-weight:600;">読み込み中...</div>
     </div>
 
-    <!-- トースト通知 -->
     <div id="toast" class="toast-notification"></div>
 
     <script>
-        // --- 1. アプリ状態と50音網羅単語リストの初期化（もぐら削除・106語） ---
+        // --- 1. アプリ状態と単語リスト（もぐら除外・106語） ---
         const DEFAULT_CARDS = [
-            // --- あ行 ---
             { id: "1", name: "あり", emoji: "🐜", imageData: null, audioData: null, isActive: true },
             { id: "2", name: "あいす", emoji: "🍨", imageData: null, audioData: null, isActive: true },
             { id: "3", name: "あめ", emoji: "🍬", imageData: null, audioData: null, isActive: true },
@@ -1345,8 +1337,6 @@
             { id: "11", name: "えだまめ", emoji: "🫛", imageData: null, audioData: null, isActive: true },
             { id: "12", name: "おにぎり", emoji: "🍙", imageData: null, audioData: null, isActive: true },
             { id: "13", name: "おに", emoji: "👹", imageData: null, audioData: null, isActive: true },
-
-            // --- か行 ---
             { id: "14", name: "かえる", emoji: "🐸", imageData: null, audioData: null, isActive: true },
             { id: "15", name: "かに", emoji: "🦀", imageData: null, audioData: null, isActive: true },
             { id: "16", name: "かめ", emoji: "🐢", imageData: null, audioData: null, isActive: true },
@@ -1361,16 +1351,12 @@
             { id: "25", name: "けーき", emoji: "🍰", imageData: null, audioData: null, isActive: true },
             { id: "26", name: "こっぷ", emoji: "🥛", imageData: null, audioData: null, isActive: true },
             { id: "27", name: "こうもり", emoji: "🦇", imageData: null, audioData: null, isActive: true },
-
-            // --- さ行 ---
             { id: "28", name: "さかな", emoji: "🐟", imageData: null, audioData: null, isActive: true },
             { id: "29", name: "さる", emoji: "🐵", imageData: null, audioData: null, isActive: true },
             { id: "30", name: "しか", emoji: "🦌", imageData: null, audioData: null, isActive: true },
             { id: "31", name: "しんかんせん", emoji: "🚅", imageData: null, audioData: null, isActive: true },
             { id: "32", name: "すいか", emoji: "🍉", imageData: null, audioData: null, isActive: true },
             { id: "33", name: "そうじき", emoji: "🧹", imageData: null, audioData: null, isActive: true },
-
-            // --- た行 ---
             { id: "34", name: "たこ", emoji: "🐙", imageData: null, audioData: null, isActive: true },
             { id: "35", name: "たまご", emoji: "🥚", imageData: null, audioData: null, isActive: true },
             { id: "36", name: "ちーず", emoji: "🧀", imageData: null, audioData: null, isActive: true },
@@ -1379,16 +1365,12 @@
             { id: "39", name: "てんとうむし", emoji: "🐞", imageData: null, audioData: null, isActive: true },
             { id: "40", name: "とけい", emoji: "⌚", imageData: null, audioData: null, isActive: true },
             { id: "41", name: "とまと", emoji: "🍅", imageData: null, audioData: null, isActive: true },
-
-            // --- な行 ---
             { id: "42", name: "なす", emoji: "🍆", imageData: null, audioData: null, isActive: true },
             { id: "43", name: "にわとり", emoji: "🐔", imageData: null, audioData: null, isActive: true },
             { id: "44", name: "にんじん", emoji: "🥕", imageData: null, audioData: null, isActive: true },
             { id: "45", name: "ねこ", emoji: "🐱", imageData: null, audioData: null, isActive: true },
             { id: "46", name: "ねずみ", emoji: "🐭", imageData: null, audioData: null, isActive: true },
             { id: "47", name: "のこぎり", emoji: "🪚", imageData: null, audioData: null, isActive: true },
-
-            // --- は行 ---
             { id: "48", name: "はち", emoji: "🐝", imageData: null, audioData: null, isActive: true },
             { id: "49", name: "はさみ", emoji: "✂️", imageData: null, audioData: null, isActive: true },
             { id: "50", name: "ひまわり", emoji: "🌻", imageData: null, audioData: null, isActive: true },
@@ -1401,8 +1383,6 @@
             { id: "57", name: "へりこぷたー", emoji: "🚁", imageData: null, audioData: null, isActive: true },
             { id: "58", name: "ほし", emoji: "⭐️", imageData: null, audioData: null, isActive: true },
             { id: "59", name: "ほん", emoji: "📖", imageData: null, audioData: null, isActive: true },
-
-            // --- ま行 ---
             { id: "60", name: "まいく", emoji: "🎤", imageData: null, audioData: null, isActive: true },
             { id: "61", name: "みかん", emoji: "🍊", imageData: null, audioData: null, isActive: true },
             { id: "62", name: "みみ", emoji: "👂", imageData: null, audioData: null, isActive: true },
@@ -1410,13 +1390,9 @@
             { id: "64", name: "めがね", emoji: "👓", imageData: null, audioData: null, isActive: true },
             { id: "65", name: "めろん", emoji: "🍈", imageData: null, audioData: null, isActive: true },
             { id: "66", name: "もも", emoji: "🍑", imageData: null, audioData: null, isActive: true },
-
-            // --- や行 ---
             { id: "67", name: "やま", emoji: "⛰️", imageData: null, audioData: null, isActive: true },
             { id: "68", name: "ゆきだるま", emoji: "⛄", imageData: null, audioData: null, isActive: true },
             { id: "69", name: "よっと", emoji: "⛵", imageData: null, audioData: null, isActive: true },
-
-            // --- ら行・わ行 ---
             { id: "70", name: "らっぱ", emoji: "🎺", imageData: null, audioData: null, isActive: true },
             { id: "71", name: "らいおん", emoji: "🦁", imageData: null, audioData: null, isActive: true },
             { id: "72", name: "らくだ", emoji: "🐪", imageData: null, audioData: null, isActive: true },
@@ -1426,8 +1402,6 @@
             { id: "76", name: "ろけっと", emoji: "🚀", imageData: null, audioData: null, isActive: true },
             { id: "77", name: "ろうそく", emoji: "🕯️", imageData: null, audioData: null, isActive: true },
             { id: "78", name: "わに", emoji: "🐊", imageData: null, audioData: null, isActive: true },
-
-            // --- 濁音・半濁音・拗音 ---
             { id: "79", name: "がっこう", emoji: "🏫", imageData: null, audioData: null, isActive: true },
             { id: "80", name: "ぎょうざ", emoji: "🥟", imageData: null, audioData: null, isActive: true },
             { id: "81", name: "ぎたー", emoji: "🎸", imageData: null, audioData: null, isActive: true },
@@ -1514,27 +1488,51 @@
         let audioChunks = [];
         let recordingCardId = null;
 
+        // --- 画面拡大・バウンス完全防止処理 ---
         function updateVh() {
             let vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
-        window.addEventListener('resize', () => {
+
+        function resetViewport() {
+            window.scrollTo(0, 0);
             updateVh();
-            renderSamplePreviewScreen();
+            const meta = document.querySelector('meta[name="viewport"]');
+            if (meta) {
+                meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no';
+            }
             if (document.getElementById('play-screen').classList.contains('active')) {
                 refreshAllGridStyles();
             }
+            renderSamplePreviewScreen();
+        }
+
+        window.addEventListener('resize', resetViewport);
+        window.addEventListener('orientationchange', () => setTimeout(resetViewport, 150));
+        window.addEventListener('pageshow', resetViewport);
+        window.addEventListener('focus', resetViewport);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                resetViewport();
+                initAudio();
+            }
         });
-        window.addEventListener('orientationchange', updateVh);
-        updateVh();
+
+        // 2本指以上のジェスチャーズームを完全ブロック
+        document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+        document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
+        // 入力完了後に強制的にスクロール位置をリセット
+        document.addEventListener('focusout', () => {
+            setTimeout(() => window.scrollTo(0, 0), 50);
+        });
 
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.innerText = message;
             toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
+            setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
         function showLoading(text) {
@@ -1553,6 +1551,7 @@
             loadHistoryData();
             initTripleTap();
             renderSamplePreviewScreen();
+            resetViewport();
         });
 
         // --- 設定の読み込み・保存 ---
@@ -1632,9 +1631,7 @@
             document.getElementById('pos-modal-title').innerText = target === 'text' ? '文字の配置を選択' : '絵の配置を選択';
             const currentVal = target === 'text' ? (setting.textPosition || 'top-left') : (setting.picturePosition || 'bottom-right');
             const cells = document.querySelectorAll('#pos-popup-grid .pos-popup-cell');
-            cells.forEach(c => {
-                c.classList.toggle('active', c.dataset.pos === currentVal);
-            });
+            cells.forEach(c => c.classList.toggle('active', c.dataset.pos === currentVal));
             document.getElementById('pos-modal-overlay').classList.add('active');
         }
 
@@ -1705,7 +1702,7 @@
             renderSamplePreviewScreen();
         }
 
-        // --- 履歴データの読み込み・保存・集計 ---
+        // --- 履歴データの管理 ---
         function loadHistoryData() {
             const saved = localStorage.getItem('karuta_history');
             if (saved) {
@@ -1823,13 +1820,11 @@
             let tapCount = 0;
             let timer = null;
 
-            trigger.addEventListener('pointerdown', (e) => {
+            trigger.addEventListener('pointerdown', () => {
                 initAudio();
                 tapCount++;
                 if (tapCount === 1) {
-                    timer = setTimeout(() => {
-                        tapCount = 0;
-                    }, 600);
+                    timer = setTimeout(() => tapCount = 0, 600);
                 } else if (tapCount === 3) {
                     clearTimeout(timer);
                     tapCount = 0;
@@ -1861,6 +1856,7 @@
             }
 
             document.getElementById('setting-modal').classList.remove('active');
+            resetViewport();
         }
 
         function switchModalTab(tab) {
@@ -1893,7 +1889,7 @@
             saveSettings();
         }
 
-        // --- 2. カードテキスト解析・サイズ & 9位置配置計算ロジック（頭文字大のメリハリ強化） ---
+        // --- 2. カードテキスト解析・サイズ & 9位置配置計算ロジック ---
         function parseCardText(name) {
             const normalized = (name || '').normalize('NFC');
             const youons = ["ゃ", "ゅ", "ょ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ"];
@@ -1941,7 +1937,6 @@
 
             const parsed = parseCardText(card.name);
 
-            // カード表面の文字コンテナ（カードには常に文字を配置）
             const textContainer = document.createElement('div');
             textContainer.className = `card-text-container ${setting.writingMode === 'vertical' ? 'writing-vertical' : 'writing-horizontal'}`;
 
@@ -2030,7 +2025,6 @@
             const textPos = setting.textPosition || 'top-left';
             const picPos = setting.picturePosition || 'bottom-right';
 
-            // 1. 絵のサイズと配置
             if (hasPic) {
                 imgContainer.style.display = 'flex';
                 const picSize = Math.min(w, h) * ratioPic;
@@ -2047,17 +2041,14 @@
                 imgContainer.style.display = 'none';
             }
 
-            // カード文字コンテナは常に表示
             textContainer.style.display = setting.writingMode === 'vertical' ? 'block' : 'flex';
 
-            // 2. 文字サイズ計算（頭文字大のとき、他の文字を約40%に抑えてメリハリを強調）
             let firstSize = 0;
             let remainingSize = 0;
             const headCharLen = isYouon ? 2 : 1;
             const remCharLen = Math.max(1, maxLen - headCharLen);
 
             if (setting.writingMode === 'horizontal') {
-                // 横書き
                 const maxAllowedW = (w * 0.88) / maxLen;
                 const maxAllowedH = hasPic ? (h * 0.45) : (h * 0.85);
 
@@ -2071,7 +2062,6 @@
                     firstSize = Math.min(maxHeadW, maxAllowedH, Math.min(w, h) * ratio * (isYouon ? 0.85 : 1.0));
                     remainingSize = 0;
                 } else {
-                    // headLarge（2文字目以降を頭文字の40%程度に設定）
                     const ratioFirst = (setting.ratioHeadLargeFirst || 0.45) * (hasPic ? 1.0 : 1.3);
                     const headWidthFactor = isYouon ? 1.7 : 1.0;
                     const effectiveLen = headWidthFactor + remCharLen * 0.45;
@@ -2089,7 +2079,6 @@
                 textContainer.style.maxWidth = '95%';
                 textContainer.style.maxHeight = '95%';
             } else {
-                // 縦書き
                 const maxAllowedH = (h * 0.88) / maxLen;
                 const maxAllowedW = hasPic ? (w * 0.45) : (w * 0.85);
 
@@ -2103,7 +2092,6 @@
                     firstSize = Math.min(maxHeadH, maxAllowedW, Math.min(w, h) * ratio * (isYouon ? 0.85 : 1.0));
                     remainingSize = 0;
                 } else {
-                    // headLarge
                     const ratioFirst = (setting.ratioHeadLargeFirst || 0.45) * (hasPic ? 1.0 : 1.3);
                     const headHeightFactor = isYouon ? 1.7 : 1.0;
                     const effectiveLen = headHeightFactor + remCharLen * 0.45;
@@ -2280,9 +2268,7 @@
 
             renderGrid();
 
-            setTimeout(() => {
-                nextQuestion();
-            }, 300);
+            setTimeout(() => nextQuestion(), 300);
         }
 
         function stopGame() {
@@ -2291,6 +2277,7 @@
             }
             document.getElementById('play-screen').classList.remove('active');
             document.getElementById('home-screen').classList.add('active');
+            resetViewport();
         }
 
         function renderGrid() {
@@ -2338,9 +2325,7 @@
                 if (historyList.length > 50) historyList.pop();
                 saveHistoryData();
 
-                setTimeout(() => {
-                    stopGame();
-                }, 2800);
+                setTimeout(() => stopGame(), 2800);
                 return;
             }
 
@@ -2506,26 +2491,22 @@
                     osc.stop(now + start + duration);
                 };
 
-                // 1. 上昇ファンファーレ
                 playTone(523.25, 0.00, 0.22, 0.20, 'sine');
                 playTone(659.25, 0.12, 0.22, 0.20, 'sine');
                 playTone(783.99, 0.24, 0.22, 0.22, 'sine');
                 playTone(1046.50, 0.36, 0.45, 0.26, 'triangle');
 
-                // 2. 弾むフレーズ
                 playTone(880.00, 0.60, 0.20, 0.20, 'sine');
                 playTone(987.77, 0.72, 0.20, 0.22, 'sine');
                 playTone(1046.50, 0.84, 0.22, 0.25, 'sine');
                 playTone(1318.51, 0.98, 0.90, 0.28, 'triangle');
 
-                // 3. フィナーレ和音
                 playTone(523.25, 1.25, 1.30, 0.15, 'sine');
                 playTone(659.25, 1.25, 1.30, 0.15, 'sine');
                 playTone(783.99, 1.25, 1.30, 0.18, 'sine');
                 playTone(1046.50, 1.25, 1.45, 0.22, 'triangle');
                 playTone(2093.00, 1.25, 1.45, 0.12, 'sine');
 
-                // 4. キラキラ音
                 const sparkleNotes = [1318.51, 1567.98, 1760.00, 2093.00, 2637.02];
                 sparkleNotes.forEach((freq, idx) => {
                     playTone(freq, 1.35 + idx * 0.08, 0.65, 0.09, 'sine');
@@ -2536,9 +2517,7 @@
         function speakOrPlayCardAudio(card) {
             if (card && card.audioData) {
                 const audio = new Audio(card.audioData);
-                audio.play().catch(() => {
-                    speakWord(card.name);
-                });
+                audio.play().catch(() => speakWord(card.name));
             } else if (card) {
                 speakWord(card.name);
             }
@@ -2744,14 +2723,13 @@
             editingCardId = cardId;
             document.getElementById('edit-word-input').value = card.name;
             document.getElementById('edit-dialog-overlay').classList.add('active');
-            setTimeout(() => {
-                document.getElementById('edit-word-input').focus();
-            }, 100);
+            setTimeout(() => document.getElementById('edit-word-input').focus(), 100);
         }
 
         function closeEditDialog() {
             document.getElementById('edit-dialog-overlay').classList.remove('active');
             editingCardId = null;
+            resetViewport();
         }
 
         function saveEditedWord() {
@@ -2813,9 +2791,7 @@
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempImageBase64 = e.target.result;
-                };
+                reader.onload = (e) => tempImageBase64 = e.target.result;
                 reader.readAsDataURL(file);
             }
         }
@@ -2838,7 +2814,7 @@
                 }
 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     const newCard = {
                         id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
                         name: nameWithoutExt,
@@ -2885,6 +2861,7 @@
             tempImageBase64 = null;
             document.getElementById('new-word-file').value = '';
             showToast("新しい単語を追加しました");
+            resetViewport();
         }
 
         // --- 5. バックアップ（エクスポート / インポート） ---
@@ -2903,7 +2880,7 @@
             a.href = url;
             a.download = `karuta_backup_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
-            URL.revokeObjectURL(blob);
+            URL.revokeObjectURL(url);
             showToast("データをエクスポートしました");
         }
 
@@ -2913,7 +2890,7 @@
 
             showLoading("バックアップデータを復元中...");
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (imported.setting) {
