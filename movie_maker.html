@@ -1,0 +1,3566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>視覚的モーション＆ボイスエディター</title>
+<style>
+  :root {
+    --bg-color: #141419;
+    --panel-bg: #1f1f28;
+    --panel-sub: #282836;
+    --card-bg: #2d2d3d;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --danger-color: #ef4444;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --purple-color: #8b5cf6;
+    --highlight-color: #ec4899;
+    --text-main: #f9fafb;
+    --text-sub: #9ca3af;
+    --border-color: #3e3e52;
+
+    --grp-a: #ef4444;
+    --grp-b: #3b82f6;
+    --grp-c: #10b981;
+    --grp-d: #f59e0b;
+  }
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    user-select: none; 
+    -webkit-user-select: none; 
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  header {
+    background-color: var(--panel-bg);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    z-index: 200;
+  }
+  .brand-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-right: 6px;
+  }
+  .header-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .header-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-sub);
+    cursor: pointer;
+  }
+
+  button {
+    background-color: #374151;
+    color: #fff;
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  button:hover { background-color: #4b5563; }
+  button.active { background-color: var(--accent-color); border-color: var(--accent-color); }
+  button.primary-btn { background-color: var(--accent-color); border-color: var(--accent-color); }
+  button.primary-btn:hover { background-color: var(--accent-hover); }
+  button.record-btn { background-color: #991b1b; border-color: #b91c1c; }
+  button.record-btn:hover { background-color: #b91c1c; }
+  button.record-btn.recording {
+    background-color: var(--danger-color);
+    border-color: #f87171;
+    animation: pulse 1s infinite;
+  }
+  button.record-both-btn { background-color: #6b21a8; border-color: #7e22ce; }
+  button.record-both-btn:hover { background-color: #7e22ce; }
+  button.record-both-btn.recording {
+    background-color: var(--purple-color);
+    border-color: #a78bfa;
+    animation: pulse 1s infinite;
+  }
+  button.theater-btn { background-color: #4338ca; border-color: #6366f1; }
+  button.theater-btn:hover { background-color: #4f46e5; }
+  button.export-btn { background-color: #065f46; border-color: #047857; }
+  button.export-btn:hover { background-color: var(--success-color); }
+  button.btn-sm { padding: 4px 8px; font-size: 12px; }
+  button.btn-danger { background-color: #7f1d1d; border-color: #991b1b; }
+  button.btn-danger:hover { background-color: #991b1b; }
+
+  button.mute-btn {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 3px;
+    background: #4b5563;
+    border: 1px solid #6b7280;
+    color: #d1d5db;
+  }
+  button.mute-btn.muted {
+    background: #dc2626;
+    border-color: #ef4444;
+    color: #fff;
+  }
+
+  input[type="text"], select, input[type="number"] {
+    background: #2b2b38;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  input[type="number"] { width: 64px; }
+  input[type="color"] {
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+  }
+  input[type="range"] {
+    accent-color: var(--accent-color);
+    cursor: pointer;
+  }
+
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+  .container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .stage-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .stage-outer {
+    flex: 1;
+    position: relative;
+    background-color: #0a0a0e;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+    transition: box-shadow 0.2s;
+  }
+  .stage-outer.recording-active {
+    box-shadow: inset 0 0 0 4px var(--danger-color);
+  }
+  .stage-outer.recording-both-active {
+    box-shadow: inset 0 0 0 4px var(--purple-color);
+  }
+  .stage-wrapper {
+    position: relative;
+    background-color: #111115;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,0,0,0.8);
+  }
+  #stage-bg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    pointer-events: none;
+    z-index: 1;
+  }
+  #stage-curtain {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    pointer-events: none;
+    z-index: 100;
+    transition: opacity 0.2s ease;
+  }
+  .stage-wrapper.editing-mode #stage-curtain {
+    opacity: 0.35 !important;
+  }
+
+  .character {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .character:active { cursor: grabbing; }
+  .character.selected .chara-img-box {
+    border: 3px solid #60a5fa;
+    box-shadow: 0 0 15px rgba(96, 165, 250, 0.7);
+  }
+  .character.ghost-mode .chara-img-box {
+    outline: 2px dashed #eab308;
+  }
+  .chara-img-box {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    position: relative;
+  }
+  .chara-img-box img, .chara-img-box svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  .spotlight-glow {
+    position: absolute;
+    width: 240%;
+    height: 240%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 220, 0.75) 0%, rgba(255, 230, 120, 0.35) 45%, rgba(255, 230, 120, 0) 70%);
+    pointer-events: none;
+    z-index: -1;
+    display: none;
+    animation: spotPulse 2s infinite alternate ease-in-out;
+  }
+  @keyframes spotPulse {
+    0% { transform: scale(0.96); opacity: 0.85; }
+    100% { transform: scale(1.05); opacity: 1.0; }
+  }
+
+  .group-indicator-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+
+  .speech-bubble {
+    position: absolute;
+    background: #ffffff;
+    color: #111;
+    border-radius: 8px;
+    font-weight: 600;
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: none;
+    pointer-events: none;
+    z-index: 160;
+    text-align: left;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    border-style: solid;
+  }
+
+  .speech-bubble.pos-top { bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%); }
+  .speech-bubble.pos-top::after { top: 100%; left: 50%; margin-left: -6px; border-width: 6px 6px 0 6px; border-color: #ffffff transparent transparent transparent; }
+  .speech-bubble.pos-bottom { top: calc(100% + 10px); left: 50%; transform: translateX(-50%); }
+  .speech-bubble.pos-bottom::after { bottom: 100%; left: 50%; margin-left: -6px; border-width: 0 6px 6px 6px; border-color: transparent transparent #ffffff transparent; }
+  .speech-bubble.pos-left { right: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+  .speech-bubble.pos-left::after { left: 100%; top: 50%; margin-top: -6px; border-width: 6px 0 6px 6px; border-color: transparent transparent transparent #ffffff; }
+  .speech-bubble.pos-right { left: calc(100% + 10px); top: 50%; transform: translateY(-50%); }
+  .speech-bubble.pos-right::after { right: 100%; top: 50%; margin-top: -6px; border-width: 6px 6px 6px 0; border-color: transparent #ffffff transparent transparent; }
+
+  .mic-indicator-box {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    z-index: 2000;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--danger-color);
+  }
+  .mic-level-meter {
+    width: 60px;
+    height: 8px;
+    background: #374151;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mic-level-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--danger-color);
+    transition: width 0.05s linear;
+  }
+
+  #countdown-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    pointer-events: none;
+  }
+  .countdown-number {
+    font-size: 120px;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 25px rgba(239,68,68,0.8);
+    animation: zoomOut 0.8s ease-out forwards;
+  }
+  @keyframes zoomOut {
+    0% { transform: scale(1.5); opacity: 0; }
+    30% { transform: scale(1.0); opacity: 1; }
+    80% { transform: scale(1.0); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0; }
+  }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.75);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3500;
+  }
+  .modal-box {
+    background: var(--panel-bg);
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .progress-bar-bg {
+    width: 100%;
+    height: 12px;
+    background: #111;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--accent-color);
+    transition: width 0.1s linear;
+  }
+
+  #theater-controls {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(24, 24, 34, 0.95);
+    border: 1px solid var(--border-color);
+    padding: 8px 18px;
+    border-radius: 30px;
+    display: none;
+    align-items: center;
+    gap: 14px;
+    z-index: 4000;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+  }
+
+  .timeline-panel {
+    background-color: var(--panel-bg);
+    padding: 10px 14px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+  }
+  .timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .timeline-slider-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #seek-bar {
+    flex: 1;
+    height: 6px;
+    accent-color: var(--accent-color);
+  }
+  .time-display {
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    width: 130px;
+    color: #fff;
+  }
+
+  .timeline-sync-container {
+    background: #13131a;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    max-height: 170px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    user-select: none;
+  }
+  .timeline-labels-col {
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+    border-right: 1px solid var(--border-color);
+    background: #171720;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+  .timeline-label-cell {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid #23232f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    gap: 6px;
+  }
+  .ruler-header-cell {
+    height: 22px;
+    background: #1c1c28;
+    color: var(--text-sub);
+    font-size: 11px;
+    border-bottom: 1px solid var(--border-color);
+    justify-content: space-between;
+  }
+
+  .timeline-lanes-col {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .ruler-lane {
+    height: 22px;
+    background: #1a1a24;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+  }
+  .ruler-tick {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-left: 1px solid #4b5563;
+    font-size: 11px;
+    color: var(--text-sub);
+    padding-left: 3px;
+    pointer-events: none;
+  }
+  .track-lane-row {
+    height: 28px;
+    position: relative;
+    border-bottom: 1px solid #23232f;
+  }
+  .track-lane-row.selected {
+    background: rgba(59, 130, 246, 0.18);
+  }
+  .track-lane-row.audio-active {
+    background: rgba(16, 185, 129, 0.15);
+  }
+
+  .timeline-playhead-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #ef4444;
+    z-index: 80;
+    pointer-events: none;
+  }
+  .timeline-playhead-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -4px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #ef4444;
+  }
+
+  .lane-span {
+    position: absolute;
+    height: 18px;
+    top: 5px;
+    border-radius: 3px;
+    opacity: 0.85;
+  }
+  .span-life { background-color: #3b82f6; }
+  .span-diag { background-color: #f59e0b; }
+  .span-highlight { background-color: var(--highlight-color); }
+  .span-audio { background-color: #10b981; }
+
+  .span-motion-track {
+    position: absolute;
+    height: 4px;
+    bottom: 3px;
+    background: #eab308;
+    border-radius: 2px;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  .keyframe-marker {
+    position: absolute;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    background-color: #eab308;
+    transform: translateX(-5px) rotate(45deg);
+    border: 1px solid #111;
+    z-index: 50;
+    cursor: pointer;
+  }
+  .keyframe-marker::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: transparent;
+  }
+  .keyframe-marker:hover {
+    background-color: #fef08a;
+    transform: translateX(-5px) rotate(45deg) scale(1.25);
+  }
+
+  .shortcut-bar {
+    font-size: 12px;
+    color: var(--text-sub);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .shortcut-bar kbd {
+    background: #374151;
+    color: #f3f4f6;
+    padding: 2px 5px;
+    border-radius: 3px;
+    border: 1px solid #4b5563;
+    font-family: inherit;
+    font-size: 11px;
+  }
+
+  .sidebar {
+    width: 420px;
+    background-color: var(--panel-bg);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-tab-nav {
+    display: flex;
+    background: #171722;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .sidebar-tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    border-radius: 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-sub);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .sidebar-tab-btn.active {
+    color: #fff;
+    border-bottom-color: var(--accent-color);
+    background: var(--panel-bg);
+  }
+
+  .chara-selector-section {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+    background: #1a1a24;
+  }
+  .chara-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-sub);
+  }
+  .chara-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chara-pill {
+    background: #2b2b3b;
+    border: 1px solid #3f3f52;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chara-pill.selected {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #fff;
+    font-weight: 600;
+  }
+  .chara-pill img {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .pill-group-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .tab-pane {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tab-pane.active {
+    display: flex;
+  }
+
+  .inspector-section {
+    background: var(--panel-sub);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .inspector-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #d1d5db;
+    border-bottom: 1px solid #373748;
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .prop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .prop-row label {
+    width: 75px;
+    color: var(--text-sub);
+    flex-shrink: 0;
+  }
+  .val-indicator {
+    width: 48px;
+    text-align: right;
+    font-family: monospace;
+    font-size: 12px;
+    color: #e5e7eb;
+  }
+
+  .group-buttons {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .grp-btn {
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: #374151;
+    color: #d1d5db;
+  }
+  .grp-btn.active-grp-none { background: #4b5563; color: #fff; border-color: #9ca3af; }
+  .grp-btn.active-grp-A { background: var(--grp-a); color: #fff; border-color: #fca5a5; }
+  .grp-btn.active-grp-B { background: var(--grp-b); color: #fff; border-color: #93c5fd; }
+  .grp-btn.active-grp-C { background: var(--grp-c); color: #fff; border-color: #6ee7b7; }
+  .grp-btn.active-grp-D { background: var(--grp-d); color: #fff; border-color: #fcd34d; }
+
+  .sub-item {
+    background: #1e1e28;
+    border: 1px solid #38384a;
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+</style>
+</head>
+<body>
+
+<header id="main-header">
+  <span class="brand-title">Scene Director</span>
+  
+  <div class="header-group">
+    <label>比率:
+      <select id="aspect-ratio-select" onchange="changeAspectRatio(this.value)">
+        <option value="16:9">16:9 (横長 1280×720)</option>
+        <option value="4:3">4:3 (標準 960×720)</option>
+        <option value="1:1">1:1 (正方形 720×720)</option>
+        <option value="9:16">9:16 (縦型 720×1280)</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="header-group">
+    <label>背景:
+      <select id="bg-preset-select" onchange="applyBgPreset(this.value)">
+        <option value="gym_stage" selected>体育館ステージ</option>
+        <option value="none">単色背景</option>
+        <option value="custom">カスタム画像</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="header-group">
+    <label id="curtain-toggle-label" style="cursor:pointer;">
+      <input type="checkbox" id="curtain-toggle" checked onchange="toggleCurtainOverlay(this.checked)">
+      前面カーテン表示
+    </label>
+  </div>
+
+  <div class="header-group" id="bg-color-group" style="display:none;">
+    <label>背景色:
+      <input type="color" id="bg-color-picker" value="#111115" onchange="changeBgColor(this.value)">
+    </label>
+  </div>
+
+  <div class="header-group" id="bg-custom-group" style="display:none;">
+    <input type="file" id="bg-file" accept="image/*" style="display:none;">
+    <button onclick="document.getElementById('bg-file').click()">画像選択</button>
+  </div>
+
+  <div style="flex:1;"></div>
+
+  <span id="save-status" style="font-size:12px; color:#9ca3af; margin-right:8px;">● 保存状況: 未保存</span>
+
+  <button class="theater-btn" onclick="enterTheaterMode()">▶ シアター再生</button>
+  <button class="export-btn" onclick="exportVideo()">🎬 動画書き出し</button>
+  <button class="primary-btn" onclick="openSaveModal()">💾 保存</button>
+  <input type="file" id="json-file" accept=".json" style="display:none;" onchange="importJSON(event)">
+  <button onclick="document.getElementById('json-file').click()">読込</button>
+  <button style="background:#7f1d1d;" onclick="openCloseConfirmModal()">✕ 閉じる</button>
+</header>
+
+<div class="container">
+  <div class="stage-area" id="stage-area-container">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage-wrapper editing-mode" id="stage">
+        <img id="stage-bg" alt="">
+        <img id="stage-curtain" alt="">
+      </div>
+
+      <div class="mic-indicator-box" id="mic-indicator">
+        <span style="color:var(--danger-color);">● REC</span>
+        <div class="mic-level-meter">
+          <div class="mic-level-fill" id="mic-level-fill"></div>
+        </div>
+      </div>
+      
+      <div id="countdown-overlay">
+        <div class="countdown-number" id="countdown-text">3</div>
+      </div>
+
+      <div class="modal-overlay" id="export-overlay">
+        <div class="modal-box">
+          <div style="font-weight:bold; font-size:15px;">動画書き出し中...</div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="export-progress"></div>
+          </div>
+          <div id="export-status" style="font-size:13px; color:#9ca3af;">0%</div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="save-choice-modal">
+        <div class="modal-box">
+          <div style="font-weight:bold; font-size:16px;">プロジェクトの保存</div>
+          <div style="font-size:13px; color:var(--text-sub);">保存方法を選択してください</div>
+          <button class="primary-btn" style="padding:10px;" onclick="saveToIndexedDB(); closeSaveModal();">
+            🌐 ブラウザに保存 (次回確認して自動復元)
+          </button>
+          <button style="padding:10px;" onclick="exportJSON(); closeSaveModal();">
+            📁 ファイルに保存 (JSONダウンロード)
+          </button>
+          <button style="background:#4b5563;" onclick="closeSaveModal()">キャンセル</button>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="close-confirm-modal">
+        <div class="modal-box">
+          <div style="font-weight:bold; font-size:16px;">プロジェクトを閉じますか？</div>
+          <div style="font-size:13px; color:var(--text-sub);">保存していない変更は破棄されます。保存してから閉じますか？</div>
+          <button class="primary-btn" style="padding:10px;" onclick="saveToIndexedDB(); closeProjectAndReset();">
+            🌐 ブラウザに保存して閉じる
+          </button>
+          <button style="padding:10px;" onclick="exportJSON(); closeProjectAndReset();">
+            📁 ファイルに保存して閉じる
+          </button>
+          <button class="btn-danger" style="padding:10px;" onclick="closeProjectAndReset();">
+            ⚠️ 保存せずに閉じる (新規作成)
+          </button>
+          <button style="background:#4b5563;" onclick="closeCloseConfirmModal()">編集に戻る</button>
+        </div>
+      </div>
+
+      <div id="theater-controls">
+        <button id="theater-play-btn" class="primary-btn" onclick="togglePlay()">再生</button>
+        <button onclick="seekTo(0)">先頭へ</button>
+        <span id="theater-time-text" style="font-family:monospace; font-size:14px; color:#fff;">00:00 / 30:00</span>
+        <button class="btn-danger" onclick="exitTheaterMode()">シアター終了 (Esc)</button>
+      </div>
+    </div>
+
+    <div class="timeline-panel" id="main-timeline-panel">
+      <div class="timeline-controls">
+        <button id="play-btn" class="primary-btn" onclick="togglePlay()">再生</button>
+        <button onclick="seekTo(0)">先頭</button>
+        <button id="global-audio-rec-btn" class="record-btn" onclick="toggleGlobalAudioRecord()">🎤 アフレコ録音</button>
+        <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ 音声トラック追加</button>
+
+        <div class="timeline-slider-wrap">
+          <input type="range" id="seek-bar" min="0" max="30" step="0.01" value="0" oninput="onSeekInput(this.value)">
+          <div class="time-display" id="time-text">00:00 / 30:00</div>
+        </div>
+        <label style="font-size:13px; color:var(--text-sub); display:flex; align-items:center; gap:4px;">
+          総秒数:
+          <input type="number" id="total-duration" value="30" min="5" max="120" onchange="updateTotalDuration(this.value)">s
+        </label>
+        <span id="out-of-bounds-alert" style="display:none; color:var(--warning-color); font-size:12px; font-weight:bold;">
+          ⚠️ 範囲外データあり <button class="btn-sm" style="background:#b45309;" onclick="trimAllOutOfBounds()">トリム</button>
+        </span>
+      </div>
+
+      <div class="timeline-sync-container" id="timeline-sync-wrap">
+        <div class="timeline-labels-col" id="timeline-labels-col">
+          <div class="timeline-label-cell ruler-header-cell">
+            <span>トラック名</span>
+            <span style="font-size:10px; color:var(--text-sub);">Mute</span>
+          </div>
+          <div id="track-labels-container"></div>
+          <div id="audio-track-labels-container"></div>
+        </div>
+
+        <div class="timeline-lanes-col" id="timeline-lanes-area" onclick="handleTimelineAreaClick(event)">
+          <div class="timeline-playhead-line" id="timeline-playhead"></div>
+          <div class="ruler-lane" id="ruler-lane"></div>
+          <div id="track-lanes-container"></div>
+          <div id="audio-track-lanes-container"></div>
+        </div>
+      </div>
+
+      <div class="shortcut-bar">
+        <span><kbd>Space</kbd> 再生/停止</span>
+        <span><kbd>K</kbd> 座標打刻(時間メモ)</span>
+        <span><kbd>R</kbd> 動き記録</span>
+        <span><kbd>Shift+R</kbd> 同時記録</span>
+        <span><kbd>M</kbd> アフレコ</span>
+        <span><kbd>←</kbd> <kbd>→</kbd> コマ送り</span>
+        <span><kbd>Tab</kbd> 人物切替</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar" id="main-sidebar">
+    <div class="sidebar-tab-nav">
+      <button class="sidebar-tab-btn active" id="tab-btn-chara" onclick="switchSidebarTab('chara')">👤 登場人物</button>
+      <button class="sidebar-tab-btn" id="tab-btn-spot" onclick="switchSidebarTab('spot')">💡 スポット</button>
+      <button class="sidebar-tab-btn" id="tab-btn-audio" onclick="switchSidebarTab('audio')">🔊 音声トラック</button>
+    </div>
+
+    <!-- タブ1: 登場人物 -->
+    <div class="tab-pane active" id="pane-chara">
+      <div class="chara-selector-section">
+        <div class="chara-selector-header">
+          <span>人物選択</span>
+          <button class="btn-sm primary-btn" onclick="addCharacter()">＋ 人物追加</button>
+        </div>
+        <div class="chara-pills" id="chara-pills"></div>
+      </div>
+      <div id="inspector-chara-content">
+        <div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>
+      </div>
+    </div>
+
+    <!-- タブ2: スポットライト演出 -->
+    <div class="tab-pane" id="pane-spot">
+      <div class="inspector-section">
+        <div class="inspector-title">
+          <span>スポットライト演出</span>
+          <button class="btn-sm" style="background:var(--highlight-color); color:#fff;" onclick="addSpotlightCue()">＋ 演出追加</button>
+        </div>
+        <div style="font-size:12px; color:var(--text-sub);">
+          指定した時間帯に、特定の人物にスポットライトを当てて拡大します。
+        </div>
+      </div>
+      <div id="spotlight-cues-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <!-- タブ3: 音声トラック -->
+    <div class="tab-pane" id="pane-audio">
+      <div class="inspector-section">
+        <div class="inspector-title">
+          <span>音声トラック一覧</span>
+          <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ トラック追加</button>
+        </div>
+        <div style="font-size:12px; color:var(--text-sub);">
+          録音先に指定したトラックへ音声が吹き込まれます。「M」ボタンで消音できます。
+        </div>
+      </div>
+      <div id="audio-tracks-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GYM_STAGE_BG_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="backWall" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="%23d8cfbe"/><stop offset="100%" stop-color="%23b8ad9c"/>
+    </linearGradient>
+    <linearGradient id="woodFloor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="%23b8793b"/><stop offset="30%" stop-color="%23cf8f4c"/><stop offset="100%" stop-color="%238f5624"/>
+    </linearGradient>
+    <radialGradient id="spotlight" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="%23ffffff" stop-opacity="0.18"/><stop offset="60%" stop-color="%23ffeebb" stop-opacity="0.05"/><stop offset="100%" stop-color="%23000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1280" height="490" fill="url(%23backWall)"/>
+  <g stroke="%23a49885" stroke-width="1.5" opacity="0.45">
+    <line x1="80" y1="0" x2="80" y2="490"/><line x1="160" y1="0" x2="160" y2="490"/><line x1="240" y1="0" x2="240" y2="490"/><line x1="320" y1="0" x2="320" y2="490"/><line x1="400" y1="0" x2="400" y2="490"/><line x1="480" y1="0" x2="480" y2="490"/><line x1="560" y1="0" x2="560" y2="490"/><line x1="640" y1="0" x2="640" y2="490"/><line x1="720" y1="0" x2="720" y2="490"/><line x1="800" y1="0" x2="800" y2="490"/><line x1="880" y1="0" x2="880" y2="490"/><line x1="960" y1="0" x2="960" y2="490"/><line x1="1040" y1="0" x2="1040" y2="490"/><line x1="1120" y1="0" x2="1120" y2="490"/><line x1="1200" y1="0" x2="1200" y2="490"/>
+  </g>
+  <polygon points="0,470 1280,470 1280,680 0,680" fill="url(%23woodFloor)"/>
+  <g stroke="%23683811" stroke-width="1.2" opacity="0.55">
+    <line x1="640" y1="470" x2="640" y2="680"/><line x1="560" y1="470" x2="510" y2="680"/><line x1="480" y1="470" x2="380" y2="680"/><line x1="400" y1="470" x2="250" y2="680"/><line x1="320" y1="470" x2="120" y2="680"/><line x1="240" y1="470" x2="-10" y2="680"/><line x1="720" y1="470" x2="770" y2="680"/><line x1="800" y1="470" x2="900" y2="680"/><line x1="880" y1="470" x2="1030" y2="680"/><line x1="960" y1="470" x2="1160" y2="680"/><line x1="1040" y1="470" x2="1290" y2="680"/><line x1="0" y1="520" x2="1280" y2="520" stroke-width="0.8"/><line x1="0" y1="580" x2="1280" y2="580" stroke-width="1"/><line x1="0" y1="640" x2="1280" y2="640" stroke-width="1.2"/>
+  </g>
+  <rect x="0" y="680" width="1280" height="40" fill="%2322150c"/>
+  <line x1="0" y1="680" x2="1280" y2="680" stroke="%23e8b070" stroke-width="2.5"/>
+  <rect x="0" y="0" width="1280" height="720" fill="url(%23spotlight)"/>
+</svg>`;
+
+const GYM_STAGE_CURTAIN_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="curtainRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="%235a0d18"/><stop offset="25%" stop-color="%238b1d2c"/><stop offset="50%" stop-color="%235a0d18"/><stop offset="75%" stop-color="%238b1d2c"/><stop offset="100%" stop-color="%23480812"/>
+    </linearGradient>
+    <linearGradient id="valanceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="%23480812"/><stop offset="70%" stop-color="%238b1d2c"/><stop offset="100%" stop-color="%235a0d18"/>
+    </linearGradient>
+  </defs>
+  <path d="M 0,0 L 150,0 C 130,240 170,480 140,720 L 0,720 Z" fill="url(%23curtainRed)"/>
+  <path d="M 35,0 C 20,240 50,480 30,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 80,0 C 65,240 95,480 75,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 125,0 C 110,240 140,480 120,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1280,0 L 1130,0 C 1150,240 1110,480 1140,720 L 1280,720 Z" fill="url(%23curtainRed)"/>
+  <path d="M 1245,0 C 1260,240 1230,480 1250,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1200,0 C 1215,240 1185,480 1205,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1155,0 C 1170,240 1140,480 1160,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 0,0 L 1280,0 L 1280,80 Q 1200,110 1120,80 Q 1040,110 960,80 Q 880,110 800,80 Q 720,110 640,80 Q 560,110 480,80 Q 400,110 320,80 Q 240,110 160,80 Q 80,110 0,80 Z" fill="url(%23valanceGrad)"/>
+  <path d="M 0,80 Q 80,110 160,80 Q 240,110 320,80 Q 400,110 480,80 Q 560,110 640,80 Q 720,110 800,80 Q 880,110 960,80 Q 1040,110 1120,80 Q 1200,110 1280,80" stroke="%23e5c158" stroke-width="4.5" fill="none"/>
+</svg>`;
+
+const GROUP_COLORS = {
+  'none': 'transparent',
+  'grp_a': '#ef4444',
+  'grp_b': '#3b82f6',
+  'grp_c': '#10b981',
+  'grp_d': '#f59e0b'
+};
+
+let duration = 30.0;
+let currentTime = 0.0;
+let isPlaying = false;
+let isRecordingMotion = false;
+let isRecordingAudio = false;
+let isRecordingBoth = false;
+let isCountingDown = false;
+let isExporting = false;
+let isTheaterMode = false;
+let hasUnsavedChanges = false;
+
+let characters = [];
+let audioTracks = [];
+let activeAudioTrackId = null;
+let spotlightCues = [];
+let selectedCharaId = null;
+
+let currentBgPreset = 'gym_stage';
+let isCurtainOverlayActive = true;
+let customBgSrc = '';
+
+let animationFrameId = null;
+let lastTimestamp = null;
+let logicalWidth = 1280;
+let logicalHeight = 720;
+let currentAspectRatio = '16:9';
+
+let audioCtx = null;
+let activeAudioNodes = [];
+let mediaRecorder = null;
+let audioChunks = [];
+let audioRecordStartTime = 0;
+let micMeterInterval = null;
+let micAnalyser = null;
+let micDataArray = null;
+
+let activeDrag = {
+  isDragging: false,
+  leaderId: null,
+  offset: { x: 0, y: 0 },
+  groupOffsets: {},
+  currentStagePointer: { x: 0, y: 0 }
+};
+
+const defaultSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="22" fill="%2360a5fa"/><path d="M 20 85 C 20 60, 80 60, 80 85 Z" fill="%2360a5fa"/></svg>`;
+
+const stageOuter = document.getElementById('stage-outer');
+const stage = document.getElementById('stage');
+const stageBg = document.getElementById('stage-bg');
+const stageCurtain = document.getElementById('stage-curtain');
+const curtainToggle = document.getElementById('curtain-toggle');
+const seekBar = document.getElementById('seek-bar');
+const timeText = document.getElementById('time-text');
+const playBtn = document.getElementById('play-btn');
+const bgColorPicker = document.getElementById('bg-color-picker');
+const bgPresetSelect = document.getElementById('bg-preset-select');
+const bgColorGroup = document.getElementById('bg-color-group');
+const bgCustomGroup = document.getElementById('bg-custom-group');
+const countdownOverlay = document.getElementById('countdown-overlay');
+const countdownText = document.getElementById('countdown-text');
+const exportOverlay = document.getElementById('export-overlay');
+const exportProgress = document.getElementById('export-progress');
+const exportStatus = document.getElementById('export-status');
+const micIndicator = document.getElementById('mic-indicator');
+const micLevelFill = document.getElementById('mic-level-fill');
+const globalAudioRecBtn = document.getElementById('global-audio-rec-btn');
+const saveStatus = document.getElementById('save-status');
+const outOfBoundsAlert = document.getElementById('out-of-bounds-alert');
+
+const saveChoiceModal = document.getElementById('save-choice-modal');
+const closeConfirmModal = document.getElementById('close-confirm-modal');
+
+const theaterControls = document.getElementById('theater-controls');
+const theaterPlayBtn = document.getElementById('theater-play-btn');
+const theaterTimeText = document.getElementById('theater-time-text');
+const charaPillsContainer = document.getElementById('chara-pills');
+const inspectorCharaContent = document.getElementById('inspector-chara-content');
+const spotlightCuesList = document.getElementById('spotlight-cues-list');
+const audioTracksList = document.getElementById('audio-tracks-list');
+
+const trackLabelsContainer = document.getElementById('track-labels-container');
+const audioTrackLabelsContainer = document.getElementById('audio-track-labels-container');
+const timelineLanesArea = document.getElementById('timeline-lanes-area');
+const rulerLane = document.getElementById('ruler-lane');
+const trackLanesContainer = document.getElementById('track-lanes-container');
+const audioTrackLanesContainer = document.getElementById('audio-track-lanes-container');
+const timelinePlayhead = document.getElementById('timeline-playhead');
+
+function switchSidebarTab(tabName) {
+  document.querySelectorAll('.sidebar-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-btn-' + tabName).classList.add('active');
+  document.getElementById('pane-' + tabName).classList.add('active');
+}
+
+function initDefaultAudioTrack() {
+  if (audioTracks.length === 0) {
+    const id = 'atk_' + Date.now();
+    audioTracks.push({ id: id, name: '音声 1', muted: false, clips: [] });
+    activeAudioTrackId = id;
+  }
+}
+
+function addAudioTrack() {
+  const id = 'atk_' + Date.now();
+  audioTracks.push({ id: id, name: '音声 ' + (audioTracks.length + 1), muted: false, clips: [] });
+  activeAudioTrackId = id;
+  renderVisualTimeline();
+  renderAudioTracksTab();
+  markUnsaved();
+}
+
+function deleteAudioTrack(trackId) {
+  if (audioTracks.length <= 1) {
+    alert('最低1つの音声トラックが必要です。');
+    return;
+  }
+  audioTracks = audioTracks.filter(t => t.id !== trackId);
+  if (activeAudioTrackId === trackId) {
+    activeAudioTrackId = audioTracks[0].id;
+  }
+  renderVisualTimeline();
+  renderAudioTracksTab();
+  markUnsaved();
+}
+
+function toggleTrackMute(type, id, ev) {
+  if (ev) ev.stopPropagation();
+  if (type === 'chara') {
+    const c = characters.find(item => item.id === id);
+    if (c) c.muted = !c.muted;
+  } else if (type === 'audio') {
+    const t = audioTracks.find(item => item.id === id);
+    if (t) t.muted = !t.muted;
+  }
+  renderVisualTimeline();
+}
+
+function addSpotlightCue() {
+  if (characters.length === 0) {
+    alert('登場人物を追加してください。');
+    return;
+  }
+  const cur = parseFloat(currentTime.toFixed(2));
+  spotlightCues.push({
+    id: 'spot_' + Date.now(),
+    targetCharaId: selectedCharaId || characters[0].id,
+    start: cur,
+    end: Math.min(duration, parseFloat((cur + 3.0).toFixed(2))),
+    scale: 1.3
+  });
+  renderSpotlightTab();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function deleteSpotlightCue(cueId) {
+  spotlightCues = spotlightCues.filter(c => c.id !== cueId);
+  renderSpotlightTab();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function updateSpotlightCue(cueId, prop, val) {
+  const cue = spotlightCues.find(c => c.id === cueId);
+  if (!cue) return;
+  cue[prop] = val;
+  if (prop === 'start' && cue.start >= cue.end) {
+    cue.end = Math.min(duration, parseFloat((cue.start + 1.0).toFixed(2)));
+  } else if (prop === 'end' && cue.end <= cue.start) {
+    cue.start = Math.max(0, parseFloat((cue.end - 1.0).toFixed(2)));
+  }
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+const DB_NAME = 'SceneDirectorDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'projectStore';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function markUnsaved() {
+  hasUnsavedChanges = true;
+  saveStatus.textContent = '● 保存状況: 未保存の変更あり';
+  saveStatus.style.color = '#f59e0b';
+}
+
+function markSaved(label) {
+  hasUnsavedChanges = false;
+  saveStatus.textContent = '● 保存状況: ' + label;
+  saveStatus.style.color = '#10b981';
+}
+
+async function saveToIndexedDB() {
+  try {
+    const projectData = getSerializedProject();
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(projectData, 'saved_project');
+    tx.oncomplete = () => {
+      markSaved('ブラウザに保存完了');
+    };
+  } catch(e) {
+    alert('ブラウザへの保存に失敗しました: ' + e);
+  }
+}
+
+async function checkAndPromptRestore() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get('saved_project');
+    req.onsuccess = async () => {
+      if (req.result) {
+        if (confirm('ブラウザに保存された前回のプロジェクトが見つかりました。復元しますか？')) {
+          await restoreProjectData(req.result);
+          markSaved('ブラウザ保存から復元済み');
+        } else {
+          initDefaultAudioTrack();
+          addCharacter();
+        }
+      } else {
+        initDefaultAudioTrack();
+        addCharacter();
+      }
+    };
+  } catch(e) {
+    initDefaultAudioTrack();
+    addCharacter();
+  }
+}
+
+window.addEventListener('beforeunload', (e) => {
+  if (hasUnsavedChanges) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function openSaveModal() { saveChoiceModal.style.display = 'flex'; }
+function closeSaveModal() { saveChoiceModal.style.display = 'none'; }
+function openCloseConfirmModal() { closeConfirmModal.style.display = 'flex'; }
+function closeCloseConfirmModal() { closeConfirmModal.style.display = 'none'; }
+
+function closeProjectAndReset() {
+  closeCloseConfirmModal();
+  characters = [];
+  audioTracks = [];
+  spotlightCues = [];
+  selectedCharaId = null;
+  stage.querySelectorAll('.character').forEach(el => el.remove());
+  applyBgPreset('gym_stage');
+  changeAspectRatio('16:9');
+  duration = 30.0;
+  document.getElementById('total-duration').value = duration;
+  initDefaultAudioTrack();
+  addCharacter();
+  seekTo(0);
+  hasUnsavedChanges = false;
+  saveStatus.textContent = '● 保存状況: 新規プロジェクト';
+  saveStatus.style.color = '#9ca3af';
+}
+
+function applyBgPreset(preset) {
+  currentBgPreset = preset;
+  if (preset === 'gym_stage') {
+    stageBg.src = GYM_STAGE_BG_SVG;
+    stageBg.style.display = 'block';
+    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
+    stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
+    bgColorGroup.style.display = 'none';
+    bgCustomGroup.style.display = 'none';
+  } else if (preset === 'none') {
+    stageBg.src = '';
+    stageBg.style.display = 'none';
+    stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
+    bgColorGroup.style.display = 'flex';
+    bgCustomGroup.style.display = 'none';
+  } else if (preset === 'custom') {
+    stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
+    if (customBgSrc) {
+      stageBg.src = customBgSrc;
+      stageBg.style.display = 'block';
+    } else {
+      stageBg.style.display = 'none';
+    }
+    bgColorGroup.style.display = 'none';
+    bgCustomGroup.style.display = 'flex';
+  }
+  markUnsaved();
+}
+
+function toggleCurtainOverlay(active) {
+  isCurtainOverlayActive = active;
+  stageCurtain.style.display = active ? 'block' : 'none';
+  markUnsaved();
+}
+
+function changeBgColor(val) {
+  stage.style.backgroundColor = val;
+  markUnsaved();
+}
+
+document.getElementById('bg-file').addEventListener('change', function(e) {
+  if (e.target.files && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = evt => {
+      customBgSrc = evt.target.result;
+      stageBg.src = customBgSrc;
+      stageBg.style.display = 'block';
+      markUnsaved();
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  }
+});
+
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioCtxClass();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playBeep(freq = 440, durationSec = 0.1) {
+  try {
+    const ctx = getAudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationSec);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + durationSec);
+  } catch(e){}
+}
+
+function getSupportedAudioMimeType() {
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return '';
+}
+
+function changeAspectRatio(ratio) {
+  currentAspectRatio = ratio;
+  switch (ratio) {
+    case '16:9': logicalWidth = 1280; logicalHeight = 720; break;
+    case '4:3':  logicalWidth = 960;  logicalHeight = 720; break;
+    case '1:1':  logicalWidth = 720;  logicalHeight = 720; break;
+    case '9:16': logicalWidth = 720;  logicalHeight = 1280; break;
+  }
+  updateStageLayout();
+  characters.forEach(c => updateStageElement(c, currentTime));
+  markUnsaved();
+}
+
+function updateStageLayout() {
+  const outerW = stageOuter.clientWidth - 20;
+  const outerH = stageOuter.clientHeight - 20;
+  if (outerW <= 0 || outerH <= 0) return;
+
+  const scale = Math.min(outerW / logicalWidth, outerH / logicalHeight);
+  stage.style.width = logicalWidth + 'px';
+  stage.style.height = logicalHeight + 'px';
+  stage.style.transform = `scale(${scale})`;
+  stage.style.transformOrigin = 'center center';
+}
+window.addEventListener('resize', updateStageLayout);
+
+function startCountdown(onComplete) {
+  if (isCountingDown) return;
+  if (isPlaying) pause();
+
+  isCountingDown = true;
+  countdownOverlay.style.display = 'flex';
+
+  const steps = [
+    { label: '3', freq: 440 },
+    { label: '2', freq: 440 },
+    { label: '1', freq: 440 },
+    { label: 'START', freq: 880 }
+  ];
+  let stepIndex = 0;
+
+  function nextStep() {
+    if (stepIndex < steps.length) {
+      const cur = steps[stepIndex];
+      countdownText.textContent = cur.label;
+      countdownText.style.animation = 'none';
+      void countdownText.offsetWidth;
+      countdownText.style.animation = 'zoomOut 0.8s ease-out forwards';
+      playBeep(cur.freq, stepIndex === 3 ? 0.3 : 0.1);
+      stepIndex++;
+      setTimeout(nextStep, 750);
+    } else {
+      countdownOverlay.style.display = 'none';
+      isCountingDown = false;
+      onComplete();
+    }
+  }
+  nextStep();
+}
+
+function addCharacter() {
+  const id = 'c_' + Date.now();
+  const chara = {
+    id: id,
+    name: '人物 ' + (characters.length + 1),
+    imgSrc: defaultSVG,
+    imageObj: null,
+    group: 'none',
+    muted: false,
+    size: 90,
+    fontSize: 16,
+    bubbleWidth: 260,
+    flipX: false,
+    x: logicalWidth * 0.5,
+    y: logicalHeight * 0.5,
+    inTime: 0.0,
+    fadeIn: 0.5,
+    outTime: duration,
+    fadeOut: 0.5,
+    dialogues: [],
+    motion: []
+  };
+  loadImageObject(chara);
+  characters.push(chara);
+  createStageElement(chara);
+  updateZIndexes();
+  selectCharacter(id);
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function loadImageObject(chara) {
+  const img = new Image();
+  img.src = chara.imgSrc;
+  chara.imageObj = img;
+}
+
+function getPointerLogicalPos(e) {
+  const rect = stage.getBoundingClientRect();
+  const scale = rect.width / logicalWidth;
+  return {
+    x: (e.clientX - rect.left) / scale,
+    y: (e.clientY - rect.top) / scale
+  };
+}
+
+function createStageElement(chara) {
+  const el = document.createElement('div');
+  el.className = 'character';
+  el.id = 'stage_' + chara.id;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'speech-bubble pos-top';
+  bubble.id = 'bubble_' + chara.id;
+  el.appendChild(bubble);
+
+  const spot = document.createElement('div');
+  spot.className = 'spotlight-glow';
+  spot.id = 'spot_' + chara.id;
+  el.appendChild(spot);
+
+  const imgBox = document.createElement('div');
+  imgBox.className = 'chara-img-box';
+  const img = document.createElement('img');
+  img.src = chara.imgSrc;
+  img.id = 'img_' + chara.id;
+  imgBox.appendChild(img);
+
+  const grpBadge = document.createElement('div');
+  grpBadge.className = 'group-indicator-badge';
+  grpBadge.id = 'badge_' + chara.id;
+  imgBox.appendChild(grpBadge);
+
+  el.appendChild(imgBox);
+
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || isExporting || isTheaterMode) return;
+    e.stopPropagation();
+    e.preventDefault();
+    getAudioContext();
+    selectCharacter(chara.id);
+    startPuppetDrag(chara.id, e);
+  });
+
+  stage.appendChild(el);
+  updateStageElement(chara, currentTime);
+}
+
+stageOuter.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || isExporting || isTheaterMode) return;
+  if (!selectedCharaId) return;
+  e.preventDefault();
+  getAudioContext();
+  startPuppetDrag(selectedCharaId, e);
+});
+
+// ドラッグ開始（※開始点を自動で◆打刻）
+function startPuppetDrag(leaderId, e) {
+  const leader = characters.find(c => c.id === leaderId);
+  if (!leader) return;
+
+  const pos = getPointerLogicalPos(e);
+  const leaderPos = getInterpolatedPosition(leader, currentTime);
+
+  activeDrag.isDragging = true;
+  activeDrag.leaderId = leader.id;
+  activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
+  activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
+
+  // ドラッグ開始点を自動キーフレーム（◆）として登録
+  recordManualKeyframe(leader, currentTime, leaderPos.x, leaderPos.y);
+
+  activeDrag.groupOffsets = {};
+  if (leader.group !== 'none') {
+    characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
+      const mPos = getInterpolatedPosition(member, currentTime);
+      activeDrag.groupOffsets[member.id] = { x: mPos.x - leaderPos.x, y: mPos.y - leaderPos.y };
+      recordManualKeyframe(member, currentTime, mPos.x, mPos.y);
+    });
+  }
+
+  // 停止中の場合のみ仮座標を設定
+  if (!isRecordingMotion) {
+    leader._dragX = leaderPos.x;
+    leader._dragY = leaderPos.y;
+  }
+
+  updateStageElement(leader, currentTime);
+}
+
+window.addEventListener('pointermove', (e) => {
+  if (!activeDrag.isDragging) return;
+  e.preventDefault();
+  const pos = getPointerLogicalPos(e);
+  activeDrag.currentStagePointer.x = pos.x;
+  activeDrag.currentStagePointer.y = pos.y;
+
+  if (!isRecordingMotion) {
+    applyDirectPointerPosition();
+  }
+});
+
+// ドラッグ終了（※終了点を自動で◆打刻）
+window.addEventListener('pointerup', () => {
+  if (activeDrag.isDragging) {
+    commitDragFinalKeyframe();
+    activeDrag.isDragging = false;
+    activeDrag.leaderId = null;
+    renderVisualTimeline();
+    renderInspector();
+    markUnsaved();
+  }
+});
+
+function applyDirectPointerPosition() {
+  if (!activeDrag.isDragging) return;
+  const leader = characters.find(c => c.id === activeDrag.leaderId);
+  if (!leader) return;
+
+  const targetX = activeDrag.currentStagePointer.x + activeDrag.offset.x;
+  const targetY = activeDrag.currentStagePointer.y + activeDrag.offset.y;
+
+  const targets = [{ chara: leader, x: targetX, y: targetY }];
+  if (leader.group !== 'none') {
+    characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
+      const gOffset = activeDrag.groupOffsets[member.id] || { x: 0, y: 0 };
+      targets.push({
+        chara: member,
+        x: targetX + gOffset.x,
+        y: targetY + gOffset.y
+      });
+    });
+  }
+
+  targets.forEach(({ chara, x, y }) => {
+    if (isRecordingMotion) {
+      // 録画中は連続軌跡データ（isManual: false）として保存。キャッシュは削除
+      recordContinuousMotionPoint(chara, currentTime, x, y);
+      delete chara._dragX;
+      delete chara._dragY;
+    } else {
+      // 停止中は仮座標として保持
+      chara._dragX = x;
+      chara._dragY = y;
+    }
+    updateStageElement(chara, currentTime);
+  });
+}
+
+function recordContinuousMotionPoint(chara, t, x, y) {
+  t = Math.round(t * 100) / 100;
+  x = Math.round(x);
+  y = Math.round(y);
+  const m = chara.motion;
+
+  if (m.length === 0 || m[m.length - 1].t < t) {
+    m.push({ t, x, y, isManual: false });
+  } else {
+    m[m.length - 1].x = x;
+    m[m.length - 1].y = y;
+  }
+}
+
+function commitDragFinalKeyframe() {
+  const leader = characters.find(c => c.id === activeDrag.leaderId);
+  if (!leader) return;
+  const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
+  
+  targets.forEach(c => {
+    let finalX, finalY;
+    if (isRecordingMotion) {
+      const curPos = getInterpolatedPosition(c, currentTime);
+      finalX = curPos.x;
+      finalY = curPos.y;
+    } else {
+      finalX = c._dragX !== undefined ? c._dragX : getInterpolatedPosition(c, currentTime).x;
+      finalY = c._dragY !== undefined ? c._dragY : getInterpolatedPosition(c, currentTime).y;
+    }
+
+    // ドラッグ終了点を手動メモ（◆）として登録
+    recordManualKeyframe(c, currentTime, finalX, finalY);
+
+    if (currentTime === 0 || c.motion.length <= 1) {
+      c.x = finalX;
+      c.y = finalY;
+    }
+    delete c._dragX;
+    delete c._dragY;
+    updateStageElement(c, currentTime);
+  });
+}
+
+function selectCharacter(id) {
+  selectedCharaId = id;
+  document.querySelectorAll('.character').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.track-lane-row').forEach(el => el.classList.remove('selected'));
+
+  const stageEl = document.getElementById('stage_' + id);
+  if (stageEl) stageEl.classList.add('selected');
+  const trackEl = document.getElementById('track_lane_row_' + id);
+  if (trackEl) trackEl.classList.add('selected');
+
+  renderInspector();
+}
+
+function cycleCharacterSelection(step = 1) {
+  if (characters.length === 0) return;
+  let idx = characters.findIndex(c => c.id === selectedCharaId);
+  idx = (idx + step + characters.length) % characters.length;
+  selectCharacter(characters[idx].id);
+}
+
+function updateZIndexes() {
+  characters.forEach((c, index) => {
+    const el = document.getElementById('stage_' + c.id);
+    if (el) el.style.zIndex = 10 + index;
+  });
+}
+
+function changeLayer(id, action) {
+  const idx = characters.findIndex(c => c.id === id);
+  if (idx === -1) return;
+
+  const item = characters.splice(idx, 1)[0];
+  if (action === 'top') characters.push(item);
+  else if (action === 'bottom') characters.unshift(item);
+  else if (action === 'up') characters.splice(Math.min(characters.length, idx + 1), 0, item);
+  else if (action === 'down') characters.splice(Math.max(0, idx - 1), 0, item);
+
+  updateZIndexes();
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function toggleFlip(id) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara) return;
+  chara.flipX = !chara.flipX;
+  updateStageElement(chara, currentTime);
+  renderInspector();
+  markUnsaved();
+}
+
+function setCharacterGroup(id, grp) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara) return;
+  chara.group = grp;
+  updateStageElement(chara, currentTime);
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+// 汎用打刻関数：手動・要点（◆）用
+function recordManualKeyframe(chara, t, x, y) {
+  t = Math.round(t * 100) / 100;
+  x = Math.round(x);
+  y = Math.round(y);
+  const m = chara.motion;
+
+  if (m.length === 0 && t > 0) {
+    m.push({ t: 0.0, x: Math.round(chara.x), y: Math.round(chara.y), isManual: true });
+  }
+
+  const existingIdx = m.findIndex(p => Math.abs(p.t - t) < 0.04);
+  if (existingIdx !== -1) {
+    m[existingIdx].x = x;
+    m[existingIdx].y = y;
+    m[existingIdx].t = t;
+    m[existingIdx].isManual = true;
+  } else {
+    m.push({ t, x, y, isManual: true });
+    m.sort((a, b) => a.t - b.t);
+  }
+}
+
+function addCurrentKeyframe(id) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara) return;
+  const curPos = getInterpolatedPosition(chara, currentTime);
+  recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+  renderVisualTimeline();
+  renderInspector();
+  markUnsaved();
+}
+
+function removeCurrentKeyframe(id) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara || !chara.motion) return;
+  const curT = currentTime;
+  const existing = chara.motion.find(p => Math.abs(p.t - curT) < 0.04 && p.isManual);
+  if (existing) {
+    existing.isManual = false;
+  }
+  updateStageElement(chara, currentTime);
+  renderVisualTimeline();
+  renderInspector();
+  markUnsaved();
+}
+
+function jumpToKeyframe(id, direction) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara || !chara.motion || chara.motion.length === 0) return;
+  const manuals = chara.motion.filter(p => p.isManual);
+  if (manuals.length === 0) return;
+
+  if (direction < 0) {
+    const prevs = manuals.filter(p => p.t < currentTime - 0.04);
+    if (prevs.length > 0) seekTo(prevs[prevs.length - 1].t);
+    else seekTo(0);
+  } else {
+    const nexts = manuals.filter(p => p.t > currentTime + 0.04);
+    if (nexts.length > 0) seekTo(nexts[0].t);
+    else seekTo(duration);
+  }
+}
+
+function trimMotionAfter(id) {
+  const chara = characters.find(c => c.id === id);
+  if (!chara) return;
+  chara.motion = chara.motion.filter(m => m.t <= currentTime);
+  updateStageElement(chara, currentTime);
+  renderVisualTimeline();
+  renderInspector();
+  markUnsaved();
+}
+
+function clearMotion(id) {
+  if(!confirm('本当にこの人物の動きの軌跡とキーフレームをすべて消去しますか？')) return;
+  const chara = characters.find(c => c.id === id);
+  if (!chara) return;
+  chara.motion = [];
+  updateStageElement(chara, currentTime);
+  renderVisualTimeline();
+  renderInspector();
+  markUnsaved();
+}
+
+function getInterpolatedPosition(chara, t) {
+  if (chara._dragX !== undefined && chara._dragY !== undefined) {
+    return { x: chara._dragX, y: chara._dragY };
+  }
+
+  const m = chara.motion;
+  if (!m || m.length === 0) return { x: chara.x, y: chara.y };
+  if (t <= m[0].t) return { x: m[0].x, y: m[0].y };
+  if (t >= m[m.length - 1].t) return { x: m[m.length - 1].x, y: m[m.length - 1].y };
+
+  let low = 0;
+  let high = m.length - 1;
+  let idx = 0;
+  while (low <= high) {
+    const mid = (low + high) >> 1;
+    if (m[mid].t <= t) {
+      idx = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  const p1 = m[idx];
+  const p2 = m[Math.min(m.length - 1, idx + 1)];
+  if (p1 === p2 || p2.t === p1.t) return { x: p1.x, y: p1.y };
+
+  const factor = (t - p1.t) / (p2.t - p1.t);
+  return {
+    x: p1.x + (p2.x - p1.x) * factor,
+    y: p1.y + (p2.y - p1.y) * factor
+  };
+}
+
+function calculateOpacity(chara, t) {
+  if (t < chara.inTime || t > chara.outTime) return 0;
+  let op = 1;
+  if (chara.fadeIn > 0 && t < chara.inTime + chara.fadeIn) {
+    op = (t - chara.inTime) / chara.fadeIn;
+  } else if (chara.fadeOut > 0 && t > chara.outTime - chara.fadeOut) {
+    op = (chara.outTime - t) / chara.fadeOut;
+  }
+  return Math.max(0, Math.min(1, op));
+}
+
+// キャラクターと字幕の表示更新
+function updateStageElement(chara, t) {
+  const el = document.getElementById('stage_' + chara.id);
+  if (!el) return;
+
+  const pos = getInterpolatedPosition(chara, t);
+  const rawOpacity = calculateOpacity(chara, t);
+  const inTimeline = (t >= chara.inTime && t <= chara.outTime);
+
+  // ドラッグ操作中、または録画中の選択キャラは可視性を強制
+  const isBeingDragged = activeDrag.isDragging && (
+    activeDrag.leaderId === chara.id || 
+    (chara.group !== 'none' && characters.find(c => c.id === activeDrag.leaderId)?.group === chara.group)
+  );
+
+  const activeSpot = spotlightCues.find(s => s.targetCharaId === chara.id && t >= s.start && t <= s.end);
+  const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+
+  const charaSize = (chara.size || 90);
+  const charaFontSize = chara.fontSize || 16;
+  const bubbleWidth = chara.bubbleWidth || 260;
+
+  el.style.width = charaSize + 'px';
+  el.style.height = charaSize + 'px';
+  el.style.transform = `translate(-50%, -50%) scale(${scaleMultiplier})`;
+
+  // 操作中はZ-Index 150(前面カーテン100より手前)＆完全表示
+  if (isBeingDragged || (isRecordingMotion && selectedCharaId === chara.id)) {
+    el.style.zIndex = 150;
+    el.style.opacity = '1.0';
+    el.style.display = 'flex';
+    el.classList.remove('ghost-mode');
+  } else {
+    const baseZIndex = characters.findIndex(c => c.id === chara.id);
+    el.style.zIndex = 10 + (baseZIndex !== -1 ? baseZIndex : 0);
+
+    if (!isPlaying && !isExporting && !isTheaterMode) {
+      if (!inTimeline || rawOpacity <= 0.05) {
+        el.style.opacity = '0.35';
+        el.classList.add('ghost-mode');
+      } else {
+        el.style.opacity = Math.max(0.35, rawOpacity);
+        el.classList.remove('ghost-mode');
+      }
+      el.style.display = 'flex';
+    } else {
+      el.classList.remove('ghost-mode');
+      el.style.opacity = rawOpacity;
+      el.style.display = (rawOpacity <= 0) ? 'none' : 'flex';
+    }
+  }
+
+  const spotEl = document.getElementById('spot_' + chara.id);
+  if (spotEl) {
+    spotEl.style.display = (activeSpot && (rawOpacity > 0 || isBeingDragged)) ? 'block' : 'none';
+  }
+
+  const imgBox = el.querySelector('.chara-img-box');
+  if (imgBox) {
+    imgBox.style.transform = chara.flipX ? 'scaleX(-1)' : 'none';
+    if (chara.group && chara.group !== 'none') {
+      imgBox.style.outline = `3px solid ${GROUP_COLORS[chara.group]}`;
+    } else {
+      imgBox.style.outline = 'none';
+    }
+  }
+
+  const badge = document.getElementById('badge_' + chara.id);
+  if (badge) {
+    if (chara.group && chara.group !== 'none') {
+      badge.style.display = 'flex';
+      badge.style.backgroundColor = GROUP_COLORS[chara.group];
+      badge.textContent = chara.group.replace('grp_', '').toUpperCase();
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  el.style.left = pos.x + 'px';
+  el.style.top = pos.y + 'px';
+
+  const bubble = document.getElementById('bubble_' + chara.id);
+  if (bubble) {
+    bubble.style.fontSize = charaFontSize + 'px';
+    bubble.style.padding = '8px 14px';
+    bubble.style.maxWidth = bubbleWidth + 'px';
+    bubble.style.width = 'max-content';
+
+    const activeDiag = (chara.dialogues || []).find(d => t >= d.start && t <= d.end && d.text.trim() !== '');
+    if (activeDiag && (rawOpacity > 0 || isBeingDragged)) {
+      bubble.textContent = activeDiag.text;
+      bubble.className = 'speech-bubble pos-' + (activeDiag.pos || 'top');
+      bubble.style.display = 'block';
+    } else {
+      bubble.style.display = 'none';
+    }
+  }
+}
+
+function setStageEditingMode(isEditing) {
+  if (isEditing) {
+    stage.classList.add('editing-mode');
+  } else {
+    stage.classList.remove('editing-mode');
+  }
+}
+
+function updateLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const delta = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  if (isPlaying) {
+    currentTime += delta;
+    if (currentTime >= duration) {
+      currentTime = duration;
+      pause();
+    }
+    syncTimelineUI();
+
+    if (isRecordingMotion && activeDrag.isDragging) {
+      applyDirectPointerPosition();
+    }
+  }
+
+  characters.forEach(c => updateStageElement(c, currentTime));
+
+  if (isPlaying || isRecordingMotion) {
+    animationFrameId = requestAnimationFrame(updateLoop);
+  }
+}
+
+function togglePlay() {
+  if (isCountingDown || isExporting) return;
+  getAudioContext();
+  if (isPlaying) pause();
+  else play();
+}
+
+function play() {
+  getAudioContext();
+  if (currentTime >= duration) currentTime = 0;
+  isPlaying = true;
+  lastTimestamp = null;
+  setStageEditingMode(false);
+  playBtn.textContent = '一時停止';
+  theaterPlayBtn.textContent = '一時停止';
+  animationFrameId = requestAnimationFrame(updateLoop);
+  playAudioTracks(currentTime);
+}
+
+function pause() {
+  isPlaying = false;
+  setStageEditingMode(true);
+  playBtn.textContent = '再生';
+  theaterPlayBtn.textContent = '再生';
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  stopAudioTracks();
+  if (isRecordingBoth) stopMotionAndAudioRecording();
+  else {
+    if (isRecordingMotion) stopMotionRecording();
+    if (isRecordingAudio) stopGlobalAudioRecording();
+  }
+  characters.forEach(c => updateStageElement(c, currentTime));
+}
+
+function seekTo(time) {
+  getAudioContext();
+  currentTime = Math.max(0, Math.min(duration, parseFloat(time.toFixed(2))));
+  syncTimelineUI();
+  characters.forEach(c => updateStageElement(c, currentTime));
+  if (isPlaying) {
+    stopAudioTracks();
+    playAudioTracks(currentTime);
+  }
+  renderInspector();
+}
+
+function onSeekInput(val) {
+  seekTo(parseFloat(val));
+}
+
+function syncTimelineUI() {
+  seekBar.value = currentTime;
+  const pad = n => String(Math.floor(n)).padStart(2, '0');
+  const txt = `${pad(currentTime)}:${pad((currentTime % 1) * 100)} / ${pad(duration)}:00`;
+  timeText.textContent = txt;
+  theaterTimeText.textContent = txt;
+
+  const pct = (currentTime / duration) * 100;
+  timelinePlayhead.style.left = `${pct}%`;
+}
+
+function updateTotalDuration(val) {
+  duration = Math.max(5, parseFloat(val));
+  seekBar.max = duration;
+  syncTimelineUI();
+  renderVisualTimeline();
+  checkOutOfBoundsData();
+  markUnsaved();
+}
+
+function checkOutOfBoundsData() {
+  let hasOut = false;
+  characters.forEach(c => {
+    if (c.outTime > duration) hasOut = true;
+    if ((c.motion || []).some(m => m.t > duration)) hasOut = true;
+    if ((c.dialogues || []).some(d => d.end > duration)) hasOut = true;
+  });
+  if (spotlightCues.some(s => s.end > duration)) hasOut = true;
+  audioTracks.forEach(t => {
+    if ((t.clips || []).some(a => a.startTime + a.duration > duration)) hasOut = true;
+  });
+
+  outOfBoundsAlert.style.display = hasOut ? 'inline-flex' : 'none';
+}
+
+function trimAllOutOfBounds() {
+  characters.forEach(c => {
+    c.outTime = Math.min(duration, c.outTime);
+    c.inTime = Math.min(duration, c.inTime);
+    c.motion = (c.motion || []).filter(m => m.t <= duration);
+    (c.dialogues || []).forEach(d => {
+      d.start = Math.min(duration, d.start);
+      d.end = Math.min(duration, d.end);
+    });
+  });
+  spotlightCues.forEach(s => {
+    s.start = Math.min(duration, s.start);
+    s.end = Math.min(duration, s.end);
+  });
+  audioTracks.forEach(t => {
+    t.clips = (t.clips || []).filter(a => a.startTime < duration);
+  });
+
+  renderVisualTimeline();
+  renderInspector();
+  renderSpotlightTab();
+  checkOutOfBoundsData();
+  markUnsaved();
+}
+
+function enterTheaterMode() {
+  if (isPlaying) pause();
+  isTheaterMode = true;
+  setStageEditingMode(false);
+  document.getElementById('main-header').style.display = 'none';
+  document.getElementById('main-sidebar').style.display = 'none';
+  document.getElementById('main-timeline-panel').style.display = 'none';
+  theaterControls.style.display = 'flex';
+  document.querySelectorAll('.character').forEach(el => el.classList.remove('selected'));
+  updateStageLayout();
+  characters.forEach(c => updateStageElement(c, currentTime));
+  play();
+}
+
+function exitTheaterMode() {
+  isTheaterMode = false;
+  if (isPlaying) pause();
+  setStageEditingMode(true);
+  document.getElementById('main-header').style.display = 'flex';
+  document.getElementById('main-sidebar').style.display = 'flex';
+  document.getElementById('main-timeline-panel').style.display = 'flex';
+  theaterControls.style.display = 'none';
+  updateStageLayout();
+  if (selectedCharaId) selectCharacter(selectedCharaId);
+  characters.forEach(c => updateStageElement(c, currentTime));
+}
+
+function renderVisualTimeline() {
+  rulerLane.innerHTML = '';
+  const step = duration <= 15 ? 1 : (duration <= 45 ? 5 : 10);
+  for (let t = 0; t <= duration; t += step) {
+    const tick = document.createElement('div');
+    tick.className = 'ruler-tick';
+    const pct = (t / duration) * 100;
+    tick.style.left = `${pct}%`;
+    tick.textContent = t + 's';
+    rulerLane.appendChild(tick);
+  }
+
+  trackLabelsContainer.innerHTML = '';
+  trackLanesContainer.innerHTML = '';
+
+  characters.forEach(c => {
+    const labelCell = document.createElement('div');
+    labelCell.className = 'timeline-label-cell';
+    
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'mute-btn' + (c.muted ? ' muted' : '');
+    muteBtn.textContent = 'M';
+    muteBtn.title = 'ミュート切替';
+    muteBtn.onclick = (e) => toggleTrackMute('chara', c.id, e);
+    labelCell.appendChild(muteBtn);
+
+    if (c.group && c.group !== 'none') {
+      const dot = document.createElement('div');
+      dot.className = 'pill-group-dot';
+      dot.style.backgroundColor = GROUP_COLORS[c.group];
+      labelCell.appendChild(dot);
+    }
+    const txt = document.createElement('span');
+    txt.textContent = c.name;
+    txt.style.overflow = 'hidden';
+    txt.style.textOverflow = 'ellipsis';
+    labelCell.appendChild(txt);
+    labelCell.onclick = (e) => { e.stopPropagation(); selectCharacter(c.id); };
+    trackLabelsContainer.appendChild(labelCell);
+
+    const laneRow = document.createElement('div');
+    laneRow.className = 'track-lane-row' + (c.id === selectedCharaId ? ' selected' : '');
+    laneRow.id = 'track_lane_row_' + c.id;
+
+    const lifeSpan = document.createElement('div');
+    lifeSpan.className = 'lane-span span-life';
+    lifeSpan.style.left = `${(c.inTime / duration) * 100}%`;
+    lifeSpan.style.width = `${((c.outTime - c.inTime) / duration) * 100}%`;
+    laneRow.appendChild(lifeSpan);
+
+    spotlightCues.filter(s => s.targetCharaId === c.id).forEach(s => {
+      const sSpan = document.createElement('div');
+      sSpan.className = 'lane-span span-highlight';
+      sSpan.style.left = `${(s.start / duration) * 100}%`;
+      sSpan.style.width = `${(Math.max(0.1, s.end - s.start) / duration) * 100}%`;
+      sSpan.title = `スポットライト (${s.scale || 1.3}倍)`;
+      laneRow.appendChild(sSpan);
+    });
+
+    (c.dialogues || []).forEach(d => {
+      const dSpan = document.createElement('div');
+      dSpan.className = 'lane-span span-diag';
+      dSpan.style.left = `${(d.start / duration) * 100}%`;
+      dSpan.style.width = `${(Math.max(0.1, d.end - d.start) / duration) * 100}%`;
+      laneRow.appendChild(dSpan);
+    });
+
+    const m = c.motion || [];
+    if (m.length >= 2) {
+      const mSpan = document.createElement('div');
+      mSpan.className = 'span-motion-track';
+      mSpan.style.left = `${(m[0].t / duration) * 100}%`;
+      mSpan.style.width = `${((m[m.length - 1].t - m[0].t) / duration) * 100}%`;
+      laneRow.appendChild(mSpan);
+    }
+
+    // ひし形は「isManual: true」の要点メモにのみ表示
+    m.filter(pt => pt.isManual).forEach(pt => {
+      const marker = document.createElement('div');
+      marker.className = 'keyframe-marker';
+      marker.style.left = `${(pt.t / duration) * 100}%`;
+      marker.title = `時間メモ: ${pt.t.toFixed(2)}s`;
+      
+      const onMarkerClick = (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        selectCharacter(c.id);
+        seekTo(pt.t);
+      };
+      marker.onclick = onMarkerClick;
+      marker.onpointerdown = (ev) => ev.stopPropagation();
+
+      laneRow.appendChild(marker);
+    });
+
+    trackLanesContainer.appendChild(laneRow);
+  });
+
+  audioTrackLabelsContainer.innerHTML = '';
+  audioTrackLanesContainer.innerHTML = '';
+
+  audioTracks.forEach(t => {
+    const isAct = (t.id === activeAudioTrackId);
+
+    const aLabelCell = document.createElement('div');
+    aLabelCell.className = 'timeline-label-cell';
+    aLabelCell.style.color = '#10b981';
+    aLabelCell.style.cursor = 'pointer';
+
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'mute-btn' + (t.muted ? ' muted' : '');
+    muteBtn.textContent = 'M';
+    muteBtn.title = '消音ミュート切替';
+    muteBtn.onclick = (e) => toggleTrackMute('audio', t.id, e);
+    aLabelCell.appendChild(muteBtn);
+
+    const txt = document.createElement('span');
+    txt.textContent = '🔊 ' + t.name;
+    txt.style.overflow = 'hidden';
+    txt.style.textOverflow = 'ellipsis';
+    if (isAct) txt.style.fontWeight = 'bold';
+    aLabelCell.appendChild(txt);
+
+    aLabelCell.onclick = (e) => {
+      e.stopPropagation();
+      activeAudioTrackId = t.id;
+      renderVisualTimeline();
+      renderAudioTracksTab();
+    };
+    audioTrackLabelsContainer.appendChild(aLabelCell);
+
+    const aLaneRow = document.createElement('div');
+    aLaneRow.className = 'track-lane-row' + (isAct ? ' audio-active' : '');
+    aLaneRow.style.background = '#181822';
+    aLaneRow.onclick = (e) => {
+      e.stopPropagation();
+      activeAudioTrackId = t.id;
+      renderVisualTimeline();
+      renderAudioTracksTab();
+    };
+
+    (t.clips || []).forEach((clip, idx) => {
+      const aSpan = document.createElement('div');
+      aSpan.className = 'lane-span span-audio';
+      aSpan.style.left = `${(clip.startTime / duration) * 100}%`;
+      aSpan.style.width = `${(clip.duration / duration) * 100}%`;
+      aSpan.title = `${clip.name || '録音'} (${clip.duration.toFixed(1)}s)`;
+      aLaneRow.appendChild(aSpan);
+    });
+
+    audioTrackLanesContainer.appendChild(aLaneRow);
+  });
+
+  syncTimelineUI();
+}
+
+function handleTimelineAreaClick(e) {
+  if (e.target.classList.contains('keyframe-marker')) return;
+  const rect = timelineLanesArea.getBoundingClientRect();
+  const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  seekTo(ratio * duration);
+}
+
+// 動き記録（開始点と終了点を自動で◆打刻）
+function toggleMotionRecord(id) {
+  if (!id || isExporting || isTheaterMode) return;
+  selectCharacter(id);
+
+  if (isRecordingMotion) {
+    stopMotionRecording();
+    pause();
+  } else {
+    startCountdown(() => {
+      const chara = characters.find(c => c.id === id);
+      if (chara) {
+        const curPos = getInterpolatedPosition(chara, currentTime);
+        trimMotionAfter(id);
+        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画開始点◆
+        delete chara._dragX;
+        delete chara._dragY;
+      }
+      isRecordingMotion = true;
+      stageOuter.classList.add('recording-active');
+      play();
+      renderInspector();
+    });
+  }
+}
+
+function stopMotionRecording() {
+  isRecordingMotion = false;
+  stageOuter.classList.remove('recording-active');
+
+  if (selectedCharaId) {
+    const chara = characters.find(c => c.id === selectedCharaId);
+    if (chara) {
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画終了点◆
+      delete chara._dragX;
+      delete chara._dragY;
+    }
+  }
+
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+// アフレコ録音（開始点と終了点を自動で◆打刻）
+async function toggleGlobalAudioRecord() {
+  if (isExporting || isTheaterMode) return;
+  getAudioContext();
+  initDefaultAudioTrack();
+
+  const targetTrack = audioTracks.find(t => t.id === activeAudioTrackId) || audioTracks[0];
+
+  if (isRecordingAudio) {
+    stopGlobalAudioRecording();
+    pause();
+  } else {
+    try {
+      const mimeType = getSupportedAudioMimeType();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const ctx = getAudioContext();
+      const micSource = ctx.createMediaStreamSource(stream);
+      micAnalyser = ctx.createAnalyser();
+      micAnalyser.fftSize = 256;
+      micSource.connect(micAnalyser);
+      micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+
+      startCountdown(() => {
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        audioChunks = [];
+        audioRecordStartTime = currentTime;
+
+        // 録音開始点◆
+        if (selectedCharaId) {
+          const chara = characters.find(c => c.id === selectedCharaId);
+          if (chara) {
+            const curPos = getInterpolatedPosition(chara, currentTime);
+            recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+          }
+        }
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const arrayBuf = await blob.arrayBuffer();
+          
+          try {
+            const decoded = await ctx.decodeAudioData(arrayBuf.slice(0));
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              targetTrack.clips.push({
+                id: 'clip_' + Date.now(),
+                name: '音声 #' + (targetTrack.clips.length + 1),
+                base64: reader.result,
+                buffer: decoded,
+                startTime: audioRecordStartTime,
+                duration: decoded.duration,
+                volume: 1.0
+              });
+              renderAudioTracksTab();
+              renderVisualTimeline();
+              markUnsaved();
+            };
+          } catch(decodeErr) {
+            alert('音声データの解析に失敗しました。');
+          }
+
+          stream.getTracks().forEach(track => track.stop());
+          cleanupMicMeter();
+        };
+
+        mediaRecorder.start(100);
+        isRecordingAudio = true;
+        stageOuter.classList.add('recording-active');
+        globalAudioRecBtn.classList.add('recording');
+        globalAudioRecBtn.textContent = '■ 録音停止';
+        micIndicator.style.display = 'flex';
+        startMicMeter();
+        play();
+      });
+    } catch(err) {
+      alert('マイクが使用できないか、アクセスが拒否されました。');
+    }
+  }
+}
+
+function stopGlobalAudioRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  isRecordingAudio = false;
+  stageOuter.classList.remove('recording-active');
+  globalAudioRecBtn.classList.remove('recording');
+  globalAudioRecBtn.textContent = '🎤 アフレコ録音';
+  micIndicator.style.display = 'none';
+  cleanupMicMeter();
+
+  // 録音終了点◆
+  if (selectedCharaId) {
+    const chara = characters.find(c => c.id === selectedCharaId);
+    if (chara) {
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+    }
+  }
+
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+// 動き＋音声 同時記録（開始点と終了点を自動で◆打刻）
+async function toggleMotionAndAudioRecord(id) {
+  if (!id || isExporting || isTheaterMode) return;
+  getAudioContext();
+  selectCharacter(id);
+  initDefaultAudioTrack();
+
+  const targetTrack = audioTracks.find(t => t.id === activeAudioTrackId) || audioTracks[0];
+
+  if (isRecordingBoth) {
+    stopMotionAndAudioRecording();
+    pause();
+  } else {
+    try {
+      const mimeType = getSupportedAudioMimeType();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const ctx = getAudioContext();
+      const micSource = ctx.createMediaStreamSource(stream);
+      micAnalyser = ctx.createAnalyser();
+      micAnalyser.fftSize = 256;
+      micSource.connect(micAnalyser);
+      micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+
+      startCountdown(() => {
+        const chara = characters.find(c => c.id === id);
+        if (chara) {
+          const curPos = getInterpolatedPosition(chara, currentTime);
+          trimMotionAfter(id);
+          recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 同時記録開始点◆
+          delete chara._dragX;
+          delete chara._dragY;
+        }
+
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        audioChunks = [];
+        audioRecordStartTime = currentTime;
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const arrayBuf = await blob.arrayBuffer();
+          
+          try {
+            const decoded = await ctx.decodeAudioData(arrayBuf.slice(0));
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+              targetTrack.clips.push({
+                id: 'clip_' + Date.now(),
+                name: (chara ? chara.name : '録音') + ' #' + (targetTrack.clips.length + 1),
+                base64: reader.result,
+                buffer: decoded,
+                startTime: audioRecordStartTime,
+                duration: decoded.duration,
+                volume: 1.0
+              });
+              renderAudioTracksTab();
+              renderVisualTimeline();
+              markUnsaved();
+            };
+          } catch(decodeErr) {
+            alert('音声データの解析に失敗しました。');
+          }
+
+          stream.getTracks().forEach(track => track.stop());
+          cleanupMicMeter();
+        };
+
+        mediaRecorder.start(100);
+        isRecordingBoth = true;
+        isRecordingMotion = true;
+        isRecordingAudio = true;
+        stageOuter.classList.add('recording-both-active');
+        micIndicator.style.display = 'flex';
+        startMicMeter();
+        play();
+        renderInspector();
+      });
+    } catch(err) {
+      alert('マイクが使用できないか、アクセスが拒否されました。');
+    }
+  }
+}
+
+function stopMotionAndAudioRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  isRecordingBoth = false;
+  isRecordingMotion = false;
+  isRecordingAudio = false;
+  stageOuter.classList.remove('recording-both-active');
+  micIndicator.style.display = 'none';
+  cleanupMicMeter();
+
+  if (selectedCharaId) {
+    const chara = characters.find(c => c.id === selectedCharaId);
+    if (chara) {
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 同時記録終了点◆
+      delete chara._dragX;
+      delete chara._dragY;
+    }
+  }
+
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function startMicMeter() {
+  if (micMeterInterval) clearInterval(micMeterInterval);
+  micMeterInterval = setInterval(() => {
+    if (!micAnalyser || !micDataArray) return;
+    micAnalyser.getByteFrequencyData(micDataArray);
+    let sum = 0;
+    for (let i = 0; i < micDataArray.length; i++) sum += micDataArray[i];
+    const avg = sum / micDataArray.length;
+    const pct = Math.min(100, Math.floor((avg / 128) * 100));
+    micLevelFill.style.width = pct + '%';
+  }, 50);
+}
+
+function cleanupMicMeter() {
+  if (micMeterInterval) clearInterval(micMeterInterval);
+  micMeterInterval = null;
+  micAnalyser = null;
+  micDataArray = null;
+}
+
+function playAudioTracks(startTime) {
+  stopAudioTracks();
+  const ctx = getAudioContext();
+
+  audioTracks.forEach(track => {
+    if (track.muted) return;
+
+    (track.clips || []).forEach(clip => {
+      if (!clip.buffer) return;
+      const buf = clip.buffer;
+      const trackStart = clip.startTime;
+      const trackEnd = trackStart + buf.duration;
+
+      if (startTime >= trackEnd) return;
+
+      const source = ctx.createBufferSource();
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = clip.volume !== undefined ? clip.volume : 1.0;
+
+      source.buffer = buf;
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      if (startTime >= trackStart) {
+        source.start(0, startTime - trackStart);
+      } else {
+        source.start(ctx.currentTime + (trackStart - startTime), 0);
+      }
+      activeAudioNodes.push(source);
+    });
+  });
+}
+
+function stopAudioTracks() {
+  activeAudioNodes.forEach(node => {
+    try { node.stop(); node.disconnect(); } catch(e){}
+  });
+  activeAudioNodes = [];
+}
+
+function deleteTrackAudioClip(trackId, clipId) {
+  const track = audioTracks.find(t => t.id === trackId);
+  if (!track) return;
+  track.clips = (track.clips || []).filter(c => c.id !== clipId);
+  renderAudioTracksTab();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function addDialogue(charaId) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara) return;
+  const cur = parseFloat(currentTime.toFixed(2));
+  const end = Math.min(duration, parseFloat((cur + 3.0).toFixed(2)));
+
+  chara.dialogues.push({
+    id: 'd_' + Date.now(),
+    text: '',
+    pos: 'top',
+    start: cur,
+    end: end
+  });
+
+  // 吹き出し開始・終了点◆
+  const curPos = getInterpolatedPosition(chara, cur);
+  recordManualKeyframe(chara, cur, curPos.x, curPos.y);
+  const endPos = getInterpolatedPosition(chara, end);
+  recordManualKeyframe(chara, end, endPos.x, endPos.y);
+
+  renderInspector();
+  renderVisualTimeline();
+  updateStageElement(chara, currentTime);
+  markUnsaved();
+}
+
+function deleteDialogue(charaId, diagId) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara) return;
+  chara.dialogues = chara.dialogues.filter(d => d.id !== diagId);
+  renderInspector();
+  renderVisualTimeline();
+  updateStageElement(chara, currentTime);
+  markUnsaved();
+}
+
+function updateDialogueProp(charaId, diagId, prop, val) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara) return;
+  const diag = chara.dialogues.find(d => d.id === diagId);
+  if (diag) {
+    diag[prop] = val;
+    if (prop === 'start' && diag.start >= diag.end) {
+      diag.end = Math.min(duration, parseFloat((diag.start + 1.0).toFixed(2)));
+    } else if (prop === 'end' && diag.end <= diag.start) {
+      diag.start = Math.max(0, parseFloat((diag.end - 1.0).toFixed(2)));
+    }
+
+    // 時間変更時に◆打刻
+    if (prop === 'start' || prop === 'end') {
+      const t = diag[prop];
+      const pos = getInterpolatedPosition(chara, t);
+      recordManualKeyframe(chara, t, pos.x, pos.y);
+    }
+
+    updateStageElement(chara, currentTime);
+    renderVisualTimeline();
+    markUnsaved();
+  }
+}
+
+function getWrappedCanvasLines(ctx, text, maxWidth) {
+  const paragraphs = text.split('\n');
+  const lines = [];
+  for (const para of paragraphs) {
+    let currentLine = '';
+    for (let i = 0; i < para.length; i++) {
+      const char = para[i];
+      const testLine = currentLine + char;
+      if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+        lines.push(currentLine);
+        currentLine = char;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  const imgRatio = imgW / imgH;
+  const targetRatio = w / h;
+
+  let renderW, renderH, offsetX, offsetY;
+  if (targetRatio > imgRatio) {
+    renderW = w;
+    renderH = w / imgRatio;
+    offsetX = x;
+    offsetY = y - (renderH - h) / 2;
+  } else {
+    renderW = h * imgRatio;
+    renderH = h;
+    offsetX = x - (renderW - w) / 2;
+    offsetY = y;
+  }
+  ctx.drawImage(img, offsetX, offsetY, renderW, renderH);
+}
+
+function getSupportedVideoMimeType() {
+  const types = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+    'video/mp4;codecs=avc1,mp4a.40.2',
+    'video/mp4'
+  ];
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return '';
+}
+
+async function exportVideo() {
+  if (isExporting) return;
+  if (isPlaying) pause();
+
+  isExporting = true;
+  setStageEditingMode(false);
+  exportOverlay.style.display = 'flex';
+  exportProgress.style.width = '0%';
+  exportStatus.textContent = '合成トラック準備中...';
+
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = logicalWidth;
+  exportCanvas.height = logicalHeight;
+  const ctx2d = exportCanvas.getContext('2d');
+
+  const actx = getAudioContext();
+  const destNode = actx.createMediaStreamDestination();
+
+  const videoStream = exportCanvas.captureStream(30);
+  const combinedTracks = [...videoStream.getVideoTracks(), ...destNode.stream.getAudioTracks()];
+  const combinedStream = new MediaStream(combinedTracks);
+
+  const chosenMime = getSupportedVideoMimeType();
+  const isMp4 = chosenMime.includes('mp4');
+  const fileExt = isMp4 ? 'mp4' : 'webm';
+
+  let recorder;
+  try {
+    recorder = chosenMime ? new MediaRecorder(combinedStream, { mimeType: chosenMime }) : new MediaRecorder(combinedStream);
+  } catch (e) {
+    recorder = new MediaRecorder(combinedStream);
+  }
+
+  const recordedChunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(recordedChunks, { type: recorder.mimeType || (isMp4 ? 'video/mp4' : 'video/webm') });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scene_export_${Date.now()}.${fileExt}`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    exportOverlay.style.display = 'none';
+    isExporting = false;
+    setStageEditingMode(true);
+    seekTo(0);
+  };
+
+  recorder.start();
+
+  const audioStartTimeOffset = actx.currentTime;
+  audioTracks.forEach(track => {
+    if (track.muted) return;
+    (track.clips || []).forEach(clip => {
+      if (clip.buffer) {
+        const source = actx.createBufferSource();
+        const gainNode = ctx2d ? actx.createGain() : null;
+        gainNode.gain.value = clip.volume !== undefined ? clip.volume : 1.0;
+        source.buffer = clip.buffer;
+        source.connect(gainNode);
+        gainNode.connect(destNode);
+        source.start(audioStartTimeOffset + Math.max(0, clip.startTime));
+      }
+    });
+  });
+
+  const startTime = performance.now();
+  const totalMs = duration * 1000;
+  let isFinished = false;
+
+  function renderExportFrame(now) {
+    const elapsed = now - startTime;
+    const simTime = Math.min(duration, elapsed / 1000);
+
+    ctx2d.fillStyle = bgColorPicker.value;
+    ctx2d.fillRect(0, 0, logicalWidth, logicalHeight);
+
+    if (stageBg.style.display !== 'none' && stageBg.complete && (stageBg.naturalWidth > 0 || stageBg.width > 0)) {
+      drawImageCover(ctx2d, stageBg, 0, 0, logicalWidth, logicalHeight);
+    }
+
+    spotlightCues.forEach(s => {
+      if (simTime >= s.start && simTime <= s.end) {
+        const chara = characters.find(c => c.id === s.targetCharaId);
+        if (chara) {
+          const pos = getInterpolatedPosition(chara, simTime);
+          const charaSize = (chara.size || 90) * (s.scale || 1.3);
+
+          ctx2d.save();
+          const radGrad = ctx2d.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, charaSize * 1.3);
+          radGrad.addColorStop(0, 'rgba(255, 255, 220, 0.75)');
+          radGrad.addColorStop(0.45, 'rgba(255, 230, 120, 0.35)');
+          radGrad.addColorStop(1, 'rgba(255, 230, 120, 0)');
+          ctx2d.fillStyle = radGrad;
+          ctx2d.beginPath();
+          ctx2d.arc(pos.x, pos.y, charaSize * 1.3, 0, Math.PI * 2);
+          ctx2d.fill();
+          ctx2d.restore();
+        }
+      }
+    });
+
+    characters.forEach(c => {
+      const op = calculateOpacity(c, simTime);
+      if (op <= 0) return;
+
+      const pos = getInterpolatedPosition(c, simTime);
+      const activeSpot = spotlightCues.find(s => s.targetCharaId === c.id && simTime >= s.start && simTime <= s.end);
+      const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+      const charaSize = (c.size || 90) * scaleMultiplier;
+
+      ctx2d.save();
+      ctx2d.globalAlpha = op;
+
+      if (c.imageObj && c.imageObj.complete) {
+        ctx2d.save();
+        ctx2d.translate(pos.x, pos.y);
+        if (c.flipX) ctx2d.scale(-1, 1);
+        ctx2d.drawImage(c.imageObj, -charaSize / 2, -charaSize / 2, charaSize, charaSize);
+        ctx2d.restore();
+      }
+      ctx2d.restore();
+    });
+
+    if (isCurtainOverlayActive && currentBgPreset === 'gym_stage' && stageCurtain.complete && (stageCurtain.naturalWidth > 0 || stageCurtain.width > 0)) {
+      drawImageCover(ctx2d, stageCurtain, 0, 0, logicalWidth, logicalHeight);
+    }
+
+    characters.forEach(c => {
+      const op = calculateOpacity(c, simTime);
+      if (op <= 0) return;
+
+      const pos = getInterpolatedPosition(c, simTime);
+      const activeSpot = spotlightCues.find(s => s.targetCharaId === c.id && simTime >= s.start && simTime <= s.end);
+      const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+      const charaSize = (c.size || 90) * scaleMultiplier;
+      const charaFontSize = c.fontSize || 16;
+      const bubbleWidth = c.bubbleWidth || 260;
+
+      const activeDiag = (c.dialogues || []).find(d => simTime >= d.start && simTime <= d.end && d.text.trim() !== '');
+      if (activeDiag) {
+        ctx2d.save();
+        ctx2d.font = `600 ${charaFontSize}px -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif`;
+
+        const maxTextW = bubbleWidth - 28;
+        const lines = getWrappedCanvasLines(ctx2d, activeDiag.text, maxTextW);
+
+        let longestLineW = 0;
+        lines.forEach(l => {
+          const w = ctx2d.measureText(l).width;
+          if (w > longestLineW) longestLineW = w;
+        });
+
+        const lineH = charaFontSize * 1.35;
+        const bubbleW = longestLineW + 28;
+        const bubbleH = lines.length * lineH + 16;
+        const bPos = activeDiag.pos || 'top';
+        const tailSize = 6;
+
+        let bubbleX, bubbleY;
+        if (bPos === 'bottom') {
+          bubbleX = pos.x - bubbleW / 2;
+          bubbleY = pos.y + charaSize / 2 + 10;
+        } else if (bPos === 'left') {
+          bubbleX = pos.x - charaSize / 2 - bubbleW - 10;
+          bubbleY = pos.y - bubbleH / 2;
+        } else if (bPos === 'right') {
+          bubbleX = pos.x + charaSize / 2 + 10;
+          bubbleY = pos.y - bubbleH / 2;
+        } else {
+          bubbleX = pos.x - bubbleW / 2;
+          bubbleY = pos.y - charaSize / 2 - bubbleH - 10;
+        }
+
+        bubbleX = Math.max(8, Math.min(logicalWidth - bubbleW - 8, bubbleX));
+        bubbleY = Math.max(8, Math.min(logicalHeight - bubbleH - 8, bubbleY));
+
+        ctx2d.fillStyle = '#ffffff';
+        ctx2d.beginPath();
+        ctx2d.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 8);
+        ctx2d.fill();
+
+        ctx2d.beginPath();
+        if (bPos === 'bottom') {
+          ctx2d.moveTo(pos.x - tailSize, bubbleY);
+          ctx2d.lineTo(pos.x + tailSize, bubbleY);
+          ctx2d.lineTo(pos.x, bubbleY - tailSize);
+        } else if (bPos === 'left') {
+          ctx2d.moveTo(bubbleX + bubbleW, pos.y - tailSize);
+          ctx2d.lineTo(bubbleX + bubbleW, pos.y + tailSize);
+          ctx2d.lineTo(bubbleX + bubbleW + tailSize, pos.y);
+        } else if (bPos === 'right') {
+          ctx2d.moveTo(bubbleX, pos.y - tailSize);
+          ctx2d.lineTo(bubbleX, pos.y + tailSize);
+          ctx2d.lineTo(bubbleX - tailSize, pos.y);
+        } else {
+          ctx2d.moveTo(pos.x - tailSize, bubbleY + bubbleH);
+          ctx2d.lineTo(pos.x + tailSize, bubbleY + bubbleH);
+          ctx2d.lineTo(pos.x, bubbleY + bubbleH + tailSize);
+        }
+        ctx2d.fill();
+
+        ctx2d.fillStyle = '#111111';
+        ctx2d.textAlign = 'left';
+        ctx2d.textBaseline = 'middle';
+        lines.forEach((l, i) => {
+          const textY = bubbleY + 8 + (i + 0.5) * lineH;
+          ctx2d.fillText(l, bubbleX + 14, textY);
+        });
+        ctx2d.restore();
+      }
+    });
+
+    const progress = Math.min(100, Math.floor((simTime / duration) * 100));
+    exportProgress.style.width = progress + '%';
+    exportStatus.textContent = `${progress}% (${simTime.toFixed(1)}s / ${duration.toFixed(1)}s)`;
+
+    if (elapsed < totalMs) {
+      requestAnimationFrame(renderExportFrame);
+    } else if (!isFinished) {
+      isFinished = true;
+      exportStatus.textContent = '100% 完了処理中...';
+      setTimeout(() => {
+        if (recorder.state !== 'inactive') recorder.stop();
+      }, 600);
+    }
+  }
+
+  requestAnimationFrame(renderExportFrame);
+}
+
+function renderInspector() {
+  renderCharaPills();
+  renderCharaTab();
+  renderSpotlightTab();
+  renderAudioTracksTab();
+}
+
+function renderCharaPills() {
+  charaPillsContainer.innerHTML = '';
+  characters.forEach(c => {
+    const pill = document.createElement('div');
+    pill.className = 'chara-pill' + (c.id === selectedCharaId ? ' selected' : '');
+    
+    if (c.group && c.group !== 'none') {
+      const dot = document.createElement('div');
+      dot.className = 'pill-group-dot';
+      dot.style.backgroundColor = GROUP_COLORS[c.group];
+      pill.appendChild(dot);
+    }
+
+    const thumb = document.createElement('img');
+    thumb.src = c.imgSrc;
+    pill.appendChild(thumb);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = c.name;
+    pill.appendChild(nameSpan);
+
+    pill.onclick = () => selectCharacter(c.id);
+    charaPillsContainer.appendChild(pill);
+  });
+}
+
+function renderCharaTab() {
+  const c = characters.find(item => item.id === selectedCharaId);
+  if (!c) {
+    inspectorCharaContent.innerHTML = `<div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>`;
+    return;
+  }
+
+  const hasKeyframeAtCurrent = (c.motion || []).some(m => Math.abs(m.t - currentTime) < 0.04 && m.isManual);
+
+  let groupMembersHTML = '';
+  if (c.group && c.group !== 'none') {
+    const members = characters.filter(m => m.group === c.group && m.id !== c.id);
+    if (members.length > 0) {
+      const names = members.map(m => `<span style="text-decoration:underline; cursor:pointer;" onclick="selectCharacter('${m.id}')">${m.name}</span>`).join(', ');
+      groupMembersHTML = `<div style="font-size:12px; color:var(--text-sub); margin-top:4px;">同グループ: ${names}</div>`;
+    }
+  }
+
+  const dialoguesHTML = (c.dialogues || []).map(d => `
+    <div class="sub-item">
+      <div style="display:flex; gap:6px;">
+        <input type="text" placeholder="セリフテキスト" value="${d.text}" style="flex:1;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'text', this.value)">
+        <button class="btn-sm btn-danger" onclick="deleteDialogue('${c.id}', '${d.id}')">削除</button>
+      </div>
+      <div class="prop-row" style="gap:6px; flex-wrap:wrap;">
+        <span style="color:var(--text-sub);">位置:</span>
+        <select style="padding:2px 4px; font-size:12px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'pos', this.value)">
+          <option value="top" ${d.pos==='top'||!d.pos?'selected':''}>上 (頭上)</option>
+          <option value="bottom" ${d.pos==='bottom'?'selected':''}>下 (足元)</option>
+          <option value="left" ${d.pos==='left'?'selected':''}>左 (左側)</option>
+          <option value="right" ${d.pos==='right'?'selected':''}>右 (右側)</option>
+        </select>
+        <span style="color:var(--text-sub); margin-left:4px;">時間:</span>
+        <input type="number" step="0.1" value="${d.start}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+        <span>〜</span>
+        <input type="number" step="0.1" value="${d.end}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+      </div>
+    </div>
+  `).join('');
+
+  inspectorCharaContent.innerHTML = `
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>基本情報・外見</span>
+      </div>
+      <div class="prop-row">
+        <label>名前:</label>
+        <input type="text" value="${c.name}" style="flex:1;" onchange="updateCharaProp('${c.id}', 'name', this.value); renderInspector(); renderVisualTimeline();">
+        <button class="btn-sm btn-danger" onclick="deleteCharacter('${c.id}')">削除</button>
+      </div>
+      <div class="prop-row">
+        <label>画像選択:</label>
+        <input type="file" accept="image/*" onchange="changeCharaImage('${c.id}', this)" style="flex:1;">
+      </div>
+      <div class="prop-row">
+        <label>左右向き:</label>
+        <button class="btn-sm" onclick="toggleFlip('${c.id}')">${c.flipX ? '⇄ 右向きにする' : '⇄ 左向きにする'}</button>
+      </div>
+      <div class="prop-row">
+        <label>サイズ:</label>
+        <input type="range" min="30" max="250" step="5" value="${c.size}" oninput="updateCharaProp('${c.id}', 'size', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.size}px</span>
+      </div>
+      <div class="prop-row">
+        <label>重なり順:</label>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'top')">最前面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'up')">前面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'down')">背面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'bottom')">最背面</button>
+      </div>
+
+      <div class="prop-row" style="align-items:flex-start; margin-top:2px;">
+        <label style="margin-top:4px;">連動同期:</label>
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+          <div class="group-buttons">
+            <button class="grp-btn ${c.group==='none'?'active-grp-none':''}" onclick="setCharacterGroup('${c.id}', 'none')">単独</button>
+            <button class="grp-btn ${c.group==='grp_a'?'active-grp-A':''}" onclick="setCharacterGroup('${c.id}', 'grp_a')">赤 (A)</button>
+            <button class="grp-btn ${c.group==='grp_b'?'active-grp-B':''}" onclick="setCharacterGroup('${c.id}', 'grp_b')">青 (B)</button>
+            <button class="grp-btn ${c.group==='grp_c'?'active-grp-C':''}" onclick="setCharacterGroup('${c.id}', 'grp_c')">緑 (C)</button>
+            <button class="grp-btn ${c.group==='grp_d'?'active-grp-D':''}" onclick="setCharacterGroup('${c.id}', 'grp_d')">黄 (D)</button>
+          </div>
+          ${groupMembersHTML}
+        </div>
+      </div>
+    </div>
+
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>動き・キーフレーム操作 (${(c.motion || []).filter(m => m.isManual).length}箇所)</span>
+      </div>
+      <div class="prop-row" style="gap:4px;">
+        <button class="btn-sm" title="前のキーフレームへ" onclick="jumpToKeyframe('${c.id}', -1)">◀ 前のキー</button>
+        <button class="btn-sm primary-btn" style="flex:1;" onclick="addCurrentKeyframe('${c.id}')">◆ 座標打刻 (K)</button>
+        ${hasKeyframeAtCurrent ? `<button class="btn-sm btn-danger" onclick="removeCurrentKeyframe('${c.id}')">◇ キー削除</button>` : ''}
+        <button class="btn-sm" title="次のキーフレームへ" onclick="jumpToKeyframe('${c.id}', 1)">次のキー ▶</button>
+      </div>
+
+      <div class="prop-row">
+        <label>出現時刻:</label>
+        <input type="number" step="0.5" value="${c.inTime}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'inTime', parseFloat(this.value)); renderVisualTimeline();">
+        <span>s</span>
+        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'inTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地に設定</button>
+      </div>
+      <div class="prop-row">
+        <label>退場時刻:</label>
+        <input type="number" step="0.5" value="${c.outTime}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'outTime', parseFloat(this.value)); renderVisualTimeline();">
+        <span>s</span>
+        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'outTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地に設定</button>
+      </div>
+
+      <div class="prop-row">
+        <label>フェード開始:</label>
+        <input type="number" step="0.1" min="0" value="${c.fadeIn}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'fadeIn', parseFloat(this.value))">
+        <span>s (出現時)</span>
+      </div>
+      <div class="prop-row">
+        <label>フェード終了:</label>
+        <input type="number" step="0.1" min="0" value="${c.fadeOut}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'fadeOut', parseFloat(this.value))">
+        <span>s (退場時)</span>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <button class="record-both-btn ${isRecordingBoth ? 'recording' : ''}" style="flex:1; padding:8px 6px; font-weight:bold;" onclick="toggleMotionAndAudioRecord('${c.id}')">
+          ● 動き＋音声 同時記録 (Shift+R)
+        </button>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:2px;">
+        <button class="record-btn ${isRecordingMotion && !isRecordingBoth ? 'recording' : ''}" style="flex:1;" onclick="toggleMotionRecord('${c.id}')">● 動きのみ記録 (R)</button>
+        <button onclick="trimMotionAfter('${c.id}')">以降削除</button>
+        <button class="btn-danger" onclick="clearMotion('${c.id}')">全消去</button>
+      </div>
+    </div>
+
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>セリフ・吹き出し設定</span>
+        <button class="btn-sm primary-btn" onclick="addDialogue('${c.id}')">＋ 字幕追加</button>
+      </div>
+      <div class="prop-row">
+        <label>文字サイズ:</label>
+        <input type="range" min="12" max="36" step="1" value="${c.fontSize}" oninput="updateCharaProp('${c.id}', 'fontSize', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.fontSize}px</span>
+      </div>
+      <div class="prop-row">
+        <label>吹き出し幅:</label>
+        <input type="range" min="100" max="600" step="10" value="${c.bubbleWidth || 260}" oninput="updateCharaProp('${c.id}', 'bubbleWidth', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.bubbleWidth || 260}px</span>
+      </div>
+      ${dialoguesHTML.length > 0 ? dialoguesHTML : '<div style="font-size:13px; color:#6b7280; padding:4px 0;">字幕が登録されていません</div>'}
+    </div>
+  `;
+}
+
+function renderSpotlightTab() {
+  if (spotlightCues.length === 0) {
+    spotlightCuesList.innerHTML = `<div style="font-size:13px; color:#6b7280; text-align:center; padding:20px 0;">現在登録されているスポットライト演出はありません</div>`;
+    return;
+  }
+
+  spotlightCuesList.innerHTML = spotlightCues.map((cue, idx) => {
+    const charaOptions = characters.map(c => `
+      <option value="${c.id}" ${c.id === cue.targetCharaId ? 'selected' : ''}>${c.name}</option>
+    `).join('');
+
+    return `
+      <div class="sub-item" style="border-left: 3px solid var(--highlight-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:bold; color:var(--highlight-color);">演出 #${idx + 1}</span>
+          <button class="btn-sm btn-danger" onclick="deleteSpotlightCue('${cue.id}')">削除</button>
+        </div>
+        <div class="prop-row">
+          <label style="width:60px;">対象人物:</label>
+          <select style="flex:1;" onchange="updateSpotlightCue('${cue.id}', 'targetCharaId', this.value)">
+            ${charaOptions}
+          </select>
+        </div>
+        <div class="prop-row">
+          <label style="width:60px;">演出区間:</label>
+          <input type="number" step="0.1" value="${cue.start}" style="width:50px;" onchange="updateSpotlightCue('${cue.id}', 'start', parseFloat(this.value))">
+          <button class="btn-sm" onclick="updateSpotlightCue('${cue.id}', 'start', parseFloat(currentTime.toFixed(2))); renderSpotlightTab();">現在地</button>
+          <span>〜</span>
+          <input type="number" step="0.1" value="${cue.end}" style="width:50px;" onchange="updateSpotlightCue('${cue.id}', 'end', parseFloat(this.value))">
+          <button class="btn-sm" onclick="updateSpotlightCue('${cue.id}', 'end', parseFloat(currentTime.toFixed(2))); renderSpotlightTab();">現在地</button>
+        </div>
+        <div class="prop-row">
+          <label style="width:60px;">拡大率:</label>
+          <input type="range" min="1.1" max="2.0" step="0.05" value="${cue.scale || 1.3}" oninput="updateSpotlightCue('${cue.id}', 'scale', parseFloat(this.value)); this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+          <span class="val-indicator">${Math.round((cue.scale || 1.3)*100)}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAudioTracksTab() {
+  audioTracksList.innerHTML = audioTracks.map(t => {
+    const isAct = (t.id === activeAudioTrackId);
+    const clipsHTML = (t.clips || []).map((clip, idx) => `
+      <div class="sub-item" style="flex-direction:row; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#10b981;">#${idx + 1} (${clip.startTime.toFixed(1)}s〜, ${clip.duration.toFixed(1)}秒)</span>
+        <button class="btn-sm btn-danger" onclick="deleteTrackAudioClip('${t.id}', '${clip.id}')">削除</button>
+      </div>
+    `).join('') || '<div style="font-size:12px; color:#6b7280;">録音クリップなし</div>';
+
+    return `
+      <div class="sub-item" style="border: 1px solid ${isAct ? '#10b981' : '#3e3e52'}; background:${isAct ? '#18241e' : '#1e1e28'};">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:bold; color:${isAct ? '#10b981' : '#fff'};">${t.name} ${isAct ? '(録音対象)' : ''}</span>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-sm" style="background:#059669;" onclick="activeAudioTrackId='${t.id}'; renderVisualTimeline(); renderAudioTracksTab();">録音先に指定</button>
+            <button class="btn-sm btn-danger" onclick="deleteAudioTrack('${t.id}')">削除</button>
+          </div>
+        </div>
+        <div style="margin-top:4px;">${clipsHTML}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateCharaProp(id, prop, val) {
+  const chara = characters.find(c => c.id === id);
+  if (chara) {
+    chara[prop] = val;
+    updateStageElement(chara, currentTime);
+    markUnsaved();
+  }
+}
+
+function changeCharaImage(id, input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const chara = characters.find(c => c.id === id);
+      chara.imgSrc = e.target.result;
+      loadImageObject(chara);
+      document.getElementById('img_' + id).src = e.target.result;
+      renderInspector();
+      markUnsaved();
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function deleteCharacter(id) {
+  characters = characters.filter(c => c.id !== id);
+  spotlightCues = spotlightCues.filter(s => s.targetCharaId !== id);
+  const el = document.getElementById('stage_' + id);
+  if (el) el.remove();
+  selectedCharaId = characters.length > 0 ? characters[0].id : null;
+  updateZIndexes();
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function getSerializedProject() {
+  return {
+    duration: duration,
+    aspectRatio: currentAspectRatio,
+    bgPreset: currentBgPreset,
+    isCurtainOverlayActive: isCurtainOverlayActive,
+    bgColor: bgColorPicker.value,
+    customBgSrc: customBgSrc,
+    characters: characters.map(c => ({
+      id: c.id,
+      name: c.name,
+      imgSrc: c.imgSrc,
+      group: c.group || 'none',
+      muted: !!c.muted,
+      size: c.size || 90,
+      fontSize: c.fontSize || 16,
+      bubbleWidth: c.bubbleWidth || 260,
+      flipX: !!c.flipX,
+      x: c.x,
+      y: c.y,
+      inTime: c.inTime,
+      fadeIn: c.fadeIn,
+      outTime: c.outTime,
+      fadeOut: c.fadeOut,
+      dialogues: c.dialogues || [],
+      motion: c.motion || []
+    })),
+    spotlightCues: spotlightCues,
+    audioTracks: audioTracks.map(t => ({
+      id: t.id,
+      name: t.name,
+      muted: !!t.muted,
+      clips: (t.clips || []).map(clip => ({
+        id: clip.id,
+        name: clip.name,
+        base64: clip.base64,
+        startTime: clip.startTime,
+        duration: clip.duration,
+        volume: clip.volume !== undefined ? clip.volume : 1.0
+      }))
+    }))
+  };
+}
+
+function exportJSON() {
+  const project = getSerializedProject();
+  const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'scene_project_' + Date.now() + '.json';
+  a.click();
+  markSaved('ファイルに書き出し完了');
+}
+
+async function restoreProjectData(data) {
+  duration = data.duration || 30.0;
+  document.getElementById('total-duration').value = duration;
+  seekBar.max = duration;
+
+  if (data.aspectRatio) {
+    document.getElementById('aspect-ratio-select').value = data.aspectRatio;
+    changeAspectRatio(data.aspectRatio);
+  }
+
+  if (data.bgColor) {
+    bgColorPicker.value = data.bgColor;
+    stage.style.backgroundColor = data.bgColor;
+  }
+
+  if (data.customBgSrc) {
+    customBgSrc = data.customBgSrc;
+  }
+
+  if (data.isCurtainOverlayActive !== undefined) {
+    isCurtainOverlayActive = data.isCurtainOverlayActive;
+    curtainToggle.checked = isCurtainOverlayActive;
+  }
+
+  if (data.bgPreset) {
+    bgPresetSelect.value = data.bgPreset;
+    applyBgPreset(data.bgPreset);
+  } else {
+    bgPresetSelect.value = 'gym_stage';
+    applyBgPreset('gym_stage');
+  }
+
+  stage.querySelectorAll('.character').forEach(el => el.remove());
+  characters = data.characters || [];
+  spotlightCues = data.spotlightCues || [];
+
+  if (data.audioTracks && data.audioTracks.length > 0) {
+    audioTracks = data.audioTracks;
+  } else if (data.globalAudioClips && data.globalAudioClips.length > 0) {
+    audioTracks = [{
+      id: 'atk_' + Date.now(),
+      name: '音声 1',
+      muted: false,
+      clips: data.globalAudioClips
+    }];
+  } else {
+    audioTracks = [];
+    initDefaultAudioTrack();
+  }
+  activeAudioTrackId = audioTracks[0].id;
+
+  characters.forEach(c => {
+    if (!c.group) c.group = 'none';
+    if (!c.bubbleWidth) c.bubbleWidth = 260;
+    (c.dialogues || []).forEach(d => {
+      if (!d.pos) d.pos = 'top';
+    });
+    // 過去データ互換
+    (c.motion || []).forEach((pt, i) => {
+      if (pt.isManual === undefined) {
+        pt.isManual = (pt.isKeyframe || i === 0 || i === c.motion.length - 1);
+      }
+    });
+  });
+
+  const ctx = getAudioContext();
+  for (const t of audioTracks) {
+    for (const clip of (t.clips || [])) {
+      if (clip.base64) {
+        try {
+          const resp = await fetch(clip.base64);
+          const arrayBuf = await resp.arrayBuffer();
+          clip.buffer = await ctx.decodeAudioData(arrayBuf);
+        } catch (audioErr) {
+          console.warn('Audio decode failed:', clip.id);
+        }
+      }
+    }
+  }
+
+  for (const c of characters) {
+    c.size = c.size || 90;
+    c.fontSize = c.fontSize || 16;
+    c.bubbleWidth = c.bubbleWidth || 260;
+    c.flipX = !!c.flipX;
+    loadImageObject(c);
+    createStageElement(c);
+  }
+
+  updateZIndexes();
+  selectedCharaId = characters.length > 0 ? characters[0].id : null;
+  renderInspector();
+  renderVisualTimeline();
+  checkOutOfBoundsData();
+  seekTo(0);
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      await restoreProjectData(data);
+      markSaved('ファイルから読み込み完了');
+    } catch(err) {
+      alert('ファイルの解析に失敗しました。');
+    }
+  };
+  reader.readAsText(file);
+}
+
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+  if (e.code === 'Escape') {
+    if (isTheaterMode) {
+      e.preventDefault();
+      exitTheaterMode();
+      return;
+    }
+    if (saveChoiceModal.style.display === 'flex') {
+      closeSaveModal();
+      return;
+    }
+    if (closeConfirmModal.style.display === 'flex') {
+      closeCloseConfirmModal();
+      return;
+    }
+  }
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  if (isTheaterMode) return;
+
+  if ((e.key === 'r' || e.key === 'R') && e.shiftKey) {
+    e.preventDefault();
+    if (selectedCharaId) toggleMotionAndAudioRecord(selectedCharaId);
+  } else if (e.key === 'r' || e.key === 'R') {
+    e.preventDefault();
+    if (selectedCharaId) toggleMotionRecord(selectedCharaId);
+  } else if (e.key === 'k' || e.key === 'K') {
+    e.preventDefault();
+    if (selectedCharaId) addCurrentKeyframe(selectedCharaId);
+  } else if (e.key === 'm' || e.key === 'M') {
+    e.preventDefault();
+    toggleGlobalAudioRecord();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    seekTo(currentTime - (e.shiftKey ? 2.0 : 0.2));
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    seekTo(currentTime + (e.shiftKey ? 2.0 : 0.2));
+  } else if (e.code === 'Home' || e.key === '0') {
+    e.preventDefault();
+    seekTo(0);
+  } else if (e.code === 'Tab') {
+    e.preventDefault();
+    cycleCharacterSelection(e.shiftKey ? -1 : 1);
+  }
+});
+
+window.addEventListener('DOMContentLoaded', async () => {
+  changeAspectRatio('16:9');
+  applyBgPreset('gym_stage');
+  setStageEditingMode(true);
+  syncTimelineUI();
+  await checkAndPromptRestore();
+});
+</script>
+</body>
+</html>
