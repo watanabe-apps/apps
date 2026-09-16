@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモD：現場防衛トリプルタップラボ - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .demo-app-header {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    .demo-app-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-back-link {
+      background: #334155;
+      color: #38bdf8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .nav-back-link:hover {
+      background: #475569;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* メイン検証ステージ */
+    .viewport-stage {
+      flex: 1;
+      position: relative;
+      background-color: #ffffff;
+      margin: 1rem;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+      touch-action: none;
+      color: var(--text-main);
+    }
+
+    .tap-tester-card {
+      background: #f8fafc;
+      border: 3px dashed #cbd5e1;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 2.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .tap-tester-card:active {
+      transform: scale(0.98);
+      background: #f1f5f9;
+    }
+
+    .tap-tester-card.success-unlocked {
+      background: #dcfce7;
+      border-color: #16a34a;
+      border-style: solid;
+      box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2);
+    }
+
+    .gear-icon {
+      font-size: 4rem;
+      margin-bottom: 0.75rem;
+      pointer-events: none;
+      transition: transform 0.3s ease;
+    }
+
+    .tap-tester-card:active .gear-icon {
+      transform: rotate(20deg);
+    }
+
+    .tap-instruction {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+      pointer-events: none;
+    }
+
+    .tap-counter-display {
+      display: flex;
+      gap: 10px;
+      margin-top: 1rem;
+      pointer-events: none;
+    }
+
+    .counter-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #cbd5e1;
+      transition: background-color 0.1s ease, transform 0.1s ease;
+    }
+
+    .counter-dot.active {
+      background-color: var(--primary);
+      transform: scale(1.2);
+    }
+
+    .counter-dot.unlocked {
+      background-color: var(--success);
+      transform: scale(1.2);
+    }
+
+    .modal-dummy-settings {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+    }
+
+    .modal-dummy-settings.show {
+      display: flex;
+    }
+
+    .dummy-dialog {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      max-width: 360px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .dummy-dialog h3 {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .dummy-dialog p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+
+    .btn-close-dialog {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="no-select">
+
+  <!-- ヘッダー -->
+  <header class="demo-app-header">
+    <div class="demo-app-title">
+      <span>🔒 デモD：現場防衛トリプルタップ検証ラボ</span>
+    </div>
+    <a href="../chapters/06_operations.html" class="nav-back-link">⬅ 第6章の解説に戻る</a>
+  </header>
+
+  <!-- ステージ -->
+  <div class="viewport-stage">
+
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <h2 style="font-size: 1.4rem; color: #0f172a; margin-bottom: 0.4rem;">トリプルタップ判定テスト</h2>
+      <p style="font-size: 0.88rem; color: #64748b;">
+        通常の1回タップでは誤作動せず、素早く3回連続で叩いた時だけロックが解除されます[cite: 6]。
+      </p>
+    </div>
+
+    <!-- タップテストターゲット -->
+    <div class="tap-tester-card" id="tapTarget">
+      <div class="gear-icon">⚙️</div>
+      <div class="tap-instruction" id="tapPrompt">ここを3回連続タップ</div>
+      <p style="font-size: 0.82rem; color: #64748b;" id="tapDetail">（500ミリ秒以内に連続接触）</p>
+
+      <div class="tap-counter-display">
+        <div class="counter-dot" id="dot-1"></div>
+        <div class="counter-dot" id="dot-2"></div>
+        <div class="counter-dot" id="dot-3"></div>
+      </div>
+    </div>
+
+    <!-- ロック解除時に開く模擬設定画面 -->
+    <div class="modal-dummy-settings" id="dummySettingsModal">
+      <div class="dummy-dialog">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔓</div>
+        <h3>設定画面のロック解除成功</h3>
+        <p>
+          意図した3回タップが認識されました！<br>
+          偶発的なシングルタップでは決して開かないため、子どもの誤操作を確実に防ぎます[cite: 6]。
+        </p>
+        <button class="btn-close-dialog" onclick="closeDummyModal()">閉じて再テストする</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- 音響効果（Web Audio API） ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, dur = 0.08) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    }
+
+    // --- トリプルタップ判定ロジック ---
+    const target = document.getElementById("tapTarget");
+    const promptText = document.getElementById("tapPrompt");
+    const detailText = document.getElementById("tapDetail");
+    const modal = document.getElementById("dummySettingsModal");
+    const dots = [
+      document.getElementById("dot-1"),
+      document.getElementById("dot-2"),
+      document.getElementById("dot-3")
+    ];
+
+    let tapHistory = [];
+    let resetTimer = null;
+
+    target.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      const now = Date.now();
+      
+      // 直前のタップから500ms以上空いていればリセット
+      if (tapHistory.length > 0 && (now - tapHistory[tapHistory.length - 1]) > 500) {
+        tapHistory = [];
+      }
+
+      tapHistory.push(now);
+      const currentCount = tapHistory.length;
+
+      // ドットの点灯
+      updateDots(currentCount);
+
+      if (currentCount === 1) {
+        playTone(440, 0.06);
+        promptText.textContent = "あと 2 回！";
+        detailText.textContent = "ト・ト・トンと素早く叩いてください";
+        
+        // 500ms経過で未達成ならドットを消灯
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          tapHistory = [];
+          updateDots(0);
+          promptText.textContent = "ここを3回連続タップ";
+          detailText.textContent = "（500ミリ秒以内に連続接触）";
+        }, 500);
+
+      } else if (currentCount === 2) {
+        playTone(550, 0.06);
+        promptText.textContent = "あと 1 回！";
+        
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          tapHistory = [];
+          updateDots(0);
+          promptText.textContent = "ここを3回連続タップ";
+          detailText.textContent = "（500ミリ秒以内に連続接触）";
+        }, 500);
+
+      } else if (currentCount >= 3) {
+        // 3回成功！
+        clearTimeout(resetTimer);
+        tapHistory = [];
+        playTone(880, 0.25);
+
+        target.classList.add("success-unlocked");
+        dots.forEach(d => { d.className = "counter-dot unlocked"; });
+        promptText.textContent = "🎉 解除成功！";
+        detailText.textContent = "大人の意図した操作として認識されました";
+
+        setTimeout(() => {
+          modal.classList.add("show");
+        }, 300);
+      }
+    });
+
+    function updateDots(count) {
+      dots.forEach((dot, idx) => {
+        if (idx < count) {
+          dot.className = "counter-dot active";
+        } else {
+          dot.className = "counter-dot";
+        }
+      });
+    }
+
+    function closeDummyModal() {
+      modal.classList.remove("show");
+      target.classList.remove("success-unlocked");
+      updateDots(0);
+      promptText.textContent = "ここを3回連続タップ";
+      detailText.textContent = "（500ミリ秒以内に連続接触）";
+    }
+  </script>
+</body>
+</html>

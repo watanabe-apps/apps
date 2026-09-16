@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .portal-card {
+      background: #ffffff;
+      border: 1px solid var(--border-mid);
+      border-radius: 10px;
+      padding: 1.5rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .portal-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.08);
+      border-color: var(--primary);
+    }
+    .portal-card-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+      width: fit-content;
+    }
+    .badge-chapter { background: var(--primary-soft); color: var(--primary-focus); }
+    .badge-demo { background: var(--warning-soft); color: var(--warning); }
+    .portal-card h3 {
+      font-size: 1.2rem;
+      color: var(--text-main);
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
+    }
+    .portal-card p {
+      font-size: 0.9rem;
+      color: var(--text-body);
+      line-height: 1.7;
+      margin-bottom: 1.2rem;
+      flex-grow: 1;
+    }
+    .portal-card a.card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- サイドバーナビゲーション -->
+  <aside class="site-sidebar no-select">
+    <div>
+      <h1>特別支援教育<br>アプリ開発ハンドブック</h1>
+      <p class="sidebar-subtitle">認知特性・UI設計・現場運用の体系化</p>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">総合案内</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="index.html" class="active">🏠 はじめに・全体目次</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">理論・設計論（全6章）</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="chapters/01_domains.html">第1章：生成AIで拓く4大領域</a></li>
+        <li><a href="chapters/02_perception.html">第2章：具体物とデジタルの知覚構造</a></li>
+        <li><a href="chapters/03_merits.html">第3章：学習アプリの5大メリット</a></li>
+        <li><a href="chapters/04_principles.html">第4章：アプリづくりの5大設計思想</a></li>
+        <li><a href="chapters/05_subjects.html">第5章：教科・自立活動別の実践論</a></li>
+        <li><a href="chapters/06_operations.html">第6章：実装・運用のリアリズム</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">検証用実動デモ（単体動作）</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="demos/01_drag_lab.html">🧪 デモA：ドラッグ操作ラボ</a></li>
+        <li><a href="demos/02_count_lab.html">🔢 デモB：数の学習（円 vs 車）</a></li>
+        <li><a href="demos/03_writing_lab.html">✍️ デモC：消去 & キーボード</a></li>
+        <li><a href="demos/04_guard_lab.html">🔒 デモD：現場防衛トリプルタップ</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <main class="main-wrapper">
+    <header class="doc-header">
+      <div class="doc-meta">
+        <span>Special Needs Education</span>
+        <span>•</span>
+        <span>Cognitive UI Architecture</span>
+      </div>
+      <h1 class="doc-title">特別支援教育におけるWebアプリケーション開発の実際</h1>
+      <div class="doc-intro">
+        <strong>【本ハンドブックの目的】</strong><br>
+        知的障害や発達障害を伴う児童生徒が、余計な操作の負担なく学習そのものに没頭できるようにするためのUI/UX設計指針と、学校現場で絶対に破綻させないための開発・運用ノウハウをまとめた実践書です。
+      </div>
+    </header>
+
+    <!-- 理論編 カード一覧 -->
+    <section>
+      <h2 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.5rem;">📚 理論・設計各章</h2>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.2rem;">
+        教育的背景や認知特性から、言葉に頼らない構造化、学校の制約への対策までを詳しく解説しています。
+      </p>
+
+      <div class="portal-grid">
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第1章</span>
+          <h3>生成AIで拓く教育アプリの4大領域</h3>
+          <p>ドリルアプリにとどまらず、授業提示用、課題プリントの自動生成、教員の校務効率化まで多角的に展開する意義を整理します。</p>
+          <a href="chapters/01_domains.html" class="card-link">第1章を読む ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第2章</span>
+          <h3>具体物とデジタルの知覚構造論</h3>
+          <p>具体物で起きる「見ずに手探りで操作する現象」を画面の特性で防ぐ理論と、「アプリから具体物へ」という指導順序の逆転を解説します。</p>
+          <a href="chapters/02_perception.html" class="card-link">第2章を読む ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第3章</span>
+          <h3>学習アプリ「5大メリット」の詳解</h3>
+          <p>視覚活用の促進、ブレのない0秒判定、待ち時間の撲滅、反復学習の高密度化など、アプリがもたらす本質的な教育効果を掘り下げます。</p>
+          <a href="chapters/03_merits.html" class="card-link">第3章を読む ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第4章</span>
+          <h3>アプリづくりの5大設計思想</h3>
+          <p>目的の具体化、ドラッグ操作の必然性、非言語的な構造化、汎用性の確保、そしてノイズ除去と演出の例外基準を詳しく論じます。</p>
+          <a href="chapters/04_principles.html" class="card-link">第4章を読む ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第5章</span>
+          <h3>教科・自立活動別の実践アプローチ</h3>
+          <p>国語の手書き・キーボード活用、算数の「左から並べる」制約、そして教科を支える基盤としての自立活動の接続について解説します。</p>
+          <a href="chapters/05_subjects.html" class="card-link">第5章を読む ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-chapter">第6章</span>
+          <h3>実装・運用のリアリズムと現場防衛</h3>
+          <p>Gemini CanvasとVS Codeの使い分け、単一ファイル原則、誤操作を防ぐトリプルタップ、JSONデータ共有など、現場の知恵を網羅します。</p>
+          <a href="chapters/06_operations.html" class="card-link">第6章を読む ➜</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 実動デモ カード一覧 -->
+    <section style="margin-top: 3.5rem;">
+      <h2 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.5rem;">🧪 検証用実動デモ（iPad・実機対応）</h2>
+      <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.2rem;">
+        文字選択や画面スクロールの干渉を排除し、単体で快適に動作する実機検証用デモです。
+      </p>
+
+      <div class="portal-grid">
+        <div class="portal-card">
+          <span class="portal-card-badge badge-demo">Demo A</span>
+          <h3>ドラッグ挙動パラメータ比較ラボ</h3>
+          <p>目安サイズ100pxのブロックを用い、指を離した判定 vs 近接吸着、運ぶ方向、再操作の可否による操作感の違いをテストできます。</p>
+          <a href="demos/01_drag_lab.html" class="card-link">デモを起動する ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-demo">Demo B</span>
+          <h3>数の学習：ノイズ除去 vs 過剰演出</h3>
+          <p>「下の3つの対象を上の枠に運ぶ」操作を通し、シンプルな円（数唱音声）と自動車（けたたましい騒音）の注意の向き方を比較します。</p>
+          <a href="demos/02_count_lab.html" class="card-link">デモを起動する ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-demo">Demo C</span>
+          <h3>瞬間消去 ＆ 伝達キーボード</h3>
+          <p>紙を破かずに一瞬で消せる手書きキャンバスと、書く前に言葉を伝えて文字の価値に気付かせるキーボードを体験できます。</p>
+          <a href="demos/03_writing_lab.html" class="card-link">デモを起動する ➜</a>
+        </div>
+
+        <div class="portal-card">
+          <span class="portal-card-badge badge-demo">Demo D</span>
+          <h3>現場防衛トリプルタップ検証</h3>
+          <p>子どもによる偶発的な誤操作を防ぎつつ、大人の操作負担を増やさない「3回連続タップ判定」の感触を確かめられます。</p>
+          <a href="demos/04_guard_lab.html" class="card-link">デモを起動する ➜</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

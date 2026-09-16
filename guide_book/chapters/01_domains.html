@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第1章：生成AIで拓く教育アプリの4大領域 - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .domain-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 1.2rem;
+    }
+    .domain-detail-card {
+      background: #fafafa;
+      border: 1px solid var(--border-mid);
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .domain-detail-card h3 {
+      font-size: 1.15rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .domain-detail-card p {
+      font-size: 0.92rem;
+      color: var(--text-body);
+      line-height: 1.8;
+      margin-bottom: 0.75rem;
+    }
+    .example-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 0.5rem;
+    }
+    .example-tag {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .nav-pager {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-mid);
+    }
+    .nav-pager a {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- サイドバーナビゲーション -->
+  <aside class="site-sidebar no-select">
+    <div>
+      <h1>特別支援教育<br>アプリ開発ハンドブック</h1>
+      <p class="sidebar-subtitle">認知特性・UI設計・現場運用の体系化</p>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">総合案内</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="../index.html">🏠 はじめに・全体目次</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">理論・設計論（全6章）</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="01_domains.html" class="active">第1章：生成AIで拓く4大領域</a></li>
+        <li><a href="02_perception.html">第2章：具体物とデジタルの知覚構造</a></li>
+        <li><a href="03_merits.html">第3章：学習アプリの5大メリット</a></li>
+        <li><a href="04_principles.html">第4章：アプリづくりの5大設計思想</a></li>
+        <li><a href="05_subjects.html">第5章：教科・自立活動別の実践論</a></li>
+        <li><a href="06_operations.html">第6章：実装・運用のリアリズム</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">検証用実動デモ</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="../demos/01_drag_lab.html">🧪 デモA：ドラッグ操作ラボ</a></li>
+        <li><a href="../demos/02_count_lab.html">🔢 デモB：数の学習（円 vs 車）</a></li>
+        <li><a href="../demos/03_writing_lab.html">✍️ デモC：消去 & キーボード</a></li>
+        <li><a href="../demos/04_guard_lab.html">🔒 デモD：現場防衛トリプルタップ</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <main class="main-wrapper">
+
+    <header class="doc-header">
+      <div class="doc-meta">
+        <span>Chapter 01</span>
+        <span>•</span>
+        <span>Educational Scope & Ecosystem</span>
+      </div>
+      <h1 class="doc-title">第1章：生成AIで拓く教育アプリの4大領域</h1>
+      <div class="doc-intro">
+        特別支援教育におけるアプリ開発の射程を、子どもが手元で操作する学習用教材にとどまらず、集団指導での提示用ツール、個別最適な課題プリントの自動生成、そして教員の校務効率化まで多角的に広げる意義を整理します。
+      </div>
+    </header>
+
+    <div class="chapter-container">
+
+      <!-- 概要ボックス -->
+      <div class="summary-box">
+        <h3>📌 第1章の要点一覧（概要）</h3>
+        <ul>
+          <li><strong>自習用アプリにとどまらない視野</strong>：特別支援の現場課題は子どもの個別学習だけではありません。授業支援、教材作成、校務までを包括して捉えます。</li>
+          <li><strong>1. 児童生徒学習用</strong>：手元で概念獲得や手続き記憶の定着を行う個別最適化教材です（計数、弁別、書字など）。</li>
+          <li><strong>2. 教師授業提示用</strong>：電子黒板や大型モニターに映し、視覚的なルールの共有や一斉指導の進行をスムーズにするツールです。</li>
+          <li><strong>3. プリント課題作成用</strong>：子どもの実態に合わせた難易度の紙教材を、設定変更だけで瞬時に自動生成・印刷するアプリです。</li>
+          <li><strong>4. 教師校務効率化用</strong>：指導案の構成検討、個別の指導計画の作成補助、指導記録の集計などを支援する実務ツールです。</li>
+          <li><strong>系統マップによる構造化</strong>：各アプリを単発で終わらせず、教科の系統性を太い幹として位置づけ、自立活動をその基盤として関連付けます[cite: 10, 12]。</li>
+        </ul>
+      </div>
+
+      <!-- 1.1 4つの開発領域の詳解 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">1.1</span>
+          <h2 class="section-title">アプリ開発の射程を広げる「4つの領域」の実際</h2>
+        </div>
+
+        <div class="prose-block">
+          <p>
+            教育現場においてプログラミングや生成AIを活用しようとするとき、多くの教員は「子どもたちが使うタブレットドリル」を真っ先に作ろうとします。もちろんそれも極めて重要ですが、特別支援学校や特別支援学級の現場を支えるためには、より広い視野でアプリの役割を定義する必要があります。
+          </p>
+          <p>
+            本ハンドブックでは、開発対象を以下の**4つの領域**に分類し、それぞれの役割に応じた最適な設計を提案します。
+          </p>
+
+          <div class="domain-detail-grid">
+            <!-- 領域1 -->
+            <div class="domain-detail-card">
+              <h3>1. 児童生徒の学習用アプリ（個別学習・概念獲得）</h3>
+              <p>
+                児童生徒が直接タブレットの画面を操作し、概念の獲得や反復練習を行う教材です。余計なノイズを排し、直感的なドラッグ操作とブレのない即時判定によって、自分の力で「できた」という内発的な達成感を積み上げさせます。
+              </p>
+              <div class="example-tag-list">
+                <span class="example-tag">1対1対応（一つずつ配ろう）[cite: 10]</span>
+                <span class="example-tag">大小弁別（おおきいちいさい）[cite: 10]</span>
+                <span class="example-tag">計数（かぞえよう基礎）[cite: 10]</span>
+                <span class="example-tag">平仮名キーボード[cite: 10]</span>
+                <span class="example-tag">点タップ[cite: 6, 10]</span>
+                <span class="example-tag">カルタ[cite: 10]</span>
+              </div>
+            </div>
+
+            <!-- 領域2 -->
+            <div class="domain-detail-card">
+              <h3>2. 教師が授業で使用するアプリ（授業提示・集団共有）</h3>
+              <p>
+                教室前方の大型モニターや電子黒板に映し出し、教員が授業の進行やルールの視覚的共有のために操作する提示用ツールです。言葉だけの説明ではルールが伝わりにくい集団指導において、視覚的な動きやシミュレーションを見せることで、子ども全員の注意を同じ場所に引きつけます。
+              </p>
+              <div class="example-tag-list">
+                <span class="example-tag">視覚タイマー</span>
+                <span class="example-tag">スケジュール提示</span>
+                <span class="example-tag">リズム視覚化ツール[cite: 10]</span>
+                <span class="example-tag">ルール解説シミュレーター</span>
+              </div>
+            </div>
+
+            <!-- 領域3 -->
+            <div class="domain-detail-card">
+              <h3>3. プリント等課題づくりアプリ（教材自動生成・印刷）</h3>
+              <p>
+                子どもの実態に合わせて、最適な難易度・レイアウトの紙プリント教材を瞬時に自動生成して印刷できるWebアプリです。マス目のサイズ、問題数、数字の範囲、イラストの有無などをスライダーで調整するだけで、その日の授業にぴったりな個別課題を出力できます。
+              </p>
+              <div class="example-tag-list">
+                <span class="example-tag">計算プリント自動生成</span>
+                <span class="example-tag">点つなぎプリント生成[cite: 10, 12]</span>
+                <span class="example-tag">迷路生成[cite: 1, 10]</span>
+                <span class="example-tag">ひらがな視覚課題生成</span>
+              </div>
+            </div>
+
+            <!-- 領域4 -->
+            <div class="domain-detail-card">
+              <h3>4. 教師が業務に使用するアプリ（校務効率化・指導計画）</h3>
+              <p>
+                教員自身の事務負担や授業準備の労力を軽減するための実務支援ツールです。個別の指導計画の文案作成補助、日々の指導記録の集計・可視化、指導案の構成検討など、多忙な教員の時間を生み出し、子どもと直接向き合う時間を最大化します。
+              </p>
+              <div class="example-tag-list">
+                <span class="example-tag">指導記録集計ツール</span>
+                <span class="example-tag">個別の指導計画作成補助</span>
+                <span class="example-tag">iPad HTML Viewer[cite: 10]</span>
+                <span class="example-tag">目標設定支援シート</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1.2 系統マップによる構造化思想 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">1.2</span>
+          <h2 class="section-title">系統マップによる構造化：教科を幹とし、自立活動を基盤とする</h2>
+        </div>
+
+        <div class="prose-block">
+          <p>
+            たくさんのアプリを開発していくと、「どのアプリを、どの子に、どの順番で使わせるべきか」というカリキュラム上の迷いが生じます。アプリが単発の思いつきで散らばってしまうと、学校全体での継続的な指導につながりません。
+          </p>
+          <p>
+            そこで重要になるのが、**「系統マップ（教材間のロードマップ）」によるアプリ群の構造化**です[cite: 10, 12]。
+          </p>
+
+          <div class="highlight-panel">
+            <strong>系統マップを設計する上での2大原則：</strong>
+            <ul>
+              <li><strong>教科の系統性をメインの太い幹にする</strong>：国語（読む・書く・伝える）や算数（分ける・数える・計算する）の学びの流れを、発達段階に応じた縦の系統軸としてメインに配置します。子どもが今どの段階にいて、次にどのアプリへ進むべきかが一目で分かります。</li>
+              <li><strong>自立活動は直上の補足基盤として接続する</strong>：自立活動（目と手の協応、手指の巧緻性、注意のコントロールなど）を教科と無関係な別枠として孤立させるのではなく、**「教科の学習を成立させるための土台」**として直上に配置します。例えば、「数を数える」という算数学習の直上に、ターゲットを目で捉える「点タップ」を位置づけることで、つまずきの根本原因に対するアプローチが明確になります[cite: 6, 10]。</li>
+            </ul>
+          </div>
+
+          <p>
+            このように教材全体をマップとして俯瞰できるように整理しておくことで、担任が変わったり学年が進んだりしても、子どもの現在の発達位置に応じた切れ目のない指導を引き継いでいくことが可能になります[cite: 10, 12]。
+          </p>
+        </div>
+      </section>
+
+      <!-- 前後の章へのナビゲーション -->
+      <div class="nav-pager">
+        <a href="../index.html">⬅ 総合案内・全体目次</a>
+        <a href="02_perception.html">第2章：具体物とデジタルの知覚構造 ➜</a>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモB：数の学習ラボ - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .demo-app-header {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    .demo-app-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-back-link {
+      background: #334155;
+      color: #38bdf8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .nav-back-link:hover {
+      background: #475569;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .config-bar {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+      font-size: 0.88rem;
+      flex-shrink: 0;
+    }
+
+    .config-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .config-select {
+      background-color: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.88rem;
+      outline: none;
+    }
+
+    .btn-reset-app {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      padding: 0.4rem 1.1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+
+    /* メインステージ */
+    .viewport-stage {
+      flex: 1;
+      position: relative;
+      background-color: #ffffff;
+      margin: 1rem;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* 上部ターゲット枠コンテナ */
+    .target-slots-container {
+      width: 320px;
+      height: 96px;
+      border: 3px dashed #64748b;
+      background: #f8fafc;
+      border-radius: 14px;
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 1;
+    }
+
+    .target-slot {
+      width: 70px;
+      height: 70px;
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+
+    .target-slot.filled-clean {
+      background-color: var(--success-soft);
+      border-color: var(--success);
+      color: var(--success);
+      font-size: 1.4rem;
+    }
+
+    .target-slot.filled-noisy {
+      background-color: var(--danger-soft);
+      border-color: var(--danger);
+      color: var(--danger);
+      font-size: 0.9rem;
+    }
+
+    /* 下部トレイ */
+    .source-tray {
+      width: 100%;
+      height: 100px;
+      background: #f1f5f9;
+      border-top: 2px solid #cbd5e1;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      z-index: 2;
+    }
+
+    /* 円オブジェクト（ノイズ除去モード） */
+    .circle-token {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background-color: #1e293b;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-drag: none;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      z-index: 10;
+    }
+    .circle-token:active { cursor: grabbing; }
+
+    /* 車オブジェクト（過剰演出モード） */
+    .car-token {
+      width: 78px;
+      height: 65px;
+      border-radius: 12px;
+      background-color: #ef4444;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.1rem;
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-drag: none;
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.4);
+      z-index: 10;
+      position: relative;
+      animation: carFlasher 0.6s infinite alternate;
+    }
+    .car-token:active { cursor: grabbing; }
+
+    @keyframes carFlasher {
+      from { transform: scale(1); filter: drop-shadow(0 0 4px #fbbf24); }
+      to { transform: scale(1.08) rotate(3deg); filter: drop-shadow(0 0 16px #ef4444); }
+    }
+
+    .feedback-toast {
+      position: absolute;
+      top: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(15, 23, 42, 0.9);
+      color: #f8fafc;
+      padding: 0.6rem 1.4rem;
+      border-radius: 20px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      pointer-events: none;
+      text-align: center;
+      z-index: 50;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body class="no-select">
+
+  <!-- ヘッダー -->
+  <header class="demo-app-header">
+    <div class="demo-app-title">
+      <span>🔢 デモB：数の学習（ノイズ除去 vs 過剰演出）ラボ</span>
+    </div>
+    <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
+  </header>
+
+  <!-- コントロールバー -->
+  <div class="config-bar">
+    <div class="config-item">
+      <label>表示・演出モード:</label>
+      <select id="cfgNoiseMode" class="config-select" onchange="initCountLab()">
+        <option value="clean">【適切】ノイズ除去（シンプルな円・「いち、に、さん」の数唱）</option>
+        <option value="noisy">【不適切】過剰な演出（自動車・派手なエンジン音と振動）</option>
+      </select>
+    </div>
+    <button class="btn-reset-app" onclick="initCountLab()">リセット</button>
+  </div>
+
+  <!-- ステージ -->
+  <div class="viewport-stage" id="countStage">
+    <div class="target-slots-container">
+      <div class="target-slot" id="slot-0">枠 1</div>
+      <div class="target-slot" id="slot-1">枠 2</div>
+      <div class="target-slot" id="slot-2">枠 3</div>
+    </div>
+
+    <div class="feedback-toast" id="countToast">下から1つずつ上の枠へ運んでください</div>
+    <div class="source-tray" id="countTray"></div>
+  </div>
+
+  <script>
+    // --- 音声・音響制御 ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, dur = 0.15) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function playEngineSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(110, now);
+      osc.frequency.linearRampToValueAtTime(420, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(85, now + 0.38);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.42);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.42);
+    }
+
+    function speakNumber(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = 1.0;
+      window.speechSynthesis.speak(u);
+    }
+
+    // --- ゲーム状態 ---
+    const stage = document.getElementById("countStage");
+    const tray = document.getElementById("countTray");
+    const toast = document.getElementById("countToast");
+    const numberWords = ["いち", "に", "さん"];
+
+    let itemStates = [
+      { id: 0, isPlaced: false, slotIdx: -1 },
+      { id: 1, isPlaced: false, slotIdx: -1 },
+      { id: 2, isPlaced: false, slotIdx: -1 }
+    ];
+
+    function initCountLab() {
+      // 1. ステージ内に移動したオブジェクトの完全消去（残骸防止）
+      stage.querySelectorAll('.circle-token, .car-token').forEach(el => el.remove());
+      tray.innerHTML = "";
+      toast.textContent = "下から1つずつ上の枠へ運んでください";
+
+      for (let i = 0; i < 3; i++) {
+        const slot = document.getElementById(`slot-${i}`);
+        slot.className = "target-slot";
+        slot.textContent = `枠 ${i + 1}`;
+      }
+
+      itemStates = [
+        { id: 0, isPlaced: false, slotIdx: -1 },
+        { id: 1, isPlaced: false, slotIdx: -1 },
+        { id: 2, isPlaced: false, slotIdx: -1 }
+      ];
+
+      const mode = document.getElementById("cfgNoiseMode").value;
+
+      for (let i = 0; i < 3; i++) {
+        const item = document.createElement("div");
+        item.id = `token-${i}`;
+
+        if (mode === "clean") {
+          item.className = "circle-token";
+          item.textContent = "●";
+        } else {
+          item.className = "car-token";
+          item.textContent = "🚗";
+        }
+
+        tray.appendChild(item);
+        setupDraggableItem(item, i);
+      }
+    }
+
+    function setupDraggableItem(el, index) {
+      let isDragging = false;
+      let startClient = { x: 0, y: 0 };
+      let initialStagePos = { x: 0, y: 0 };
+
+      el.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        if (itemStates[index].isPlaced) return;
+
+        isDragging = true;
+        el.setPointerCapture(e.pointerId);
+
+        const mode = document.getElementById("cfgNoiseMode").value;
+        if (mode === "noisy") {
+          playEngineSound();
+        }
+
+        const rect = el.getBoundingClientRect();
+        const stageRect = stage.getBoundingClientRect();
+        initialStagePos = {
+          x: rect.left - stageRect.left,
+          y: rect.top - stageRect.top
+        };
+
+        el.style.position = "absolute";
+        el.style.left = `${initialStagePos.x}px`;
+        el.style.top = `${initialStagePos.y}px`;
+        el.style.zIndex = "150";
+        stage.appendChild(el);
+
+        startClient = { x: e.clientX, y: e.clientY };
+      });
+
+      el.addEventListener("pointermove", (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const dx = e.clientX - startClient.x;
+        const dy = e.clientY - startClient.y;
+        el.style.left = `${initialStagePos.x + dx}px`;
+        el.style.top = `${initialStagePos.y + dy}px`;
+
+        const mode = document.getElementById("cfgNoiseMode").value;
+        if (mode === "noisy") {
+          el.style.transform = `scale(1.15) rotate(${Math.sin(Date.now() / 40) * 12}deg)`;
+        }
+      });
+
+      const onEnd = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+
+        const b = el.getBoundingClientRect();
+        const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+
+        // 枠の当たり判定
+        let targetSlotIdx = -1;
+        for (let i = 0; i < 3; i++) {
+          const slot = document.getElementById(`slot-${i}`);
+          const s = slot.getBoundingClientRect();
+          if (bCenter.x >= s.left && bCenter.x <= s.right &&
+              bCenter.y >= s.top && bCenter.y <= s.bottom) {
+            const isOccupied = itemStates.some(item => item.slotIdx === i);
+            if (!isOccupied) {
+              targetSlotIdx = i;
+              break;
+            }
+          }
+        }
+
+        const mode = document.getElementById("cfgNoiseMode").value;
+
+        if (targetSlotIdx !== -1) {
+          itemStates[index].isPlaced = true;
+          itemStates[index].slotIdx = targetSlotIdx;
+
+          const slot = document.getElementById(`slot-${targetSlotIdx}`);
+          const s = slot.getBoundingClientRect();
+          const stageRect = stage.getBoundingClientRect();
+
+          el.style.left = `${s.left - stageRect.left + (s.width - b.width) / 2}px`;
+          el.style.top = `${s.top - stageRect.top + (s.height - b.height) / 2}px`;
+          el.style.transform = "none";
+          el.style.cursor = "default";
+
+          const placedCount = itemStates.filter(t => t.isPlaced).length;
+
+          if (mode === "clean") {
+            playTone(440 + placedCount * 110, 0.15);
+            speakNumber(numberWords[placedCount - 1]);
+
+            slot.classList.add("filled-clean");
+            slot.textContent = `${placedCount}`;
+            toast.textContent = `いま ${placedCount} こ 入りました（音声：「${numberWords[placedCount - 1]}」）`;
+          } else {
+            playEngineSound();
+            slot.classList.add("filled-noisy");
+            slot.textContent = "🚗 ブブン!";
+            toast.textContent = "🚗 けたたましい音で「いくつ数えたか」が曖昧になります";
+          }
+
+          if (placedCount === 3) {
+            setTimeout(() => {
+              if (mode === "clean") {
+                playTone(880, 0.35);
+                toast.textContent = "🎉 3つ全部入りました！（「できた」達成感）";
+              } else {
+                toast.textContent = "⚠️ 演出に気を取られ、数の概念定着が阻害されます";
+              }
+            }, 450);
+          }
+        } else {
+          // ドロップ失敗：元のトレイに戻す
+          el.style.position = "";
+          el.style.left = "";
+          el.style.top = "";
+          el.style.transform = "none";
+          el.style.zIndex = "";
+          tray.appendChild(el);
+        }
+      };
+
+      el.addEventListener("pointerup", onEnd);
+      el.addEventListener("pointercancel", onEnd);
+    }
+
+    window.addEventListener("DOMContentLoaded", initCountLab);
+  </script>
+</body>
+</html>

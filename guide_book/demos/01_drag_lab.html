@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモA：ドラッグ操作ラボ - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .demo-app-header {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    .demo-app-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-back-link {
+      background: #334155;
+      color: #38bdf8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .nav-back-link:hover {
+      background: #475569;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .config-bar {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      align-items: center;
+      border-bottom: 2px solid #334155;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .config-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .config-item label {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .config-select {
+      background-color: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .btn-reset-app {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: auto;
+    }
+    .btn-reset-app:active {
+      background-color: var(--primary-focus);
+    }
+
+    /* メイン操作ステージ */
+    .viewport-stage {
+      flex: 1;
+      position: relative;
+      background-color: #ffffff;
+      margin: 1rem;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* 100px ドラッグブロック */
+    .drag-box-100 {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      background-color: var(--primary);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: grab;
+      position: absolute;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      touch-action: none;
+      -webkit-user-drag: none;
+      z-index: 10;
+      transition: transform 0.08s ease, background-color 0.2s ease;
+    }
+
+    .drag-box-100:active {
+      cursor: grabbing;
+      transform: scale(1.04);
+    }
+
+    .drag-box-100.is-locked {
+      background-color: #64748b !important;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* 100px ドロップ枠 */
+    .target-slot-100 {
+      width: 100px;
+      height: 100px;
+      border: 3px dashed var(--primary);
+      background-color: var(--primary-soft);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-focus);
+      position: absolute;
+      z-index: 1;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .target-slot-100.snapped {
+      background-color: var(--success-soft);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .status-toast {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(15, 23, 42, 0.85);
+      color: #f8fafc;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      pointer-events: none;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body class="no-select">
+
+  <!-- ヘッダー -->
+  <header class="demo-app-header">
+    <div class="demo-app-title">
+      <span>🧪 デモA：ドラッグ挙動パラメータ比較ラボ</span>
+    </div>
+    <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
+  </header>
+
+  <!-- パラメータ操作パネル -->
+  <div class="config-bar">
+    <div class="config-item">
+      <label>判定方式:</label>
+      <select id="cfgTrigger" class="config-select" onchange="resetLab()">
+        <option value="release">離した時に判定（ドロップ判定）</option>
+        <option value="proximity">近づいた瞬間に吸着（近接判定）</option>
+      </select>
+    </div>
+
+    <div class="config-item">
+      <label>吸着後:</label>
+      <select id="cfgRedrag" class="config-select" onchange="resetLab()">
+        <option value="allow">再度ドラッグ可能（やり直し可）</option>
+        <option value="lock">枠に固定（やり直し不可）</option>
+      </select>
+    </div>
+
+    <div class="config-item">
+      <label>運ぶ方向:</label>
+      <select id="cfgDirection" class="config-select" onchange="resetLab()">
+        <option value="bottom-top">下から上へ（手で隠れない原則）</option>
+        <option value="top-bottom">上から下へ（教科書レイアウト）</option>
+        <option value="left-right">左から右へ</option>
+      </select>
+    </div>
+
+    <div class="config-item">
+      <label>判定範囲:</label>
+      <select id="cfgRadius" class="config-select">
+        <option value="generous">広め（タブレット推奨・手前で吸着）</option>
+        <option value="strict">厳密（完全な重なり判定）</option>
+      </select>
+    </div>
+
+    <button class="btn-reset-app" onclick="resetLab()">初期位置にリセット</button>
+  </div>
+
+  <!-- ステージ -->
+  <div class="viewport-stage" id="labStage">
+    <div class="target-slot-100" id="labTarget">
+      <span>枠</span>
+      <span style="font-size: 0.72rem; font-weight: normal;">100px</span>
+    </div>
+    <div class="drag-box-100" id="labBlock">
+      <span>100px</span>
+      <span style="font-size: 0.72rem; font-weight: normal;">ドラッグ</span>
+    </div>
+    <div class="status-toast" id="statusToast">ブロックを枠まで運んでください</div>
+  </div>
+
+  <script>
+    // --- Web Audio API（効果音） ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, dur = 0.15) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    }
+
+    // --- 要素と状態 ---
+    const stage = document.getElementById("labStage");
+    const block = document.getElementById("labBlock");
+    const target = document.getElementById("labTarget");
+    const toast = document.getElementById("statusToast");
+
+    let isDragging = false;
+    let isSnapped = false;
+    let startPointer = { x: 0, y: 0 };
+    let blockStartPos = { x: 0, y: 0 };
+
+    function resetLab() {
+      isDragging = false;
+      isSnapped = false;
+      block.classList.remove("is-locked");
+      block.style.pointerEvents = "auto";
+      block.style.zIndex = "10";
+      target.classList.remove("snapped");
+      target.innerHTML = '<span>枠</span><span style="font-size: 0.72rem; font-weight: normal;">100px</span>';
+      toast.textContent = "ブロックを枠まで運んでください";
+
+      const dir = document.getElementById("cfgDirection").value;
+      const stageW = stage.clientWidth;
+      const stageH = stage.clientHeight;
+
+      if (dir === "bottom-top") {
+        target.style.left = `${(stageW - 100) / 2}px`;
+        target.style.top = `40px`;
+        block.style.left = `${(stageW - 100) / 2}px`;
+        block.style.top = `${stageH - 140}px`;
+      } else if (dir === "top-bottom") {
+        target.style.left = `${(stageW - 100) / 2}px`;
+        target.style.top = `${stageH - 140}px`;
+        block.style.left = `${(stageW - 100) / 2}px`;
+        block.style.top = `40px`;
+      } else { // left-right
+        target.style.left = `${stageW - 140}px`;
+        target.style.top = `${(stageH - 100) / 2}px`;
+        block.style.left = `40px`;
+        block.style.top = `${(stageH - 100) / 2}px`;
+      }
+    }
+
+    block.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      if (isSnapped && document.getElementById("cfgRedrag").value === "lock") return;
+
+      isDragging = true;
+      block.setPointerCapture(e.pointerId);
+      block.style.zIndex = "100";
+
+      startPointer = { x: e.clientX, y: e.clientY };
+      const bRect = block.getBoundingClientRect();
+      const sRect = stage.getBoundingClientRect();
+      blockStartPos = { x: bRect.left - sRect.left, y: bRect.top - sRect.top };
+
+      if (isSnapped) {
+        isSnapped = false;
+        target.classList.remove("snapped");
+        target.innerHTML = '<span>枠</span><span style="font-size: 0.72rem; font-weight: normal;">100px</span>';
+      }
+    });
+
+    block.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+
+      const dx = e.clientX - startPointer.x;
+      const dy = e.clientY - startPointer.y;
+      const curX = blockStartPos.x + dx;
+      const curY = blockStartPos.y + dy;
+
+      block.style.left = `${curX}px`;
+      block.style.top = `${curY}px`;
+
+      if (document.getElementById("cfgTrigger").value === "proximity") {
+        if (checkCollision()) {
+          executeSnap(e.pointerId);
+        }
+      }
+    });
+
+    function onPointerUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      try { block.releasePointerCapture(e.pointerId); } catch(err) {}
+
+      if (document.getElementById("cfgTrigger").value === "release") {
+        if (checkCollision()) {
+          executeSnap();
+        } else {
+          returnToOrigin();
+        }
+      } else {
+        if (!isSnapped) returnToOrigin();
+      }
+    }
+
+    block.addEventListener("pointerup", onPointerUp);
+    block.addEventListener("pointercancel", onPointerUp);
+
+    function checkCollision() {
+      const b = block.getBoundingClientRect();
+      const t = target.getBoundingClientRect();
+      const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+      const tCenter = { x: t.left + t.width / 2, y: t.top + t.height / 2 };
+      const dist = Math.hypot(bCenter.x - tCenter.x, bCenter.y - tCenter.y);
+
+      const isGenerous = document.getElementById("cfgRadius").value === "generous";
+      const threshold = isGenerous ? 85 : 45;
+      return dist < threshold;
+    }
+
+    function executeSnap(pointerId) {
+      isSnapped = true;
+      isDragging = false;
+      if (pointerId) {
+        try { block.releasePointerCapture(pointerId); } catch(err) {}
+      }
+
+      playBeep(659.25, 0.2); // 吸着音
+
+      const tRect = target.getBoundingClientRect();
+      const sRect = stage.getBoundingClientRect();
+
+      block.style.left = `${tRect.left - sRect.left}px`;
+      block.style.top = `${tRect.top - sRect.top}px`;
+      block.style.zIndex = "10";
+
+      target.classList.add("snapped");
+      target.innerHTML = '<span>ぴったり!</span>';
+      toast.textContent = "吸着成功（正解判定）";
+
+      if (document.getElementById("cfgRedrag").value === "lock") {
+        block.classList.add("is-locked");
+        toast.textContent = "吸着成功（固定・やり直し不可）";
+      }
+    }
+
+    function returnToOrigin() {
+      block.style.zIndex = "10";
+      toast.textContent = "枠から外れたため初期位置に戻りました";
+      resetLab();
+    }
+
+    window.addEventListener("DOMContentLoaded", resetLab);
+    window.addEventListener("resize", resetLab);
+  </script>
+</body>
+</html>

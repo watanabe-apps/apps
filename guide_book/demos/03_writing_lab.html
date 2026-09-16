@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモC：国語科UI体験ラボ - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .demo-app-header {
+      background-color: #1e293b;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    .demo-app-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-back-link {
+      background: #334155;
+      color: #38bdf8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+    .nav-back-link:hover {
+      background: #475569;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* 左右2分割のメインステージ */
+    .lab-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .lab-card {
+      background: #ffffff;
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .lab-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .lab-card-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* 左側：手書きキャンバス */
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      background: #fafafa;
+      border: 2px dashed #cbd5e1;
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas.drawing-board {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .canvas-guide-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      border-top: 1px dashed #e2e8f0;
+      pointer-events: none;
+    }
+
+    .canvas-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-canvas-clear {
+      flex: 1;
+      background-color: var(--danger);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: opacity 0.2s;
+    }
+    .btn-canvas-clear:active { opacity: 0.85; }
+
+    /* 右側：伝達キーボード */
+    .keyboard-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .message-display-box {
+      background: #f8fafc;
+      border: 2px solid var(--border-mid);
+      border-radius: 10px;
+      padding: 1rem;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .key-button {
+      background: #f1f5f9;
+      border: 2px solid #cbd5e1;
+      color: var(--text-main);
+      font-size: 1.25rem;
+      font-weight: 700;
+      padding: 0.85rem 0;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s;
+      touch-action: manipulation;
+    }
+
+    .key-button:active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: scale(0.96);
+    }
+
+    .key-button.delete-key {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: var(--danger);
+    }
+
+    .btn-speak-action {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 6px rgba(2, 132, 199, 0.25);
+    }
+    .btn-speak-action:active { background-color: var(--primary-focus); }
+
+    @media (max-width: 800px) {
+      .lab-layout { grid-template-columns: 1fr; overflow-y: auto; }
+      body { overflow-y: auto; }
+    }
+  </style>
+</head>
+<body class="no-select">
+
+  <!-- ヘッダー -->
+  <header class="demo-app-header">
+    <div class="demo-app-title">
+      <span>✍️ デモC：国語科UI体験（瞬間消去 ＆ 伝達キーボード）ラボ</span>
+    </div>
+    <a href="../chapters/05_subjects.html" class="nav-back-link">⬅ 第5章の解説に戻る</a>
+  </header>
+
+  <!-- メインレイアウト -->
+  <div class="lab-layout">
+
+    <!-- 左：手書きキャンバス -->
+    <div class="lab-card">
+      <div class="lab-card-title">
+        <span>✏️ 字形思考に専念できる手書き</span>
+      </div>
+      <p class="lab-card-desc">
+        文字を自由に書いてみてください。下のボタンを押せば、紙が破れるストレスなく一瞬で真っ白に戻せます。
+      </p>
+
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="writeCanvas" class="drawing-board"></canvas>
+        <div class="canvas-guide-line"></div>
+      </div>
+
+      <div class="canvas-controls">
+        <button class="btn-canvas-clear" onclick="clearWritingBoard()">
+          <span>🗑️ 一瞬で消す（紙の疲弊ゼロ）</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 右：機能的キーボード -->
+    <div class="lab-card">
+      <div class="lab-card-title">
+        <span>⌨️ 言葉を伝える要求キーボード</span>
+      </div>
+      <p class="lab-card-desc">
+        文字を書けなくても、キーを押して言葉を組み立ててみましょう。「要求を伝える」を押すと相手へ届きます。
+      </p>
+
+      <div class="keyboard-workspace">
+        <div class="message-display-box" id="msgDisplay"></div>
+
+        <div class="keypad-grid">
+          <button class="key-button" onclick="pressChar('あ')">あ</button>
+          <button class="key-button" onclick="pressChar('そ')">そ</button>
+          <button class="key-button" onclick="pressChar('ぼ')">ぼ</button>
+          <button class="key-button" onclick="pressChar('う')">う</button>
+
+          <button class="key-button" onclick="pressChar('こ')">こ</button>
+          <button class="key-button" onclick="pressChar('れ')">れ</button>
+          <button class="key-button" onclick="pressChar('み')">み</button>
+          <button class="key-button" onclick="pressChar('て')">て</button>
+
+          <button class="key-button" onclick="pressChar('か')">か</button>
+          <button class="key-button" onclick="pressChar('し')">し</button>
+          <button class="key-button" onclick="pressChar('て')">て</button>
+          <button class="key-button delete-key" onclick="deleteChar()">消す</button>
+        </div>
+
+        <button class="btn-speak-action" onclick="speakMessage()">
+          <span>📢 要求を伝える（音声読み上げ）</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- 音響効果（Web Audio API） ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTapTone(freq = 520, dur = 0.08) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    }
+
+    // --- 左側：手書きキャンバス制御 ---
+    const canvas = document.getElementById("writeCanvas");
+    const ctx = canvas.getContext("2d");
+    const container = document.getElementById("canvasContainer");
+
+    function resizeCanvas() {
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      ctx.lineWidth = 6;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#1e293b";
+    }
+
+    let isDrawing = false;
+
+    canvas.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    });
+
+    window.addEventListener("pointerup", () => { isDrawing = false; });
+    window.addEventListener("pointercancel", () => { isDrawing = false; });
+
+    function clearWritingBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      playTapTone(400, 0.12);
+    }
+
+    // --- 右側：キーボード制御 ---
+    const display = document.getElementById("msgDisplay");
+
+    function pressChar(ch) {
+      display.textContent += ch;
+      playTapTone(660, 0.06);
+    }
+
+    function deleteChar() {
+      display.textContent = display.textContent.slice(0, -1);
+      playTapTone(330, 0.08);
+    }
+
+    function speakMessage() {
+      const text = display.textContent.trim() || "あそぼう";
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      resizeCanvas();
+    });
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+    });
+  </script>
+</body>
+</html>

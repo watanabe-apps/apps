@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章：教科・自立活動別の実践アプローチ - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .demo-link-card {
+      background: #f8fafc;
+      border: 2px solid var(--border-mid);
+      border-left: 5px solid var(--warning);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .demo-link-info h4 {
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+    .demo-link-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .demo-btn {
+      background: var(--warning);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.2s ease;
+    }
+    .demo-btn:hover {
+      opacity: 0.9;
+      color: #fff;
+      text-decoration: none;
+    }
+    .nav-pager {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-mid);
+    }
+    .nav-pager a {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- サイドバーナビゲーション -->
+  <aside class="site-sidebar no-select">
+    <div>
+      <h1>特別支援教育<br>アプリ開発ハンドブック</h1>
+      <p class="sidebar-subtitle">認知特性・UI設計・現場運用の体系化</p>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">総合案内</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="../index.html">🏠 はじめに・全体目次</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">理論・設計論（全6章）</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="01_domains.html">第1章：生成AIで拓く4大領域</a></li>
+        <li><a href="02_perception.html">第2章：具体物とデジタルの知覚構造</a></li>
+        <li><a href="03_merits.html">第3章：学習アプリの5大メリット</a></li>
+        <li><a href="04_principles.html">第4章：アプリづくりの5大設計思想</a></li>
+        <li><a href="05_subjects.html" class="active">第5章：教科・自立活動別の実践論</a></li>
+        <li><a href="06_operations.html">第6章：実装・運用のリアリズム</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">検証用実動デモ</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="../demos/01_drag_lab.html">🧪 デモA：ドラッグ操作ラボ</a></li>
+        <li><a href="../demos/02_count_lab.html">🔢 デモB：数の学習（円 vs 車）</a></li>
+        <li><a href="../demos/03_writing_lab.html">✍️ デモC：消去 & キーボード</a></li>
+        <li><a href="../demos/04_guard_lab.html">🔒 デモD：現場防衛トリプルタップ</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <main class="main-wrapper">
+
+    <header class="doc-header">
+      <div class="doc-meta">
+        <span>Chapter 05</span>
+        <span>•</span>
+        <span>Subject & Developmental Applications</span>
+      </div>
+      <h1 class="doc-title">第5章：教科・自立活動別の実践的アプローチ</h1>
+      <div class="doc-intro">
+        国語科における文字指導の負荷分離と機能的活用、算数科における数唱連動と順序性の獲得、そして教科の学びを根底から支える自立活動との系統的な位置づけについて、実際の指導現場での具体例を交えて詳しく解説します。
+      </div>
+    </header>
+
+    <div class="chapter-container">
+
+      <!-- 概要ボックス -->
+      <div class="summary-box">
+        <h3>📌 第5章の要点一覧（概要）</h3>
+        <ul>
+          <li><strong>国語・手書き学習</strong>：アプリの最大の強みは「一瞬できれいに消せること」です。紙が破れる・消し残る疲弊をなくし、字形思考に全集中させます。</li>
+          <li><strong>国語・キーボード先行</strong>：書字の身体負荷をなくし、文字を「要求や気持ちを伝える道具」として先に体験させ、文字の価値への気付きを促します。</li>
+          <li><strong>算数・数の数え方</strong>：手の操作と数唱（声）を完全一致させます。「左から順に並べる」制約が順序性や音韻意識を育て、具体物へと自発的に転移します。</li>
+          <li><strong>算数・概念の弁別</strong>：「おおきいちいさい」や「いくつといくつ」など、言葉の指示が通じない段階でも、即時判定の繰り返しで比較の型を形成します。</li>
+          <li><strong>自立活動との系統性</strong>：自立活動は教科と並列の別枠ではなく、国語や算数の学びを支える直上の補足基盤として位置づけます。</li>
+        </ul>
+      </div>
+
+      <!-- 5.1 国語科の実践 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.1</span>
+          <h2 class="section-title">国語科：書字負担の分離とキーボードによる機能的言語獲得</h2>
+        </div>
+
+        <div class="prose-block">
+          <p>
+            特別支援教育における文字の学習には、大きく分けて**「文字の形を捉えて書く学習」**と、**「文字を使って自分の思いを相手に伝える学習」**の2つがあります。従来の紙と鉛筆による指導では、この2つが同時に求められるため、子どもにとって非常に高いハードルとなっていました。
+          </p>
+          <p>
+            まず、手書きの学習においてアプリがもたらす決定的なメリットは、**「きれいに、一瞬で消せること」**です。特別支援学校の教室では、間違えた線を消しゴムで消そうとして力みすぎ、プリントが破れてしまったり、きれいに消えずに残った黒い跡に惑わされて余計に混乱したりする姿が日常的に見られます。消しゴムを器用に使う練習も将来的には必要ですが、「今は字の形（字形）を正しく認識し、書くことに専念させたい」という場面では、消去作業に奪われるエネルギーは大きな邪魔になります。アプリであれば、ボタンを一度押すだけで画面を真っ新にリセットできるため、**子どもは失敗を恐れず、疲弊することなく何度でも字形の試行錯誤に没頭できます**。
+          </p>
+          <p>
+            そして、それ以上に教育的価値が高いのが、**書く前の段階における「平仮名キーボード」の活用**です。
+          </p>
+          <p>
+            定型発達のお子さんであれば、文字の形が整っていなくても、手紙のようなものを書いて大人に渡し、「何かを伝えたつもりになる」という経験を通して自然と文字への興味を深めていきます。しかし、ディスレクシア（読み書き困難）のお子さんや知的障害を伴うお子さんの場合、文字は身の回りの絵やイラストと同じ「ただの図形」に見えており、文字を使って他者に何かを伝えようという動機そのものが持ちにくい現実があります。
+          </p>
+
+          <div class="highlight-panel">
+            <strong>「文字の価値に気付くのは、文字を活用できるようになってから」</strong>
+            <ul>
+              <li><strong>運動負荷のバイパス</strong>：鉛筆を正しく持って線をコントロールする運動は極めて重い負荷です。キーボードなら、指先でキーを押すだけで整った文字を出力できます。</li>
+              <li><strong>要求の実現体験</strong>：画面のキーで「あ・そ・ぼ・う」と入力して教員に見せ、実際に一緒に遊んでもらうという体験を繰り返します。</li>
+              <li><strong>機能への気付き</strong>：自分の入力した文字によって周囲の環境が変化し、願いが叶う体験を通して、子どもは初めて**「文字は単なる模様ではなく、自分の思いを伝えて願いを叶える便利な道具（機能）なんだ！」**と実感します。</li>
+            </ul>
+          </div>
+
+          <p>
+            意味も分からず機械的になぞり書きを反復させるのではなく、キーボードを通して**「文字の持つ価値や役割」を先に身体で理解させておくこと**。この土台があって初めて、その後に続く手書きの学習に対しても、「使えるようになりたい」という内発的な意味づけと意欲が芽生えます。
+          </p>
+        </div>
+
+        <!-- デモC 案内カード -->
+        <div class="demo-link-card no-select">
+          <div class="demo-link-info">
+            <h4>✍️ 実際の操作感を試してみる：デモC（瞬間消去 ＆ 伝達キーボード）</h4>
+            <p>紙を破かずに何度でもやり直せる手書きキャンバスと、書く前に言葉を伝えて相手を動かすキーボードのUIを体験できます。</p>
+          </div>
+          <a href="../demos/03_writing_lab.html" class="demo-btn" target="_blank">デモCを開く ➜</a>
+        </div>
+      </section>
+
+      <!-- 5.2 算数科の実践 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.2</span>
+          <h2 class="section-title">算数科：手の操作と数唱の一致、および「左から並べる」制約の転移</h2>
+        </div>
+
+        <div class="prose-block">
+          <p>
+            算数の基礎である「計数（数を数えること）」の指導において、最も頻繁に見られるつまずきは、**「手を動かして物を触るペース」と「声を出して数を唱えるペース（数唱）」がズレてしまうこと**です。口では「いち、に、さん、し」とテンポよく唱えているのに、手はまだ2個目しか触っていなかったり、逆に手だけが素早く動いて口が追いつかなかったりします。
+          </p>
+          <p>
+            この課題を解決するためには、**「オブジェクトを枠に入れた瞬間にだけ、ぴったり連動して『いち』『に』と音声が返る」という厳密な同期設計**が不可欠になります。手で運ぶ身体動作と、耳から入る聴覚フィードバックが0秒のズレもなく完全に一致することで、子どもは「1つの動作に対して1つの数が対応する（1対1対応）」という概念を直感的に掴んでいきます。
+          </p>
+          <p>
+            さらに、アプリ設計において非常に効果的なのが**「枠の左側から順番に配置することを必須にする」という制約（オプション）**です。
+          </p>
+
+          <div class="highlight-panel">
+            <strong>なぜ「左から順に並べる制約」がその後の学習を救うのか：</strong>
+            <ul>
+              <li><strong>バラバラ配置の弊害</strong>：枠を自由に選べるようにすると、あちこちの空いている場所に適当に置いてしまうお子さんがいます。そうしたお子さんは、後のひらがな学習で文字を左から正しい語順で並べることや、文章の読み書きで深刻なつまずきを示しがちです。</li>
+              <li><strong>音韻意識との連動</strong>：音韻意識（言葉が1音1音の音の連なりで構成されているという気付き）の発達は、話し言葉だけでなく、文字の空間的な配置順序（左から右への時間的・空間的順序性）と強く結びついています。</li>
+              <li><strong>ルールの先行獲得</strong>：算数の計数の段階で「物は左から順番に詰めていくものだ」という運動ルールを型として身につけさせておくことが、国語や生活単元を含むその後の学習全体の滞りを防ぎます。</li>
+            </ul>
+          </div>
+
+          <p>
+            この制約の教育的効果は、現場の実践でもはっきりと証明されています。アプリ上で「左から順にしか置けないルール」を何度も繰り返して遊んでいた児童に対し、ある日、何の前触れもなく本物の具体物（お皿とおはじき）を渡して課題を行わせました。教員は「左から置きなさい」といった指示は一言も出していません。しかし、そのお子さんは**当然のルールであるかのように、自発的に左のお皿から順番におはじきを1つずつ並べていったのです**。
+          </p>
+          <p>
+            デジタル上の厳密な枠組みによって「行動の型」を自動化させておくことで、現実の具体物環境に移った際にも、教員の指示待ちになることなく正しい行動パターンがそのまま発揮（汎化）されます。
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.3 概念形成と自立活動の系統性 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.3</span>
+          <h2 class="section-title">概念形成の足場かけと自立活動の「直上補足」モデル</h2>
+        </div>
+
+        <div class="prose-block">
+          <p>
+            言葉による指示理解が難しく、自発的な表出もまだ乏しいお子さんに対して、「大きい・小さい」といった抽象的な比較概念を教えるのは非常に難度が高い指導です。「大きい方を箱に入れてね」と言葉で伝えても理解できず、具体物を使うと物を打ち付けて遊んだり転がしたりしてしまい、比較する前に終わってしまいます。
+          </p>
+          <p>
+            こうした場面こそ、アプリによる**「行動の枠組みの先行提示」**が生きます。画面の左上に大きな枠、右上に小さな枠を用意し、画面下部に出てきた同じ絵柄の大小ペアをドラッグさせて分類させるアプリ（「おおきいちいさい」）[cite: 2]では、子どもは最初、言葉の意味が分からず適当に運ぼうとします。しかし、大きい物を大きい枠に運んだ時だけ小気味よい音が鳴り、間違えた枠に持っていくと静かに元の位置に戻るという即時判定を何度も繰り返すうちに、子どもは自然と**「両者をしっかり見比べて、形に合った方へ分ける」という比較の行動パターン**を身につけていきます。
+          </p>
+          <p>
+            この段階では、まだ「おおきい」「ちいさい」という言葉自体を獲得したとは言えないかもしれません。しかし、**「比較して分けるという活動のルール」が先に確立しているため、後から言葉を添えてあげることで、概念が極めて定着しやすい状態が整います**。
+          </p>
+
+          <div class="highlight-panel">
+            <strong>自立活動は教科の「直上」に位置づく補足基盤：</strong>
+            <p>
+              カリキュラム設計において、自立活動（身体の動き、感覚の活用、心理的な安定など）を各教科と完全に切り離された「別枠の独立した幹」として扱ってしまうと、指導がバラバラになりがちです。
+            </p>
+            <p style="margin-top: 0.5rem;">
+              本ハンドブックでは、**「国語や算数といった教科の学び（読む・書く・数える）がメインの太い幹であり、自立活動はその基礎を支える直上の補足基盤である」**という構造化を提案します。
+            </p>
+            <ul>
+              <li><strong>アプリ操作そのものが協応訓練</strong>：画面を注視しながら指先をコントロールしてターゲットを捉えるアプリ操作は、自立活動の「目と手の協応」そのものです。</li>
+              <li><strong>教科の土台としての接続</strong>：「点タップ」で画面内のターゲットを目で追う力（眼球運動）を育てることが、国語の行を追って読む力や算数の物を数える視線移動の直接的な土台になります。</li>
+            </ul>
+          </div>
+
+          <p>
+            教科の目標を常に中心に据えつつ、その達成を阻んでいる身体的・知覚的なつまずきをアプリの機能で補完・育成していくこと。これこそが、特別支援教育におけるアプリ開発の真骨頂です。
+          </p>
+        </div>
+      </section>
+
+      <!-- 前後の章へのナビゲーション -->
+      <div class="nav-pager">
+        <a href="04_principles.html">⬅ 第4章：アプリづくりの5大設計思想</a>
+        <a href="06_operations.html">第6章：実装・運用のリアリズム ➜</a>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>

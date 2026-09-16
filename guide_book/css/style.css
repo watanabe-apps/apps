@@ -1,0 +1,335 @@
+:root {
+  /* 背景・サーフェス */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #0f172a;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+
+  /* 文字色 */
+  --text-main: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-inverse: #f8fafc;
+
+  /* 境界線 */
+  --border-light: #e2e8f0;
+  --border-mid: #cbd5e1;
+  --border-dark: #94a3b8;
+
+  /* カラーユニバーサルデザイン（CUD）配慮カラー */
+  --primary: #0284c7;        /* 明確なブルー */
+  --primary-focus: #0369a1;
+  --primary-soft: #e0f2fe;
+  --accent: #4f46e5;         /* インディゴ */
+  --accent-soft: #e0e7ff;
+  --success: #15803d;        /* 落ち着いたグリーン */
+  --success-soft: #dcfce7;
+  --danger: #b91c1c;         /* 警告レッド */
+  --danger-soft: #fee2e2;
+  --warning: #b45309;        /* アンバーオレンジ */
+  --warning-soft: #fef3c7;
+
+  /* フォント指定：UDフォントおよび教科書体優先 */
+  --font-family: -apple-system, BlinkMacSystemFont, "BIZ UDPGothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-canvas);
+  color: var(--text-body);
+  line-height: 1.9;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* リンク */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: var(--primary-focus);
+  text-decoration: underline;
+}
+
+/* サイドバー（全体共通ナビゲーション） */
+.site-sidebar {
+  width: 300px;
+  background-color: var(--bg-sidebar);
+  color: #94a3b8;
+  padding: 2.5rem 1.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border-right: 1px solid #1e293b;
+}
+
+.site-sidebar h1 {
+  color: #f8fafc;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #334155;
+  padding-bottom: 0.85rem;
+}
+
+.site-sidebar .sidebar-subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+  font-weight: normal;
+}
+
+.sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-nav-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebar-nav-list a {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav-list a:hover {
+  background-color: #1e293b;
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.sidebar-nav-list a.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* メインコンテンツ枠 */
+.main-wrapper {
+  flex: 1;
+  padding: 3.5rem 3rem;
+  max-width: 1040px;
+}
+
+/* ドキュメントヘッダー */
+.doc-header {
+  border-bottom: 3px solid var(--primary);
+  padding-bottom: 2rem;
+  margin-bottom: 3rem;
+}
+
+.doc-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.doc-title {
+  font-size: 2.1rem;
+  color: var(--text-main);
+  line-height: 1.35;
+  margin-bottom: 1rem;
+}
+
+.doc-intro {
+  background-color: var(--primary-soft);
+  border-left: 5px solid var(--primary);
+  padding: 1.25rem 1.5rem;
+  border-radius: 4px;
+  font-size: 0.96rem;
+  color: var(--primary-focus);
+  line-height: 1.8;
+}
+
+/* 章・セクションカード */
+.chapter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.section-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 12px;
+  padding: 2.2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.85rem;
+  margin-bottom: 1.8rem;
+}
+
+.section-badge {
+  background-color: var(--primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.section-title {
+  font-size: 1.45rem;
+  color: var(--text-main);
+}
+
+/* 概要ボックス（箇条書き） */
+.summary-box {
+  background-color: var(--bg-subtle);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.8rem;
+  border-left: 5px solid var(--accent);
+}
+
+.summary-box h3, .summary-box h4 {
+  font-size: 1rem;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.summary-box ul {
+  padding-left: 1.25rem;
+  font-size: 0.94rem;
+  color: var(--text-body);
+}
+
+.summary-box li {
+  margin-bottom: 0.45rem;
+}
+
+/* 詳細解説の段落文章（です・ます調） */
+.prose-block {
+  font-size: 0.98rem;
+  line-height: 2.0;
+  color: var(--text-body);
+}
+
+.prose-block p {
+  margin-bottom: 1.35rem;
+  text-align: justify;
+}
+
+.prose-block strong {
+  color: var(--text-main);
+  background: linear-gradient(transparent 70%, var(--primary-soft) 70%);
+  font-weight: 700;
+}
+
+/* ポイント強調ボックス */
+.highlight-panel {
+  background-color: #f0f9ff;
+  border-left: 4px solid var(--primary);
+  padding: 1.1rem 1.35rem;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  color: #0c4a6e;
+  font-size: 0.94rem;
+}
+
+.highlight-panel ul {
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.highlight-panel li {
+  margin-bottom: 0.35rem;
+}
+
+/* 比較対比テーブル */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+}
+
+.data-table th {
+  background-color: var(--bg-subtle);
+  color: var(--text-main);
+  font-weight: 700;
+  padding: 0.9rem;
+  border: 1px solid var(--border-mid);
+  text-align: left;
+}
+
+.data-table td {
+  padding: 0.9rem;
+  border: 1px solid var(--border-mid);
+  vertical-align: top;
+}
+
+/* ===================================================
+   文字選択禁止（デモ・操作パーツ専用）
+   =================================================== */
+.no-select {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 880px) {
+  body {
+    flex-direction: column;
+  }
+  .site-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+    padding: 1.5rem;
+  }
+  .main-wrapper {
+    padding: 2rem 1.25rem;
+  }
+}
