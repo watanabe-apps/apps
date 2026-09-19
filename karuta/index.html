@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="img.png">
@@ -37,10 +37,9 @@
             -webkit-user-select: none;
         }
 
-        /* iOSの自動ズーム・文字拡大を完全防止 */
         input, select, textarea, button {
             font-family: var(--font-family);
-            font-size: 16px !important; /* 16px未満だとiOSが勝手に画面をズームする */
+            font-size: 16px !important;
         }
 
         body, html {
@@ -48,7 +47,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            height: calc(var(--vh, 1vh) * 100);
+            height: 100dvh;
             overflow: hidden;
             position: fixed;
             top: 0;
@@ -75,12 +74,9 @@
             position: absolute;
             top: 0;
             left: 0;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
             touch-action: none;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         .screen.active {
@@ -90,6 +86,7 @@
         /* --- スタート画面 --- */
         #home-screen {
             gap: 26px;
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
         }
 
         .btn-start {
@@ -126,11 +123,15 @@
             color: #8e8e93;
         }
 
-        /* --- プレイ画面 --- */
+        /* --- プレイ画面（セーフエリアを完全に保護） --- */
         #play-screen {
             justify-content: flex-start;
-            padding: 10px;
-            gap: 10px;
+            padding-top: max(8px, env(safe-area-inset-top));
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            padding-left: max(10px, env(safe-area-inset-left));
+            padding-right: max(10px, env(safe-area-inset-right));
+            gap: 8px;
+            height: 100%;
         }
 
         .play-header {
@@ -138,8 +139,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 48px;
-            padding: 0 8px;
+            height: 44px;
+            padding: 0 4px;
             position: relative;
             flex-shrink: 0;
         }
@@ -213,9 +214,12 @@
             transform: scale(0.92);
         }
 
+        /* グリッドコンテナ（はみ出しを完全ブロック） */
         .grid-container {
             flex: 1;
             width: 100%;
+            min-height: 0; /* 親Flexコンテナを突き破るのを防止 */
+            min-width: 0;
             display: grid;
             gap: 8px;
             justify-content: center;
@@ -228,10 +232,13 @@
         .card-slot {
             width: 100%;
             height: 100%;
+            min-height: 0; /* 子供のカードサイズによるスロット膨張を防止 */
+            min-width: 0;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
             touch-action: none;
         }
 
@@ -365,10 +372,10 @@
             background: #f2f2f7;
             z-index: 100;
             flex-direction: column;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-left: env(safe-area-inset-left);
-            padding-right: env(safe-area-inset-right);
+            padding-top: max(10px, env(safe-area-inset-top));
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            padding-left: max(10px, env(safe-area-inset-left));
+            padding-right: max(10px, env(safe-area-inset-right));
             overflow: hidden;
             overscroll-behavior: none;
         }
@@ -386,6 +393,7 @@
             justify-content: space-between;
             position: relative;
             flex-shrink: 0;
+            border-radius: 8px 8px 0 0;
         }
 
         .modal-title {
@@ -1322,7 +1330,6 @@
     <div id="toast" class="toast-notification"></div>
 
     <script>
-        // --- 1. アプリ状態と単語リスト（もぐら除外・106語） ---
         const DEFAULT_CARDS = [
             { id: "1", name: "あり", emoji: "🐜", imageData: null, audioData: null, isActive: true },
             { id: "2", name: "あいす", emoji: "🍨", imageData: null, audioData: null, isActive: true },
@@ -1497,10 +1504,6 @@
         function resetViewport() {
             window.scrollTo(0, 0);
             updateVh();
-            const meta = document.querySelector('meta[name="viewport"]');
-            if (meta) {
-                meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no';
-            }
             if (document.getElementById('play-screen').classList.contains('active')) {
                 refreshAllGridStyles();
             }
@@ -1508,22 +1511,20 @@
         }
 
         window.addEventListener('resize', resetViewport);
-        window.addEventListener('orientationchange', () => setTimeout(resetViewport, 150));
-        window.addEventListener('pageshow', resetViewport);
-        window.addEventListener('focus', resetViewport);
+        window.addEventListener('orientationchange', () => setTimeout(resetViewport, 200));
+        window.addEventListener('pageshow', () => setTimeout(resetViewport, 150));
+        window.addEventListener('focus', () => setTimeout(resetViewport, 150));
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                resetViewport();
+                setTimeout(resetViewport, 150);
                 initAudio();
             }
         });
 
-        // 2本指以上のジェスチャーズームを完全ブロック
         document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
         document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
         document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
 
-        // 入力完了後に強制的にスクロール位置をリセット
         document.addEventListener('focusout', () => {
             setTimeout(() => window.scrollTo(0, 0), 50);
         });
@@ -1982,39 +1983,47 @@
             return cardEl;
         }
 
+        // 親グリッドの全体サイズから1マスの利用可能領域を厳密計算（雪だるま式膨張バグを完全解消）
         function applyCardStyles(cardEl, textContainer, firstSpan, remainingSpan, imgContainer, isYouon, isSample) {
             const slot = cardEl.parentElement;
             if (!slot) return;
-            const slotRect = slot.getBoundingClientRect();
-            const slotW = Math.max(slotRect.width, 30);
-            const slotH = Math.max(slotRect.height, 30);
+            const grid = slot.parentElement;
+            if (!grid) return;
+
+            const gridRect = grid.getBoundingClientRect();
+            const cols = isSample ? setting.columns : setting.columns;
+            const rows = isSample ? setting.rows : setting.rows;
+            const gap = 8;
+
+            const availW = Math.max(30, (gridRect.width - (cols - 1) * gap) / cols);
+            const availH = Math.max(30, (gridRect.height - (rows - 1) * gap) / rows);
 
             const aspectMode = setting.cardAspectRatio || 'standard';
-            let targetCardW = slotW;
-            let targetCardH = slotH;
+            let targetCardW = availW;
+            let targetCardH = availH;
 
             if (aspectMode === 'square') {
-                const side = Math.min(slotW, slotH);
+                const side = Math.min(availW, availH);
                 targetCardW = side;
                 targetCardH = side;
             } else if (aspectMode === 'standard') {
                 const isVert = setting.writingMode === 'vertical';
                 const ratio = isVert ? (3 / 4) : (4 / 3);
 
-                if (slotW / slotH > ratio) {
-                    targetCardH = slotH;
-                    targetCardW = slotH * ratio;
+                if (availW / availH > ratio) {
+                    targetCardH = availH;
+                    targetCardW = availH * ratio;
                 } else {
-                    targetCardW = slotW;
-                    targetCardH = slotW / ratio;
+                    targetCardW = availW;
+                    targetCardH = availW / ratio;
                 }
             } else {
-                targetCardW = slotW;
-                targetCardH = slotH;
+                targetCardW = availW;
+                targetCardH = availH;
             }
 
-            cardEl.style.width = `${targetCardW}px`;
-            cardEl.style.height = `${targetCardH}px`;
+            cardEl.style.width = `${Math.floor(targetCardW)}px`;
+            cardEl.style.height = `${Math.floor(targetCardH)}px`;
 
             const w = targetCardW;
             const h = targetCardH;
@@ -2069,8 +2078,8 @@
 
                     firstSize = Math.min(safeFirstSize, maxAllowedH, Math.min(w, h) * ratioFirst * (isYouon ? 0.82 : 1.0));
                     
-                    const availW = Math.max(w * 0.88 - (firstSize * headWidthFactor), 8);
-                    const autoRest = availW / remCharLen;
+                    const remW = Math.max(w * 0.88 - (firstSize * headWidthFactor), 8);
+                    const autoRest = remW / remCharLen;
                     remainingSize = Math.min(autoRest, firstSize * 0.42, maxAllowedH * 0.5);
                 }
 
@@ -2099,8 +2108,8 @@
 
                     firstSize = Math.min(safeFirstSize, maxAllowedW, Math.min(w, h) * ratioFirst * (isYouon ? 0.82 : 1.0));
                     
-                    const availH = Math.max(h * 0.88 - (firstSize * headHeightFactor), 8);
-                    const autoRest = availH / remCharLen;
+                    const remH = Math.max(h * 0.88 - (firstSize * headHeightFactor), 8);
+                    const autoRest = remH / remCharLen;
                     remainingSize = Math.min(autoRest, firstSize * 0.42, maxAllowedW * 0.5);
                 }
 
@@ -2880,7 +2889,7 @@
             a.href = url;
             a.download = `karuta_backup_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(blob);
             showToast("データをエクスポートしました");
         }
 
