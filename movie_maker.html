@@ -193,12 +193,15 @@
   .stage-outer.recording-both-active {
     box-shadow: inset 0 0 0 4px var(--purple-color);
   }
+
+  /* flex-shrink: 0 で親サイズ縮小時の変形を完全に防止 */
   .stage-wrapper {
     position: relative;
     background-color: #111115;
     overflow: hidden;
     box-shadow: 0 0 25px rgba(0,0,0,0.8);
     touch-action: none;
+    flex-shrink: 0;
   }
   #stage-bg {
     width: 100%;
@@ -225,7 +228,7 @@
     opacity: 0.35 !important;
   }
 
-  /* transition を排除してドラッグ時の座標追従の遅延・飛翔を根絶 */
+  /* transition を排除し、ドラッグ追従の遅延・増幅を根絶 */
   .character {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -634,7 +637,7 @@
     font-size: 11px;
   }
 
-  /* 単一インスペクター設計に完全復元 */
+  /* 単一インスペクター構造 */
   .sidebar {
     width: 410px;
     background-color: var(--panel-bg);
@@ -862,6 +865,7 @@
         </div>
       </div>
 
+      <!-- 保存選択モーダル -->
       <div class="modal-overlay" id="save-choice-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトの保存</div>
@@ -876,6 +880,7 @@
         </div>
       </div>
 
+      <!-- 終了確認モーダル -->
       <div class="modal-overlay" id="close-confirm-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトを閉じますか？</div>
@@ -922,6 +927,7 @@
         </span>
       </div>
 
+      <!-- 2カラム完全同期タイムライン -->
       <div class="timeline-sync-container" id="timeline-sync-wrap">
         <div class="timeline-labels-col" id="timeline-labels-col">
           <div class="timeline-label-cell ruler-header-cell">
@@ -1066,7 +1072,6 @@ let micMeterInterval = null;
 let micAnalyser = null;
 let micDataArray = null;
 
-// ドラッグ状態管理（iPad対応：開始時の基準Rectを保持）
 let activeDrag = {
   isDragging: false,
   leaderId: null,
@@ -1119,7 +1124,6 @@ const trackLanesContainer = document.getElementById('track-lanes-container');
 const audioTrackLanesContainer = document.getElementById('audio-track-lanes-container');
 const timelinePlayhead = document.getElementById('timeline-playhead');
 
-// --- 音声トラック初期化 ---
 function initDefaultAudioTrack() {
   if (audioTracks.length === 0) {
     const id = 'atk_' + Date.now();
@@ -1163,7 +1167,6 @@ function toggleTrackMute(type, id, ev) {
   renderVisualTimeline();
 }
 
-// --- IndexedDB ストレージ ---
 const DB_NAME = 'SceneDirectorDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'projectStore';
@@ -1275,12 +1278,10 @@ function applyBgPreset(preset) {
   } else if (preset === 'none') {
     stageBg.src = '';
     stageBg.style.display = 'none';
-    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
     stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
     bgColorGroup.style.display = 'flex';
     bgCustomGroup.style.display = 'none';
   } else if (preset === 'custom') {
-    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
     stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
     if (customBgSrc) {
       stageBg.src = customBgSrc;
@@ -1366,6 +1367,7 @@ function changeAspectRatio(ratio) {
   markUnsaved();
 }
 
+// ステージの縦横変形を防ぐ完全スケール計算
 function updateStageLayout() {
   const outerW = stageOuter.clientWidth - 20;
   const outerH = stageOuter.clientHeight - 20;
@@ -1374,6 +1376,10 @@ function updateStageLayout() {
   const scale = Math.min(outerW / logicalWidth, outerH / logicalHeight);
   stage.style.width = logicalWidth + 'px';
   stage.style.height = logicalHeight + 'px';
+  stage.style.minWidth = logicalWidth + 'px';
+  stage.style.minHeight = logicalHeight + 'px';
+  stage.style.maxWidth = logicalWidth + 'px';
+  stage.style.maxHeight = logicalHeight + 'px';
   stage.style.transform = `scale(${scale})`;
   stage.style.transformOrigin = 'center center';
 }
@@ -1414,7 +1420,7 @@ function startCountdown(onComplete) {
   nextStep();
 }
 
-// 人物追加関数（完全復元）
+// 人物追加
 function addCharacter() {
   const id = 'c_' + Date.now();
   const chara = {
@@ -1453,7 +1459,7 @@ function loadImageObject(chara) {
   chara.imageObj = img;
 }
 
-// iPad対応：開始時Rect基準のポインター座標変換
+// ポインター座標の論理スケール変換
 function getPointerLogicalPos(e) {
   const rect = (activeDrag.isDragging && activeDrag.startRect) ? activeDrag.startRect : stage.getBoundingClientRect();
   const scale = (activeDrag.isDragging && activeDrag.startScale) ? activeDrag.startScale : (rect.width / logicalWidth);
@@ -1495,7 +1501,7 @@ function createStageElement(chara) {
 
   el.appendChild(imgBox);
 
-  // キャラクター直接掴み（カウントダウン中も反応）
+  // キャラクター本体を押した時のみドラッグ開始
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || isExporting || isTheaterMode) return;
     e.stopPropagation();
@@ -1508,14 +1514,6 @@ function createStageElement(chara) {
   stage.appendChild(el);
   updateStageElement(chara, currentTime);
 }
-
-stageOuter.addEventListener('pointerdown', (e) => {
-  if (e.button !== 0 || isExporting || isTheaterMode) return;
-  if (!selectedCharaId) return;
-  e.preventDefault();
-  getAudioContext();
-  startPuppetDrag(selectedCharaId, e);
-});
 
 // ドラッグ開始（※開始点を自動で◆打刻）
 function startPuppetDrag(leaderId, e) {
@@ -1535,7 +1533,7 @@ function startPuppetDrag(leaderId, e) {
   activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
   activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
 
-  // ドラッグ開始点を自動キーフレーム（◆）打刻
+  // 開始点をキーフレーム（◆）として自動登録
   recordManualKeyframe(leader, currentTime, leaderPos.x, leaderPos.y);
 
   activeDrag.groupOffsets = {};
@@ -1547,7 +1545,6 @@ function startPuppetDrag(leaderId, e) {
     });
   }
 
-  // 停止中の場合のみ仮座標を設定
   if (!isRecordingMotion) {
     leader._dragX = leaderPos.x;
     leader._dragY = leaderPos.y;
@@ -1568,12 +1565,12 @@ window.addEventListener('pointermove', (e) => {
   }
 }, { passive: false });
 
-function endDragOperation(pointerId) {
+function endDragOperation() {
   if (activeDrag.isDragging) {
     if (!isRecordingMotion) {
       commitCurrentDragKeyframe();
     } else {
-      // 録画中のマウスアップ時：ドラッグ終了点を自動でメモ（◆）
+      // 録画中のマウスアップ時：ドラッグ終了点を自動で◆打刻
       const leader = characters.find(c => c.id === activeDrag.leaderId);
       if (leader && leader.motion && leader.motion.length > 0) {
         leader.motion[leader.motion.length - 1].isManual = true;
@@ -1595,8 +1592,8 @@ function endDragOperation(pointerId) {
   }
 }
 
-window.addEventListener('pointerup', (e) => endDragOperation(e.pointerId));
-window.addEventListener('pointercancel', (e) => endDragOperation(e.pointerId));
+window.addEventListener('pointerup', () => endDragOperation());
+window.addEventListener('pointercancel', () => endDragOperation());
 
 function applyDirectPointerPosition() {
   if (!activeDrag.isDragging) return;
@@ -1653,21 +1650,16 @@ function commitCurrentDragKeyframe() {
   const leader = characters.find(c => c.id === activeDrag.leaderId);
   if (!leader) return;
   const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
-  
   targets.forEach(c => {
-    const finalX = c._dragX !== undefined ? c._dragX : getInterpolatedPosition(c, currentTime).x;
-    const finalY = c._dragY !== undefined ? c._dragY : getInterpolatedPosition(c, currentTime).y;
-
-    // ドラッグ終了点を手動メモ（◆）として自動登録
-    recordManualKeyframe(c, currentTime, finalX, finalY);
-
-    if (currentTime === 0 || c.motion.length <= 1) {
-      c.x = finalX;
-      c.y = finalY;
+    if (c._dragX !== undefined && c._dragY !== undefined) {
+      recordManualKeyframe(c, currentTime, c._dragX, c._dragY);
+      if (currentTime === 0 || c.motion.length <= 1) {
+        c.x = c._dragX;
+        c.y = c._dragY;
+      }
+      delete c._dragX;
+      delete c._dragY;
     }
-    delete c._dragX;
-    delete c._dragY;
-    updateStageElement(c, currentTime);
   });
 }
 
@@ -1733,7 +1725,7 @@ function setCharacterGroup(id, grp) {
   markUnsaved();
 }
 
-// 汎用打刻関数：手動・要点（◆）用
+// 手動・要点打刻（◆）
 function recordManualKeyframe(chara, t, x, y) {
   t = Math.round(t * 100) / 100;
   x = Math.round(x);
@@ -1863,7 +1855,7 @@ function calculateOpacity(chara, t) {
   return Math.max(0, Math.min(1, op));
 }
 
-// キャラクターと字幕の表示更新
+// 表示更新（ドラッグ中および録画中は常時完全表示）
 function updateStageElement(chara, t) {
   const el = document.getElementById('stage_' + chara.id);
   if (!el) return;
@@ -1872,7 +1864,6 @@ function updateStageElement(chara, t) {
   const rawOpacity = calculateOpacity(chara, t);
   const inTimeline = (t >= chara.inTime && t <= chara.outTime);
 
-  // ドラッグ操作中、または録画中の選択キャラは可視性を強制
   const isBeingDragged = activeDrag.isDragging && (
     activeDrag.leaderId === chara.id || 
     (chara.group !== 'none' && characters.find(c => c.id === activeDrag.leaderId)?.group === chara.group)
@@ -1889,7 +1880,7 @@ function updateStageElement(chara, t) {
   el.style.height = charaSize + 'px';
   el.style.transform = `translate(-50%, -50%) scale(${scaleMultiplier})`;
 
-  // 操作中はZ-Index 150(前面カーテン100より手前)＆完全表示
+  // 操作中・録画中の選択人物はZ-Index 150(前面カーテンより手前)＆完全表示
   if (isBeingDragged || (isRecordingMotion && selectedCharaId === chara.id)) {
     el.style.zIndex = 150;
     el.style.opacity = '1.0';
@@ -2329,7 +2320,6 @@ function stopMotionRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
-      // 停止時のキーフレームは打たない
     }
   }
 
@@ -2553,7 +2543,6 @@ function stopMotionAndAudioRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
-      // 停止時のキーフレームは打たない
     }
   }
 
@@ -2792,7 +2781,6 @@ function getSupportedVideoMimeType() {
   return '';
 }
 
-// 動画書き出し（完全統合・ストリーム安全遮断・タイムアウト付加）
 async function exportVideo() {
   if (isExporting) return;
   if (isPlaying) pause();
@@ -2871,7 +2859,7 @@ async function exportVideo() {
 
   const startTime = performance.now();
   const totalMs = duration * 1000;
-  const tailMarginMs = 800; // 最終フレームを完全に焼き切る余白
+  const tailMarginMs = 800;
   let isFinishSequenceStarted = false;
 
   function finishExport() {
