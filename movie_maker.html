@@ -884,6 +884,7 @@
         </div>
       </div>
 
+      <!-- 保存選択モーダル -->
       <div class="modal-overlay" id="save-choice-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトの保存</div>
@@ -898,6 +899,7 @@
         </div>
       </div>
 
+      <!-- 終了／閉じる確認モーダル -->
       <div class="modal-overlay" id="close-confirm-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトを閉じますか？</div>
@@ -1026,7 +1028,6 @@
 </div>
 
 <script>
-// WebKit/Safari完全対応SVG生成関数
 function createSafeSvgDataUri(svgString) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
 }
@@ -1552,7 +1553,6 @@ function loadImageObject(chara) {
   chara.imageObj = img;
 }
 
-// タブレット対応の正確な論理座標変換
 function getPointerLogicalPos(e) {
   const rect = stage.getBoundingClientRect();
   const scale = rect.width / logicalWidth;
@@ -1629,7 +1629,6 @@ function startPuppetDrag(leaderId, e) {
   activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
   activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
 
-  // 録画中は開始点として直接記録
   if (isRecordingMotion) {
     recordContinuousMotionPoint(leader, currentTime, leaderPos.x, leaderPos.y);
     leader.motion[leader.motion.length - 1].isManual = true;
@@ -1672,9 +1671,11 @@ window.addEventListener('pointermove', (e) => {
   }
 }, { passive: false });
 
-window.addEventListener('pointerup', (e) => {
+function endDragOperation(pointerId) {
   if (activeDrag.isDragging) {
-    try { stageOuter.releasePointerCapture(e.pointerId); } catch(err){}
+    if (pointerId !== undefined) {
+      try { stageOuter.releasePointerCapture(pointerId); } catch(err){}
+    }
     if (!isRecordingMotion) {
       commitCurrentDragKeyframe();
     } else {
@@ -1696,7 +1697,10 @@ window.addEventListener('pointerup', (e) => {
     renderInspector();
     markUnsaved();
   }
-});
+}
+
+window.addEventListener('pointerup', (e) => endDragOperation(e.pointerId));
+window.addEventListener('pointercancel', (e) => endDragOperation(e.pointerId));
 
 function applyDirectPointerPosition() {
   if (!activeDrag.isDragging) return;
@@ -2385,7 +2389,7 @@ function handleTimelineAreaClick(e) {
   seekTo(ratio * duration);
 }
 
-// 動き記録（キャッシュ完全消去＋開始点自動打刻）
+// 動き記録
 function toggleMotionRecord(id) {
   if (!id || isExporting || isTheaterMode) return;
   selectCharacter(id);
@@ -2420,8 +2424,6 @@ function stopMotionRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
-      const curPos = getInterpolatedPosition(chara, currentTime);
-      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
     }
   }
 
@@ -2525,14 +2527,6 @@ function stopGlobalAudioRecording() {
   globalAudioRecBtn.textContent = '🎤 アフレコ録音';
   micIndicator.style.display = 'none';
   cleanupMicMeter();
-
-  if (selectedCharaId) {
-    const chara = characters.find(c => c.id === selectedCharaId);
-    if (chara) {
-      const curPos = getInterpolatedPosition(chara, currentTime);
-      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
-    }
-  }
 
   renderInspector();
   renderVisualTimeline();
@@ -2643,8 +2637,6 @@ function stopMotionAndAudioRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
-      const curPos = getInterpolatedPosition(chara, currentTime);
-      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
     }
   }
 
@@ -2836,6 +2828,7 @@ function getSupportedVideoMimeType() {
   return '';
 }
 
+// 動画書き出し（完全統合・ストリーム遮断・タイムアウト付加）
 async function exportVideo() {
   if (isExporting) return;
   if (isPlaying) pause();
@@ -2870,8 +2863,16 @@ async function exportVideo() {
   }
 
   const recordedChunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  let isDownloadTriggered = false;
+
+  recorder.ondataavailable = e => { 
+    if (e.data.size > 0) recordedChunks.push(e.data); 
+  };
+
   recorder.onstop = () => {
+    if (isDownloadTriggered) return;
+    isDownloadTriggered = true;
+
     const blob = new Blob(recordedChunks, { type: recorder.mimeType || (isMp4 ? 'video/mp4' : 'video/webm') });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2906,7 +2907,41 @@ async function exportVideo() {
 
   const startTime = performance.now();
   const totalMs = duration * 1000;
-  let isFinished = false;
+  const tailMarginMs = 800; // 最終フレームと音声を焼き切る余白
+  let isFinishSequenceStarted = false;
+
+  // 終了シーケンス統合処理
+  function finishExport() {
+    if (isFinishSequenceStarted) return;
+    isFinishSequenceStarted = true;
+    exportStatus.textContent = '100% 完了処理中...';
+
+    // 1. 全ストリームのトラックを完全遮断してMediaRecorderに終端を認識させる
+    try { destNode.disconnect(); } catch(e){}
+    videoStream.getTracks().forEach(track => track.stop());
+    destNode.stream.getTracks().forEach(track => track.stop());
+    combinedStream.getTracks().forEach(track => track.stop());
+
+    // 2. レコーダーの停止
+    if (recorder.state !== 'inactive') {
+      recorder.stop();
+    }
+
+    // 3. onstopが発火しない環境向けのセーフティ解除タイマー (3秒)
+    setTimeout(() => {
+      if (isExporting && !isDownloadTriggered) {
+        if (recordedChunks.length > 0) {
+          recorder.onstop();
+        } else {
+          exportOverlay.style.display = 'none';
+          isExporting = false;
+          setStageEditingMode(true);
+          seekTo(0);
+          alert('端末の制約により動画の自動生成が完了できませんでした。「シアター再生」機能を表示し、端末の画面収録をご利用ください。');
+        }
+      }
+    }, 3000);
+  }
 
   function renderExportFrame(now) {
     const elapsed = now - startTime;
@@ -3051,533 +3086,19 @@ async function exportVideo() {
       }
     });
 
-    const progress = Math.min(100, Math.floor((simTime / duration) * 100));
+    const progress = Math.min(100, Math.floor((elapsed / totalMs) * 100));
     exportProgress.style.width = progress + '%';
-    exportStatus.textContent = `${progress}% (${simTime.toFixed(1)}s / ${duration.toFixed(1)}s)`;
+    exportStatus.textContent = `${progress}% (${Math.min(duration, elapsed / 1000).toFixed(1)}s / ${duration.toFixed(1)}s)`;
 
-    if (elapsed < totalMs) {
+    if (elapsed < totalMs + tailMarginMs) {
       requestAnimationFrame(renderExportFrame);
-    } else if (!isFinished) {
-      isFinished = true;
-      exportStatus.textContent = '100% 完了処理中...';
-      setTimeout(() => {
-        if (recorder.state !== 'inactive') recorder.stop();
-      }, 600);
+    } else {
+      finishExport();
     }
   }
 
   requestAnimationFrame(renderExportFrame);
 }
-
-function renderInspector() {
-  renderCharaPills();
-  renderCharaTab();
-  renderSpotlightTab();
-  renderAudioTracksTab();
-}
-
-function renderCharaPills() {
-  charaPillsContainer.innerHTML = '';
-  characters.forEach(c => {
-    const pill = document.createElement('div');
-    pill.className = 'chara-pill' + (c.id === selectedCharaId ? ' selected' : '');
-    
-    if (c.group && c.group !== 'none') {
-      const dot = document.createElement('div');
-      dot.className = 'pill-group-dot';
-      dot.style.backgroundColor = GROUP_COLORS[c.group];
-      pill.appendChild(dot);
-    }
-
-    const thumb = document.createElement('img');
-    thumb.src = c.imgSrc;
-    pill.appendChild(thumb);
-
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = c.name;
-    pill.appendChild(nameSpan);
-
-    pill.onclick = () => selectCharacter(c.id);
-    charaPillsContainer.appendChild(pill);
-  });
-}
-
-function renderCharaTab() {
-  const c = characters.find(item => item.id === selectedCharaId);
-  if (!c) {
-    inspectorCharaContent.innerHTML = `<div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>`;
-    return;
-  }
-
-  const hasKeyframeAtCurrent = (c.motion || []).some(m => Math.abs(m.t - currentTime) < 0.04 && m.isManual);
-
-  let groupMembersHTML = '';
-  if (c.group && c.group !== 'none') {
-    const members = characters.filter(m => m.group === c.group && m.id !== c.id);
-    if (members.length > 0) {
-      const names = members.map(m => `<span style="text-decoration:underline; cursor:pointer;" onclick="selectCharacter('${m.id}')">${m.name}</span>`).join(', ');
-      groupMembersHTML = `<div style="font-size:12px; color:var(--text-sub); margin-top:4px;">同グループ: ${names}</div>`;
-    }
-  }
-
-  const dialoguesHTML = (c.dialogues || []).map(d => `
-    <div class="sub-item">
-      <div style="display:flex; gap:6px;">
-        <input type="text" placeholder="セリフテキスト" value="${d.text}" style="flex:1;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'text', this.value)">
-        <button class="btn-sm btn-danger" onclick="deleteDialogue('${c.id}', '${d.id}')">削除</button>
-      </div>
-      <div class="prop-row" style="gap:6px; flex-wrap:wrap;">
-        <span style="color:var(--text-sub);">位置:</span>
-        <select style="padding:2px 4px; font-size:12px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'pos', this.value)">
-          <option value="top" ${d.pos==='top'||!d.pos?'selected':''}>上 (頭上)</option>
-          <option value="bottom" ${d.pos==='bottom'?'selected':''}>下 (足元)</option>
-          <option value="left" ${d.pos==='left'?'selected':''}>左 (左側)</option>
-          <option value="right" ${d.pos==='right'?'selected':''}>右 (右側)</option>
-        </select>
-        <span style="color:var(--text-sub); margin-left:4px;">時間:</span>
-        <input type="number" step="0.1" value="${d.start}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(this.value))">
-        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
-        <span>〜</span>
-        <input type="number" step="0.1" value="${d.end}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(this.value))">
-        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
-      </div>
-    </div>
-  `).join('');
-
-  inspectorCharaContent.innerHTML = `
-    <div class="inspector-section">
-      <div class="inspector-title">
-        <span>基本情報・外見</span>
-      </div>
-      <div class="prop-row">
-        <label>名前:</label>
-        <input type="text" value="${c.name}" style="flex:1;" onchange="updateCharaProp('${c.id}', 'name', this.value); renderInspector(); renderVisualTimeline();">
-        <button class="btn-sm btn-danger" onclick="deleteCharacter('${c.id}')">削除</button>
-      </div>
-      <div class="prop-row">
-        <label>画像選択:</label>
-        <input type="file" accept="image/*" onchange="changeCharaImage('${c.id}', this)" style="flex:1;">
-      </div>
-      <div class="prop-row">
-        <label>左右向き:</label>
-        <button class="btn-sm" onclick="toggleFlip('${c.id}')">${c.flipX ? '⇄ 右向きにする' : '⇄ 左向きにする'}</button>
-      </div>
-      <div class="prop-row">
-        <label>サイズ:</label>
-        <input type="range" min="30" max="250" step="5" value="${c.size}" oninput="updateCharaProp('${c.id}', 'size', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
-        <span class="val-indicator">${c.size}px</span>
-      </div>
-      <div class="prop-row">
-        <label>重なり順:</label>
-        <button class="btn-sm" onclick="changeLayer('${c.id}', 'top')">最前面</button>
-        <button class="btn-sm" onclick="changeLayer('${c.id}', 'up')">前面</button>
-        <button class="btn-sm" onclick="changeLayer('${c.id}', 'down')">背面</button>
-        <button class="btn-sm" onclick="changeLayer('${c.id}', 'bottom')">最背面</button>
-      </div>
-
-      <div class="prop-row" style="align-items:flex-start; margin-top:2px;">
-        <label style="margin-top:4px;">連動同期:</label>
-        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-          <div class="group-buttons">
-            <button class="grp-btn ${c.group==='none'?'active-grp-none':''}" onclick="setCharacterGroup('${c.id}', 'none')">単独</button>
-            <button class="grp-btn ${c.group==='grp_a'?'active-grp-A':''}" onclick="setCharacterGroup('${c.id}', 'grp_a')">赤 (A)</button>
-            <button class="grp-btn ${c.group==='grp_b'?'active-grp-B':''}" onclick="setCharacterGroup('${c.id}', 'grp_b')">青 (B)</button>
-            <button class="grp-btn ${c.group==='grp_c'?'active-grp-C':''}" onclick="setCharacterGroup('${c.id}', 'grp_c')">緑 (C)</button>
-            <button class="grp-btn ${c.group==='grp_d'?'active-grp-D':''}" onclick="setCharacterGroup('${c.id}', 'grp_d')">黄 (D)</button>
-          </div>
-          ${groupMembersHTML}
-        </div>
-      </div>
-    </div>
-
-    <div class="inspector-section">
-      <div class="inspector-title">
-        <span>動き・キーフレーム操作 (${(c.motion || []).filter(m => m.isManual).length}箇所)</span>
-      </div>
-      <div class="prop-row" style="gap:4px;">
-        <button class="btn-sm" title="前のキーフレームへ" onclick="jumpToKeyframe('${c.id}', -1)">◀ 前のキー</button>
-        <button class="btn-sm primary-btn" style="flex:1;" onclick="addCurrentKeyframe('${c.id}')">◆ 座標打刻 (K)</button>
-        ${hasKeyframeAtCurrent ? `<button class="btn-sm btn-danger" onclick="removeCurrentKeyframe('${c.id}')">◇ キー削除</button>` : ''}
-        <button class="btn-sm" title="次のキーフレームへ" onclick="jumpToKeyframe('${c.id}', 1)">次のキー ▶</button>
-      </div>
-
-      <div class="prop-row">
-        <label>出現時刻:</label>
-        <input type="number" step="0.5" value="${c.inTime}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'inTime', parseFloat(this.value)); renderVisualTimeline();">
-        <span>s</span>
-        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'inTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地に設定</button>
-      </div>
-      <div class="prop-row">
-        <label>退場時刻:</label>
-        <input type="number" step="0.5" value="${c.outTime}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'outTime', parseFloat(this.value)); renderVisualTimeline();">
-        <span>s</span>
-        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'outTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地に設定</button>
-      </div>
-
-      <div class="prop-row">
-        <label>フェード開始:</label>
-        <input type="number" step="0.1" min="0" value="${c.fadeIn}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'fadeIn', parseFloat(this.value))">
-        <span>s (出現時)</span>
-      </div>
-      <div class="prop-row">
-        <label>フェード終了:</label>
-        <input type="number" step="0.1" min="0" value="${c.fadeOut}" style="width:70px;" onchange="updateCharaProp('${c.id}', 'fadeOut', parseFloat(this.value))">
-        <span>s (退場時)</span>
-      </div>
-
-      <div style="display:flex; gap:6px; margin-top:4px;">
-        <button class="record-both-btn ${isRecordingBoth ? 'recording' : ''}" style="flex:1; padding:8px 6px; font-weight:bold;" onclick="toggleMotionAndAudioRecord('${c.id}')">
-          ● 動き＋音声 同時記録 (Shift+R)
-        </button>
-      </div>
-      <div style="display:flex; gap:6px; margin-top:2px;">
-        <button class="record-btn ${isRecordingMotion && !isRecordingBoth ? 'recording' : ''}" style="flex:1;" onclick="toggleMotionRecord('${c.id}')">● 動きのみ記録 (R)</button>
-        <button onclick="trimMotionAfter('${c.id}')">以降削除</button>
-        <button class="btn-danger" onclick="clearMotion('${c.id}')">全消去</button>
-      </div>
-    </div>
-
-    <div class="inspector-section">
-      <div class="inspector-title">
-        <span>セリフ・吹き出し設定</span>
-        <button class="btn-sm primary-btn" onclick="addDialogue('${c.id}')">＋ 字幕追加</button>
-      </div>
-      <div class="prop-row">
-        <label>文字サイズ:</label>
-        <input type="range" min="12" max="36" step="1" value="${c.fontSize}" oninput="updateCharaProp('${c.id}', 'fontSize', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
-        <span class="val-indicator">${c.fontSize}px</span>
-      </div>
-      <div class="prop-row">
-        <label>吹き出し幅:</label>
-        <input type="range" min="100" max="600" step="10" value="${c.bubbleWidth || 260}" oninput="updateCharaProp('${c.id}', 'bubbleWidth', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
-        <span class="val-indicator">${c.bubbleWidth || 260}px</span>
-      </div>
-      ${dialoguesHTML.length > 0 ? dialoguesHTML : '<div style="font-size:13px; color:#6b7280; padding:4px 0;">字幕が登録されていません</div>'}
-    </div>
-  `;
-}
-
-function renderSpotlightTab() {
-  if (spotlightCues.length === 0) {
-    spotlightCuesList.innerHTML = `<div style="font-size:13px; color:#6b7280; text-align:center; padding:20px 0;">現在登録されているスポットライト演出はありません</div>`;
-    return;
-  }
-
-  spotlightCuesList.innerHTML = spotlightCues.map((cue, idx) => {
-    const charaOptions = characters.map(c => `
-      <option value="${c.id}" ${c.id === cue.targetCharaId ? 'selected' : ''}>${c.name}</option>
-    `).join('');
-
-    return `
-      <div class="sub-item" style="border-left: 3px solid var(--highlight-color);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:bold; color:var(--highlight-color);">演出 #${idx + 1}</span>
-          <button class="btn-sm btn-danger" onclick="deleteSpotlightCue('${cue.id}')">削除</button>
-        </div>
-        <div class="prop-row">
-          <label style="width:60px;">対象人物:</label>
-          <select style="flex:1;" onchange="updateSpotlightCue('${cue.id}', 'targetCharaId', this.value)">
-            ${charaOptions}
-          </select>
-        </div>
-        <div class="prop-row">
-          <label style="width:60px;">演出区間:</label>
-          <input type="number" step="0.1" value="${cue.start}" style="width:50px;" onchange="updateSpotlightCue('${cue.id}', 'start', parseFloat(this.value))">
-          <button class="btn-sm" onclick="updateSpotlightCue('${cue.id}', 'start', parseFloat(currentTime.toFixed(2))); renderSpotlightTab();">現在地</button>
-          <span>〜</span>
-          <input type="number" step="0.1" value="${cue.end}" style="width:50px;" onchange="updateSpotlightCue('${cue.id}', 'end', parseFloat(this.value))">
-          <button class="btn-sm" onclick="updateSpotlightCue('${cue.id}', 'end', parseFloat(currentTime.toFixed(2))); renderSpotlightTab();">現在地</button>
-        </div>
-        <div class="prop-row">
-          <label style="width:60px;">拡大率:</label>
-          <input type="range" min="1.1" max="2.0" step="0.05" value="${cue.scale || 1.3}" oninput="updateSpotlightCue('${cue.id}', 'scale', parseFloat(this.value)); this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
-          <span class="val-indicator">${Math.round((cue.scale || 1.3)*100)}%</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderAudioTracksTab() {
-  audioTracksList.innerHTML = audioTracks.map(t => {
-    const isAct = (t.id === activeAudioTrackId);
-    const clipsHTML = (t.clips || []).map((clip, idx) => `
-      <div class="sub-item" style="flex-direction:row; justify-content:space-between; align-items:center;">
-        <span style="font-size:12px; color:#10b981;">#${idx + 1} (${clip.startTime.toFixed(1)}s〜, ${clip.duration.toFixed(1)}秒)</span>
-        <button class="btn-sm btn-danger" onclick="deleteTrackAudioClip('${t.id}', '${clip.id}')">削除</button>
-      </div>
-    `).join('') || '<div style="font-size:12px; color:#6b7280;">録音クリップなし</div>';
-
-    return `
-      <div class="sub-item" style="border: 1px solid ${isAct ? '#10b981' : '#3e3e52'}; background:${isAct ? '#18241e' : '#1e1e28'};">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:bold; color:${isAct ? '#10b981' : '#fff'};">${t.name} ${isAct ? '(録音対象)' : ''}</span>
-          <div style="display:flex; gap:4px;">
-            <button class="btn-sm" style="background:#059669;" onclick="activeAudioTrackId='${t.id}'; renderVisualTimeline(); renderAudioTracksTab();">録音先に指定</button>
-            <button class="btn-sm btn-danger" onclick="deleteAudioTrack('${t.id}')">削除</button>
-          </div>
-        </div>
-        <div style="margin-top:4px;">${clipsHTML}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function updateCharaProp(id, prop, val) {
-  const chara = characters.find(c => c.id === id);
-  if (chara) {
-    chara[prop] = val;
-    updateStageElement(chara, currentTime);
-    markUnsaved();
-  }
-}
-
-function changeCharaImage(id, input) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const chara = characters.find(c => c.id === id);
-      chara.imgSrc = e.target.result;
-      loadImageObject(chara);
-      document.getElementById('img_' + id).src = e.target.result;
-      renderInspector();
-      markUnsaved();
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function deleteCharacter(id) {
-  characters = characters.filter(c => c.id !== id);
-  spotlightCues = spotlightCues.filter(s => s.targetCharaId !== id);
-  const el = document.getElementById('stage_' + id);
-  if (el) el.remove();
-  selectedCharaId = characters.length > 0 ? characters[0].id : null;
-  updateZIndexes();
-  renderInspector();
-  renderVisualTimeline();
-  markUnsaved();
-}
-
-function getSerializedProject() {
-  return {
-    duration: duration,
-    aspectRatio: currentAspectRatio,
-    bgPreset: currentBgPreset,
-    isCurtainOverlayActive: isCurtainOverlayActive,
-    bgColor: bgColorPicker.value,
-    customBgSrc: customBgSrc,
-    characters: characters.map(c => ({
-      id: c.id,
-      name: c.name,
-      imgSrc: c.imgSrc,
-      group: c.group || 'none',
-      muted: !!c.muted,
-      size: c.size || 90,
-      fontSize: c.fontSize || 16,
-      bubbleWidth: c.bubbleWidth || 260,
-      flipX: !!c.flipX,
-      x: c.x,
-      y: c.y,
-      inTime: c.inTime,
-      fadeIn: c.fadeIn,
-      outTime: c.outTime,
-      fadeOut: c.fadeOut,
-      dialogues: c.dialogues || [],
-      motion: c.motion || []
-    })),
-    spotlightCues: spotlightCues,
-    audioTracks: audioTracks.map(t => ({
-      id: t.id,
-      name: t.name,
-      muted: !!t.muted,
-      clips: (t.clips || []).map(clip => ({
-        id: clip.id,
-        name: clip.name,
-        base64: clip.base64,
-        startTime: clip.startTime,
-        duration: clip.duration,
-        volume: clip.volume !== undefined ? clip.volume : 1.0
-      }))
-    }))
-  };
-}
-
-function exportJSON() {
-  const project = getSerializedProject();
-  const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'scene_project_' + Date.now() + '.json';
-  a.click();
-  markSaved('ファイルに書き出し完了');
-}
-
-async function restoreProjectData(data) {
-  duration = data.duration || 30.0;
-  document.getElementById('total-duration').value = duration;
-  seekBar.max = duration;
-
-  if (data.aspectRatio) {
-    document.getElementById('aspect-ratio-select').value = data.aspectRatio;
-    changeAspectRatio(data.aspectRatio);
-  }
-
-  if (data.bgColor) {
-    bgColorPicker.value = data.bgColor;
-    stage.style.backgroundColor = data.bgColor;
-  }
-
-  if (data.customBgSrc) {
-    customBgSrc = data.customBgSrc;
-  }
-
-  if (data.isCurtainOverlayActive !== undefined) {
-    isCurtainOverlayActive = data.isCurtainOverlayActive;
-    curtainToggle.checked = isCurtainOverlayActive;
-  }
-
-  if (data.bgPreset) {
-    bgPresetSelect.value = data.bgPreset;
-    applyBgPreset(data.bgPreset);
-  } else {
-    bgPresetSelect.value = 'gym_stage';
-    applyBgPreset('gym_stage');
-  }
-
-  stage.querySelectorAll('.character').forEach(el => el.remove());
-  characters = data.characters || [];
-  spotlightCues = data.spotlightCues || [];
-
-  if (data.audioTracks && data.audioTracks.length > 0) {
-    audioTracks = data.audioTracks;
-  } else if (data.globalAudioClips && data.globalAudioClips.length > 0) {
-    audioTracks = [{
-      id: 'atk_' + Date.now(),
-      name: '音声 1',
-      muted: false,
-      clips: data.globalAudioClips
-    }];
-  } else {
-    audioTracks = [];
-    initDefaultAudioTrack();
-  }
-  activeAudioTrackId = audioTracks[0].id;
-
-  characters.forEach(c => {
-    if (!c.group) c.group = 'none';
-    if (!c.bubbleWidth) c.bubbleWidth = 260;
-    (c.dialogues || []).forEach(d => {
-      if (!d.pos) d.pos = 'top';
-    });
-    (c.motion || []).forEach((pt, i) => {
-      if (pt.isManual === undefined) {
-        pt.isManual = (pt.isKeyframe || i === 0 || i === c.motion.length - 1);
-      }
-    });
-  });
-
-  const ctx = getAudioContext();
-  for (const t of audioTracks) {
-    for (const clip of (t.clips || [])) {
-      if (clip.base64) {
-        try {
-          const resp = await fetch(clip.base64);
-          const arrayBuf = await resp.arrayBuffer();
-          clip.buffer = await ctx.decodeAudioData(arrayBuf);
-        } catch (audioErr) {
-          console.warn('Audio decode failed:', clip.id);
-        }
-      }
-    }
-  }
-
-  for (const c of characters) {
-    c.size = c.size || 90;
-    c.fontSize = c.fontSize || 16;
-    c.bubbleWidth = c.bubbleWidth || 260;
-    c.flipX = !!c.flipX;
-    loadImageObject(c);
-    createStageElement(c);
-  }
-
-  updateZIndexes();
-  selectedCharaId = characters.length > 0 ? characters[0].id : null;
-  renderInspector();
-  renderVisualTimeline();
-  checkOutOfBoundsData();
-  seekTo(0);
-}
-
-function importJSON(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async evt => {
-    try {
-      const data = JSON.parse(evt.target.result);
-      await restoreProjectData(data);
-      markSaved('ファイルから読み込み完了');
-    } catch(err) {
-      alert('ファイルの解析に失敗しました。');
-    }
-  };
-  reader.readAsText(file);
-}
-
-window.addEventListener('keydown', (e) => {
-  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-
-  if (e.code === 'Escape') {
-    if (isTheaterMode) {
-      e.preventDefault();
-      exitTheaterMode();
-      return;
-    }
-    if (saveChoiceModal.style.display === 'flex') {
-      closeSaveModal();
-      return;
-    }
-    if (closeConfirmModal.style.display === 'flex') {
-      closeCloseConfirmModal();
-      return;
-    }
-  }
-
-  if (e.code === 'Space') {
-    e.preventDefault();
-    togglePlay();
-    return;
-  }
-
-  if (isTheaterMode) return;
-
-  if ((e.key === 'r' || e.key === 'R') && e.shiftKey) {
-    e.preventDefault();
-    if (selectedCharaId) toggleMotionAndAudioRecord(selectedCharaId);
-  } else if (e.key === 'r' || e.key === 'R') {
-    e.preventDefault();
-    if (selectedCharaId) toggleMotionRecord(selectedCharaId);
-  } else if (e.key === 'k' || e.key === 'K') {
-    e.preventDefault();
-    if (selectedCharaId) addCurrentKeyframe(selectedCharaId);
-  } else if (e.key === 'm' || e.key === 'M') {
-    e.preventDefault();
-    toggleGlobalAudioRecord();
-  } else if (e.code === 'ArrowLeft') {
-    e.preventDefault();
-    seekTo(currentTime - (e.shiftKey ? 2.0 : 0.2));
-  } else if (e.code === 'ArrowRight') {
-    e.preventDefault();
-    seekTo(currentTime + (e.shiftKey ? 2.0 : 0.2));
-  } else if (e.code === 'Home' || e.key === '0') {
-    e.preventDefault();
-    seekTo(0);
-  } else if (e.code === 'Tab') {
-    e.preventDefault();
-    cycleCharacterSelection(e.shiftKey ? -1 : 1);
-  }
-});
 
 window.addEventListener('DOMContentLoaded', async () => {
   changeAspectRatio('16:9');
