@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>視覚支援 動画プレイヤー</title>
+  <style>
+    :root {
+      --vh: 1vh;
+      --primary: #2563eb;
+      --bg-bar: rgba(15, 23, 42, 0.85);
+      --border-bar: rgba(255, 255, 255, 0.18);
+      --text-color: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      overflow: hidden;
+      background-color: #0b0f19;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      touch-action: none;
+    }
+
+    #app-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ビューポート全体 */
+    #viewport {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000;
+    }
+
+    /* 映像＋描画ステージ
+       中央配置（translate(-50%, -50%)）をベースに、拡大時のみ panX, panY による移動を許容 */
+    #stage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+      will-change: transform;
+      display: none;
+    }
+
+    #main-video, #main-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      display: block;
+    }
+
+    #draw-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* 全画面固定レイヤー（スポットライト・方眼線） */
+    #fixed-overlay-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* 初期状態：中央の選択カード */
+    #initial-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      z-index: 5;
+      text-align: center;
+    }
+
+    .open-main-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--primary);
+      border: 2px solid #60a5fa;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+      cursor: pointer;
+    }
+    .open-main-btn:active {
+      transform: scale(0.96);
+    }
+
+    .open-sub-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .open-sub-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* UI透明度（通常 / 半透明 / 非表示） */
+    .ui-overlay {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 20;
+    }
+    body.ui-mode-ghost .ui-overlay {
+      opacity: 0.2 !important;
+    }
+    body.ui-mode-ghost .ui-overlay:hover,
+    body.ui-mode-ghost .ui-overlay:focus-within {
+      opacity: 0.92 !important;
+    }
+    body.ui-mode-hidden .ui-overlay {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-8px);
+    }
+    body.ui-mode-hidden #bottom-panel,
+    body.ui-mode-hidden #video-controls {
+      transform: translate(-50%, 15px) !important;
+    }
+
+    /* 上部バー */
+    #top-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 68px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-bar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-bar);
+      border-radius: 14px;
+      padding: 6px 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #top-bar::-webkit-scrollbar { display: none; }
+
+    /* 右上常駐：表示切替ボタン */
+    #btn-ui-visibility {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid var(--border-bar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 30;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #btn-ui-visibility span.icon { font-size: 1.2rem; line-height: 1; }
+    #btn-ui-visibility span.label { font-size: 0.62rem; font-weight: 700; margin-top: 2px; }
+
+    /* 汎用ボタンスタイル */
+    .btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-color);
+      border-radius: 10px;
+      min-width: 44px;
+      height: 44px;
+      padding: 2px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      gap: 1px;
+    }
+    .btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
+    .btn.active {
+      background: var(--primary);
+      border-color: #60a5fa;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.45);
+    }
+    .btn span.icon { font-size: 1.15rem; line-height: 1; }
+    .btn span.label { font-size: 0.62rem; font-weight: 700; white-space: nowrap; }
+
+    /* 操作対象セグメント */
+    .target-box {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 2px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .target-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #94a3b8;
+      padding: 0 6px;
+      white-space: nowrap;
+    }
+    .target-btn {
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      padding: 5px 9px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .target-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .target-btn.active.both {
+      background: #d97706;
+    }
+
+    /* 下部ツールパネル */
+    #bottom-panel {
+      position: absolute;
+      bottom: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-bar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-bar);
+      border-radius: 16px;
+      padding: 6px 10px;
+      max-width: 96vw;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #bottom-panel::-webkit-scrollbar { display: none; }
+
+    /* 下部動画コントローラー */
+    #video-controls {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96vw;
+      max-width: 720px;
+      background: var(--bg-bar);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-bar);
+      border-radius: 14px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #video-controls.hidden { display: none !important; }
+
+    .seeker-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    input[type="range"].seeker {
+      flex: 1;
+      height: 6px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .time-badge {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+      min-width: 78px;
+      text-align: right;
+    }
+
+    .color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      margin: 1px;
+    }
+
+    /* ズーム倍率バッジ（タップで基準リセット） */
+    #zoom-badge {
+      position: absolute;
+      bottom: 125px;
+      right: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-bar);
+      border-radius: 20px;
+      padding: 4px 12px;
+      color: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      z-index: 15;
+    }
+    #zoom-badge.hidden { display: none; }
+
+    /* 再生・一時停止の画面中央演出 */
+    #tap-feedback {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      color: white;
+      font-size: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 25;
+    }
+    #tap-feedback.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
+</head>
+<body class="ui-mode-normal">
+
+  <div id="app-container">
+    <input type="file" id="file-input" accept="video/*,image/*" style="display:none;">
+
+    <!-- メイン表示領域 -->
+    <div id="viewport">
+      <div id="stage">
+        <video id="main-video" playsinline webkit-playsinline loop preload="auto" style="display:none;"></video>
+        <img id="main-image" alt="支援画像" style="display:none;">
+        <canvas id="draw-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- 全画面固定（スポットライト・方眼） -->
+    <canvas id="fixed-overlay-canvas"></canvas>
+
+    <!-- 初期画面：中央の静かな選択カード -->
+    <div id="initial-placeholder">
+      <button class="open-main-btn" id="btn-initial-open">
+        <span style="font-size: 1.6rem;">📁</span>
+        <span>動画・画像を選択</span>
+      </button>
+      <button class="open-sub-btn" id="btn-initial-sample">
+        サンプル手順カードを開く
+      </button>
+    </div>
+
+    <!-- タップ演出 -->
+    <div id="tap-feedback">▶</div>
+
+    <!-- 拡大率バッジ -->
+    <div id="zoom-badge" class="hidden ui-overlay" title="タップで基準に戻す">
+      <span id="zoom-badge-text">🔍 1.0x</span>
+      <span style="color:#94a3b8; font-size:0.65rem;">基準</span>
+    </div>
+
+    <!-- 上部ヘッダーバー -->
+    <header id="top-bar" class="ui-overlay">
+      <button class="btn" id="btn-file" title="ファイルを開く">
+        <span class="icon">📁</span>
+        <span class="label">開く</span>
+      </button>
+
+      <div style="width: 1px; height: 26px; background: rgba(255,255,255,0.15); margin: 0 2px;"></div>
+
+      <button class="btn" id="btn-spotlight" title="周囲を暗くして注目させる">
+        <span class="icon">🔦</span>
+        <span class="label">スポット</span>
+      </button>
+
+      <button class="btn" id="btn-grid" title="姿勢・傾き確認用の方眼線">
+        <span class="icon">📐</span>
+        <span class="label">方眼</span>
+      </button>
+
+      <!-- 操作対象セグメント -->
+      <div class="target-box" title="ピンチ・ボタン操作時の対象">
+        <span class="target-label">操作対象</span>
+        <button class="target-btn active" id="target-video">映像</button>
+        <button class="target-btn" id="target-spotlight">スポット</button>
+        <button class="target-btn both" id="target-both">両方</button>
+      </div>
+
+      <div style="width: 1px; height: 26px; background: rgba(255,255,255,0.15); margin: 0 2px;"></div>
+
+      <button class="btn" id="btn-zoom-in" title="拡大">
+        <span class="icon">➕</span>
+        <span class="label">拡大</span>
+      </button>
+      <button class="btn" id="btn-zoom-out" title="縮小">
+        <span class="icon">➖</span>
+        <span class="label">縮小</span>
+      </button>
+      <button class="btn" id="btn-zoom-reset" title="基準サイズへ戻す">
+        <span class="icon">↺</span>
+        <span class="label">基準</span>
+      </button>
+
+      <div style="flex:1;"></div>
+
+      <button class="btn" id="btn-fullscreen" title="全画面表示切替">
+        <span class="icon">⛶</span>
+        <span class="label">全画面</span>
+      </button>
+    </header>
+
+    <!-- 右上常駐：UI切替 -->
+    <button id="btn-ui-visibility" title="UI表示切替（通常 / 半透明 / 非表示）">
+      <span class="icon" id="ui-vis-icon">👁️</span>
+      <span class="label" id="ui-vis-label">通常</span>
+    </button>
+
+    <!-- 下部ツールパネル -->
+    <footer id="bottom-panel" class="ui-overlay">
+      <button class="btn active" id="tool-touch" title="触るモード（再生/停止・ピンチ拡大・移動）">
+        <span class="icon">✋</span>
+        <span class="label">触る</span>
+      </button>
+
+      <button class="btn" id="tool-pen" title="フリーハンドで書く">
+        <span class="icon">✏️</span>
+        <span class="label">描く</span>
+      </button>
+
+      <button class="btn" id="tool-arrow" title="矢印を書く">
+        <span class="icon">↗️</span>
+        <span class="label">矢印</span>
+      </button>
+
+      <button class="btn" id="tool-circle" title="丸で囲む">
+        <span class="icon">⭕</span>
+        <span class="label">囲み</span>
+      </button>
+
+      <button class="btn" id="tool-move" title="描いた線を指で移動する">
+        <span class="icon">✥</span>
+        <span class="label">移動</span>
+      </button>
+
+      <div style="width: 1px; height: 26px; background: rgba(255,255,255,0.15); margin: 0 2px;"></div>
+
+      <button class="btn" id="btn-color-select" title="ペンの色を変更">
+        <div class="color-dot" id="active-color-indicator" style="background:#facc15;"></div>
+        <span class="label" id="active-color-label">黄色</span>
+      </button>
+
+      <button class="btn" id="btn-size-select" title="ペンの太さを変更">
+        <span class="icon" style="font-size:0.9rem;">●</span>
+        <span class="label" id="active-size-label">太線</span>
+      </button>
+
+      <div style="width: 1px; height: 26px; background: rgba(255,255,255,0.15); margin: 0 2px;"></div>
+
+      <button class="btn" id="btn-undo" title="1つ戻す">
+        <span class="icon">↩️</span>
+        <span class="label">取消</span>
+      </button>
+
+      <button class="btn" id="btn-clear" title="すべての書き込みを消去">
+        <span class="icon">🗑️</span>
+        <span class="label">全消</span>
+      </button>
+    </footer>
+
+    <!-- 下部動画コントローラー -->
+    <div id="video-controls" class="hidden ui-overlay">
+      <button class="btn" id="btn-play" style="min-width:44px; height:40px;">
+        <span class="icon" id="play-icon">▶</span>
+        <span class="label" id="play-label">再生</span>
+      </button>
+
+      <button class="btn" id="btn-back-10" style="min-width:38px; height:40px;" title="10秒戻る">
+        <span class="icon" style="font-size:0.85rem;">«10</span>
+        <span class="label">戻る</span>
+      </button>
+
+      <button class="btn" id="btn-prev-frame" style="min-width:36px; height:40px;" title="1コマ戻る">
+        <span class="icon" style="font-size:0.85rem;">❙◀</span>
+        <span class="label">コマ</span>
+      </button>
+
+      <button class="btn" id="btn-next-frame" style="min-width:36px; height:40px;" title="1コマ進む">
+        <span class="icon" style="font-size:0.85rem;">▶❙</span>
+        <span class="label">コマ</span>
+      </button>
+
+      <button class="btn" id="btn-fwd-10" style="min-width:38px; height:40px;" title="10秒進む">
+        <span class="icon" style="font-size:0.85rem;">10»</span>
+        <span class="label">進む</span>
+      </button>
+
+      <div class="seeker-container">
+        <input type="range" class="seeker" id="video-seeker" min="0" max="100" value="0" step="0.1">
+        <span class="time-badge" id="time-display">0:00 / 0:00</span>
+      </div>
+
+      <button class="btn" id="btn-speed" style="min-width:48px; height:40px;" title="再生速度切替">
+        <span class="icon" id="speed-display" style="font-size:0.85rem; font-weight:800;">1.0x</span>
+        <span class="label">速度</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       状態管理
+       ========================================================================== */
+    const state = {
+      hasMedia: false,
+      mediaType: null, // 'video' | 'image'
+      naturalWidth: 0,
+      naturalHeight: 0,
+      fitWidth: 0,
+      fitHeight: 0,
+
+      // 拡大縮小 ＆ 拡大時パン移動
+      zoom: 1.0,
+      minZoom: 1.0,
+      maxZoom: 5.0,
+      panX: 0,
+      panY: 0,
+
+      // スポットライト
+      isSpotlight: false,
+      spotlightX: window.innerWidth / 2,
+      spotlightY: window.innerHeight / 2,
+      spotlightRadius: 130,
+      defaultSpotRadius: 130,
+      minSpotRadius: 40,
+      maxSpotRadius: 400,
+
+      // 操作対象: 'video' | 'spotlight' | 'both'
+      activeTarget: 'video',
+
+      // 方眼
+      isGrid: false,
+
+      // UI表示モード: 'normal' | 'ghost' | 'hidden'
+      uiMode: 'normal',
+
+      // 描画ツール
+      currentTool: 'touch',
+      activeColor: '#facc15',
+      activeStrokeWidth: 8,
+      strokes: [],
+      redoStack: [],
+
+      colors: [
+        { name: '黄色', color: '#facc15' },
+        { name: '赤色', color: '#ef4444' },
+        { name: '水色', color: '#38bdf8' },
+        { name: '白色', color: '#ffffff' },
+        { name: '黒色', color: '#0f172a' }
+      ],
+      colorIndex: 0,
+
+      widths: [
+        { label: '細線', width: 4 },
+        { label: '太線', width: 8 },
+        { label: '極太', width: 14 }
+      ],
+      widthIndex: 1,
+
+      speeds: [0.25, 0.5, 0.75, 1.0, 1.5, 2.0],
+      speedIndex: 3
+    };
+
+    // DOM要素
+    const viewport = document.getElementById('viewport');
+    const stage = document.getElementById('stage');
+    const mainVideo = document.getElementById('main-video');
+    const mainImage = document.getElementById('main-image');
+    const drawCanvas = document.getElementById('draw-canvas');
+    const drawCtx = drawCanvas.getContext('2d');
+    const fixedCanvas = document.getElementById('fixed-overlay-canvas');
+    const fixedCtx = fixedCanvas.getContext('2d');
+
+    const initialPlaceholder = document.getElementById('initial-placeholder');
+    const fileInput = document.getElementById('file-input');
+    const videoControls = document.getElementById('video-controls');
+    const videoSeeker = document.getElementById('video-seeker');
+    const timeDisplay = document.getElementById('time-display');
+    const btnPlay = document.getElementById('btn-play');
+    const playIcon = document.getElementById('play-icon');
+    const playLabel = document.getElementById('play-label');
+    const speedDisplay = document.getElementById('speed-display');
+    const zoomBadge = document.getElementById('zoom-badge');
+    const zoomBadgeText = document.getElementById('zoom-badge-text');
+    const tapFeedback = document.getElementById('tap-feedback');
+
+    /* ==========================================================================
+       ビューポート高さ計算
+       ========================================================================== */
+    function updateViewportDimensions() {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      fixedCanvas.width = window.innerWidth;
+      fixedCanvas.height = window.innerHeight;
+
+      if (state.hasMedia) {
+        fitStageToScreen();
+      }
+      renderFixedOverlay();
+    }
+    window.addEventListener('resize', updateViewportDimensions);
+    window.addEventListener('orientationchange', () => setTimeout(updateViewportDimensions, 150));
+    updateViewportDimensions();
+
+    /* ==========================================================================
+       メディアの全画面フィット計算
+       ========================================================================== */
+    function fitStageToScreen() {
+      if (!state.naturalWidth || !state.naturalHeight) return;
+
+      const screenW = viewport.clientWidth;
+      const screenH = viewport.clientHeight;
+      const mediaAspect = state.naturalWidth / state.naturalHeight;
+      const screenAspect = screenW / screenH;
+
+      let fitW, fitH;
+      if (screenAspect > mediaAspect) {
+        fitH = screenH;
+        fitW = fitH * mediaAspect;
+      } else {
+        fitW = screenW;
+        fitH = fitW / mediaAspect;
+      }
+
+      state.fitWidth = Math.round(fitW);
+      state.fitHeight = Math.round(fitH);
+
+      stage.style.width = `${state.fitWidth}px`;
+      stage.style.height = `${state.fitHeight}px`;
+      stage.style.display = 'block';
+
+      drawCanvas.width = state.fitWidth;
+      drawCanvas.height = state.fitHeight;
+
+      clampPan();
+      updateStageTransform();
+      redrawAllStrokes();
+    }
+
+    /* ==========================================================================
+       ズーム ＆ パン（拡大時のみ移動・境界制限付き）
+       ========================================================================== */
+    function clampPan() {
+      if (state.zoom <= 1.01) {
+        // 等倍のときは完全に画面中央に吸着（パンなし）
+        state.panX = 0;
+        state.panY = 0;
+        return;
+      }
+      // 映像が拡大しているときは、画面外へ逃げてしまわない範囲にクランプ
+      const scaledW = state.fitWidth * state.zoom;
+      const scaledH = state.fitHeight * state.zoom;
+      const maxPanX = Math.max(0, (scaledW - viewport.clientWidth) / 2 + 60);
+      const maxPanY = Math.max(0, (scaledH - viewport.clientHeight) / 2 + 60);
+
+      state.panX = Math.max(-maxPanX, Math.min(maxPanX, state.panX));
+      state.panY = Math.max(-maxPanY, Math.min(maxPanY, state.panY));
+    }
+
+    function updateStageTransform() {
+      clampPan();
+      stage.style.transform = `translate(calc(-50% + ${state.panX}px), calc(-50% + ${state.panY}px)) scale(${state.zoom})`;
+
+      if (state.zoom > 1.02 || Math.abs(state.panX) > 5 || Math.abs(state.panY) > 5) {
+        zoomBadge.classList.remove('hidden');
+        zoomBadgeText.textContent = `🔍 ${state.zoom.toFixed(1)}x`;
+      } else {
+        zoomBadge.classList.add('hidden');
+      }
+    }
+
+    function resetZoom() {
+      state.zoom = 1.0;
+      state.panX = 0;
+      state.panY = 0;
+      if (state.isSpotlight && (state.activeTarget === 'spotlight' || state.activeTarget === 'both')) {
+        state.spotlightRadius = state.defaultSpotRadius;
+        renderFixedOverlay();
+      }
+      updateStageTransform();
+    }
+
+    zoomBadge.addEventListener('click', resetZoom);
+    document.getElementById('btn-zoom-reset').addEventListener('click', resetZoom);
+
+    /* ==========================================================================
+       拡大縮小の同期処理（両方連動時に片方だけ動く現象の完全防止）
+       ========================================================================== */
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      applyScaleStep(1.22);
+    });
+
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      applyScaleStep(0.82);
+    });
+
+    function applyScaleStep(stepRatio) {
+      if (state.activeTarget === 'video') {
+        state.zoom = Math.max(state.minZoom, Math.min(state.maxZoom, state.zoom * stepRatio));
+        updateStageTransform();
+      } else if (state.activeTarget === 'spotlight' && state.isSpotlight) {
+        state.spotlightRadius = Math.max(state.minSpotRadius, Math.min(state.maxSpotRadius, state.spotlightRadius * stepRatio));
+        renderFixedOverlay();
+      } else if (state.activeTarget === 'both') {
+        // 「両方」連動時：どちらかが限界に達したら両方同時に停止
+        let effectiveRatio = stepRatio;
+        if (stepRatio > 1) {
+          // 拡大方向：上限チェック
+          const maxAllowedVideoRatio = state.maxZoom / state.zoom;
+          const maxAllowedSpotRatio = state.isSpotlight ? (state.maxSpotRadius / state.spotlightRadius) : 999;
+          const maxAllowed = Math.min(maxAllowedVideoRatio, maxAllowedSpotRatio);
+          effectiveRatio = Math.min(stepRatio, maxAllowed);
+        } else {
+          // 縮小方向：下限チェック
+          const minAllowedVideoRatio = state.minZoom / state.zoom;
+          const minAllowedSpotRatio = state.isSpotlight ? (state.minSpotRadius / state.spotlightRadius) : 0;
+          const minAllowed = Math.max(minAllowedVideoRatio, minAllowedSpotRatio);
+          effectiveRatio = Math.max(stepRatio, minAllowed);
+        }
+
+        if (Math.abs(effectiveRatio - 1.0) > 0.001) {
+          state.zoom *= effectiveRatio;
+          if (state.isSpotlight) {
+            state.spotlightRadius *= effectiveRatio;
+            renderFixedOverlay();
+          }
+          updateStageTransform();
+        }
+      }
+    }
+
+    /* ==========================================================================
+       操作対象切り替え
+       ========================================================================== */
+    const targetBtns = {
+      video: document.getElementById('target-video'),
+      spotlight: document.getElementById('target-spotlight'),
+      both: document.getElementById('target-both')
+    };
+
+    function setTarget(targetKey) {
+      state.activeTarget = targetKey;
+      Object.keys(targetBtns).forEach(k => {
+        targetBtns[k].classList.toggle('active', k === targetKey);
+      });
+      if ((targetKey === 'spotlight' || targetKey === 'both') && !state.isSpotlight) {
+        toggleSpotlight(true);
+      }
+    }
+
+    Object.keys(targetBtns).forEach(k => {
+      targetBtns[k].addEventListener('click', () => setTarget(k));
+    });
+
+    /* ==========================================================================
+       スポットライト ＆ 方眼線
+       ========================================================================== */
+    const btnSpotlight = document.getElementById('btn-spotlight');
+    const btnGrid = document.getElementById('btn-grid');
+
+    function toggleSpotlight(force) {
+      state.isSpotlight = typeof force === 'boolean' ? force : !state.isSpotlight;
+      btnSpotlight.classList.toggle('active', state.isSpotlight);
+      if (state.isSpotlight && state.activeTarget === 'video') {
+        setTarget('both');
+      }
+      renderFixedOverlay();
+    }
+    btnSpotlight.addEventListener('click', () => toggleSpotlight());
+
+    btnGrid.addEventListener('click', () => {
+      state.isGrid = !state.isGrid;
+      btnGrid.classList.toggle('active', state.isGrid);
+      renderFixedOverlay();
+    });
+
+    function renderFixedOverlay() {
+      fixedCtx.clearRect(0, 0, fixedCanvas.width, fixedCanvas.height);
+
+      // 方眼
+      if (state.isGrid) {
+        fixedCtx.save();
+        fixedCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        fixedCtx.lineWidth = 1;
+        const step = 45;
+        for (let x = step; x < fixedCanvas.width; x += step) {
+          fixedCtx.beginPath();
+          fixedCtx.moveTo(x, 0);
+          fixedCtx.lineTo(x, fixedCanvas.height);
+          fixedCtx.stroke();
+        }
+        for (let y = step; y < fixedCanvas.height; y += step) {
+          fixedCtx.beginPath();
+          fixedCtx.moveTo(0, y);
+          fixedCtx.lineTo(fixedCanvas.width, y);
+          fixedCtx.stroke();
+        }
+        // 中心十字線
+        fixedCtx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+        fixedCtx.lineWidth = 1.5;
+        fixedCtx.beginPath();
+        fixedCtx.moveTo(fixedCanvas.width / 2, 0);
+        fixedCtx.lineTo(fixedCanvas.width / 2, fixedCanvas.height);
+        fixedCtx.moveTo(0, fixedCanvas.height / 2);
+        fixedCtx.lineTo(fixedCanvas.width, fixedCanvas.height / 2);
+        fixedCtx.stroke();
+        fixedCtx.restore();
+      }
+
+      // スポットライト
+      if (state.isSpotlight) {
+        fixedCtx.save();
+        fixedCtx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+        fixedCtx.fillRect(0, 0, fixedCanvas.width, fixedCanvas.height);
+
+        fixedCtx.globalCompositeOperation = 'destination-out';
+        fixedCtx.beginPath();
+        fixedCtx.arc(state.spotlightX, state.spotlightY, state.spotlightRadius, 0, Math.PI * 2);
+        fixedCtx.fill();
+
+        fixedCtx.globalCompositeOperation = 'source-over';
+        fixedCtx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+        fixedCtx.lineWidth = 3;
+        fixedCtx.beginPath();
+        fixedCtx.arc(state.spotlightX, state.spotlightY, state.spotlightRadius, 0, Math.PI * 2);
+        fixedCtx.stroke();
+        fixedCtx.restore();
+      }
+    }
+
+    /* ==========================================================================
+       描画処理
+       ========================================================================== */
+    function drawStrokeObject(ctx, stroke) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const outlineWidth = stroke.width + 6;
+      const isBright = ['#facc15', '#38bdf8', '#ffffff'].includes(stroke.color);
+      const outlineColor = isBright ? '#000000' : '#ffffff';
+
+      if (stroke.type === 'pen') {
+        if (stroke.points.length < 2) {
+          ctx.restore();
+          return;
+        }
+        ctx.beginPath();
+        ctx.strokeStyle = outlineColor;
+        ctx.lineWidth = outlineWidth;
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+
+      } else if (stroke.type === 'arrow') {
+        const { x1, y1, x2, y2 } = stroke;
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const headLen = Math.max(stroke.width * 2.8, 22);
+
+        ctx.beginPath();
+        ctx.strokeStyle = outlineColor;
+        ctx.lineWidth = outlineWidth;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+
+      } else if (stroke.type === 'circle') {
+        const cx = (stroke.x1 + stroke.x2) / 2;
+        const cy = (stroke.y1 + stroke.y2) / 2;
+        const rx = Math.abs(stroke.x2 - stroke.x1) / 2;
+        const ry = Math.abs(stroke.y2 - stroke.y1) / 2;
+
+        ctx.beginPath();
+        ctx.strokeStyle = outlineColor;
+        ctx.lineWidth = outlineWidth;
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function redrawAllStrokes() {
+      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+      state.strokes.forEach(s => drawStrokeObject(drawCtx, s));
+    }
+
+    /* ==========================================================================
+       マルチタッチ・ポインター操作（拡大時パン ＆ 両方同期ピンチ）
+       ========================================================================== */
+    const pointers = new Map();
+    let currentDrawingStroke = null;
+    let initialPinchDistance = null;
+    let initialZoom = 1.0;
+    let initialSpotRadius = 130;
+    let pointerDownStartPos = null;
+    let pointerDownStartTime = 0;
+
+    function getCanvasCoordinates(clientX, clientY) {
+      const rect = drawCanvas.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) * (drawCanvas.width / rect.width),
+        y: (clientY - rect.top) * (drawCanvas.height / rect.height)
+      };
+    }
+
+    viewport.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.ui-overlay, #btn-ui-visibility, #initial-placeholder')) return;
+
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      viewport.setPointerCapture(e.pointerId);
+
+      if (pointers.size === 1) {
+        pointerDownStartPos = { x: e.clientX, y: e.clientY };
+        pointerDownStartTime = Date.now();
+
+        if (['pen', 'arrow', 'circle'].includes(state.currentTool) && state.hasMedia) {
+          const pt = getCanvasCoordinates(e.clientX, e.clientY);
+          if (state.currentTool === 'pen') {
+            currentDrawingStroke = {
+              type: 'pen',
+              color: state.activeColor,
+              width: state.activeStrokeWidth,
+              points: [pt]
+            };
+          } else if (state.currentTool === 'arrow') {
+            currentDrawingStroke = {
+              type: 'arrow',
+              color: state.activeColor,
+              width: state.activeStrokeWidth,
+              x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y
+            };
+          } else if (state.currentTool === 'circle') {
+            currentDrawingStroke = {
+              type: 'circle',
+              color: state.activeColor,
+              width: state.activeStrokeWidth,
+              x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y
+            };
+          }
+        }
+      } else if (pointers.size === 2) {
+        currentDrawingStroke = null;
+        redrawAllStrokes();
+
+        const pts = Array.from(pointers.values());
+        initialPinchDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        initialZoom = state.zoom;
+        initialSpotRadius = state.spotlightRadius;
+      }
+    });
+
+    viewport.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      const prev = pointers.get(e.pointerId);
+      const dx = e.clientX - prev.x;
+      const dy = e.clientY - prev.y;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (pointers.size === 1) {
+        // 描画モード
+        if (state.currentTool === 'pen' && currentDrawingStroke) {
+          const pt = getCanvasCoordinates(e.clientX, e.clientY);
+          currentDrawingStroke.points.push(pt);
+          redrawAllStrokes();
+          drawStrokeObject(drawCtx, currentDrawingStroke);
+
+        } else if (['arrow', 'circle'].includes(state.currentTool) && currentDrawingStroke) {
+          const pt = getCanvasCoordinates(e.clientX, e.clientY);
+          currentDrawingStroke.x2 = pt.x;
+          currentDrawingStroke.y2 = pt.y;
+          redrawAllStrokes();
+          drawStrokeObject(drawCtx, currentDrawingStroke);
+
+        } else if (state.currentTool === 'move') {
+          // 描いた線全体の移動
+          const rect = drawCanvas.getBoundingClientRect();
+          const scaleAdjust = drawCanvas.width / rect.width;
+          const cdx = dx * scaleAdjust;
+          const cdy = dy * scaleAdjust;
+          state.strokes.forEach(s => {
+            if (s.type === 'pen') {
+              s.points.forEach(p => { p.x += cdx; p.y += cdy; });
+            } else {
+              s.x1 += cdx; s.y1 += cdy;
+              s.x2 += cdx; s.y2 += cdy;
+            }
+          });
+          redrawAllStrokes();
+
+        } else if (state.currentTool === 'touch') {
+          // 「触る」モード：対象に応じた直感的ドラッグ
+          if (state.activeTarget === 'video') {
+            // 映像が拡大されている場合のみ、見たい箇所へスライド
+            if (state.zoom > 1.01) {
+              state.panX += dx;
+              state.panY += dy;
+              updateStageTransform();
+            }
+          } else if (state.activeTarget === 'spotlight') {
+            // スポットライトを手元で隠れない相対移動
+            if (state.isSpotlight) {
+              state.spotlightX += dx;
+              state.spotlightY += dy;
+              renderFixedOverlay();
+            }
+          } else if (state.activeTarget === 'both') {
+            // 両方：スポットライトは常に追従、映像は拡大中であれば一緒にスライド
+            if (state.isSpotlight) {
+              state.spotlightX += dx;
+              state.spotlightY += dy;
+              renderFixedOverlay();
+            }
+            if (state.zoom > 1.01) {
+              state.panX += dx;
+              state.panY += dy;
+              updateStageTransform();
+            }
+          }
+        }
+
+      } else if (pointers.size === 2) {
+        // ピンチ操作：片方だけが動いてしまわない連動クランプ
+        const pts = Array.from(pointers.values());
+        const currentDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+        const rawRatio = currentDist / (initialPinchDistance || currentDist);
+
+        if (state.activeTarget === 'video') {
+          state.zoom = Math.max(state.minZoom, Math.min(state.maxZoom, initialZoom * rawRatio));
+          updateStageTransform();
+        } else if (state.activeTarget === 'spotlight' && state.isSpotlight) {
+          state.spotlightRadius = Math.max(state.minSpotRadius, Math.min(state.maxSpotRadius, initialSpotRadius * rawRatio));
+          renderFixedOverlay();
+        } else if (state.activeTarget === 'both') {
+          let clampedRatio = rawRatio;
+          if (rawRatio > 1) {
+            // 拡大時：先に上限に達する側で止める
+            const maxVid = state.maxZoom / initialZoom;
+            const maxSpot = state.isSpotlight ? (state.maxSpotRadius / initialSpotRadius) : 999;
+            clampedRatio = Math.min(rawRatio, Math.min(maxVid, maxSpot));
+          } else {
+            // 縮小時：先に下限に達する側で止める
+            const minVid = state.minZoom / initialZoom;
+            const minSpot = state.isSpotlight ? (state.minSpotRadius / initialSpotRadius) : 0;
+            clampedRatio = Math.max(rawRatio, Math.max(minVid, minSpot));
+          }
+
+          state.zoom = initialZoom * clampedRatio;
+          if (state.isSpotlight) {
+            state.spotlightRadius = initialSpotRadius * clampedRatio;
+            renderFixedOverlay();
+          }
+          updateStageTransform();
+        }
+      }
+    });
+
+    function endPointer(e) {
+      if (pointers.has(e.pointerId)) {
+        pointers.delete(e.pointerId);
+      }
+
+      if (pointers.size === 0) {
+        if (pointerDownStartPos) {
+          const dist = Math.hypot(e.clientX - pointerDownStartPos.x, e.clientY - pointerDownStartPos.y);
+          const elapsed = Date.now() - pointerDownStartTime;
+          if (dist < 8 && elapsed < 300) {
+            handleSingleTap();
+          }
+        }
+
+        if (currentDrawingStroke) {
+          state.strokes.push(currentDrawingStroke);
+          state.redoStack = [];
+          currentDrawingStroke = null;
+          redrawAllStrokes();
+        }
+        pointerDownStartPos = null;
+      }
+    }
+
+    viewport.addEventListener('pointerup', endPointer);
+    viewport.addEventListener('pointercancel', endPointer);
+
+    // PCマウスホイール
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      applyScaleStep(e.deltaY < 0 ? 1.15 : 0.88);
+    }, { passive: false });
+
+    // 画面タップで再生／一時停止（触るモード時）
+    function handleSingleTap() {
+      if (state.currentTool !== 'touch') return;
+      if (state.mediaType !== 'video') return;
+
+      if (mainVideo.paused) {
+        mainVideo.play();
+        triggerTapBadge('▶');
+      } else {
+        mainVideo.pause();
+        triggerTapBadge('⏸');
+      }
+      updatePlayButtonUI();
+    }
+
+    function triggerTapBadge(icon) {
+      tapFeedback.textContent = icon;
+      tapFeedback.classList.add('show');
+      setTimeout(() => tapFeedback.classList.remove('show'), 420);
+    }
+
+    /* ==========================================================================
+       ツール切り替え
+       ========================================================================== */
+    const toolButtons = {
+      touch: document.getElementById('tool-touch'),
+      pen: document.getElementById('tool-pen'),
+      arrow: document.getElementById('tool-arrow'),
+      circle: document.getElementById('tool-circle'),
+      move: document.getElementById('tool-move')
+    };
+
+    function selectTool(key) {
+      state.currentTool = key;
+      Object.keys(toolButtons).forEach(k => {
+        toolButtons[k].classList.toggle('active', k === key);
+      });
+      viewport.style.cursor = key === 'touch' ? 'default' : (key === 'move' ? 'move' : 'crosshair');
+    }
+
+    Object.keys(toolButtons).forEach(k => {
+      toolButtons[k].addEventListener('click', () => selectTool(k));
+    });
+
+    // 色
+    const btnColorSelect = document.getElementById('btn-color-select');
+    const colorIndicator = document.getElementById('active-color-indicator');
+    const colorLabel = document.getElementById('active-color-label');
+
+    btnColorSelect.addEventListener('click', () => {
+      state.colorIndex = (state.colorIndex + 1) % state.colors.length;
+      const c = state.colors[state.colorIndex];
+      state.activeColor = c.color;
+      colorIndicator.style.backgroundColor = c.color;
+      colorLabel.textContent = c.name;
+    });
+
+    // 太さ
+    const btnSizeSelect = document.getElementById('btn-size-select');
+    const sizeLabel = document.getElementById('active-size-label');
+
+    btnSizeSelect.addEventListener('click', () => {
+      state.widthIndex = (state.widthIndex + 1) % state.widths.length;
+      const w = state.widths[state.widthIndex];
+      state.activeStrokeWidth = w.width;
+      sizeLabel.textContent = w.label;
+    });
+
+    // 取消
+    document.getElementById('btn-undo').addEventListener('click', () => {
+      if (state.strokes.length > 0) {
+        state.redoStack.push(state.strokes.pop());
+        redrawAllStrokes();
+      }
+    });
+
+    // 全消
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (state.strokes.length === 0) return;
+      state.strokes = [];
+      state.redoStack = [];
+      redrawAllStrokes();
+    });
+
+    /* ==========================================================================
+       UI透明度切替 ＆ 全画面
+       ========================================================================== */
+    const btnUiVisibility = document.getElementById('btn-ui-visibility');
+    const uiVisIcon = document.getElementById('ui-vis-icon');
+    const uiVisLabel = document.getElementById('ui-vis-label');
+
+    btnUiVisibility.addEventListener('click', () => {
+      if (state.uiMode === 'normal') {
+        state.uiMode = 'ghost';
+        document.body.className = 'ui-mode-ghost';
+        uiVisIcon.textContent = '👻';
+        uiVisLabel.textContent = '半透明';
+      } else if (state.uiMode === 'ghost') {
+        state.uiMode = 'hidden';
+        document.body.className = 'ui-mode-hidden';
+        uiVisIcon.textContent = '🔒';
+        uiVisLabel.textContent = '非表示';
+      } else {
+        state.uiMode = 'normal';
+        document.body.className = 'ui-mode-normal';
+        uiVisIcon.textContent = '👁️';
+        uiVisLabel.textContent = '通常';
+      }
+    });
+
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      btnFullscreen.classList.toggle('active', !!document.fullscreenElement);
+    });
+
+    /* ==========================================================================
+       動画コントロール
+       ========================================================================== */
+    function formatTime(sec) {
+      if (isNaN(sec) || !isFinite(sec)) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updatePlayButtonUI() {
+      if (mainVideo.paused) {
+        playIcon.textContent = '▶';
+        playLabel.textContent = '再生';
+      } else {
+        playIcon.textContent = '⏸';
+        playLabel.textContent = '停止';
+      }
+    }
+
+    btnPlay.addEventListener('click', () => {
+      if (mainVideo.paused) {
+        mainVideo.play();
+      } else {
+        mainVideo.pause();
+      }
+      updatePlayButtonUI();
+    });
+
+    mainVideo.addEventListener('play', updatePlayButtonUI);
+    mainVideo.addEventListener('pause', updatePlayButtonUI);
+
+    mainVideo.addEventListener('timeupdate', () => {
+      if (mainVideo.duration) {
+        videoSeeker.value = (mainVideo.currentTime / mainVideo.duration) * 100;
+        timeDisplay.textContent = `${formatTime(mainVideo.currentTime)} / ${formatTime(mainVideo.duration)}`;
+      }
+    });
+
+    mainVideo.addEventListener('loadedmetadata', () => {
+      state.naturalWidth = mainVideo.videoWidth;
+      state.naturalHeight = mainVideo.videoHeight;
+      fitStageToScreen();
+      resetZoom();
+      timeDisplay.textContent = `0:00 / ${formatTime(mainVideo.duration)}`;
+      updatePlayButtonUI();
+    });
+
+    videoSeeker.addEventListener('input', (e) => {
+      if (mainVideo.duration) {
+        mainVideo.currentTime = (parseFloat(e.target.value) / 100) * mainVideo.duration;
+      }
+    });
+
+    document.getElementById('btn-back-10').addEventListener('click', () => {
+      mainVideo.currentTime = Math.max(0, mainVideo.currentTime - 10);
+    });
+    document.getElementById('btn-fwd-10').addEventListener('click', () => {
+      mainVideo.currentTime = Math.min(mainVideo.duration || 0, mainVideo.currentTime + 10);
+    });
+    document.getElementById('btn-prev-frame').addEventListener('click', () => {
+      mainVideo.pause();
+      mainVideo.currentTime = Math.max(0, mainVideo.currentTime - (1 / 30));
+    });
+    document.getElementById('btn-next-frame').addEventListener('click', () => {
+      mainVideo.pause();
+      mainVideo.currentTime = Math.min(mainVideo.duration || 0, mainVideo.currentTime + (1 / 30));
+    });
+
+    document.getElementById('btn-speed').addEventListener('click', () => {
+      state.speedIndex = (state.speedIndex + 1) % state.speeds.length;
+      const spd = state.speeds[state.speedIndex];
+      mainVideo.playbackRate = spd;
+      speedDisplay.textContent = `${spd}x`;
+    });
+
+    /* ==========================================================================
+       メディア読み込み処理
+       ========================================================================== */
+    const btnFile = document.getElementById('btn-file');
+    const btnInitialOpen = document.getElementById('btn-initial-open');
+    const btnInitialSample = document.getElementById('btn-initial-sample');
+
+    btnFile.addEventListener('click', () => fileInput.click());
+    btnInitialOpen.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith('video/')) {
+        loadVideo(url);
+      } else if (file.type.startsWith('image/')) {
+        loadImage(url);
+      }
+      fileInput.value = '';
+    });
+
+    function loadVideo(url) {
+      state.hasMedia = true;
+      state.mediaType = 'video';
+      initialPlaceholder.style.display = 'none';
+
+      mainImage.style.display = 'none';
+      mainVideo.style.display = 'block';
+      videoControls.classList.remove('hidden');
+
+      mainVideo.src = url;
+      mainVideo.load();
+      selectTool('touch');
+    }
+
+    function loadImage(url) {
+      state.hasMedia = true;
+      state.mediaType = 'image';
+      initialPlaceholder.style.display = 'none';
+
+      mainVideo.pause();
+      mainVideo.style.display = 'none';
+      videoControls.classList.add('hidden');
+      mainImage.style.display = 'block';
+
+      mainImage.src = url;
+      mainImage.onload = () => {
+        state.naturalWidth = mainImage.naturalWidth;
+        state.naturalHeight = mainImage.naturalHeight;
+        fitStageToScreen();
+        resetZoom();
+        selectTool('touch');
+      };
+    }
+
+    // サンプル手順カード生成
+    btnInitialSample.addEventListener('click', () => {
+      const cvs = document.createElement('canvas');
+      cvs.width = 960;
+      cvs.height = 540;
+      const ctx = cvs.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.fillText('てあらいの じゅんばん', 40, 65);
+
+      const steps = [
+        { num: '1', title: 'みずでぬらす', icon: '🚰' },
+        { num: '2', title: 'せっけんをつける', icon: '🧼' },
+        { num: '3', title: 'よくこする', icon: '🫧' },
+        { num: '4', title: 'タオルでふく', icon: '🧺' }
+      ];
+
+      steps.forEach((s, i) => {
+        const x = 40 + i * 225;
+        const y = 110;
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(x, y, 205, 380, 18);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#2563eb';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillText(s.num, x + 24, y + 48);
+
+        ctx.font = '68px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.icon, x + 102, y + 180);
+
+        ctx.fillStyle = '#334155';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(s.title, x + 102, y + 290);
+        ctx.textAlign = 'start';
+      });
+
+      loadImage(cvs.toDataURL());
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      selectTool('touch');
+    });
+  </script>
+</body>
+</html>

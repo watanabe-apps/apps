@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>視覚的モーション＆ボイスエディター</title>
 <style>
   :root {
@@ -32,6 +32,7 @@
     padding: 0; 
     user-select: none; 
     -webkit-user-select: none; 
+    touch-action: manipulation;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Segoe UI", Roboto, sans-serif;
@@ -43,6 +44,7 @@
     overflow: hidden;
     font-size: 14px;
     line-height: 1.4;
+    touch-action: none;
   }
 
   header {
@@ -196,6 +198,7 @@
     background-color: #111115;
     overflow: hidden;
     box-shadow: 0 0 25px rgba(0,0,0,0.8);
+    touch-action: none;
   }
   #stage-bg {
     width: 100%;
@@ -231,6 +234,7 @@
     justify-content: center;
     user-select: none;
     -webkit-user-drag: none;
+    touch-action: none;
   }
   .character:active { cursor: grabbing; }
   .character.selected .chara-img-box {
@@ -919,12 +923,12 @@
       </div>
     </div>
 
+    <!-- タイムラインパネル -->
     <div class="timeline-panel" id="main-timeline-panel">
       <div class="timeline-controls">
         <button id="play-btn" class="primary-btn" onclick="togglePlay()">再生</button>
         <button onclick="seekTo(0)">先頭</button>
         <button id="global-audio-rec-btn" class="record-btn" onclick="toggleGlobalAudioRecord()">🎤 アフレコ録音</button>
-        <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ 音声トラック追加</button>
 
         <div class="timeline-slider-wrap">
           <input type="range" id="seek-bar" min="0" max="30" step="0.01" value="0" oninput="onSeekInput(this.value)">
@@ -969,6 +973,7 @@
     </div>
   </div>
 
+  <!-- サイドバー（3タブ構成） -->
   <div class="sidebar" id="main-sidebar">
     <div class="sidebar-tab-nav">
       <button class="sidebar-tab-btn active" id="tab-btn-chara" onclick="switchSidebarTab('chara')">👤 登場人物</button>
@@ -1021,51 +1026,59 @@
 </div>
 
 <script>
-const GYM_STAGE_BG_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+// WebKit/Safari完全対応SVG生成関数
+function createSafeSvgDataUri(svgString) {
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
+}
+
+const RAW_GYM_STAGE_BG_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
   <defs>
     <linearGradient id="backWall" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="%23d8cfbe"/><stop offset="100%" stop-color="%23b8ad9c"/>
+      <stop offset="0%" stop-color="#d8cfbe"/><stop offset="100%" stop-color="#b8ad9c"/>
     </linearGradient>
     <linearGradient id="woodFloor" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="%23b8793b"/><stop offset="30%" stop-color="%23cf8f4c"/><stop offset="100%" stop-color="%238f5624"/>
+      <stop offset="0%" stop-color="#b8793b"/><stop offset="30%" stop-color="#cf8f4c"/><stop offset="100%" stop-color="#8f5624"/>
     </linearGradient>
     <radialGradient id="spotlight" cx="50%" cy="30%" r="60%">
-      <stop offset="0%" stop-color="%23ffffff" stop-opacity="0.18"/><stop offset="60%" stop-color="%23ffeebb" stop-opacity="0.05"/><stop offset="100%" stop-color="%23000000" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="60%" stop-color="#ffeebb" stop-opacity="0.05"/><stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect x="0" y="0" width="1280" height="490" fill="url(%23backWall)"/>
-  <g stroke="%23a49885" stroke-width="1.5" opacity="0.45">
+  <rect x="0" y="0" width="1280" height="490" fill="url(#backWall)"/>
+  <g stroke="#a49885" stroke-width="1.5" opacity="0.45">
     <line x1="80" y1="0" x2="80" y2="490"/><line x1="160" y1="0" x2="160" y2="490"/><line x1="240" y1="0" x2="240" y2="490"/><line x1="320" y1="0" x2="320" y2="490"/><line x1="400" y1="0" x2="400" y2="490"/><line x1="480" y1="0" x2="480" y2="490"/><line x1="560" y1="0" x2="560" y2="490"/><line x1="640" y1="0" x2="640" y2="490"/><line x1="720" y1="0" x2="720" y2="490"/><line x1="800" y1="0" x2="800" y2="490"/><line x1="880" y1="0" x2="880" y2="490"/><line x1="960" y1="0" x2="960" y2="490"/><line x1="1040" y1="0" x2="1040" y2="490"/><line x1="1120" y1="0" x2="1120" y2="490"/><line x1="1200" y1="0" x2="1200" y2="490"/>
   </g>
-  <polygon points="0,470 1280,470 1280,680 0,680" fill="url(%23woodFloor)"/>
-  <g stroke="%23683811" stroke-width="1.2" opacity="0.55">
+  <polygon points="0,470 1280,470 1280,680 0,680" fill="url(#woodFloor)"/>
+  <g stroke="#683811" stroke-width="1.2" opacity="0.55">
     <line x1="640" y1="470" x2="640" y2="680"/><line x1="560" y1="470" x2="510" y2="680"/><line x1="480" y1="470" x2="380" y2="680"/><line x1="400" y1="470" x2="250" y2="680"/><line x1="320" y1="470" x2="120" y2="680"/><line x1="240" y1="470" x2="-10" y2="680"/><line x1="720" y1="470" x2="770" y2="680"/><line x1="800" y1="470" x2="900" y2="680"/><line x1="880" y1="470" x2="1030" y2="680"/><line x1="960" y1="470" x2="1160" y2="680"/><line x1="1040" y1="470" x2="1290" y2="680"/><line x1="0" y1="520" x2="1280" y2="520" stroke-width="0.8"/><line x1="0" y1="580" x2="1280" y2="580" stroke-width="1"/><line x1="0" y1="640" x2="1280" y2="640" stroke-width="1.2"/>
   </g>
-  <rect x="0" y="680" width="1280" height="40" fill="%2322150c"/>
-  <line x1="0" y1="680" x2="1280" y2="680" stroke="%23e8b070" stroke-width="2.5"/>
-  <rect x="0" y="0" width="1280" height="720" fill="url(%23spotlight)"/>
+  <rect x="0" y="680" width="1280" height="40" fill="#22150c"/>
+  <line x1="0" y1="680" x2="1280" y2="680" stroke="#e8b070" stroke-width="2.5"/>
+  <rect x="0" y="0" width="1280" height="720" fill="url(#spotlight)"/>
 </svg>`;
 
-const GYM_STAGE_CURTAIN_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+const RAW_GYM_STAGE_CURTAIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
   <defs>
     <linearGradient id="curtainRed" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="%235a0d18"/><stop offset="25%" stop-color="%238b1d2c"/><stop offset="50%" stop-color="%235a0d18"/><stop offset="75%" stop-color="%238b1d2c"/><stop offset="100%" stop-color="%23480812"/>
+      <stop offset="0%" stop-color="#5a0d18"/><stop offset="25%" stop-color="#8b1d2c"/><stop offset="50%" stop-color="#5a0d18"/><stop offset="75%" stop-color="#8b1d2c"/><stop offset="100%" stop-color="#480812"/>
     </linearGradient>
     <linearGradient id="valanceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="%23480812"/><stop offset="70%" stop-color="%238b1d2c"/><stop offset="100%" stop-color="%235a0d18"/>
+      <stop offset="0%" stop-color="#480812"/><stop offset="70%" stop-color="#8b1d2c"/><stop offset="100%" stop-color="#5a0d18"/>
     </linearGradient>
   </defs>
-  <path d="M 0,0 L 150,0 C 130,240 170,480 140,720 L 0,720 Z" fill="url(%23curtainRed)"/>
-  <path d="M 35,0 C 20,240 50,480 30,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 80,0 C 65,240 95,480 75,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 125,0 C 110,240 140,480 120,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 1280,0 L 1130,0 C 1150,240 1110,480 1140,720 L 1280,720 Z" fill="url(%23curtainRed)"/>
-  <path d="M 1245,0 C 1260,240 1230,480 1250,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 1200,0 C 1215,240 1185,480 1205,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 1155,0 C 1170,240 1140,480 1160,720" stroke="%23220307" stroke-width="4" fill="none" opacity="0.5"/>
-  <path d="M 0,0 L 1280,0 L 1280,80 Q 1200,110 1120,80 Q 1040,110 960,80 Q 880,110 800,80 Q 720,110 640,80 Q 560,110 480,80 Q 400,110 320,80 Q 240,110 160,80 Q 80,110 0,80 Z" fill="url(%23valanceGrad)"/>
-  <path d="M 0,80 Q 80,110 160,80 Q 240,110 320,80 Q 400,110 480,80 Q 560,110 640,80 Q 720,110 800,80 Q 880,110 960,80 Q 1040,110 1120,80 Q 1200,110 1280,80" stroke="%23e5c158" stroke-width="4.5" fill="none"/>
+  <path d="M 0,0 L 150,0 C 130,240 170,480 140,720 L 0,720 Z" fill="url(#curtainRed)"/>
+  <path d="M 35,0 C 20,240 50,480 30,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 80,0 C 65,240 95,480 75,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 125,0 C 110,240 140,480 120,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1280,0 L 1130,0 C 1150,240 1110,480 1140,720 L 1280,720 Z" fill="url(#curtainRed)"/>
+  <path d="M 1245,0 C 1260,240 1230,480 1250,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1200,0 C 1215,240 1185,480 1205,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 1155,0 C 1170,240 1140,480 1160,720" stroke="#220307" stroke-width="4" fill="none" opacity="0.5"/>
+  <path d="M 0,0 L 1280,0 L 1280,80 Q 1200,110 1120,80 Q 1040,110 960,80 Q 880,110 800,80 Q 720,110 640,80 Q 560,110 480,80 Q 400,110 320,80 Q 240,110 160,80 Q 80,110 0,80 Z" fill="url(#valanceGrad)"/>
+  <path d="M 0,80 Q 80,110 160,80 Q 240,110 320,80 Q 400,110 480,80 Q 560,110 640,80 Q 720,110 800,80 Q 880,110 960,80 Q 1040,110 1120,80 Q 1200,110 1280,80" stroke="#e5c158" stroke-width="4.5" fill="none"/>
 </svg>`;
+
+const GYM_STAGE_BG_SVG = createSafeSvgDataUri(RAW_GYM_STAGE_BG_SVG);
+const GYM_STAGE_CURTAIN_SVG = createSafeSvgDataUri(RAW_GYM_STAGE_CURTAIN_SVG);
 
 const GROUP_COLORS = {
   'none': 'transparent',
@@ -1119,7 +1132,7 @@ let activeDrag = {
   currentStagePointer: { x: 0, y: 0 }
 };
 
-const defaultSVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="22" fill="%2360a5fa"/><path d="M 20 85 C 20 60, 80 60, 80 85 Z" fill="%2360a5fa"/></svg>`;
+const defaultSVG = createSafeSvgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="22" fill="#60a5fa"/><path d="M 20 85 C 20 60, 80 60, 80 85 Z" fill="#60a5fa"/></svg>`);
 
 const stageOuter = document.getElementById('stage-outer');
 const stage = document.getElementById('stage');
@@ -1363,10 +1376,12 @@ function applyBgPreset(preset) {
   } else if (preset === 'none') {
     stageBg.src = '';
     stageBg.style.display = 'none';
+    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
     stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
     bgColorGroup.style.display = 'flex';
     bgCustomGroup.style.display = 'none';
   } else if (preset === 'custom') {
+    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
     stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
     if (customBgSrc) {
       stageBg.src = customBgSrc;
@@ -1464,6 +1479,7 @@ function updateStageLayout() {
   stage.style.transformOrigin = 'center center';
 }
 window.addEventListener('resize', updateStageLayout);
+window.addEventListener('orientationchange', () => setTimeout(updateStageLayout, 200));
 
 function startCountdown(onComplete) {
   if (isCountingDown) return;
@@ -1536,6 +1552,7 @@ function loadImageObject(chara) {
   chara.imageObj = img;
 }
 
+// タブレット対応の正確な論理座標変換
 function getPointerLogicalPos(e) {
   const rect = stage.getBoundingClientRect();
   const scale = rect.width / logicalWidth;
@@ -1549,6 +1566,8 @@ function createStageElement(chara) {
   const el = document.createElement('div');
   el.className = 'character';
   el.id = 'stage_' + chara.id;
+  el.draggable = false;
+  el.ondragstart = (e) => { e.preventDefault(); return false; };
 
   const bubble = document.createElement('div');
   bubble.className = 'speech-bubble pos-top';
@@ -1565,6 +1584,7 @@ function createStageElement(chara) {
   const img = document.createElement('img');
   img.src = chara.imgSrc;
   img.id = 'img_' + chara.id;
+  img.draggable = false;
   imgBox.appendChild(img);
 
   const grpBadge = document.createElement('div');
@@ -1578,6 +1598,7 @@ function createStageElement(chara) {
     if (e.button !== 0 || isExporting || isTheaterMode) return;
     e.stopPropagation();
     e.preventDefault();
+    try { stageOuter.setPointerCapture(e.pointerId); } catch(err){}
     getAudioContext();
     selectCharacter(chara.id);
     startPuppetDrag(chara.id, e);
@@ -1591,11 +1612,11 @@ stageOuter.addEventListener('pointerdown', (e) => {
   if (e.button !== 0 || isExporting || isTheaterMode) return;
   if (!selectedCharaId) return;
   e.preventDefault();
+  try { stageOuter.setPointerCapture(e.pointerId); } catch(err){}
   getAudioContext();
   startPuppetDrag(selectedCharaId, e);
 });
 
-// ドラッグ開始（※開始点を自動で◆打刻）
 function startPuppetDrag(leaderId, e) {
   const leader = characters.find(c => c.id === leaderId);
   if (!leader) return;
@@ -1608,22 +1629,32 @@ function startPuppetDrag(leaderId, e) {
   activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
   activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
 
-  // ドラッグ開始点を自動キーフレーム（◆）として登録
-  recordManualKeyframe(leader, currentTime, leaderPos.x, leaderPos.y);
+  // 録画中は開始点として直接記録
+  if (isRecordingMotion) {
+    recordContinuousMotionPoint(leader, currentTime, leaderPos.x, leaderPos.y);
+    leader.motion[leader.motion.length - 1].isManual = true;
+    delete leader._dragX;
+    delete leader._dragY;
+  } else {
+    leader._dragX = leaderPos.x;
+    leader._dragY = leaderPos.y;
+  }
 
   activeDrag.groupOffsets = {};
   if (leader.group !== 'none') {
     characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
       const mPos = getInterpolatedPosition(member, currentTime);
       activeDrag.groupOffsets[member.id] = { x: mPos.x - leaderPos.x, y: mPos.y - leaderPos.y };
-      recordManualKeyframe(member, currentTime, mPos.x, mPos.y);
+      if (isRecordingMotion) {
+        recordContinuousMotionPoint(member, currentTime, mPos.x, mPos.y);
+        member.motion[member.motion.length - 1].isManual = true;
+        delete member._dragX;
+        delete member._dragY;
+      } else {
+        member._dragX = mPos.x;
+        member._dragY = mPos.y;
+      }
     });
-  }
-
-  // 停止中の場合のみ仮座標を設定
-  if (!isRecordingMotion) {
-    leader._dragX = leaderPos.x;
-    leader._dragY = leaderPos.y;
   }
 
   updateStageElement(leader, currentTime);
@@ -1639,12 +1670,26 @@ window.addEventListener('pointermove', (e) => {
   if (!isRecordingMotion) {
     applyDirectPointerPosition();
   }
-});
+}, { passive: false });
 
-// ドラッグ終了（※終了点を自動で◆打刻）
-window.addEventListener('pointerup', () => {
+window.addEventListener('pointerup', (e) => {
   if (activeDrag.isDragging) {
-    commitDragFinalKeyframe();
+    try { stageOuter.releasePointerCapture(e.pointerId); } catch(err){}
+    if (!isRecordingMotion) {
+      commitCurrentDragKeyframe();
+    } else {
+      const leader = characters.find(c => c.id === activeDrag.leaderId);
+      if (leader && leader.motion && leader.motion.length > 0) {
+        leader.motion[leader.motion.length - 1].isManual = true;
+      }
+      if (leader && leader.group !== 'none') {
+        characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
+          if (member.motion && member.motion.length > 0) {
+            member.motion[member.motion.length - 1].isManual = true;
+          }
+        });
+      }
+    }
     activeDrag.isDragging = false;
     activeDrag.leaderId = null;
     renderVisualTimeline();
@@ -1675,16 +1720,18 @@ function applyDirectPointerPosition() {
 
   targets.forEach(({ chara, x, y }) => {
     if (isRecordingMotion) {
-      // 録画中は連続軌跡データ（isManual: false）として保存。キャッシュは削除
       recordContinuousMotionPoint(chara, currentTime, x, y);
       delete chara._dragX;
       delete chara._dragY;
     } else {
-      // 停止中は仮座標として保持
       chara._dragX = x;
       chara._dragY = y;
     }
-    updateStageElement(chara, currentTime);
+    const el = document.getElementById('stage_' + chara.id);
+    if (el) {
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    }
   });
 }
 
@@ -1702,32 +1749,20 @@ function recordContinuousMotionPoint(chara, t, x, y) {
   }
 }
 
-function commitDragFinalKeyframe() {
+function commitCurrentDragKeyframe() {
   const leader = characters.find(c => c.id === activeDrag.leaderId);
   if (!leader) return;
   const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
-  
   targets.forEach(c => {
-    let finalX, finalY;
-    if (isRecordingMotion) {
-      const curPos = getInterpolatedPosition(c, currentTime);
-      finalX = curPos.x;
-      finalY = curPos.y;
-    } else {
-      finalX = c._dragX !== undefined ? c._dragX : getInterpolatedPosition(c, currentTime).x;
-      finalY = c._dragY !== undefined ? c._dragY : getInterpolatedPosition(c, currentTime).y;
+    if (c._dragX !== undefined && c._dragY !== undefined) {
+      recordManualKeyframe(c, currentTime, c._dragX, c._dragY);
+      if (currentTime === 0 || c.motion.length <= 1) {
+        c.x = c._dragX;
+        c.y = c._dragY;
+      }
+      delete c._dragX;
+      delete c._dragY;
     }
-
-    // ドラッグ終了点を手動メモ（◆）として登録
-    recordManualKeyframe(c, currentTime, finalX, finalY);
-
-    if (currentTime === 0 || c.motion.length <= 1) {
-      c.x = finalX;
-      c.y = finalY;
-    }
-    delete c._dragX;
-    delete c._dragY;
-    updateStageElement(c, currentTime);
   });
 }
 
@@ -1793,7 +1828,6 @@ function setCharacterGroup(id, grp) {
   markUnsaved();
 }
 
-// 汎用打刻関数：手動・要点（◆）用
 function recordManualKeyframe(chara, t, x, y) {
   t = Math.round(t * 100) / 100;
   x = Math.round(x);
@@ -1923,7 +1957,6 @@ function calculateOpacity(chara, t) {
   return Math.max(0, Math.min(1, op));
 }
 
-// キャラクターと字幕の表示更新
 function updateStageElement(chara, t) {
   const el = document.getElementById('stage_' + chara.id);
   if (!el) return;
@@ -1932,7 +1965,6 @@ function updateStageElement(chara, t) {
   const rawOpacity = calculateOpacity(chara, t);
   const inTimeline = (t >= chara.inTime && t <= chara.outTime);
 
-  // ドラッグ操作中、または録画中の選択キャラは可視性を強制
   const isBeingDragged = activeDrag.isDragging && (
     activeDrag.leaderId === chara.id || 
     (chara.group !== 'none' && characters.find(c => c.id === activeDrag.leaderId)?.group === chara.group)
@@ -1949,7 +1981,6 @@ function updateStageElement(chara, t) {
   el.style.height = charaSize + 'px';
   el.style.transform = `translate(-50%, -50%) scale(${scaleMultiplier})`;
 
-  // 操作中はZ-Index 150(前面カーテン100より手前)＆完全表示
   if (isBeingDragged || (isRecordingMotion && selectedCharaId === chara.id)) {
     el.style.zIndex = 150;
     el.style.opacity = '1.0';
@@ -2268,7 +2299,6 @@ function renderVisualTimeline() {
       laneRow.appendChild(mSpan);
     }
 
-    // ひし形は「isManual: true」の要点メモにのみ表示
     m.filter(pt => pt.isManual).forEach(pt => {
       const marker = document.createElement('div');
       marker.className = 'keyframe-marker';
@@ -2355,7 +2385,7 @@ function handleTimelineAreaClick(e) {
   seekTo(ratio * duration);
 }
 
-// 動き記録（開始点と終了点を自動で◆打刻）
+// 動き記録（キャッシュ完全消去＋開始点自動打刻）
 function toggleMotionRecord(id) {
   if (!id || isExporting || isTheaterMode) return;
   selectCharacter(id);
@@ -2369,9 +2399,9 @@ function toggleMotionRecord(id) {
       if (chara) {
         const curPos = getInterpolatedPosition(chara, currentTime);
         trimMotionAfter(id);
-        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画開始点◆
         delete chara._dragX;
         delete chara._dragY;
+        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
       }
       isRecordingMotion = true;
       stageOuter.classList.add('recording-active');
@@ -2388,10 +2418,10 @@ function stopMotionRecording() {
   if (selectedCharaId) {
     const chara = characters.find(c => c.id === selectedCharaId);
     if (chara) {
-      const curPos = getInterpolatedPosition(chara, currentTime);
-      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画終了点◆
       delete chara._dragX;
       delete chara._dragY;
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
     }
   }
 
@@ -2400,7 +2430,7 @@ function stopMotionRecording() {
   markUnsaved();
 }
 
-// アフレコ録音（開始点と終了点を自動で◆打刻）
+// アフレコ録音
 async function toggleGlobalAudioRecord() {
   if (isExporting || isTheaterMode) return;
   getAudioContext();
@@ -2428,7 +2458,6 @@ async function toggleGlobalAudioRecord() {
         audioChunks = [];
         audioRecordStartTime = currentTime;
 
-        // 録音開始点◆
         if (selectedCharaId) {
           const chara = characters.find(c => c.id === selectedCharaId);
           if (chara) {
@@ -2497,7 +2526,6 @@ function stopGlobalAudioRecording() {
   micIndicator.style.display = 'none';
   cleanupMicMeter();
 
-  // 録音終了点◆
   if (selectedCharaId) {
     const chara = characters.find(c => c.id === selectedCharaId);
     if (chara) {
@@ -2511,7 +2539,7 @@ function stopGlobalAudioRecording() {
   markUnsaved();
 }
 
-// 動き＋音声 同時記録（開始点と終了点を自動で◆打刻）
+// 動き＋音声 同時記録
 async function toggleMotionAndAudioRecord(id) {
   if (!id || isExporting || isTheaterMode) return;
   getAudioContext();
@@ -2540,9 +2568,9 @@ async function toggleMotionAndAudioRecord(id) {
         if (chara) {
           const curPos = getInterpolatedPosition(chara, currentTime);
           trimMotionAfter(id);
-          recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 同時記録開始点◆
           delete chara._dragX;
           delete chara._dragY;
+          recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
         }
 
         mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -2613,10 +2641,10 @@ function stopMotionAndAudioRecording() {
   if (selectedCharaId) {
     const chara = characters.find(c => c.id === selectedCharaId);
     if (chara) {
-      const curPos = getInterpolatedPosition(chara, currentTime);
-      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 同時記録終了点◆
       delete chara._dragX;
       delete chara._dragY;
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
     }
   }
 
@@ -2708,7 +2736,6 @@ function addDialogue(charaId) {
     end: end
   });
 
-  // 吹き出し開始・終了点◆
   const curPos = getInterpolatedPosition(chara, cur);
   recordManualKeyframe(chara, cur, curPos.x, curPos.y);
   const endPos = getInterpolatedPosition(chara, end);
@@ -2742,7 +2769,6 @@ function updateDialogueProp(charaId, diagId, prop, val) {
       diag.start = Math.max(0, parseFloat((diag.end - 1.0).toFixed(2)));
     }
 
-    // 時間変更時に◆打刻
     if (prop === 'start' || prop === 'end') {
       const t = diag[prop];
       const pos = getInterpolatedPosition(chara, t);
@@ -2868,7 +2894,7 @@ async function exportVideo() {
     (track.clips || []).forEach(clip => {
       if (clip.buffer) {
         const source = actx.createBufferSource();
-        const gainNode = ctx2d ? actx.createGain() : null;
+        const gainNode = actx.createGain();
         gainNode.gain.value = clip.volume !== undefined ? clip.volume : 1.0;
         source.buffer = clip.buffer;
         source.connect(gainNode);
@@ -2936,7 +2962,7 @@ async function exportVideo() {
       ctx2d.restore();
     });
 
-    if (isCurtainOverlayActive && currentBgPreset === 'gym_stage' && stageCurtain.complete && (stageCurtain.naturalWidth > 0 || stageCurtain.width > 0)) {
+    if (isCurtainOverlayActive && stageCurtain.complete && (stageCurtain.naturalWidth > 0 || stageCurtain.width > 0)) {
       drawImageCover(ctx2d, stageCurtain, 0, 0, logicalWidth, logicalHeight);
     }
 
@@ -3444,7 +3470,6 @@ async function restoreProjectData(data) {
     (c.dialogues || []).forEach(d => {
       if (!d.pos) d.pos = 'top';
     });
-    // 過去データ互換
     (c.motion || []).forEach((pt, i) => {
       if (pt.isManual === undefined) {
         pt.isManual = (pt.isKeyframe || i === 0 || i === c.motion.length - 1);

@@ -35,6 +35,12 @@
       gap: 0.5rem;
     }
 
+    .header-links-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
     .nav-back-link {
       background: #334155;
       color: #38bdf8;
@@ -228,12 +234,15 @@
 </head>
 <body class="no-select">
 
-  <!-- ヘッダー -->
+  <!-- ヘッダー（目次リンク追加） -->
   <header class="demo-app-header">
     <div class="demo-app-title">
       <span>✍️ デモC：国語科UI体験（瞬間消去 ＆ 伝達キーボード）ラボ</span>
     </div>
-    <a href="../chapters/05_subjects.html" class="nav-back-link">⬅ 第5章の解説に戻る</a>
+    <div class="header-links-group">
+      <a href="../index.html" class="nav-back-link">🏠 全体目次</a>
+      <a href="../chapters/05_subjects.html" class="nav-back-link">⬅ 第5章の解説に戻る</a>
+    </div>
   </header>
 
   <!-- メインレイアウト -->

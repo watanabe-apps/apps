@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>第1章：生成AIで拓く教育アプリの4大領域 - 特別支援教育 アプリ開発ハンドブック</title>
+  <title>第1章：生成AIで何ができる？ - 特別支援教育 アプリ開発ハンドブック</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
     .domain-detail-grid {
@@ -22,29 +22,33 @@
     .domain-detail-card h3 {
       font-size: 1.15rem;
       color: var(--accent);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.6rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
     .domain-detail-card p {
-      font-size: 0.92rem;
+      font-size: 0.94rem;
       color: var(--text-body);
-      line-height: 1.8;
-      margin-bottom: 0.75rem;
+      line-height: 1.85;
+      margin-bottom: 0.85rem;
+    }
+    .domain-detail-card p:last-of-type {
+      margin-bottom: 0.6rem;
     }
     .example-tag-list {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       margin-top: 0.5rem;
+      margin-bottom: 0.85rem;
     }
     .example-tag {
       background: var(--accent-soft);
       color: var(--accent);
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 3px 9px;
       border-radius: 4px;
     }
     .nav-pager {
@@ -79,7 +83,7 @@
     <div class="sidebar-nav-group">
       <div class="sidebar-nav-title">理論・設計論（全6章）</div>
       <ul class="sidebar-nav-list">
-        <li><a href="01_domains.html" class="active">第1章：生成AIで拓く4大領域</a></li>
+        <li><a href="01_domains.html" class="active">第1章：生成AIで何ができる？</a></li>
         <li><a href="02_perception.html">第2章：具体物とデジタルの知覚構造</a></li>
         <li><a href="03_merits.html">第3章：学習アプリの5大メリット</a></li>
         <li><a href="04_principles.html">第4章：アプリづくりの5大設計思想</a></li>
@@ -106,11 +110,11 @@
       <div class="doc-meta">
         <span>Chapter 01</span>
         <span>•</span>
-        <span>Educational Scope & Ecosystem</span>
+        <span>Scope & Possibilities of Generative AI</span>
       </div>
-      <h1 class="doc-title">第1章：生成AIで拓く教育アプリの4大領域</h1>
+      <h1 class="doc-title">第1章：生成AIで何ができる？</h1>
       <div class="doc-intro">
-        特別支援教育におけるアプリ開発の射程を、子どもが手元で操作する学習用教材にとどまらず、集団指導での提示用ツール、個別最適な課題プリントの自動生成、そして教員の校務効率化まで多角的に広げる意義を整理します。
+        生成AIの最も効果的な活用方法は、プログラミングだと考えています。その中でもHTML、CSS、Javascriptを使用したアプリ開発は、環境の構築を一切必要とせず共有も容易なため、学校現場にとって最も合理的な方法だと思っています。そこで、本ページでは生成AIを活用したアプリ作りについて説明します。生成AIを活用すれば、児童生徒が手元で操作する学習用アプリにとどまらず、視覚支援等の授業で活用するアプリ、プリント課題の作成アプリ、そして教員自身の校務効率化アプリまで作成することができます。それぞれの例や意義を紹介します。
       </div>
     </header>
 
@@ -118,120 +122,100 @@
 
       <!-- 概要ボックス -->
       <div class="summary-box">
-        <h3>📌 第1章の要点一覧（概要）</h3>
+        <h3>📌 この章の要点一覧（概要）</h3>
         <ul>
-          <li><strong>自習用アプリにとどまらない視野</strong>：特別支援の現場課題は子どもの個別学習だけではありません。授業支援、教材作成、校務までを包括して捉えます。</li>
-          <li><strong>1. 児童生徒学習用</strong>：手元で概念獲得や手続き記憶の定着を行う個別最適化教材です（計数、弁別、書字など）。</li>
-          <li><strong>2. 教師授業提示用</strong>：電子黒板や大型モニターに映し、視覚的なルールの共有や一斉指導の進行をスムーズにするツールです。</li>
-          <li><strong>3. プリント課題作成用</strong>：子どもの実態に合わせた難易度の紙教材を、設定変更だけで瞬時に自動生成・印刷するアプリです。</li>
-          <li><strong>4. 教師校務効率化用</strong>：指導案の構成検討、個別の指導計画の作成補助、指導記録の集計などを支援する実務ツールです。</li>
-          <li><strong>系統マップによる構造化</strong>：各アプリを単発で終わらせず、教科の系統性を太い幹として位置づけ、自立活動をその基盤として関連付けます[cite: 10, 12]。</li>
+          <li><strong>学習用アプリにとどまらない視野</strong>：特別支援の現場の課題は児童生徒の個別学習だけではありません。授業支援、教材作成、校務までを包括して捉える視点も大切です。その他にも、発想次第で活用の幅は広がります。</li>
+          <li><strong>学習用アプリ</strong>：児童生徒が使用し、概念獲得や記憶の定着を促進する個別最適化教材です。</li>
+          <li><strong>授業支援アプリ</strong>：電子黒板や大型モニターに映し、主に視覚支援を行うことで授業を円滑に進めるためのツールです。</li>
+          <li><strong>プリント課題作成アプリ</strong>：児童生徒の実態に合わせた難易度のプリント教材を自動生成・印刷するアプリです。</li>
+          <li><strong>業務効率化アプリ</strong>：指導計画の作成、アセスメント、分掌業務等を支援する実務ツールです。</li>
+          <li><strong>その他</strong>：アプリの作成以外にも、既存のExcelファイルに数式を加えて自動化したり、Power Automate等の業務効率化ツールの活用に役立てたりすることもできます。</li>
         </ul>
       </div>
 
-      <!-- 1.1 4つの開発領域の詳解 -->
+      <!-- 1.1 4つの領域の実際 -->
       <section class="section-block">
         <div class="section-header">
           <span class="section-badge">1.1</span>
-          <h2 class="section-title">アプリ開発の射程を広げる「4つの領域」の実際</h2>
+          <h2 class="section-title">アプリ開発の視野を広げる「4つの領域」の実際</h2>
         </div>
 
         <div class="prose-block">
           <p>
-            教育現場においてプログラミングや生成AIを活用しようとするとき、多くの教員は「子どもたちが使うタブレットドリル」を真っ先に作ろうとします。もちろんそれも極めて重要ですが、特別支援学校や特別支援学級の現場を支えるためには、より広い視野でアプリの役割を定義する必要があります。
+            教育現場においてプログラミングや生成AIを活用しようとするとき、多くの教員は「児童生徒が使うタブレットドリル」を作ろうとします。それが最も効果的であると考えますが、業務改善の推進が求められる昨今、より広い視野でアプリの役割を定義する必要があります。
           </p>
           <p>
-            本ハンドブックでは、開発対象を以下の**4つの領域**に分類し、それぞれの役割に応じた最適な設計を提案します。
+            現場で求められる業務は幅広く、授業関連では教材作成（具体物、プリント等）、指導計画の作成等、分掌業務ではクリエイティブな内容からコピペで終わる単純作業まで様々です。これらのすべてをアプリで効率化するという考えは非効率ですが、効率化を検討すること自体は重要です。また、短期的な視点で考えると、現状のやり方を継続するのが効率的であることは否定できませんが、長期的な視点や引き継ぎ等を踏まえると、生成AIを活用してアプリを作成することが効率的となる可能性もあります。
+          </p>
+          <p>
+            <strong>ただし、質の低いアプリは逆効果ということも頭に入れておく必要があります。</strong>
+          </p>
+          <p>
+            本ページでは、開発対象を以下の4つの領域に分類し、それぞれの役割に応じた最適な設計を提案します。
           </p>
 
           <div class="domain-detail-grid">
             <!-- 領域1 -->
             <div class="domain-detail-card">
-              <h3>1. 児童生徒の学習用アプリ（個別学習・概念獲得）</h3>
+              <h3>1. 学習用アプリ（個別学習・概念獲得）</h3>
               <p>
-                児童生徒が直接タブレットの画面を操作し、概念の獲得や反復練習を行う教材です。余計なノイズを排し、直感的なドラッグ操作とブレのない即時判定によって、自分の力で「できた」という内発的な達成感を積み上げさせます。
+                児童生徒が直接タブレットの画面を操作し、概念の獲得や反復練習を行う教材です。余計なノイズを排し、直感的なドラッグ操作とブレのない即時フィードバックによって、自分の力で「できた」という内発的な達成感を積み上げさせます。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">1対1対応（一つずつ配ろう）[cite: 10]</span>
-                <span class="example-tag">大小弁別（おおきいちいさい）[cite: 10]</span>
-                <span class="example-tag">計数（かぞえよう基礎）[cite: 10]</span>
-                <span class="example-tag">平仮名キーボード[cite: 10]</span>
-                <span class="example-tag">点タップ[cite: 6, 10]</span>
-                <span class="example-tag">カルタ[cite: 10]</span>
+                <span class="example-tag">1対1対応</span>
+                <span class="example-tag">大きい・小さい</span>
+                <span class="example-tag">数えよう</span>
+                <span class="example-tag">平仮名キーボード</span>
+                <span class="example-tag">カルタ など</span>
               </div>
+              <p>
+                特別支援教育において、具体物を操作しながら学習することは非常に重要です。その考え方に基づくと、アプリでの学習はふさわしくないのではないかという疑念も生じますが、実践からアプリの意義を強く感じています。十分検証されていない内容ではありますが、アプリで概念形成の基盤を築き、具体物で概念を深めて汎化させるという指導の道筋も有効なのではないかと考えています。この内容については第2章以降で説明します。
+              </p>
             </div>
 
             <!-- 領域2 -->
             <div class="domain-detail-card">
-              <h3>2. 教師が授業で使用するアプリ（授業提示・集団共有）</h3>
+              <h3>2. 授業支援アプリ（視覚支援・集団共有）</h3>
               <p>
-                教室前方の大型モニターや電子黒板に映し出し、教員が授業の進行やルールの視覚的共有のために操作する提示用ツールです。言葉だけの説明ではルールが伝わりにくい集団指導において、視覚的な動きやシミュレーションを見せることで、子ども全員の注意を同じ場所に引きつけます。
+                教師が操作し、教室前方の大型モニター等に映し出し、学習内容やルール等を提示するためのツールです。従来PowerPointや画像、動画で提示してきた内容ですが、アプリを使用することでより柔軟な提示が可能となります。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">視覚タイマー</span>
-                <span class="example-tag">スケジュール提示</span>
-                <span class="example-tag">リズム視覚化ツール[cite: 10]</span>
-                <span class="example-tag">ルール解説シミュレーター</span>
+                <span class="example-tag">スケジュール時計</span>
+                <span class="example-tag">リズム視覚化ツール</span>
+                <span class="example-tag">視覚支援動画プレイヤー など</span>
               </div>
+              <p>
+                児童生徒の操作を伴わないため、学習アプリより学習効率は落ちます。メインの学習手段ではなく、補助的ツールという位置付けが望ましいです。自分の好みや使用状況に併せてカスタマイズできるため、既存のツールより直感的で扱いやすいものができる可能性もあります。
+              </p>
             </div>
 
             <!-- 領域3 -->
             <div class="domain-detail-card">
-              <h3>3. プリント等課題づくりアプリ（教材自動生成・印刷）</h3>
+              <h3>3. プリント課題作成アプリ（教材自動生成・印刷）</h3>
               <p>
-                子どもの実態に合わせて、最適な難易度・レイアウトの紙プリント教材を瞬時に自動生成して印刷できるWebアプリです。マス目のサイズ、問題数、数字の範囲、イラストの有無などをスライダーで調整するだけで、その日の授業にぴったりな個別課題を出力できます。
+                児童生徒の実態に合わせて、最適な難易度・レイアウトのプリント教材を瞬時に自動生成して印刷できるアプリです。マス目のサイズ、問題数、数字の範囲等を調整するだけで、その日の授業にぴったりな個別課題を出力できます。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">計算プリント自動生成</span>
-                <span class="example-tag">点つなぎプリント生成[cite: 10, 12]</span>
-                <span class="example-tag">迷路生成[cite: 1, 10]</span>
-                <span class="example-tag">ひらがな視覚課題生成</span>
+                <span class="example-tag">計算プリントメーカー</span>
+                <span class="example-tag">ひらがな単語プリントメーカー など</span>
               </div>
+              <p>
+                従来Excel等で作成していたプリントも、アプリ化することができます。問題の自動生成が大きな特徴で、児童生徒ごとに設定を変更して保存しておき、必要な児童の分だけ問題生成、印刷するということもできます。すでにマクロや計算式で問題を生成できるExcelファイルが存在する場合、わざわざアプリ化する必要はありません。プリントを新しく作成する場合には、アプリ化することも検討しても良いかもしれません。
+              </p>
             </div>
 
             <!-- 領域4 -->
             <div class="domain-detail-card">
-              <h3>4. 教師が業務に使用するアプリ（校務効率化・指導計画）</h3>
+              <h3>4. 業務効率化アプリ（校務効率化・指導計画）</h3>
               <p>
-                教員自身の事務負担や授業準備の労力を軽減するための実務支援ツールです。個別の指導計画の文案作成補助、日々の指導記録の集計・可視化、指導案の構成検討など、多忙な教員の時間を生み出し、子どもと直接向き合う時間を最大化します。
+                教員自身の事務負担や授業準備の労力を軽減、効率化するための実務支援ツールです。主指導計画の作成や、分掌業務の遂行のために、効率化できるツールを作成するというイメージです。指導計画の作成については、個別の指導計画、年間指導計画、単元計画等を関連付け、現状バラバラになっているファイルを一つのアプリに集約し、効率的に業務を進めるといったことも可能です。分掌業務については、教師の個に特化したツールとなりやすく、汎用性は低くなるかもしれません。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">指導記録集計ツール</span>
-                <span class="example-tag">個別の指導計画作成補助</span>
-                <span class="example-tag">iPad HTML Viewer[cite: 10]</span>
-                <span class="example-tag">目標設定支援シート</span>
+                <span class="example-tag">実態把握ツール</span>
+                <span class="example-tag">自立活動流れ図 など</span>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- 1.2 系統マップによる構造化思想 -->
-      <section class="section-block">
-        <div class="section-header">
-          <span class="section-badge">1.2</span>
-          <h2 class="section-title">系統マップによる構造化：教科を幹とし、自立活動を基盤とする</h2>
-        </div>
-
-        <div class="prose-block">
-          <p>
-            たくさんのアプリを開発していくと、「どのアプリを、どの子に、どの順番で使わせるべきか」というカリキュラム上の迷いが生じます。アプリが単発の思いつきで散らばってしまうと、学校全体での継続的な指導につながりません。
-          </p>
-          <p>
-            そこで重要になるのが、**「系統マップ（教材間のロードマップ）」によるアプリ群の構造化**です[cite: 10, 12]。
-          </p>
-
-          <div class="highlight-panel">
-            <strong>系統マップを設計する上での2大原則：</strong>
-            <ul>
-              <li><strong>教科の系統性をメインの太い幹にする</strong>：国語（読む・書く・伝える）や算数（分ける・数える・計算する）の学びの流れを、発達段階に応じた縦の系統軸としてメインに配置します。子どもが今どの段階にいて、次にどのアプリへ進むべきかが一目で分かります。</li>
-              <li><strong>自立活動は直上の補足基盤として接続する</strong>：自立活動（目と手の協応、手指の巧緻性、注意のコントロールなど）を教科と無関係な別枠として孤立させるのではなく、**「教科の学習を成立させるための土台」**として直上に配置します。例えば、「数を数える」という算数学習の直上に、ターゲットを目で捉える「点タップ」を位置づけることで、つまずきの根本原因に対するアプローチが明確になります[cite: 6, 10]。</li>
-            </ul>
-          </div>
-
-          <p>
-            このように教材全体をマップとして俯瞰できるように整理しておくことで、担任が変わったり学年が進んだりしても、子どもの現在の発達位置に応じた切れ目のない指導を引き継いでいくことが可能になります[cite: 10, 12]。
-          </p>
         </div>
       </section>
 

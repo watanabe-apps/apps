@@ -305,9 +305,7 @@ a:hover {
   vertical-align: top;
 }
 
-/* ===================================================
-   文字選択禁止（デモ・操作パーツ専用）
-   =================================================== */
+/* 文字選択禁止（デモ・操作パーツ専用） */
 .no-select {
   user-select: none !important;
   -webkit-user-select: none !important;
@@ -316,7 +314,7 @@ a:hover {
   -webkit-touch-callout: none !important;
 }
 
-/* レスポンシブ対応 */
+/* レスポンシブ対応（iPad縦向き・タブレット表示最適化） */
 @media (max-width: 880px) {
   body {
     flex-direction: column;
@@ -327,7 +325,7 @@ a:hover {
     position: static;
     border-right: none;
     border-bottom: 1px solid #1e293b;
-    padding: 1.5rem;
+    padding: 1.5rem 1.25rem;
   }
   .main-wrapper {
     padding: 2rem 1.25rem;

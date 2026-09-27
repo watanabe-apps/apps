@@ -35,6 +35,12 @@
       gap: 0.5rem;
     }
 
+    .header-links-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
     .nav-back-link {
       background: #334155;
       color: #38bdf8;
@@ -231,12 +237,15 @@
 </head>
 <body class="no-select">
 
-  <!-- ヘッダー -->
+  <!-- ヘッダー（目次リンク追加） -->
   <header class="demo-app-header">
     <div class="demo-app-title">
       <span>🔢 デモB：数の学習（ノイズ除去 vs 過剰演出）ラボ</span>
     </div>
-    <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
+    <div class="header-links-group">
+      <a href="../index.html" class="nav-back-link">🏠 全体目次</a>
+      <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
+    </div>
   </header>
 
   <!-- コントロールバー -->
@@ -320,7 +329,6 @@
     ];
 
     function initCountLab() {
-      // 1. ステージ内に移動したオブジェクトの完全消去（残骸防止）
       stage.querySelectorAll('.circle-token, .car-token').forEach(el => el.remove());
       tray.innerHTML = "";
       toast.textContent = "下から1つずつ上の枠へ運んでください";
@@ -412,7 +420,6 @@
         const b = el.getBoundingClientRect();
         const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
 
-        // 枠の当たり判定
         let targetSlotIdx = -1;
         for (let i = 0; i < 3; i++) {
           const slot = document.getElementById(`slot-${i}`);
@@ -469,7 +476,6 @@
             }, 450);
           }
         } else {
-          // ドロップ失敗：元のトレイに戻す
           el.style.position = "";
           el.style.left = "";
           el.style.top = "";

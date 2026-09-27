@@ -35,6 +35,12 @@
       gap: 0.5rem;
     }
 
+    .header-links-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
     .nav-back-link {
       background: #334155;
       color: #38bdf8;
@@ -193,12 +199,15 @@
 </head>
 <body class="no-select">
 
-  <!-- ヘッダー -->
+  <!-- ヘッダー（目次リンク追加） -->
   <header class="demo-app-header">
     <div class="demo-app-title">
       <span>🔒 デモD：現場防衛トリプルタップ検証ラボ</span>
     </div>
-    <a href="../chapters/06_operations.html" class="nav-back-link">⬅ 第6章の解説に戻る</a>
+    <div class="header-links-group">
+      <a href="../index.html" class="nav-back-link">🏠 全体目次</a>
+      <a href="../chapters/06_operations.html" class="nav-back-link">⬅ 第6章の解説に戻る</a>
+    </div>
   </header>
 
   <!-- ステージ -->
@@ -207,7 +216,7 @@
     <div style="text-align: center; margin-bottom: 1.5rem;">
       <h2 style="font-size: 1.4rem; color: #0f172a; margin-bottom: 0.4rem;">トリプルタップ判定テスト</h2>
       <p style="font-size: 0.88rem; color: #64748b;">
-        通常の1回タップでは誤作動せず、素早く3回連続で叩いた時だけロックが解除されます[cite: 6]。
+        通常の1回タップでは誤作動せず、素早く3回連続で叩いた時だけロックが解除されます。
       </p>
     </div>
 
@@ -231,7 +240,7 @@
         <h3>設定画面のロック解除成功</h3>
         <p>
           意図した3回タップが認識されました！<br>
-          偶発的なシングルタップでは決して開かないため、子どもの誤操作を確実に防ぎます[cite: 6]。
+          偶発的なシングルタップでは決して開かないため、子どもの誤操作を確実に防ぎます。
         </p>
         <button class="btn-close-dialog" onclick="closeDummyModal()">閉じて再テストする</button>
       </div>
@@ -274,7 +283,6 @@
       e.preventDefault();
       const now = Date.now();
       
-      // 直前のタップから500ms以上空いていればリセット
       if (tapHistory.length > 0 && (now - tapHistory[tapHistory.length - 1]) > 500) {
         tapHistory = [];
       }
@@ -282,7 +290,6 @@
       tapHistory.push(now);
       const currentCount = tapHistory.length;
 
-      // ドットの点灯
       updateDots(currentCount);
 
       if (currentCount === 1) {
@@ -290,7 +297,6 @@
         promptText.textContent = "あと 2 回！";
         detailText.textContent = "ト・ト・トンと素早く叩いてください";
         
-        // 500ms経過で未達成ならドットを消灯
         clearTimeout(resetTimer);
         resetTimer = setTimeout(() => {
           tapHistory = [];
@@ -312,7 +318,6 @@
         }, 500);
 
       } else if (currentCount >= 3) {
-        // 3回成功！
         clearTimeout(resetTimer);
         tapHistory = [];
         playTone(880, 0.25);
