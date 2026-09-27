@@ -225,6 +225,7 @@
     opacity: 0.35 !important;
   }
 
+  /* transition を排除してドラッグ時の座標追従の遅延・飛翔を根絶 */
   .character {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -633,44 +634,22 @@
     font-size: 11px;
   }
 
+  /* 単一インスペクター設計に完全復元 */
   .sidebar {
-    width: 420px;
+    width: 410px;
     background-color: var(--panel-bg);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-  .sidebar-tab-nav {
-    display: flex;
-    background: #171722;
-    border-bottom: 1px solid var(--border-color);
-  }
-  .sidebar-tab-btn {
-    flex: 1;
-    padding: 10px 0;
-    border-radius: 0;
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: transparent;
-    color: var(--text-sub);
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .sidebar-tab-btn.active {
-    color: #fff;
-    border-bottom-color: var(--accent-color);
-    background: var(--panel-bg);
-  }
-
   .chara-selector-section {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    max-height: 120px;
+    gap: 8px;
+    max-height: 160px;
     overflow-y: auto;
     background: #1a1a24;
   }
@@ -678,7 +657,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-sub);
   }
@@ -690,23 +669,26 @@
   .chara-pill {
     background: #2b2b3b;
     border: 1px solid #3f3f52;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: all 0.15s ease;
   }
+  .chara-pill:hover { background: #353548; }
   .chara-pill.selected {
     background: var(--accent-color);
     border-color: var(--accent-color);
     color: #fff;
     font-weight: 600;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
   }
   .chara-pill img {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -716,18 +698,14 @@
     border-radius: 50%;
   }
 
-  .tab-pane {
-    display: none;
+  .inspector-content {
     flex: 1;
-    overflow-y: auto;
     padding: 12px;
+    overflow-y: auto;
+    display: flex;
     flex-direction: column;
     gap: 10px;
   }
-  .tab-pane.active {
-    display: flex;
-  }
-
   .inspector-section {
     background: var(--panel-sub);
     border: 1px solid var(--border-color);
@@ -773,9 +751,9 @@
     flex: 1;
   }
   .grp-btn {
-    padding: 3px 7px;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
@@ -884,7 +862,6 @@
         </div>
       </div>
 
-      <!-- 保存選択モーダル -->
       <div class="modal-overlay" id="save-choice-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトの保存</div>
@@ -899,7 +876,6 @@
         </div>
       </div>
 
-      <!-- 終了／閉じる確認モーダル -->
       <div class="modal-overlay" id="close-confirm-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトを閉じますか？</div>
@@ -931,6 +907,7 @@
         <button id="play-btn" class="primary-btn" onclick="togglePlay()">再生</button>
         <button onclick="seekTo(0)">先頭</button>
         <button id="global-audio-rec-btn" class="record-btn" onclick="toggleGlobalAudioRecord()">🎤 アフレコ録音</button>
+        <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ 音声トラック追加</button>
 
         <div class="timeline-slider-wrap">
           <input type="range" id="seek-bar" min="0" max="30" step="0.01" value="0" oninput="onSeekInput(this.value)">
@@ -975,59 +952,24 @@
     </div>
   </div>
 
-  <!-- サイドバー（3タブ構成） -->
+  <!-- サイドバー（単一インスペクター構造） -->
   <div class="sidebar" id="main-sidebar">
-    <div class="sidebar-tab-nav">
-      <button class="sidebar-tab-btn active" id="tab-btn-chara" onclick="switchSidebarTab('chara')">👤 登場人物</button>
-      <button class="sidebar-tab-btn" id="tab-btn-spot" onclick="switchSidebarTab('spot')">💡 スポット</button>
-      <button class="sidebar-tab-btn" id="tab-btn-audio" onclick="switchSidebarTab('audio')">🔊 音声トラック</button>
+    <div class="chara-selector-section">
+      <div class="chara-selector-header">
+        <span>登場人物選択</span>
+        <button class="btn-sm primary-btn" onclick="addCharacter()">＋ 人物追加</button>
+      </div>
+      <div class="chara-pills" id="chara-pills"></div>
     </div>
 
-    <!-- タブ1: 登場人物 -->
-    <div class="tab-pane active" id="pane-chara">
-      <div class="chara-selector-section">
-        <div class="chara-selector-header">
-          <span>人物選択</span>
-          <button class="btn-sm primary-btn" onclick="addCharacter()">＋ 人物追加</button>
-        </div>
-        <div class="chara-pills" id="chara-pills"></div>
-      </div>
-      <div id="inspector-chara-content">
-        <div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>
-      </div>
-    </div>
-
-    <!-- タブ2: スポットライト演出 -->
-    <div class="tab-pane" id="pane-spot">
-      <div class="inspector-section">
-        <div class="inspector-title">
-          <span>スポットライト演出</span>
-          <button class="btn-sm" style="background:var(--highlight-color); color:#fff;" onclick="addSpotlightCue()">＋ 演出追加</button>
-        </div>
-        <div style="font-size:12px; color:var(--text-sub);">
-          指定した時間帯に、特定の人物にスポットライトを当てて拡大します。
-        </div>
-      </div>
-      <div id="spotlight-cues-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-    </div>
-
-    <!-- タブ3: 音声トラック -->
-    <div class="tab-pane" id="pane-audio">
-      <div class="inspector-section">
-        <div class="inspector-title">
-          <span>音声トラック一覧</span>
-          <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ トラック追加</button>
-        </div>
-        <div style="font-size:12px; color:var(--text-sub);">
-          録音先に指定したトラックへ音声が吹き込まれます。「M」ボタンで消音できます。
-        </div>
-      </div>
-      <div id="audio-tracks-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+    <div class="inspector-content" id="inspector-content">
+      <div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>
     </div>
   </div>
 </div>
 
 <script>
+// WebKit/Safari完全対応SVGエンコード関数
 function createSafeSvgDataUri(svgString) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
 }
@@ -1103,7 +1045,6 @@ let hasUnsavedChanges = false;
 let characters = [];
 let audioTracks = [];
 let activeAudioTrackId = null;
-let spotlightCues = [];
 let selectedCharaId = null;
 
 let currentBgPreset = 'gym_stage';
@@ -1125,12 +1066,15 @@ let micMeterInterval = null;
 let micAnalyser = null;
 let micDataArray = null;
 
+// ドラッグ状態管理（iPad対応：開始時の基準Rectを保持）
 let activeDrag = {
   isDragging: false,
   leaderId: null,
   offset: { x: 0, y: 0 },
   groupOffsets: {},
-  currentStagePointer: { x: 0, y: 0 }
+  currentStagePointer: { x: 0, y: 0 },
+  startRect: null,
+  startScale: 1.0
 };
 
 const defaultSVG = createSafeSvgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="22" fill="#60a5fa"/><path d="M 20 85 C 20 60, 80 60, 80 85 Z" fill="#60a5fa"/></svg>`);
@@ -1165,9 +1109,7 @@ const theaterControls = document.getElementById('theater-controls');
 const theaterPlayBtn = document.getElementById('theater-play-btn');
 const theaterTimeText = document.getElementById('theater-time-text');
 const charaPillsContainer = document.getElementById('chara-pills');
-const inspectorCharaContent = document.getElementById('inspector-chara-content');
-const spotlightCuesList = document.getElementById('spotlight-cues-list');
-const audioTracksList = document.getElementById('audio-tracks-list');
+const inspectorContent = document.getElementById('inspector-content');
 
 const trackLabelsContainer = document.getElementById('track-labels-container');
 const audioTrackLabelsContainer = document.getElementById('audio-track-labels-container');
@@ -1177,13 +1119,7 @@ const trackLanesContainer = document.getElementById('track-lanes-container');
 const audioTrackLanesContainer = document.getElementById('audio-track-lanes-container');
 const timelinePlayhead = document.getElementById('timeline-playhead');
 
-function switchSidebarTab(tabName) {
-  document.querySelectorAll('.sidebar-tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-btn-' + tabName).classList.add('active');
-  document.getElementById('pane-' + tabName).classList.add('active');
-}
-
+// --- 音声トラック初期化 ---
 function initDefaultAudioTrack() {
   if (audioTracks.length === 0) {
     const id = 'atk_' + Date.now();
@@ -1197,7 +1133,7 @@ function addAudioTrack() {
   audioTracks.push({ id: id, name: '音声 ' + (audioTracks.length + 1), muted: false, clips: [] });
   activeAudioTrackId = id;
   renderVisualTimeline();
-  renderAudioTracksTab();
+  renderInspector();
   markUnsaved();
 }
 
@@ -1211,7 +1147,7 @@ function deleteAudioTrack(trackId) {
     activeAudioTrackId = audioTracks[0].id;
   }
   renderVisualTimeline();
-  renderAudioTracksTab();
+  renderInspector();
   markUnsaved();
 }
 
@@ -1227,44 +1163,7 @@ function toggleTrackMute(type, id, ev) {
   renderVisualTimeline();
 }
 
-function addSpotlightCue() {
-  if (characters.length === 0) {
-    alert('登場人物を追加してください。');
-    return;
-  }
-  const cur = parseFloat(currentTime.toFixed(2));
-  spotlightCues.push({
-    id: 'spot_' + Date.now(),
-    targetCharaId: selectedCharaId || characters[0].id,
-    start: cur,
-    end: Math.min(duration, parseFloat((cur + 3.0).toFixed(2))),
-    scale: 1.3
-  });
-  renderSpotlightTab();
-  renderVisualTimeline();
-  markUnsaved();
-}
-
-function deleteSpotlightCue(cueId) {
-  spotlightCues = spotlightCues.filter(c => c.id !== cueId);
-  renderSpotlightTab();
-  renderVisualTimeline();
-  markUnsaved();
-}
-
-function updateSpotlightCue(cueId, prop, val) {
-  const cue = spotlightCues.find(c => c.id === cueId);
-  if (!cue) return;
-  cue[prop] = val;
-  if (prop === 'start' && cue.start >= cue.end) {
-    cue.end = Math.min(duration, parseFloat((cue.start + 1.0).toFixed(2)));
-  } else if (prop === 'end' && cue.end <= cue.start) {
-    cue.start = Math.max(0, parseFloat((cue.end - 1.0).toFixed(2)));
-  }
-  renderVisualTimeline();
-  markUnsaved();
-}
-
+// --- IndexedDB ストレージ ---
 const DB_NAME = 'SceneDirectorDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'projectStore';
@@ -1350,7 +1249,6 @@ function closeProjectAndReset() {
   closeCloseConfirmModal();
   characters = [];
   audioTracks = [];
-  spotlightCues = [];
   selectedCharaId = null;
   stage.querySelectorAll('.character').forEach(el => el.remove());
   applyBgPreset('gym_stage');
@@ -1516,6 +1414,7 @@ function startCountdown(onComplete) {
   nextStep();
 }
 
+// 人物追加関数（完全復元）
 function addCharacter() {
   const id = 'c_' + Date.now();
   const chara = {
@@ -1536,6 +1435,7 @@ function addCharacter() {
     outTime: duration,
     fadeOut: 0.5,
     dialogues: [],
+    highlights: [],
     motion: []
   };
   loadImageObject(chara);
@@ -1553,9 +1453,10 @@ function loadImageObject(chara) {
   chara.imageObj = img;
 }
 
+// iPad対応：開始時Rect基準のポインター座標変換
 function getPointerLogicalPos(e) {
-  const rect = stage.getBoundingClientRect();
-  const scale = rect.width / logicalWidth;
+  const rect = (activeDrag.isDragging && activeDrag.startRect) ? activeDrag.startRect : stage.getBoundingClientRect();
+  const scale = (activeDrag.isDragging && activeDrag.startScale) ? activeDrag.startScale : (rect.width / logicalWidth);
   return {
     x: (e.clientX - rect.left) / scale,
     y: (e.clientY - rect.top) / scale
@@ -1594,11 +1495,11 @@ function createStageElement(chara) {
 
   el.appendChild(imgBox);
 
+  // キャラクター直接掴み（カウントダウン中も反応）
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || isExporting || isTheaterMode) return;
     e.stopPropagation();
     e.preventDefault();
-    try { stageOuter.setPointerCapture(e.pointerId); } catch(err){}
     getAudioContext();
     selectCharacter(chara.id);
     startPuppetDrag(chara.id, e);
@@ -1612,14 +1513,19 @@ stageOuter.addEventListener('pointerdown', (e) => {
   if (e.button !== 0 || isExporting || isTheaterMode) return;
   if (!selectedCharaId) return;
   e.preventDefault();
-  try { stageOuter.setPointerCapture(e.pointerId); } catch(err){}
   getAudioContext();
   startPuppetDrag(selectedCharaId, e);
 });
 
+// ドラッグ開始（※開始点を自動で◆打刻）
 function startPuppetDrag(leaderId, e) {
   const leader = characters.find(c => c.id === leaderId);
   if (!leader) return;
+
+  const rect = stage.getBoundingClientRect();
+  const scale = rect.width / logicalWidth;
+  activeDrag.startRect = rect;
+  activeDrag.startScale = scale;
 
   const pos = getPointerLogicalPos(e);
   const leaderPos = getInterpolatedPosition(leader, currentTime);
@@ -1629,31 +1535,22 @@ function startPuppetDrag(leaderId, e) {
   activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
   activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
 
-  if (isRecordingMotion) {
-    recordContinuousMotionPoint(leader, currentTime, leaderPos.x, leaderPos.y);
-    leader.motion[leader.motion.length - 1].isManual = true;
-    delete leader._dragX;
-    delete leader._dragY;
-  } else {
-    leader._dragX = leaderPos.x;
-    leader._dragY = leaderPos.y;
-  }
+  // ドラッグ開始点を自動キーフレーム（◆）打刻
+  recordManualKeyframe(leader, currentTime, leaderPos.x, leaderPos.y);
 
   activeDrag.groupOffsets = {};
   if (leader.group !== 'none') {
     characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
       const mPos = getInterpolatedPosition(member, currentTime);
       activeDrag.groupOffsets[member.id] = { x: mPos.x - leaderPos.x, y: mPos.y - leaderPos.y };
-      if (isRecordingMotion) {
-        recordContinuousMotionPoint(member, currentTime, mPos.x, mPos.y);
-        member.motion[member.motion.length - 1].isManual = true;
-        delete member._dragX;
-        delete member._dragY;
-      } else {
-        member._dragX = mPos.x;
-        member._dragY = mPos.y;
-      }
+      recordManualKeyframe(member, currentTime, mPos.x, mPos.y);
     });
+  }
+
+  // 停止中の場合のみ仮座標を設定
+  if (!isRecordingMotion) {
+    leader._dragX = leaderPos.x;
+    leader._dragY = leaderPos.y;
   }
 
   updateStageElement(leader, currentTime);
@@ -1673,12 +1570,10 @@ window.addEventListener('pointermove', (e) => {
 
 function endDragOperation(pointerId) {
   if (activeDrag.isDragging) {
-    if (pointerId !== undefined) {
-      try { stageOuter.releasePointerCapture(pointerId); } catch(err){}
-    }
     if (!isRecordingMotion) {
       commitCurrentDragKeyframe();
     } else {
+      // 録画中のマウスアップ時：ドラッグ終了点を自動でメモ（◆）
       const leader = characters.find(c => c.id === activeDrag.leaderId);
       if (leader && leader.motion && leader.motion.length > 0) {
         leader.motion[leader.motion.length - 1].isManual = true;
@@ -1693,6 +1588,7 @@ function endDragOperation(pointerId) {
     }
     activeDrag.isDragging = false;
     activeDrag.leaderId = null;
+    activeDrag.startRect = null;
     renderVisualTimeline();
     renderInspector();
     markUnsaved();
@@ -1757,16 +1653,21 @@ function commitCurrentDragKeyframe() {
   const leader = characters.find(c => c.id === activeDrag.leaderId);
   if (!leader) return;
   const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
+  
   targets.forEach(c => {
-    if (c._dragX !== undefined && c._dragY !== undefined) {
-      recordManualKeyframe(c, currentTime, c._dragX, c._dragY);
-      if (currentTime === 0 || c.motion.length <= 1) {
-        c.x = c._dragX;
-        c.y = c._dragY;
-      }
-      delete c._dragX;
-      delete c._dragY;
+    const finalX = c._dragX !== undefined ? c._dragX : getInterpolatedPosition(c, currentTime).x;
+    const finalY = c._dragY !== undefined ? c._dragY : getInterpolatedPosition(c, currentTime).y;
+
+    // ドラッグ終了点を手動メモ（◆）として自動登録
+    recordManualKeyframe(c, currentTime, finalX, finalY);
+
+    if (currentTime === 0 || c.motion.length <= 1) {
+      c.x = finalX;
+      c.y = finalY;
     }
+    delete c._dragX;
+    delete c._dragY;
+    updateStageElement(c, currentTime);
   });
 }
 
@@ -1832,6 +1733,7 @@ function setCharacterGroup(id, grp) {
   markUnsaved();
 }
 
+// 汎用打刻関数：手動・要点（◆）用
 function recordManualKeyframe(chara, t, x, y) {
   t = Math.round(t * 100) / 100;
   x = Math.round(x);
@@ -1961,6 +1863,7 @@ function calculateOpacity(chara, t) {
   return Math.max(0, Math.min(1, op));
 }
 
+// キャラクターと字幕の表示更新
 function updateStageElement(chara, t) {
   const el = document.getElementById('stage_' + chara.id);
   if (!el) return;
@@ -1969,13 +1872,14 @@ function updateStageElement(chara, t) {
   const rawOpacity = calculateOpacity(chara, t);
   const inTimeline = (t >= chara.inTime && t <= chara.outTime);
 
+  // ドラッグ操作中、または録画中の選択キャラは可視性を強制
   const isBeingDragged = activeDrag.isDragging && (
     activeDrag.leaderId === chara.id || 
     (chara.group !== 'none' && characters.find(c => c.id === activeDrag.leaderId)?.group === chara.group)
   );
 
-  const activeSpot = spotlightCues.find(s => s.targetCharaId === chara.id && t >= s.start && t <= s.end);
-  const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+  const activeHl = (chara.highlights || []).find(h => t >= h.start && t <= h.end);
+  const scaleMultiplier = activeHl ? (activeHl.scale || 1.3) : 1.0;
 
   const charaSize = (chara.size || 90);
   const charaFontSize = chara.fontSize || 16;
@@ -1985,6 +1889,7 @@ function updateStageElement(chara, t) {
   el.style.height = charaSize + 'px';
   el.style.transform = `translate(-50%, -50%) scale(${scaleMultiplier})`;
 
+  // 操作中はZ-Index 150(前面カーテン100より手前)＆完全表示
   if (isBeingDragged || (isRecordingMotion && selectedCharaId === chara.id)) {
     el.style.zIndex = 150;
     el.style.opacity = '1.0';
@@ -2012,7 +1917,7 @@ function updateStageElement(chara, t) {
 
   const spotEl = document.getElementById('spot_' + chara.id);
   if (spotEl) {
-    spotEl.style.display = (activeSpot && (rawOpacity > 0 || isBeingDragged)) ? 'block' : 'none';
+    spotEl.style.display = (activeHl && activeHl.spotlight && (rawOpacity > 0 || isBeingDragged)) ? 'block' : 'none';
   }
 
   const imgBox = el.querySelector('.chara-img-box');
@@ -2166,8 +2071,8 @@ function checkOutOfBoundsData() {
     if (c.outTime > duration) hasOut = true;
     if ((c.motion || []).some(m => m.t > duration)) hasOut = true;
     if ((c.dialogues || []).some(d => d.end > duration)) hasOut = true;
+    if ((c.highlights || []).some(h => h.end > duration)) hasOut = true;
   });
-  if (spotlightCues.some(s => s.end > duration)) hasOut = true;
   audioTracks.forEach(t => {
     if ((t.clips || []).some(a => a.startTime + a.duration > duration)) hasOut = true;
   });
@@ -2184,10 +2089,10 @@ function trimAllOutOfBounds() {
       d.start = Math.min(duration, d.start);
       d.end = Math.min(duration, d.end);
     });
-  });
-  spotlightCues.forEach(s => {
-    s.start = Math.min(duration, s.start);
-    s.end = Math.min(duration, s.end);
+    (c.highlights || []).forEach(h => {
+      h.start = Math.min(duration, h.start);
+      h.end = Math.min(duration, h.end);
+    });
   });
   audioTracks.forEach(t => {
     t.clips = (t.clips || []).filter(a => a.startTime < duration);
@@ -2195,7 +2100,6 @@ function trimAllOutOfBounds() {
 
   renderVisualTimeline();
   renderInspector();
-  renderSpotlightTab();
   checkOutOfBoundsData();
   markUnsaved();
 }
@@ -2277,13 +2181,13 @@ function renderVisualTimeline() {
     lifeSpan.style.width = `${((c.outTime - c.inTime) / duration) * 100}%`;
     laneRow.appendChild(lifeSpan);
 
-    spotlightCues.filter(s => s.targetCharaId === c.id).forEach(s => {
-      const sSpan = document.createElement('div');
-      sSpan.className = 'lane-span span-highlight';
-      sSpan.style.left = `${(s.start / duration) * 100}%`;
-      sSpan.style.width = `${(Math.max(0.1, s.end - s.start) / duration) * 100}%`;
-      sSpan.title = `スポットライト (${s.scale || 1.3}倍)`;
-      laneRow.appendChild(sSpan);
+    (c.highlights || []).forEach(h => {
+      const hSpan = document.createElement('div');
+      hSpan.className = 'lane-span span-highlight';
+      hSpan.style.left = `${(h.start / duration) * 100}%`;
+      hSpan.style.width = `${(Math.max(0.1, h.end - h.start) / duration) * 100}%`;
+      hSpan.title = `強調演出 (${Math.round((h.scale || 1.3)*100)}%)`;
+      laneRow.appendChild(hSpan);
     });
 
     (c.dialogues || []).forEach(d => {
@@ -2303,6 +2207,7 @@ function renderVisualTimeline() {
       laneRow.appendChild(mSpan);
     }
 
+    // ひし形は要点（isManual: true）にのみ表示
     m.filter(pt => pt.isManual).forEach(pt => {
       const marker = document.createElement('div');
       marker.className = 'keyframe-marker';
@@ -2353,7 +2258,7 @@ function renderVisualTimeline() {
       e.stopPropagation();
       activeAudioTrackId = t.id;
       renderVisualTimeline();
-      renderAudioTracksTab();
+      renderInspector();
     };
     audioTrackLabelsContainer.appendChild(aLabelCell);
 
@@ -2364,7 +2269,7 @@ function renderVisualTimeline() {
       e.stopPropagation();
       activeAudioTrackId = t.id;
       renderVisualTimeline();
-      renderAudioTracksTab();
+      renderInspector();
     };
 
     (t.clips || []).forEach((clip, idx) => {
@@ -2405,7 +2310,7 @@ function toggleMotionRecord(id) {
         trimMotionAfter(id);
         delete chara._dragX;
         delete chara._dragY;
-        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画開始点◆
       }
       isRecordingMotion = true;
       stageOuter.classList.add('recording-active');
@@ -2424,6 +2329,7 @@ function stopMotionRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
+      // 停止時のキーフレームは打たない
     }
   }
 
@@ -2460,6 +2366,7 @@ async function toggleGlobalAudioRecord() {
         audioChunks = [];
         audioRecordStartTime = currentTime;
 
+        // 録音開始点◆
         if (selectedCharaId) {
           const chara = characters.find(c => c.id === selectedCharaId);
           if (chara) {
@@ -2490,7 +2397,7 @@ async function toggleGlobalAudioRecord() {
                 duration: decoded.duration,
                 volume: 1.0
               });
-              renderAudioTracksTab();
+              renderInspector();
               renderVisualTimeline();
               markUnsaved();
             };
@@ -2528,6 +2435,15 @@ function stopGlobalAudioRecording() {
   micIndicator.style.display = 'none';
   cleanupMicMeter();
 
+  // 録音終了点◆
+  if (selectedCharaId) {
+    const chara = characters.find(c => c.id === selectedCharaId);
+    if (chara) {
+      const curPos = getInterpolatedPosition(chara, currentTime);
+      recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+    }
+  }
+
   renderInspector();
   renderVisualTimeline();
   markUnsaved();
@@ -2564,7 +2480,7 @@ async function toggleMotionAndAudioRecord(id) {
           trimMotionAfter(id);
           delete chara._dragX;
           delete chara._dragY;
-          recordManualKeyframe(chara, currentTime, curPos.x, curPos.y);
+          recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 同時記録開始点◆
         }
 
         mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -2593,7 +2509,7 @@ async function toggleMotionAndAudioRecord(id) {
                 duration: decoded.duration,
                 volume: 1.0
               });
-              renderAudioTracksTab();
+              renderInspector();
               renderVisualTimeline();
               markUnsaved();
             };
@@ -2637,6 +2553,7 @@ function stopMotionAndAudioRecording() {
     if (chara) {
       delete chara._dragX;
       delete chara._dragY;
+      // 停止時のキーフレームは打たない
     }
   }
 
@@ -2709,7 +2626,7 @@ function deleteTrackAudioClip(trackId, clipId) {
   const track = audioTracks.find(t => t.id === trackId);
   if (!track) return;
   track.clips = (track.clips || []).filter(c => c.id !== clipId);
-  renderAudioTracksTab();
+  renderInspector();
   renderVisualTimeline();
   markUnsaved();
 }
@@ -2728,6 +2645,7 @@ function addDialogue(charaId) {
     end: end
   });
 
+  // 字幕開始・終了点◆
   const curPos = getInterpolatedPosition(chara, cur);
   recordManualKeyframe(chara, cur, curPos.x, curPos.y);
   const endPos = getInterpolatedPosition(chara, end);
@@ -2767,6 +2685,52 @@ function updateDialogueProp(charaId, diagId, prop, val) {
       recordManualKeyframe(chara, t, pos.x, pos.y);
     }
 
+    updateStageElement(chara, currentTime);
+    renderVisualTimeline();
+    markUnsaved();
+  }
+}
+
+function addHighlight(charaId) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara) return;
+  if (!chara.highlights) chara.highlights = [];
+
+  const cur = parseFloat(currentTime.toFixed(2));
+  chara.highlights.push({
+    id: 'hl_' + Date.now(),
+    start: cur,
+    end: Math.min(duration, parseFloat((cur + 3.0).toFixed(2))),
+    scale: 1.3,
+    spotlight: true
+  });
+  renderInspector();
+  renderVisualTimeline();
+  updateStageElement(chara, currentTime);
+  markUnsaved();
+}
+
+function deleteHighlight(charaId, hlId) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara || !chara.highlights) return;
+  chara.highlights = chara.highlights.filter(h => h.id !== hlId);
+  renderInspector();
+  renderVisualTimeline();
+  updateStageElement(chara, currentTime);
+  markUnsaved();
+}
+
+function updateHighlightProp(charaId, hlId, prop, val) {
+  const chara = characters.find(c => c.id === charaId);
+  if (!chara || !chara.highlights) return;
+  const hl = chara.highlights.find(h => h.id === hlId);
+  if (hl) {
+    hl[prop] = val;
+    if (prop === 'start' && hl.start >= hl.end) {
+      hl.end = Math.min(duration, parseFloat((hl.start + 1.0).toFixed(2)));
+    } else if (prop === 'end' && hl.end <= hl.start) {
+      hl.start = Math.max(0, parseFloat((hl.end - 1.0).toFixed(2)));
+    }
     updateStageElement(chara, currentTime);
     renderVisualTimeline();
     markUnsaved();
@@ -2828,7 +2792,7 @@ function getSupportedVideoMimeType() {
   return '';
 }
 
-// 動画書き出し（完全統合・ストリーム遮断・タイムアウト付加）
+// 動画書き出し（完全統合・ストリーム安全遮断・タイムアウト付加）
 async function exportVideo() {
   if (isExporting) return;
   if (isPlaying) pause();
@@ -2907,27 +2871,23 @@ async function exportVideo() {
 
   const startTime = performance.now();
   const totalMs = duration * 1000;
-  const tailMarginMs = 800; // 最終フレームと音声を焼き切る余白
+  const tailMarginMs = 800; // 最終フレームを完全に焼き切る余白
   let isFinishSequenceStarted = false;
 
-  // 終了シーケンス統合処理
   function finishExport() {
     if (isFinishSequenceStarted) return;
     isFinishSequenceStarted = true;
     exportStatus.textContent = '100% 完了処理中...';
 
-    // 1. 全ストリームのトラックを完全遮断してMediaRecorderに終端を認識させる
     try { destNode.disconnect(); } catch(e){}
     videoStream.getTracks().forEach(track => track.stop());
     destNode.stream.getTracks().forEach(track => track.stop());
     combinedStream.getTracks().forEach(track => track.stop());
 
-    // 2. レコーダーの停止
     if (recorder.state !== 'inactive') {
       recorder.stop();
     }
 
-    // 3. onstopが発火しない環境向けのセーフティ解除タイマー (3秒)
     setTimeout(() => {
       if (isExporting && !isDownloadTriggered) {
         if (recordedChunks.length > 0) {
@@ -2954,24 +2914,24 @@ async function exportVideo() {
       drawImageCover(ctx2d, stageBg, 0, 0, logicalWidth, logicalHeight);
     }
 
-    spotlightCues.forEach(s => {
-      if (simTime >= s.start && simTime <= s.end) {
-        const chara = characters.find(c => c.id === s.targetCharaId);
-        if (chara) {
-          const pos = getInterpolatedPosition(chara, simTime);
-          const charaSize = (chara.size || 90) * (s.scale || 1.3);
+    characters.forEach(c => {
+      const op = calculateOpacity(c, simTime);
+      if (op <= 0) return;
+      const activeHl = (c.highlights || []).find(h => simTime >= h.start && simTime <= h.end);
+      if (activeHl && activeHl.spotlight) {
+        const pos = getInterpolatedPosition(c, simTime);
+        const charaSize = (c.size || 90) * (activeHl.scale || 1.3);
 
-          ctx2d.save();
-          const radGrad = ctx2d.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, charaSize * 1.3);
-          radGrad.addColorStop(0, 'rgba(255, 255, 220, 0.75)');
-          radGrad.addColorStop(0.45, 'rgba(255, 230, 120, 0.35)');
-          radGrad.addColorStop(1, 'rgba(255, 230, 120, 0)');
-          ctx2d.fillStyle = radGrad;
-          ctx2d.beginPath();
-          ctx2d.arc(pos.x, pos.y, charaSize * 1.3, 0, Math.PI * 2);
-          ctx2d.fill();
-          ctx2d.restore();
-        }
+        ctx2d.save();
+        const radGrad = ctx2d.createRadialGradient(pos.x, pos.y, 10, pos.x, pos.y, charaSize * 1.3);
+        radGrad.addColorStop(0, 'rgba(255, 255, 220, 0.75)');
+        radGrad.addColorStop(0.45, 'rgba(255, 230, 120, 0.35)');
+        radGrad.addColorStop(1, 'rgba(255, 230, 120, 0)');
+        ctx2d.fillStyle = radGrad;
+        ctx2d.beginPath();
+        ctx2d.arc(pos.x, pos.y, charaSize * 1.3, 0, Math.PI * 2);
+        ctx2d.fill();
+        ctx2d.restore();
       }
     });
 
@@ -2980,8 +2940,8 @@ async function exportVideo() {
       if (op <= 0) return;
 
       const pos = getInterpolatedPosition(c, simTime);
-      const activeSpot = spotlightCues.find(s => s.targetCharaId === c.id && simTime >= s.start && simTime <= s.end);
-      const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+      const activeHl = (c.highlights || []).find(h => simTime >= h.start && simTime <= h.end);
+      const scaleMultiplier = activeHl ? (activeHl.scale || 1.3) : 1.0;
       const charaSize = (c.size || 90) * scaleMultiplier;
 
       ctx2d.save();
@@ -3006,8 +2966,8 @@ async function exportVideo() {
       if (op <= 0) return;
 
       const pos = getInterpolatedPosition(c, simTime);
-      const activeSpot = spotlightCues.find(s => s.targetCharaId === c.id && simTime >= s.start && simTime <= s.end);
-      const scaleMultiplier = activeSpot ? (activeSpot.scale || 1.3) : 1.0;
+      const activeHl = (c.highlights || []).find(h => simTime >= h.start && simTime <= h.end);
+      const scaleMultiplier = activeHl ? (activeHl.scale || 1.3) : 1.0;
       const charaSize = (c.size || 90) * scaleMultiplier;
       const charaFontSize = c.fontSize || 16;
       const bubbleWidth = c.bubbleWidth || 260;
@@ -3099,6 +3059,508 @@ async function exportVideo() {
 
   requestAnimationFrame(renderExportFrame);
 }
+
+// 単一インスペクター描画処理（完全復元）
+function renderInspector() {
+  charaPillsContainer.innerHTML = '';
+  characters.forEach(c => {
+    const pill = document.createElement('div');
+    pill.className = 'chara-pill' + (c.id === selectedCharaId ? ' selected' : '');
+    
+    if (c.group && c.group !== 'none') {
+      const dot = document.createElement('div');
+      dot.className = 'pill-group-dot';
+      dot.style.backgroundColor = GROUP_COLORS[c.group];
+      pill.appendChild(dot);
+    }
+
+    const thumb = document.createElement('img');
+    thumb.src = c.imgSrc;
+    pill.appendChild(thumb);
+
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = c.name;
+    pill.appendChild(nameSpan);
+
+    pill.onclick = () => selectCharacter(c.id);
+    charaPillsContainer.appendChild(pill);
+  });
+
+  const c = characters.find(item => item.id === selectedCharaId);
+  if (!c) {
+    inspectorContent.innerHTML = `<div style="font-size:14px; color:#9ca3af; text-align:center; margin-top:40px;">人物を追加または選択してください</div>`;
+    return;
+  }
+
+  const hasKeyframeAtCurrent = (c.motion || []).some(m => Math.abs(m.t - currentTime) < 0.04 && m.isManual);
+
+  let groupMembersHTML = '';
+  if (c.group && c.group !== 'none') {
+    const members = characters.filter(m => m.group === c.group && m.id !== c.id);
+    if (members.length > 0) {
+      const names = members.map(m => `<span style="text-decoration:underline; cursor:pointer;" onclick="selectCharacter('${m.id}')">${m.name}</span>`).join(', ');
+      groupMembersHTML = `<div style="font-size:12px; color:var(--text-sub); margin-top:4px;">同グループ: ${names}</div>`;
+    }
+  }
+
+  const highlightsHTML = (c.highlights || []).map(h => `
+    <div class="sub-item">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:bold; color:var(--highlight-color);">★ 強調演出</span>
+        <button class="btn-sm btn-danger" onclick="deleteHighlight('${c.id}', '${h.id}')">削除</button>
+      </div>
+      <div class="prop-row" style="gap:6px;">
+        <span style="color:var(--text-sub);">時間:</span>
+        <input type="number" step="0.1" value="${h.start}" style="width:50px;" onchange="updateHighlightProp('${c.id}', '${h.id}', 'start', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateHighlightProp('${c.id}', '${h.id}', 'start', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+        <span>〜</span>
+        <input type="number" step="0.1" value="${h.end}" style="width:50px;" onchange="updateHighlightProp('${c.id}', '${h.id}', 'end', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateHighlightProp('${c.id}', '${h.id}', 'end', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+      </div>
+      <div class="prop-row" style="gap:12px; margin-top:2px;">
+        <label style="width:55px;">拡大率:</label>
+        <input type="range" min="1.1" max="2.0" step="0.05" value="${h.scale || 1.3}" oninput="updateHighlightProp('${c.id}', '${h.id}', 'scale', parseFloat(this.value)); this.nextElementSibling.textContent=Math.round(this.value*100)+'%'">
+        <span class="val-indicator">${Math.round((h.scale || 1.3)*100)}%</span>
+        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:#fff; cursor:pointer;">
+          <input type="checkbox" ${h.spotlight ? 'checked' : ''} onchange="updateHighlightProp('${c.id}', '${h.id}', 'spotlight', this.checked)">
+          スポット照明
+        </label>
+      </div>
+    </div>
+  `).join('');
+
+  const dialoguesHTML = (c.dialogues || []).map(d => `
+    <div class="sub-item">
+      <div style="display:flex; gap:6px;">
+        <input type="text" placeholder="セリフテキスト" value="${d.text}" style="flex:1;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'text', this.value)">
+        <button class="btn-sm btn-danger" onclick="deleteDialogue('${c.id}', '${d.id}')">削除</button>
+      </div>
+      <div class="prop-row" style="gap:6px; flex-wrap:wrap;">
+        <span style="color:var(--text-sub);">位置:</span>
+        <select style="padding:2px 4px; font-size:12px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'pos', this.value)">
+          <option value="top" ${d.pos==='top'||!d.pos?'selected':''}>上 (頭上)</option>
+          <option value="bottom" ${d.pos==='bottom'?'selected':''}>下 (足元)</option>
+          <option value="left" ${d.pos==='left'?'selected':''}>左 (左側)</option>
+          <option value="right" ${d.pos==='right'?'selected':''}>右 (右側)</option>
+        </select>
+        <span style="color:var(--text-sub); margin-left:4px;">時間:</span>
+        <input type="number" step="0.1" value="${d.start}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'start', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+        <span>〜</span>
+        <input type="number" step="0.1" value="${d.end}" style="width:50px;" onchange="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(this.value))">
+        <button class="btn-sm" onclick="updateDialogueProp('${c.id}', '${d.id}', 'end', parseFloat(currentTime.toFixed(2))); renderInspector();">現在地</button>
+      </div>
+    </div>
+  `).join('');
+
+  const audioTracksInspectorHTML = audioTracks.map(t => {
+    const isAct = (t.id === activeAudioTrackId);
+    const clipsHTML = (t.clips || []).map((clip, idx) => `
+      <div class="sub-item" style="flex-direction:row; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#10b981;">#${idx + 1} (${clip.startTime.toFixed(1)}s〜, ${clip.duration.toFixed(1)}秒)</span>
+        <button class="btn-sm btn-danger" onclick="deleteTrackAudioClip('${t.id}', '${clip.id}')">削除</button>
+      </div>
+    `).join('') || '<div style="font-size:12px; color:#6b7280;">録音クリップなし</div>';
+
+    return `
+      <div class="sub-item" style="border: 1px solid ${isAct ? '#10b981' : '#3e3e52'}; background:${isAct ? '#18241e' : '#1e1e28'};">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:bold; color:${isAct ? '#10b981' : '#fff'};">${t.name} ${isAct ? '(録音対象)' : ''}</span>
+          <div style="display:flex; gap:4px;">
+            ${!isAct ? `<button class="btn-sm" style="background:#059669;" onclick="activeAudioTrackId='${t.id}'; renderVisualTimeline(); renderInspector();">録音先に指定</button>` : ''}
+            <button class="btn-sm btn-danger" onclick="deleteAudioTrack('${t.id}')">削除</button>
+          </div>
+        </div>
+        <div style="margin-top:4px;">${clipsHTML}</div>
+      </div>
+    `;
+  }).join('');
+
+  inspectorContent.innerHTML = `
+    <!-- 基本情報・外見 -->
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>基本情報・外見</span>
+        <button class="btn-sm btn-danger" onclick="deleteCharacter('${c.id}')">この人物を削除</button>
+      </div>
+      <div class="prop-row">
+        <label>名前:</label>
+        <input type="text" value="${c.name}" style="flex:1;" onchange="updateCharaProp('${c.id}', 'name', this.value); renderInspector(); renderVisualTimeline();">
+      </div>
+      <div class="prop-row">
+        <label>画像/向き:</label>
+        <input type="file" accept="image/*" onchange="changeCharaImage('${c.id}', this)" style="flex:1;">
+        <button class="btn-sm" onclick="toggleFlip('${c.id}')">${c.flipX ? '⇄ 右向きへ' : '⇄ 左向きへ'}</button>
+      </div>
+      <div class="prop-row">
+        <label>サイズ:</label>
+        <input type="range" min="30" max="250" step="5" value="${c.size}" oninput="updateCharaProp('${c.id}', 'size', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.size}px</span>
+      </div>
+      <div class="prop-row">
+        <label>重なり順:</label>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'top')">最前面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'up')">前面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'down')">背面</button>
+        <button class="btn-sm" onclick="changeLayer('${c.id}', 'bottom')">最背面</button>
+      </div>
+
+      <div class="prop-row" style="align-items:flex-start; margin-top:2px;">
+        <label style="margin-top:4px;">連動同期:</label>
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+          <div class="group-buttons">
+            <button class="grp-btn ${c.group==='none'?'active-grp-none':''}" onclick="setCharacterGroup('${c.id}', 'none')">単独</button>
+            <button class="grp-btn ${c.group==='grp_a'?'active-grp-A':''}" onclick="setCharacterGroup('${c.id}', 'grp_a')">赤 (A)</button>
+            <button class="grp-btn ${c.group==='grp_b'?'active-grp-B':''}" onclick="setCharacterGroup('${c.id}', 'grp_b')">青 (B)</button>
+            <button class="grp-btn ${c.group==='grp_c'?'active-grp-C':''}" onclick="setCharacterGroup('${c.id}', 'grp_c')">緑 (C)</button>
+            <button class="grp-btn ${c.group==='grp_d'?'active-grp-D':''}" onclick="setCharacterGroup('${c.id}', 'grp_d')">黄 (D)</button>
+          </div>
+          ${groupMembersHTML}
+        </div>
+      </div>
+    </div>
+
+    <!-- 動き・キーフレーム設定 -->
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>動き・キーフレーム操作 (${(c.motion || []).filter(m => m.isManual).length}箇所)</span>
+      </div>
+      <div class="prop-row" style="gap:4px;">
+        <button class="btn-sm" title="前のキーフレームへ" onclick="jumpToKeyframe('${c.id}', -1)">◀ 前のキー</button>
+        <button class="btn-sm primary-btn" style="flex:1;" onclick="addCurrentKeyframe('${c.id}')">◆ 座標打刻 (K)</button>
+        ${hasKeyframeAtCurrent ? `<button class="btn-sm btn-danger" onclick="removeCurrentKeyframe('${c.id}')">◇ キー削除</button>` : ''}
+        <button class="btn-sm" title="次のキーフレームへ" onclick="jumpToKeyframe('${c.id}', 1)">次のキー ▶</button>
+      </div>
+
+      <div class="prop-row">
+        <label>出現時刻:</label>
+        <input type="number" step="0.5" value="${c.inTime}" style="width:60px;" onchange="updateCharaProp('${c.id}', 'inTime', parseFloat(this.value)); renderVisualTimeline();">s
+        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'inTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地</button>
+        <label style="width:40px; text-align:right;">退場:</label>
+        <input type="number" step="0.5" value="${c.outTime}" style="width:60px;" onchange="updateCharaProp('${c.id}', 'outTime', parseFloat(this.value)); renderVisualTimeline();">s
+        <button class="btn-sm" onclick="updateCharaProp('${c.id}', 'outTime', parseFloat(currentTime.toFixed(2))); renderInspector(); renderVisualTimeline();">現在地</button>
+      </div>
+
+      <div class="prop-row" style="gap:12px;">
+        <label>フェード時間:</label>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span style="color:var(--text-sub);">開始(In):</span>
+          <input type="number" step="0.1" min="0" value="${c.fadeIn}" style="width:60px;" onchange="updateCharaProp('${c.id}', 'fadeIn', parseFloat(this.value))">
+          <span>s</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span style="color:var(--text-sub);">終了(Out):</span>
+          <input type="number" step="0.1" min="0" value="${c.fadeOut}" style="width:60px;" onchange="updateCharaProp('${c.id}', 'fadeOut', parseFloat(this.value))">
+          <span>s</span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <button class="record-both-btn ${isRecordingBoth ? 'recording' : ''}" style="flex:1; padding:8px 6px; font-weight:bold;" onclick="toggleMotionAndAudioRecord('${c.id}')">
+          ● 動き＋音声 同時記録 (Shift+R)
+        </button>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:2px;">
+        <button class="record-btn ${isRecordingMotion && !isRecordingBoth ? 'recording' : ''}" style="flex:1;" onclick="toggleMotionRecord('${c.id}')">● 動きのみ記録 (R)</button>
+        <button onclick="trimMotionAfter('${c.id}')">以降削除</button>
+        <button class="btn-danger" onclick="clearMotion('${c.id}')">全消去</button>
+      </div>
+    </div>
+
+    <!-- 強調演出 -->
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>強調・スポットライト演出</span>
+        <button class="btn-sm" style="background:var(--highlight-color); border-color:var(--highlight-color); color:#fff;" onclick="addHighlight('${c.id}')">＋ 強調追加</button>
+      </div>
+      ${highlightsHTML.length > 0 ? highlightsHTML : '<div style="font-size:13px; color:#6b7280; padding:4px 0;">強調演出が登録されていません</div>'}
+    </div>
+
+    <!-- 字幕 -->
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>セリフ・吹き出し設定</span>
+        <button class="btn-sm primary-btn" onclick="addDialogue('${c.id}')">＋ 字幕追加</button>
+      </div>
+      <div class="prop-row">
+        <label>文字サイズ:</label>
+        <input type="range" min="12" max="36" step="1" value="${c.fontSize}" oninput="updateCharaProp('${c.id}', 'fontSize', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.fontSize}px</span>
+      </div>
+      <div class="prop-row">
+        <label>吹き出し幅:</label>
+        <input type="range" min="100" max="600" step="10" value="${c.bubbleWidth || 260}" oninput="updateCharaProp('${c.id}', 'bubbleWidth', parseFloat(this.value)); this.nextElementSibling.textContent=this.value+'px'">
+        <span class="val-indicator">${c.bubbleWidth || 260}px</span>
+      </div>
+      ${dialoguesHTML.length > 0 ? dialoguesHTML : '<div style="font-size:13px; color:#6b7280; padding:4px 0;">字幕が登録されていません</div>'}
+    </div>
+
+    <!-- 音声トラック一覧 -->
+    <div class="inspector-section">
+      <div class="inspector-title">
+        <span>音声トラック管理 (${audioTracks.length}本)</span>
+        <button class="btn-sm" style="background:#047857;" onclick="addAudioTrack()">＋ 追加</button>
+      </div>
+      ${audioTracksInspectorHTML}
+    </div>
+  `;
+}
+
+function updateCharaProp(id, prop, val) {
+  const chara = characters.find(c => c.id === id);
+  if (chara) {
+    chara[prop] = val;
+    updateStageElement(chara, currentTime);
+    markUnsaved();
+  }
+}
+
+function changeCharaImage(id, input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const chara = characters.find(c => c.id === id);
+      chara.imgSrc = e.target.result;
+      loadImageObject(chara);
+      document.getElementById('img_' + id).src = e.target.result;
+      renderInspector();
+      markUnsaved();
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function deleteCharacter(id) {
+  characters = characters.filter(c => c.id !== id);
+  const el = document.getElementById('stage_' + id);
+  if (el) el.remove();
+  selectedCharaId = characters.length > 0 ? characters[0].id : null;
+  updateZIndexes();
+  renderInspector();
+  renderVisualTimeline();
+  markUnsaved();
+}
+
+function getSerializedProject() {
+  return {
+    duration: duration,
+    aspectRatio: currentAspectRatio,
+    bgPreset: currentBgPreset,
+    isCurtainOverlayActive: isCurtainOverlayActive,
+    bgColor: bgColorPicker.value,
+    customBgSrc: customBgSrc,
+    characters: characters.map(c => ({
+      id: c.id,
+      name: c.name,
+      imgSrc: c.imgSrc,
+      group: c.group || 'none',
+      muted: !!c.muted,
+      size: c.size || 90,
+      fontSize: c.fontSize || 16,
+      bubbleWidth: c.bubbleWidth || 260,
+      flipX: !!c.flipX,
+      x: c.x,
+      y: c.y,
+      inTime: c.inTime,
+      fadeIn: c.fadeIn,
+      outTime: c.outTime,
+      fadeOut: c.fadeOut,
+      dialogues: c.dialogues || [],
+      highlights: c.highlights || [],
+      motion: c.motion || []
+    })),
+    audioTracks: audioTracks.map(t => ({
+      id: t.id,
+      name: t.name,
+      muted: !!t.muted,
+      clips: (t.clips || []).map(clip => ({
+        id: clip.id,
+        name: clip.name,
+        base64: clip.base64,
+        startTime: clip.startTime,
+        duration: clip.duration,
+        volume: clip.volume !== undefined ? clip.volume : 1.0
+      }))
+    }))
+  };
+}
+
+function exportJSON() {
+  const project = getSerializedProject();
+  const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'scene_project_' + Date.now() + '.json';
+  a.click();
+  markSaved('ファイルに書き出し完了');
+}
+
+async function restoreProjectData(data) {
+  duration = data.duration || 30.0;
+  document.getElementById('total-duration').value = duration;
+  seekBar.max = duration;
+
+  if (data.aspectRatio) {
+    document.getElementById('aspect-ratio-select').value = data.aspectRatio;
+    changeAspectRatio(data.aspectRatio);
+  }
+
+  if (data.bgColor) {
+    bgColorPicker.value = data.bgColor;
+    stage.style.backgroundColor = data.bgColor;
+  }
+
+  if (data.customBgSrc) {
+    customBgSrc = data.customBgSrc;
+  }
+
+  if (data.isCurtainOverlayActive !== undefined) {
+    isCurtainOverlayActive = data.isCurtainOverlayActive;
+    curtainToggle.checked = isCurtainOverlayActive;
+  }
+
+  if (data.bgPreset) {
+    bgPresetSelect.value = data.bgPreset;
+    applyBgPreset(data.bgPreset);
+  } else {
+    bgPresetSelect.value = 'gym_stage';
+    applyBgPreset('gym_stage');
+  }
+
+  stage.querySelectorAll('.character').forEach(el => el.remove());
+  characters = data.characters || [];
+
+  if (data.audioTracks && data.audioTracks.length > 0) {
+    audioTracks = data.audioTracks;
+  } else if (data.globalAudioClips && data.globalAudioClips.length > 0) {
+    audioTracks = [{
+      id: 'atk_' + Date.now(),
+      name: '音声 1',
+      muted: false,
+      clips: data.globalAudioClips
+    }];
+  } else {
+    audioTracks = [];
+    initDefaultAudioTrack();
+  }
+  activeAudioTrackId = audioTracks[0].id;
+
+  characters.forEach(c => {
+    if (!c.group) c.group = 'none';
+    if (!c.highlights) c.highlights = [];
+    if (!c.bubbleWidth) c.bubbleWidth = 260;
+    (c.dialogues || []).forEach(d => {
+      if (!d.pos) d.pos = 'top';
+    });
+    (c.motion || []).forEach((pt, i) => {
+      if (pt.isManual === undefined) {
+        pt.isManual = (pt.isKeyframe || i === 0 || i === c.motion.length - 1);
+      }
+    });
+  });
+
+  const ctx = getAudioContext();
+  for (const t of audioTracks) {
+    for (const clip of (t.clips || [])) {
+      if (clip.base64) {
+        try {
+          const resp = await fetch(clip.base64);
+          const arrayBuf = await resp.arrayBuffer();
+          clip.buffer = await ctx.decodeAudioData(arrayBuf);
+        } catch (audioErr) {
+          console.warn('Audio decode failed:', clip.id);
+        }
+      }
+    }
+  }
+
+  for (const c of characters) {
+    c.size = c.size || 90;
+    c.fontSize = c.fontSize || 16;
+    c.bubbleWidth = c.bubbleWidth || 260;
+    c.flipX = !!c.flipX;
+    loadImageObject(c);
+    createStageElement(c);
+  }
+
+  updateZIndexes();
+  selectedCharaId = characters.length > 0 ? characters[0].id : null;
+  renderInspector();
+  renderVisualTimeline();
+  checkOutOfBoundsData();
+  seekTo(0);
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      await restoreProjectData(data);
+      markSaved('ファイルから読み込み完了');
+    } catch(err) {
+      alert('ファイルの解析に失敗しました。');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ショートカットキー
+window.addEventListener('keydown', (e) => {
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+  if (e.code === 'Escape') {
+    if (isTheaterMode) {
+      e.preventDefault();
+      exitTheaterMode();
+      return;
+    }
+    if (saveChoiceModal.style.display === 'flex') {
+      closeSaveModal();
+      return;
+    }
+    if (closeConfirmModal.style.display === 'flex') {
+      closeCloseConfirmModal();
+      return;
+    }
+  }
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  if (isTheaterMode) return;
+
+  if ((e.key === 'r' || e.key === 'R') && e.shiftKey) {
+    e.preventDefault();
+    if (selectedCharaId) toggleMotionAndAudioRecord(selectedCharaId);
+  } else if (e.key === 'r' || e.key === 'R') {
+    e.preventDefault();
+    if (selectedCharaId) toggleMotionRecord(selectedCharaId);
+  } else if (e.key === 'k' || e.key === 'K') {
+    e.preventDefault();
+    if (selectedCharaId) addCurrentKeyframe(selectedCharaId);
+  } else if (e.key === 'm' || e.key === 'M') {
+    e.preventDefault();
+    toggleGlobalAudioRecord();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    seekTo(currentTime - (e.shiftKey ? 2.0 : 0.2));
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    seekTo(currentTime + (e.shiftKey ? 2.0 : 0.2));
+  } else if (e.code === 'Home' || e.key === '0') {
+    e.preventDefault();
+    seekTo(0);
+  } else if (e.code === 'Tab') {
+    e.preventDefault();
+    cycleCharacterSelection(e.shiftKey ? -1 : 1);
+  }
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
   changeAspectRatio('16:9');
