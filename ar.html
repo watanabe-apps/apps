@@ -96,11 +96,11 @@
       top: 58px;
       right: 14px;
       z-index: 40;
-      background: rgba(15, 23, 42, 0.92);
+      background: rgba(15, 23, 42, 0.94);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 14px;
       padding: 14px 16px;
-      width: 250px;
+      width: 260px;
       color: #f1f5f9;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -160,7 +160,7 @@
       transform: scale(0.97);
     }
     .hud-button:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
     .hud-button.active {
@@ -172,11 +172,30 @@
       background: #2563eb;
       border-color: #3b82f6;
     }
+
+    /* エラー通知バナー */
+    #errorNotice {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(220, 38, 38, 0.9);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 50;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
   </style>
 </head>
 <body>
   <video id="webcam" playsinline webkit-playsinline muted autoplay></video>
   <canvas id="stage"></canvas>
+
+  <div id="errorNotice"></div>
 
   <!-- プレゼン検証用HUD（デフォルトは格納・ワンタップで開閉） -->
   <button id="hudBtn" type="button">
@@ -192,6 +211,14 @@
         <span id="thresholdVal">0.40</span>
       </div>
       <input id="thresholdSlider" class="hud-slider" type="range" min="0.10" max="0.90" step="0.05" value="0.40">
+    </div>
+
+    <div class="hud-row">
+      <div class="hud-label">
+        <span>野菜サイズ</span>
+        <span id="scaleVal">1.0x</span>
+      </div>
+      <input id="scaleSlider" class="hud-slider" type="range" min="0.6" max="1.6" step="0.1" value="1.0">
     </div>
 
     <div class="hud-actions">
@@ -210,28 +237,39 @@
     const hudPanel = document.getElementById('hudPanel');
     const thresholdSlider = document.getElementById('thresholdSlider');
     const thresholdVal = document.getElementById('thresholdVal');
+    const scaleSlider = document.getElementById('scaleSlider');
+    const scaleVal = document.getElementById('scaleVal');
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     const toggleDebugBtn = document.getElementById('toggleDebugBtn');
     const shuffleVegBtn = document.getElementById('shuffleVegBtn');
     const badgeCount = document.getElementById('badgeCount');
     const badgeFps = document.getElementById('badgeFps');
+    const errorNotice = document.getElementById('errorNotice');
 
-    // 状態変数
+    // パラメータ状態変数
     let scoreThreshold = 0.40;
+    let vegetableScale = 1.0;
     let isFrontCamera = false; // 研修本番用に背面カメラがデフォルト
     let showDebug = false;
 
-    // カメラ切り替え＆ライフサイクル安全ガード
+    // カメラライフサイクルと推論の安全ガード
     let faceModel = null;
     let currentStream = null;
     let isInferring = false;
+    let isDrainingInference = false; // カメラ破棄前の推論排出フラグ
     let isRunning = false;
-    let isCameraReady = false;      // カメラ映像が確定し推論可能な状態か
-    let isSwitchingCamera = false;  // 切り替え処理中フラグ（連続押し防止）
+    let isCameraReady = false;
+    let isSwitchingCamera = false;
 
-    // FPS算出用バッファ
+    // FPS算出用
     const fpsWindow = [];
     let lastFpsTextUpdate = 0;
+
+    function showError(msg) {
+      errorNotice.textContent = msg;
+      errorNotice.style.display = 'block';
+      setTimeout(() => { errorNotice.style.display = 'none'; }, 4000);
+    }
 
     function resizeCanvas() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -250,6 +288,11 @@
     thresholdSlider.addEventListener('input', (e) => {
       scoreThreshold = parseFloat(e.target.value);
       thresholdVal.textContent = scoreThreshold.toFixed(2);
+    });
+
+    scaleSlider.addEventListener('input', (e) => {
+      vegetableScale = parseFloat(e.target.value);
+      scaleVal.textContent = vegetableScale.toFixed(1) + 'x';
     });
 
     toggleDebugBtn.addEventListener('click', () => {
@@ -273,7 +316,7 @@
       'daikon'     // 7: ダイコン
     ];
 
-    /** 1. カボチャ (Pumpkin) - 王道のジャック・オー・ランタン */
+    /** 1. カボチャ (Pumpkin) */
     function drawPumpkin(c, r) {
       c.fillStyle = '#1e3a12';
       c.beginPath();
@@ -319,7 +362,7 @@
       c.shadowBlur = 0;
     }
 
-    /** 2. トマト (Tomato) - ツヤツヤ赤丸＆ウインク笑顔 */
+    /** 2. トマト (Tomato) */
     function drawTomato(c, r) {
       const grad = c.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.1, 0, 0, r);
       grad.addColorStop(0, '#f87171');
@@ -375,7 +418,7 @@
       c.fill();
     }
 
-    /** 3. ナス (Eggplant) - 洋梨シェイプ＆ニヤリドヤ顔 */
+    /** 3. ナス (Eggplant) */
     function drawEggplant(c, r) {
       const grad = c.createRadialGradient(-r * 0.2, -r * 0.1, r * 0.1, 0, 0.2 * r, r * 1.1);
       grad.addColorStop(0, '#c084fc');
@@ -421,7 +464,7 @@
       c.stroke();
     }
 
-    /** 4. ニンジン (Carrot) - 出っ歯＆アホ毛草 */
+    /** 4. ニンジン (Carrot) */
     function drawCarrot(c, r) {
       c.fillStyle = '#22c55e';
       c.beginPath();
@@ -471,7 +514,7 @@
       c.beginPath(); c.moveTo(0, r * 0.18); c.lineTo(0, r * 0.32); c.stroke();
     }
 
-    /** 5. タマネギ (Onion) - とんがり頭＆嬉し泣き顔 */
+    /** 5. タマネギ (Onion) */
     function drawOnion(c, r) {
       const grad = c.createRadialGradient(0, -r * 0.1, r * 0.1, 0, 0, r);
       grad.addColorStop(0, '#fef08a');
@@ -513,7 +556,7 @@
       c.fill();
     }
 
-    /** 6. ピーマン (Bell Pepper) - 深緑プリプリ＆大口元気顔 */
+    /** 6. ピーマン (Bell Pepper) */
     function drawPepper(c, r) {
       c.fillStyle = '#14532d';
       c.fillRect(-r * 0.08, -r * 1.0, r * 0.16, r * 0.3);
@@ -547,7 +590,7 @@
       c.fill();
     }
 
-    /** 7. ブロッコリー (Broccoli) - モコモコ＆紳士ヒゲ */
+    /** 7. ブロッコリー (Broccoli) */
     function drawBroccoli(c, r) {
       c.fillStyle = '#bbf7d0';
       c.fillRect(-r * 0.25, r * 0.15, r * 0.5, r * 0.75);
@@ -589,7 +632,7 @@
       c.stroke();
     }
 
-    /** 8. ダイコン (Radish) - 白美肌＆おだやかな仏笑顔 */
+    /** 8. ダイコン (Radish) */
     function drawDaikon(c, r) {
       c.fillStyle = '#16a34a';
       c.beginPath();
@@ -658,7 +701,7 @@
       constructor() {
         this.tracks = [];
         this.nextId = 1;
-        this.lostMax = 10;
+        this.lostMax = 8;
       }
 
       shuffle() {
@@ -701,7 +744,7 @@
           }
         }
 
-        // 新規顔の登録
+        // 新規登録
         for (const hit of detections) {
           if (!hit.assigned) {
             this.tracks.push({
@@ -748,8 +791,8 @@
     async function inferenceLoop() {
       if (!isRunning) return;
 
-      // カメラが安全に再生準備完了している時のみ推論を実行
-      if (isCameraReady && faceModel && !isInferring && video.readyState >= 2 && video.videoWidth > 0) {
+      // カメラ再生準備完了時のみ実行（排出中または切り替え中はスキップ）
+      if (isCameraReady && !isDrainingInference && faceModel && !isInferring && video.readyState >= 2 && video.videoWidth > 0) {
         isInferring = true;
         try {
           const faces = await faceModel.estimateFaces(video, false);
@@ -759,14 +802,13 @@
           const cw = canvas.width;
           const ch = canvas.height;
 
-          // カバー表示スケール計算
           const scale = Math.max(cw / vw, ch / vh);
           const renderW = vw * scale;
           const renderH = vh * scale;
           const offsetX = (cw - renderW) / 2;
           const offsetY = (ch - renderH) / 2;
 
-          // ビデオ座標からキャンバス座標への変換（インカメラ時はX反転）
+          // インカメラ時はX座標を反転
           const toScreenX = (vx) => {
             if (isFrontCamera) {
               return cw - (offsetX + vx * scale);
@@ -788,25 +830,22 @@
             const boxW = Math.abs(vx2 - vx1) * scale;
             const boxH = Math.abs(vy2 - vy1) * scale;
 
-            // 大きさ1.0: 顔サイズに自然にフィットするスケール
-            const radius = Math.max(boxW, boxH) * 0.54;
+            // スライダーで指定された倍率を反映
+            const radius = Math.max(boxW, boxH) * 0.54 * vegetableScale;
 
-            // ランドマーク（両目・鼻）
-            const ptRightEye = face.landmarks[0]; // 被写体の右目
-            const ptLeftEye = face.landmarks[1];  // 被写体の左目
+            const ptRightEye = face.landmarks[0];
+            const ptLeftEye = face.landmarks[1];
             const ptNose = face.landmarks[2];
 
             const eyeA = { x: toScreenX(ptRightEye[0]), y: toScreenY(ptRightEye[1]) };
             const eyeB = { x: toScreenX(ptLeftEye[0]), y: toScreenY(ptLeftEye[1]) };
             const noseScr = { x: toScreenX(ptNose[0]), y: toScreenY(ptNose[1]) };
 
-            // 【首の傾き（Roll角）の計算】
-            // 画面上のX座標順で左右の目をソートすることで、前面・背面どちらでも正確に追従
+            // 画面空間上で左右の目をソートしてRoll角を算出（インカメラ鏡像でも反転しない）
             const leftEyeScreen = eyeA.x < eyeB.x ? eyeA : eyeB;
             const rightEyeScreen = eyeA.x < eyeB.x ? eyeB : eyeA;
             const tiltAngle = Math.atan2(rightEyeScreen.y - leftEyeScreen.y, rightEyeScreen.x - leftEyeScreen.x);
 
-            // 顔の中心点
             const midEyeX = (eyeA.x + eyeB.x) * 0.5;
             const midEyeY = (eyeA.y + eyeB.y) * 0.5;
             const faceCenterX = midEyeX + (noseScr.x - midEyeX) * 0.22;
@@ -831,20 +870,19 @@
           tracker.update(detections);
           badgeCount.textContent = `${tracker.getActiveTracks().length}人`;
         } catch (err) {
-          // カメラ切替タイミングなどでのフレーム破棄を安全に無視
+          // 切り替え直後のフレーム破棄等は安全に無視
         } finally {
           isInferring = false;
         }
       }
 
-      // 非ブロッキングで継続実行（約24ms間隔）
-      setTimeout(inferenceLoop, 24);
+      setTimeout(inferenceLoop, 28);
     }
 
     function render(now) {
       if (!isRunning) return;
 
-      // FPS計測
+      // FPSカウンター
       fpsWindow.push(now);
       while (fpsWindow.length > 0 && fpsWindow[0] < now - 1000) {
         fpsWindow.shift();
@@ -868,7 +906,6 @@
         const offsetX = (cw - renderW) / 2;
         const offsetY = (ch - renderH) / 2;
 
-        // カメラ映像の描画（インカメラ時は鏡像反転）
         ctx.save();
         if (isFrontCamera) {
           ctx.translate(cw, 0);
@@ -877,7 +914,6 @@
         ctx.drawImage(video, offsetX, offsetY, renderW, renderH);
         ctx.restore();
 
-        // 検出トラックの野菜描画
         const activeTracks = tracker.getActiveTracks();
         for (let i = 0; i < activeTracks.length; i++) {
           const t = activeTracks[i];
@@ -888,7 +924,6 @@
 
           renderVegetable(ctx, t.vegType, t.cx, t.cy, t.radius, t.angle, alpha);
 
-          // デバッグ枠
           if (showDebug) {
             ctx.save();
             ctx.strokeStyle = '#22c55e';
@@ -911,7 +946,7 @@
           }
         }
       } else {
-        // カメラ切り替え待機中は背景をクリア
+        // 切替待機中は黒背景
         ctx.fillStyle = '#050505';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
@@ -920,32 +955,69 @@
     }
 
     /**
-     * カメラの起動および切り替えライフサイクル管理
-     * 連続実行時のハードウェア競合（NotReadableError/AbortError）を徹底防止
+     * カメラの安全な完全解放（Webkitバッファ破棄 ＆ 推論ドレイン待機 ＆ 500msクールダウン）
      */
-    async function startCamera(facingMode) {
+    async function stopCamera() {
       isCameraReady = false;
 
-      // 1. 既存ストリームの完全解放と破棄
+      // 1. 進行中推論の排出待機（最大1000ms）
+      isDrainingInference = true;
+      const drainStart = performance.now();
+      while (isInferring && (performance.now() - drainStart < 1000)) {
+        await new Promise(r => setTimeout(r, 20));
+      }
+      isDrainingInference = false;
+
+      // 2. 既存トラックの停止
       if (currentStream) {
         currentStream.getTracks().forEach(tr => {
           try { tr.stop(); } catch (e) {}
         });
         currentStream = null;
       }
+
+      // 3. WebKitデコーダーバッファの完全パージ（CRITICAL）
       try {
         video.pause();
         video.srcObject = null;
+        video.load(); // WebKit内部のメディアパイプラインを強制破棄
       } catch (e) {}
 
-      // 既存トラックの追従キャッシュをリセット
+      // 4. トラッカーのリセット
       tracker.clear();
       badgeCount.textContent = '0人';
 
-      // 2. モバイルOSのカメラセンサーおよびハードウェア解放待ちクールダウン（250ms）
-      await new Promise(resolve => setTimeout(resolve, 250));
+      // 5. モバイルOSのハードウェアカメラ排他ロック解除待ち（500ms）
+      await new Promise(r => setTimeout(r, 500));
+    }
 
-      // 3. モバイル向けに640x480の快適解像度を指定
+    /**
+     * タイムアウト付き安全なgetUserMedia呼び出し（ハングアップ防止）
+     */
+    async function safeGetUserMedia(constraints, timeoutMs = 6000) {
+      let timerId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timerId = setTimeout(() => reject(new Error('カメラの応答がタイムアウトしました。ブラウザをリロードしてください。')), timeoutMs);
+      });
+      try {
+        const stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia(constraints),
+          timeoutPromise
+        ]);
+        clearTimeout(timerId);
+        return stream;
+      } catch (err) {
+        clearTimeout(timerId);
+        throw err;
+      }
+    }
+
+    /**
+     * カメラ起動メインルーチン
+     */
+    async function startCamera(facingMode) {
+      await stopCamera();
+
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
@@ -955,37 +1027,46 @@
         audio: false
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await safeGetUserMedia(constraints, 6000);
       currentStream = stream;
       video.srcObject = stream;
 
-      // iOS Safari/Chrome等での完全自動再生設定
       video.muted = true;
       video.playsInline = true;
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
       await video.play();
 
-      // 4. ビデオフレームが正しく読み出せるまで確実に待機
-      await new Promise(resolve => {
+      // 解像度・フレーム確定待機
+      await new Promise((resolve, reject) => {
         if (video.readyState >= 2 && video.videoWidth > 0) return resolve();
+        let resolved = false;
+
         const onReady = () => {
-          if (video.videoWidth > 0 && video.videoHeight > 0) {
+          if (!resolved && video.videoWidth > 0 && video.videoHeight > 0) {
+            resolved = true;
             video.removeEventListener('loadeddata', onReady);
             video.removeEventListener('canplay', onReady);
             resolve();
           }
         };
+
         video.addEventListener('loadeddata', onReady);
         video.addEventListener('canplay', onReady);
-        // 万一のフォールバックタイムアウト
-        setTimeout(resolve, 1500);
+
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            if (video.videoWidth > 0) resolve();
+            else reject(new Error('ビデオフレームの初期化に失敗しました。'));
+          }
+        }, 3000);
       });
 
       isCameraReady = true;
     }
 
-    // カメラ切り替えボタンのクリックハンドラ（二重呼び出し防止排他ガード付き）
+    // カメラ切り替えボタン（完全排他・多重押し防止）
     switchCameraBtn.addEventListener('click', async () => {
       if (isSwitchingCamera) return;
       isSwitchingCamera = true;
@@ -994,7 +1075,6 @@
       const prevBtnText = switchCameraBtn.textContent;
       switchCameraBtn.textContent = '🔄 切替中...';
 
-      // 前面/背面のトグル
       isFrontCamera = !isFrontCamera;
 
       try {
@@ -1002,53 +1082,54 @@
         switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
       } catch (err) {
         console.error("Camera switch error:", err);
-        // 万一失敗した場合は元に戻す
+        showError("カメラの切替に失敗しました。再試行します。");
+        // 元のカメラ設定にロールバック
         isFrontCamera = !isFrontCamera;
-        switchCameraBtn.textContent = prevBtnText;
         try {
           await startCamera(isFrontCamera ? 'user' : 'environment');
         } catch (e) {}
+        switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
       } finally {
-        switchCameraBtn.disabled = false;
         isSwitchingCamera = false;
+        switchCameraBtn.disabled = false;
       }
     });
 
     /**
-     * アプリケーションの自動起動（タップ不要）
+     * アプリ起動ルーチン
      */
     async function bootstrap() {
       if (isRunning) return;
       isRunning = true;
 
-      // 1. 描画ループを直ちに開始
       requestAnimationFrame(render);
 
-      // 2. カメラの自動起動（初回は研修用に背面カメラ）
       try {
         await startCamera(isFrontCamera ? 'user' : 'environment');
       } catch (err) {
-        console.warn("Camera init retry listener attached:", err);
+        console.warn("Auto camera start blocked:", err);
+        showError("画面をタップしてカメラを許可してください。");
         const fallback = async () => {
           window.removeEventListener('pointerdown', fallback);
           try {
             await startCamera(isFrontCamera ? 'user' : 'environment');
-          } catch (e) {}
+          } catch (e) {
+            showError("カメラへのアクセスが拒否されました。");
+          }
         };
         window.addEventListener('pointerdown', fallback);
       }
 
-      // 3. BlazeFaceモデルのバックグラウンド非同期ロード
+      // BlazeFace非同期ロード
       try {
         faceModel = await blazeface.load({ maxFaces: 20, scoreThreshold: 0.15 });
-        // ロード完了次第、推論ループを稼働
         inferenceLoop();
       } catch (e) {
         console.error("Model load failed:", e);
+        showError("AIモデルの読み込みに失敗しました。");
       }
     }
 
-    // ページロード完了で即座に開始
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', bootstrap);
     } else {
