@@ -2,227 +2,50 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AR カルタ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Quest 3 MR カルタ</title>
   <style>
-    * {
-      box-sizing: border-box;
+    body {
       margin: 0;
       padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    body, html {
-      width: 100%;
-      height: 100%;
       overflow: hidden;
       background-color: #000;
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      font-family: -apple-system, sans-serif;
     }
-    #camera-video {
+    #overlay-ui {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 1;
-    }
-    #ar-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: auto;
-    }
-    #ui-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
       z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      pointer-events: none;
-      padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px) 16px;
     }
-    .interactive {
-      pointer-events: auto;
-    }
-    /* 上部ステータス */
-    #status-card {
-      background: rgba(255, 255, 255, 0.92);
-      border-radius: 20px;
-      padding: 12px 20px;
-      text-align: center;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-      margin: 0 auto;
-      max-width: 480px;
-      width: 100%;
-    }
-    #score-bar {
-      display: flex;
-      justify-content: space-between;
-      font-size: 16px;
-      font-weight: bold;
-      color: #555;
-      margin-bottom: 4px;
-    }
-    #message-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: #666;
-    }
-    #target-word {
-      font-size: 48px;
-      font-weight: 900;
-      color: #1976D2;
-      line-height: 1.2;
-    }
-    /* レティクル（照準） */
-    #reticle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 24px;
-      height: 24px;
-      transform: translate(-50%, -50%);
-      border: 2px solid rgba(255, 255, 255, 0.7);
-      border-radius: 50%;
-      pointer-events: none;
-      box-shadow: 0 0 8px rgba(0,0,0,0.5);
-    }
-    #reticle::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 4px;
-      height: 4px;
-      background: #FF9800;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-    }
-    /* 下部ボタン */
-    #controls {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-    .btn {
-      border: none;
-      outline: none;
-      font-size: 18px;
-      font-weight: bold;
-      padding: 12px 24px;
-      border-radius: 30px;
+    .start-btn {
+      background: #0070D1;
       color: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-size: 26px;
+      font-weight: bold;
+      padding: 20px 48px;
+      border: none;
+      border-radius: 40px;
       cursor: pointer;
-      transition: transform 0.1s;
+      box-shadow: 0 4px 20px rgba(0, 112, 209, 0.6);
     }
-    .btn:active {
-      transform: scale(0.95);
-    }
-    #btn-hint {
-      background: #FBC02D;
-      color: #333;
-    }
-    #btn-hint:disabled {
-      background: #BDBDBD;
-      color: #777;
-    }
-    /* スパークル演出オーバーレイ */
-    #sparkle-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 15;
-    }
-    /* 初期モーダル */
-    #start-modal {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .modal-content {
-      background: #fff;
-      border-radius: 24px;
-      padding: 32px 24px;
-      text-align: center;
-      max-width: 380px;
-      width: 100%;
-    }
-    .modal-content h1 {
-      font-size: 28px;
-      margin-bottom: 12px;
-      color: #333;
-    }
-    .modal-content p {
-      font-size: 15px;
-      color: #666;
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-    #btn-start-app {
-      background: #FF9800;
-      width: 100%;
-      padding: 16px;
-      font-size: 20px;
+    .start-btn:active {
+      transform: scale(0.96);
     }
   </style>
-  <!-- Three.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-  <video id="camera-video" autoplay playsinline muted></video>
-  <canvas id="ar-canvas"></canvas>
-  <canvas id="sparkle-overlay"></canvas>
-  <div id="reticle"></div>
-
-  <div id="ui-container">
-    <div id="status-card">
-      <div id="score-bar">
-        <span id="score-text">とったかず: 0 まい</span>
-        <span id="remain-text">のこり: 0 まい</span>
-      </div>
-      <div id="message-text">カードを みつけて タッチしよう！</div>
-      <div id="target-word">---</div>
-    </div>
-
-    <div id="controls">
-      <button id="btn-hint" class="btn interactive" disabled>💡 ヒント (3)</button>
-    </div>
-  </div>
-
-  <div id="start-modal">
-    <div class="modal-content">
-      <h1>AR カルタ</h1>
-      <p>カメラとジャイロセンサーを使って、部屋の空間に浮かぶひらがなカードを探すゲームです。<br>見つけたらカードをタップして取ろう！</p>
-      <button id="btn-start-app" class="btn interactive">あそびを はじめる</button>
-    </div>
+  <div id="overlay-ui">
+    <button id="btn-enter-ar" class="start-btn">MR カルタをはじめる</button>
   </div>
 
   <script>
-    // MARK: - 音声合成プレイヤー (Web Audio API)
-    class SoundSynth {
+    // MARK: - 3D空間オーディオ（Web Audio API + PannerNode）
+    class SpatialSoundSynth {
       constructor() {
         this.ctx = null;
       }
@@ -235,227 +58,173 @@
           this.ctx.resume();
         }
       }
-      playGetSound() {
+      playAtPosition(position) {
         if (!this.ctx) return;
         const now = this.ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // ド・ミ・ソ・ド
+        const panner = this.ctx.createPanner();
+        panner.panningModel = 'HRTF';
+        panner.distanceModel = 'inverse';
+        panner.refDistance = 1;
+        panner.maxDistance = 10;
+        panner.rolloffFactor = 1;
+        panner.positionX.setValueAtTime(position.x, now);
+        panner.positionY.setValueAtTime(position.y, now);
+        panner.positionZ.setValueAtTime(position.z, now);
+        panner.connect(this.ctx.destination);
+
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-          gain.gain.setValueAtTime(0.3, now + idx * 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+          osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+          gain.gain.setValueAtTime(0.4, now + idx * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now + idx * 0.08);
-          osc.stop(now + idx * 0.08 + 0.25);
+          gain.connect(panner);
+          osc.start(now + idx * 0.07);
+          osc.stop(now + idx * 0.07 + 0.25);
         });
       }
     }
 
-    // MARK: - ゲーム定数 & 状態
-    const WORDS_POOL = [
+    const sound = new SpatialSoundSynth();
+
+    // MARK: - ゲーム定数
+    const WORDS = [
       "いぬ", "ねこ", "くるま", "りんご", "ぼおる",
       "ひこうき", "ばなな", "とけい", "ぼうし", "くつ",
-      "えんぴつ", "たいよう", "おはな", "とり", "さかな",
-      "でんしゃ", "ぱんだ", "きりん", "いちご", "ぶどう"
+      "えんぴつ", "たいよう", "おはな", "とり", "さかな"
     ];
-    const GAME_CARD_COUNT = 10;
     let remainingWords = [];
     let currentTargetWord = "";
     let score = 0;
-    let hintCount = 3;
-    let hintActive = false;
 
-    // MARK: - Three.js & AR 管理
+    // MARK: - Three.js 変数
     let scene, camera, renderer;
     let cardMeshes = {};
-    let raycaster, tapPointer;
+    let hand0, hand1;
+    let controller0, controller1;
+    let hudMesh = null;
+    let hudCanvas, hudCtx, hudTexture;
     let laserLine = null;
+    let laserFrames = 0;
+    let isProcessingHit = false;
 
-    // ジャイロ姿勢計算用
-    let deviceOrientation = {};
-    let screenOrientation = 0;
-
-    const synth = new SoundSynth();
-
-    // MARK: - アプリ初期化
-    document.getElementById("btn-start-app").addEventListener("click", async () => {
-      synth.init();
-      document.getElementById("start-modal").style.display = "none";
-      await requestDeviceOrientation();
-      await startCamera();
-      initThreeJS();
-      startGame();
+    document.getElementById("btn-enter-ar").addEventListener("click", () => {
+      sound.init();
+      startWebXR();
     });
 
-    // iOS 13+ のジャイロ許可リクエスト
-    async function requestDeviceOrientation() {
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        try {
-          const response = await DeviceOrientationEvent.requestPermission();
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', onDeviceOrientation, false);
-          }
-        } catch (e) {
-          console.error("DeviceOrientation permission error:", e);
-        }
-      } else {
-        window.addEventListener('deviceorientation', onDeviceOrientation, false);
+    // MARK: - WebXR セッション開始
+    async function startWebXR() {
+      if (!navigator.xr) {
+        alert("WebXR非対応ブラウザです。Quest 3のMeta Quest Browserで開いてください。");
+        return;
       }
-      window.addEventListener('orientationchange', () => {
-        screenOrientation = window.orientation || 0;
-      }, false);
-      screenOrientation = window.orientation || 0;
-    }
-
-    function onDeviceOrientation(event) {
-      deviceOrientation = event;
-    }
-
-    // 背面カメラ起動
-    async function startCamera() {
-      const video = document.getElementById("camera-video");
-      const constraints = {
-        audio: false,
-        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-      };
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-        await video.play();
-      } catch (err) {
-        alert("カメラの起動に失敗しました。カメラへのアクセスを許可してください。");
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (!supported) {
+        alert("immersive-ar に対応していません。");
+        return;
       }
+
+      initThreeJS();
+
+      const session = await navigator.xr.requestSession('immersive-ar', {
+        requiredFeatures: ['local-floor'],
+        optionalFeatures: ['hand-tracking', 'hit-test']
+      });
+
+      renderer.xr.setReferenceSpaceType('local-floor');
+      await renderer.xr.setSession(session);
+      document.getElementById("overlay-ui").style.display = "none";
+
+      setupGame();
     }
 
-    // Three.js 初期設定
     function initThreeJS() {
-      const canvas = document.getElementById("ar-canvas");
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 50);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.xr.enabled = true;
+      document.body.appendChild(renderer.domElement);
 
-      raycaster = new THREE.Raycaster();
-      tapPointer = new THREE.Vector2();
+      // 環境光（カードが見やすくなる均等光）
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambientLight);
 
-      // レーザービームオブジェクト（ヒント用）
+      // コントローラー・ハンドトラッキング初期化
+      controller0 = renderer.xr.getController(0);
+      controller1 = renderer.xr.getController(1);
+      scene.add(controller0);
+      scene.add(controller1);
+
+      // コントローラーのトリガーでもヒント発動
+      controller0.addEventListener('selectstart', triggerHint);
+      controller1.addEventListener('selectstart', triggerHint);
+
+      hand0 = renderer.xr.getHand(0);
+      hand1 = renderer.xr.getHand(1);
+      scene.add(hand0);
+      scene.add(hand1);
+
+      // 3D HUD（視界上部に追従するお題ボード）
+      createFloatingHUD();
+
+      // ヒント用3Dレーザービーム
       const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
-      const laserMat = new THREE.LineBasicMaterial({ color: 0xFFEB3B, linewidth: 4 });
+      const laserMat = new THREE.LineBasicMaterial({ color: 0xFFEB3B, linewidth: 5 });
       laserLine = new THREE.Line(laserGeo, laserMat);
       laserLine.visible = false;
       scene.add(laserLine);
 
-      // タップ判定
-      window.addEventListener('pointerdown', onScenePointerDown);
-      window.addEventListener('resize', onWindowResize);
-
-      document.getElementById("btn-hint").addEventListener("click", triggerHint);
-
-      requestAnimationFrame(renderLoop);
+      renderer.setAnimationLoop(renderLoop);
     }
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    // MARK: - 3D HUD（視界追従パネル）
+    function createFloatingHUD() {
+      hudCanvas = document.createElement('canvas');
+      hudCanvas.width = 1024;
+      hudCanvas.height = 360;
+      hudCtx = hudCanvas.getContext('2d');
+      hudTexture = new THREE.CanvasTexture(hudCanvas);
+
+      const mat = new THREE.MeshBasicMaterial({ map: hudTexture, transparent: true });
+      const geo = new THREE.PlaneGeometry(0.7, 0.25);
+      hudMesh = new THREE.Mesh(geo, mat);
+      scene.add(hudMesh);
+      updateHUD("さがして タッチ！", "");
     }
 
-    // MARK: - ゲーム進行
-    function startGame() {
-      score = 0;
-      hintCount = 3;
-      updateHintButton();
+    function updateHUD(subText, mainWord) {
+      hudCtx.clearRect(0, 0, 1024, 360);
       
-      // 単語をシャッフル抽出
-      const shuffledPool = [...WORDS_POOL].sort(() => 0.5 - Math.random());
-      remainingWords = shuffledPool.slice(0, GAME_CARD_COUNT);
-      
-      spawnCards(remainingWords);
-      nextTarget();
-    }
+      // 角丸プレート
+      hudCtx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      roundRect(hudCtx, 20, 20, 984, 320, 40);
+      hudCtx.fill();
 
-    function nextTarget() {
-      if (remainingWords.length > 0) {
-        currentTargetWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
-        document.getElementById("target-word").innerText = currentTargetWord;
-        document.getElementById("message-text").innerText = `「${currentTargetWord}」を さがそう！`;
-      } else {
-        currentTargetWord = "";
-        document.getElementById("target-word").innerText = "🎉";
-        document.getElementById("message-text").innerText = "ぜんぶ とれたよ！クリア！";
-      }
-      document.getElementById("score-text").innerText = `とったかず: ${score} まい`;
-      document.getElementById("remain-text").innerText = `のこり: ${remainingWords.length} まい`;
-    }
+      // 枠線
+      hudCtx.strokeStyle = "#0070D1";
+      hudCtx.lineWidth = 12;
+      roundRect(hudCtx, 20, 20, 984, 320, 40);
+      hudCtx.stroke();
 
-    // カードの空間配置（プレイヤー中心の球面上に散開）
-    function spawnCards(words) {
-      // 既存カードの破棄
-      Object.values(cardMeshes).forEach(mesh => scene.remove(mesh));
-      cardMeshes = {};
+      // サブ情報
+      hudCtx.fillStyle = "#555";
+      hudCtx.font = "bold 44px sans-serif";
+      hudCtx.textAlign = "center";
+      hudCtx.fillText(`${subText}   (とったかず: ${score})`, 512, 100);
 
-      const total = words.length;
-      words.forEach((word, idx) => {
-        const mesh = createCardMesh(word);
-        
-        // プレイヤーの周囲（半径2.2m〜2.8m、360度、上下角-25度〜+30度）に配置
-        const phi = THREE.MathUtils.degToRad(90 - (Math.random() * 55 - 25)); // 仰俯角
-        const theta = (idx / total) * Math.PI * 2 + (Math.random() * 0.4 - 0.2); // 方位角
-        const radius = 2.2 + Math.random() * 0.6;
+      // メイン単語
+      hudCtx.fillStyle = "#0070D1";
+      hudCtx.font = "900 120px sans-serif";
+      hudCtx.fillText(mainWord || "---", 512, 240);
 
-        mesh.position.set(
-          radius * Math.sin(phi) * Math.sin(theta),
-          radius * Math.cos(phi),
-          -radius * Math.sin(phi) * Math.cos(theta)
-        );
-        // カードを中央（プレイヤー位置）に向ける
-        mesh.lookAt(0, 0, 0);
-
-        scene.add(mesh);
-        cardMeshes[word] = mesh;
-      });
-    }
-
-    // 動的テクスチャ生成によるカードメッシュの構築
-    function createCardMesh(text) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 360;
-      canvas.height = 480;
-      const ctx = canvas.getContext('2d');
-
-      // カード地
-      ctx.fillStyle = "#FFFFFF";
-      roundRect(ctx, 10, 10, 340, 460, 24);
-      ctx.fill();
-
-      // 青枠
-      ctx.strokeStyle = "#1E88E5";
-      ctx.lineWidth = 14;
-      roundRect(ctx, 10, 10, 340, 460, 24);
-      ctx.stroke();
-
-      // 文字描画（動的フォントスケーリング）
-      ctx.fillStyle = "#111111";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      let fontSize = 100;
-      ctx.font = `bold ${fontSize}px sans-serif`;
-      while (ctx.measureText(text).width > 300 && fontSize > 30) {
-        fontSize -= 6;
-        ctx.font = `bold ${fontSize}px sans-serif`;
-      }
-      ctx.fillText(text, 180, 240);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-      const geo = new THREE.PlaneGeometry(0.36, 0.48);
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.name = text;
-      return mesh;
+      hudTexture.needsUpdate = true;
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -468,161 +237,239 @@
       ctx.closePath();
     }
 
-    // MARK: - インタラクション（タップ判定）
-    function onScenePointerDown(event) {
-      if (!currentTargetWord) return;
+    // MARK: - ゲームロジック
+    function setupGame() {
+      score = 0;
+      remainingWords = [...WORDS].sort(() => 0.5 - Math.random()).slice(0, 10);
+      spawnCards(remainingWords);
+      nextTarget();
+    }
 
-      tapPointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-      tapPointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    function nextTarget() {
+      if (remainingWords.length > 0) {
+        currentTargetWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+        updateHUD("つぎの カードに てで タッチ！", currentTargetWord);
+      } else {
+        currentTargetWord = "";
+        updateHUD("ぜんぶ とれたよ！ クリア！", "🎉");
+      }
+      isProcessingHit = false;
+    }
 
-      raycaster.setFromCamera(tapPointer, camera);
+    // 部屋の中（床から0.6m〜1.2m、周囲1.2m〜2.2m）にカードを分散配置
+    function spawnCards(words) {
+      Object.values(cardMeshes).forEach(mesh => scene.remove(mesh));
+      cardMeshes = {};
+
+      const count = words.length;
+      words.forEach((word, i) => {
+        const mesh = createCardMesh(word);
+        const angle = (i / count) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
+        const dist = 1.3 + Math.random() * 0.8;
+
+        mesh.position.set(
+          Math.sin(angle) * dist,
+          0.65 + Math.random() * 0.55, // 床から65cm〜120cmの高さ
+          -Math.cos(angle) * dist
+        );
+
+        scene.add(mesh);
+        cardMeshes[word] = mesh;
+      });
+    }
+
+    // 厚み1cmの直方体カードメッシュ生成
+    function createCardMesh(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 360;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = "#FFFFFF";
+      roundRect(ctx, 12, 12, 336, 456, 32);
+      ctx.fill();
+
+      ctx.strokeStyle = "#0070D1";
+      ctx.lineWidth = 16;
+      roundRect(ctx, 12, 12, 336, 456, 32);
+      ctx.stroke();
+
+      ctx.fillStyle = "#111";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      let fontSize = 110;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      while (ctx.measureText(text).width > 300 && fontSize > 36) {
+        fontSize -= 6;
+        ctx.font = `bold ${fontSize}px sans-serif`;
+      }
+      ctx.fillText(text, 180, 240);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const faceMat = new THREE.MeshBasicMaterial({ map: texture });
+      const sideMat = new THREE.MeshBasicMaterial({ color: 0x0070D1 });
+
+      // 直方体（幅22cm, 高さ28cm, 厚み1cm）
+      const geo = new THREE.BoxGeometry(0.22, 0.28, 0.01);
+      const materials = [sideMat, sideMat, sideMat, sideMat, faceMat, sideMat];
+      const mesh = new THREE.Mesh(geo, materials);
+      mesh.name = text;
+      return mesh;
+    }
+
+    // MARK: - ヒント（手元からカードへのレーザー照射）
+    function triggerHint() {
+      if (!currentTargetWord || !cardMeshes[currentTargetWord]) return;
+      laserFrames = 120; // 2秒間照射
+      laserLine.visible = true;
+    }
+
+    // MARK: - ハンドトラッキング取得判定
+    function checkTouchInteractions() {
+      if (isProcessingHit || !currentTargetWord || !cardMeshes[currentTargetWord]) return;
+
       const targetMesh = cardMeshes[currentTargetWord];
-      if (!targetMesh) return;
+      const cardPos = targetMesh.position;
+      const touchThreshold = 0.12; // 12cm以内判定
 
-      const intersects = raycaster.intersectObject(targetMesh);
-      if (intersects.length > 0) {
-        collectCard(currentTargetWord, targetMesh);
+      // 判定対象のポイント（右手・左手の人差し指先、またはコントローラー先端）
+      const touchPoints = [];
+
+      // ハンドトラッキング（人差し指先端: index-finger-tip）
+      [hand0, hand1].forEach(hand => {
+        if (hand && hand.joints && hand.joints['index-finger-tip']) {
+          const tip = hand.joints['index-finger-tip'];
+          if (tip.position) {
+            touchPoints.push(tip.position);
+          }
+        }
+      });
+
+      // コントローラー先端
+      [controller0, controller1].forEach(c => {
+        if (c && c.visible) {
+          touchPoints.push(c.position);
+        }
+      });
+
+      // 接触判定
+      for (const pt of touchPoints) {
+        if (pt.distanceTo(cardPos) < touchThreshold) {
+          isProcessingHit = true;
+          collectCard(currentTargetWord, targetMesh);
+          break;
+        }
       }
     }
 
     function collectCard(word, mesh) {
-      synth.playGetSound();
-      triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
+      sound.playAtPosition(mesh.position);
+      create3DParticleBurst(mesh.position);
 
-      // レーザー解除
-      laserLine.visible = false;
-      hintActive = false;
+      delete cardMeshes[word];
+      score++;
+      remainingWords = remainingWords.filter(w => w !== word);
 
-      // 取得アニメーション（回転しながら縮小破棄）
+      // 取得アニメーション（縮小消滅）
       const startScale = mesh.scale.x;
       const startTime = performance.now();
-      function anim(now) {
-        const elapsed = (now - startTime) / 250;
+      function shrink(now) {
+        const elapsed = (now - startTime) / 180;
         if (elapsed < 1) {
           const s = startScale * (1 - elapsed);
           mesh.scale.set(s, s, s);
-          mesh.rotation.z += 0.2;
-          requestAnimationFrame(anim);
+          requestAnimationFrame(shrink);
         } else {
           scene.remove(mesh);
-          delete cardMeshes[word];
-          score++;
-          remainingWords = remainingWords.filter(w => w !== word);
           nextTarget();
         }
       }
-      requestAnimationFrame(anim);
+      requestAnimationFrame(shrink);
     }
 
-    // MARK: - ヒント（3Dレーザービーム照射）
-    function triggerHint() {
-      if (hintCount <= 0 || !currentTargetWord || hintActive) return;
-      hintCount--;
-      updateHintButton();
-      hintActive = true;
+    // 3Dスパークル爆発パーティクル
+    function create3DParticleBurst(position) {
+      const count = 20;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+      const velocities = [];
 
-      const targetMesh = cardMeshes[currentTargetWord];
-      if (!targetMesh) return;
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = position.x;
+        positions[i * 3 + 1] = position.y;
+        positions[i * 3 + 2] = position.z;
 
-      laserLine.visible = true;
-
-      // 3秒後にレーザーを消去
-      setTimeout(() => {
-        laserLine.visible = false;
-        hintActive = false;
-      }, 3000);
-    }
-
-    function updateHintButton() {
-      const btn = document.getElementById("btn-hint");
-      btn.innerText = `💡 ヒント (${hintCount})`;
-      btn.disabled = (hintCount <= 0);
-    }
-
-    // MARK: - 画面全体スパークル描画 (2D Canvas)
-    function triggerSparkles(cx, cy) {
-      const canvas = document.getElementById("sparkle-overlay");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const ctx = canvas.getContext('2d');
-      const particles = [];
-      const colors = ['#FFD700', '#FF9800', '#FFFFFF', '#00E5FF'];
-
-      for (let i = 0; i < 40; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 8 + 3;
-        particles.push({
-          x: cx, y: cy,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: Math.random() * 6 + 4,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          alpha: 1.0
-        });
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        const speed = 0.8 + Math.random() * 1.2;
+        velocities.push(new THREE.Vector3(
+          Math.sin(phi) * Math.cos(theta) * speed,
+          Math.sin(phi) * Math.sin(theta) * speed,
+          Math.cos(phi) * speed
+        ));
       }
 
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let alive = false;
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.alpha -= 0.025;
-          if (p.alpha > 0) {
-            alive = true;
-            ctx.save();
-            ctx.globalAlpha = p.alpha;
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ color: 0xFFEB3B, size: 0.04, transparent: true, opacity: 1.0 });
+      const pSystem = new THREE.Points(geo, mat);
+      scene.add(pSystem);
+
+      const startTime = performance.now();
+      function animParticles(now) {
+        const elapsed = (now - startTime) / 400;
+        if (elapsed < 1) {
+          const posArr = pSystem.geometry.attributes.position.array;
+          for (let i = 0; i < count; i++) {
+            posArr[i * 3] += velocities[i].x * 0.016;
+            posArr[i * 3 + 1] += velocities[i].y * 0.016;
+            posArr[i * 3 + 2] += velocities[i].z * 0.016;
           }
-        });
-        if (alive) requestAnimationFrame(draw);
-        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+          pSystem.geometry.attributes.position.needsUpdate = true;
+          mat.opacity = 1.0 - elapsed;
+          requestAnimationFrame(animParticles);
+        } else {
+          scene.remove(pSystem);
+        }
       }
-      requestAnimationFrame(draw);
-    }
-
-    // MARK: - デバイスジャイロのクォータニオン変換
-    const zee = new THREE.Vector3(0, 0, 1);
-    const euler = new THREE.Euler();
-    const q0 = new THREE.Quaternion();
-    const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -PI/2 around X
-
-    function updateCameraOrientation() {
-      if (!deviceOrientation || deviceOrientation.alpha === null) return;
-      const alpha = THREE.MathUtils.degToRad(deviceOrientation.alpha || 0);
-      const beta = THREE.MathUtils.degToRad(deviceOrientation.beta || 0);
-      const gamma = THREE.MathUtils.degToRad(deviceOrientation.gamma || 0);
-      const orient = THREE.MathUtils.degToRad(screenOrientation || 0);
-
-      euler.set(beta, alpha, -gamma, 'YXZ');
-      camera.quaternion.setFromEuler(euler);
-      camera.quaternion.multiply(q1);
-      camera.quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
+      requestAnimationFrame(animParticles);
     }
 
     // MARK: - メインレンダーループ
     function renderLoop() {
-      requestAnimationFrame(renderLoop);
+      // 1. HUDを視界前方（視線やや上、0.9m先）にスムーズ追従
+      if (hudMesh) {
+        const forward = new THREE.Vector3(0, 0.22, -0.9).applyQuaternion(camera.quaternion);
+        hudMesh.position.copy(camera.position).add(forward);
+        hudMesh.lookAt(camera.position);
+      }
 
-      // ジャイロによる視点回転同期
-      updateCameraOrientation();
+      // 2. 全カードをプレイヤー正面に向ける（ビルボード）
+      Object.values(cardMeshes).forEach(mesh => {
+        mesh.lookAt(camera.position);
+      });
 
-      // ヒント発動中のレーザー更新（カメラ手元下部からターゲットカード中心へ照射）
-      if (laserLine && laserLine.visible && currentTargetWord && cardMeshes[currentTargetWord]) {
+      // 3. ハンドトラッキング / コントローラー接触判定
+      checkTouchInteractions();
+
+      // 4. 3Dレーザービームの追従描画
+      if (laserFrames > 0 && currentTargetWord && cardMeshes[currentTargetWord]) {
+        laserFrames--;
         const targetPos = cardMeshes[currentTargetWord].position;
-        const camPos = camera.position.clone();
-        // カメラの手元（少し前方かつ右下）からビームを伸ばす
-        const handOffset = new THREE.Vector3(0.12, -0.15, -0.3).applyQuaternion(camera.quaternion);
-        const startPos = camPos.add(handOffset);
+        
+        // 手元座標（右手ハンド先端、なければコントローラー、なければヘッドセット前方下）
+        let startPos = camera.position.clone().add(new THREE.Vector3(0.1, -0.15, -0.3).applyQuaternion(camera.quaternion));
+        if (hand0 && hand0.joints && hand0.joints['index-finger-tip'] && hand0.joints['index-finger-tip'].position) {
+          startPos = hand0.joints['index-finger-tip'].position;
+        } else if (controller0 && controller0.visible) {
+          startPos = controller0.position;
+        }
 
         const positions = laserLine.geometry.attributes.position.array;
         positions[0] = startPos.x; positions[1] = startPos.y; positions[2] = startPos.z;
         positions[3] = targetPos.x; positions[4] = targetPos.y; positions[5] = targetPos.z;
         laserLine.geometry.attributes.position.needsUpdate = true;
+      } else {
+        laserLine.visible = false;
       }
 
       renderer.render(scene, camera);
