@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>人を野菜だと思え - 聴衆変身AR</title>
 
-  <!-- TensorFlow.js & BlazeFace (軽量・高速CDN) -->
+  <!-- TensorFlow.js & BlazeFace (軽量CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 
@@ -38,7 +38,7 @@
       z-index: 1;
     }
 
-    /* バックグラウンド用ビデオ要素（自動再生・インライン再生用） */
+    /* バックグラウンド用ビデオ要素（完全非表示・インライン再生用） */
     #webcam {
       position: fixed;
       top: 0;
@@ -96,7 +96,7 @@
       top: 58px;
       right: 14px;
       z-index: 40;
-      background: rgba(15, 23, 42, 0.90);
+      background: rgba(15, 23, 42, 0.92);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 14px;
       padding: 14px 16px;
@@ -154,10 +154,14 @@
       border-radius: 8px;
       cursor: pointer;
       text-align: center;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, border-color 0.15s, opacity 0.15s;
     }
-    .hud-button:active {
+    .hud-button:active:not(:disabled) {
       transform: scale(0.97);
+    }
+    .hud-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     .hud-button.active {
       background: #ea580c;
@@ -171,11 +175,10 @@
   </style>
 </head>
 <body>
-  <!-- 自動再生・インラインビデオ（タップ待機なし） -->
   <video id="webcam" playsinline webkit-playsinline muted autoplay></video>
   <canvas id="stage"></canvas>
 
-  <!-- プレゼン検証用HUD（デフォルトは格納） -->
+  <!-- プレゼン検証用HUD（デフォルトは格納・ワンタップで開閉） -->
   <button id="hudBtn" type="button">
     <span>⚙️ 調整</span>
     <span id="badgeCount" class="badge-count">0人</span>
@@ -218,10 +221,13 @@
     let isFrontCamera = false; // 研修本番用に背面カメラがデフォルト
     let showDebug = false;
 
+    // カメラ切り替え＆ライフサイクル安全ガード
     let faceModel = null;
     let currentStream = null;
     let isInferring = false;
     let isRunning = false;
+    let isCameraReady = false;      // カメラ映像が確定し推論可能な状態か
+    let isSwitchingCamera = false;  // 切り替え処理中フラグ（連続押し防止）
 
     // FPS算出用バッファ
     const fpsWindow = [];
@@ -236,7 +242,6 @@
     window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
     resizeCanvas();
 
-    // HUDの開閉
     hudBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       hudPanel.classList.toggle('closed');
@@ -270,7 +275,6 @@
 
     /** 1. カボチャ (Pumpkin) - 王道のジャック・オー・ランタン */
     function drawPumpkin(c, r) {
-      // 緑のヘタ
       c.fillStyle = '#1e3a12';
       c.beginPath();
       c.moveTo(-r * 0.08, -r * 0.78);
@@ -278,7 +282,6 @@
       c.quadraticCurveTo(r * 0.14, -r * 1.08, r * 0.08, -r * 0.78);
       c.fill();
 
-      // オレンジの立体房
       const grad = c.createRadialGradient(0, -r * 0.2, r * 0.1, 0, 0, r * 1.05);
       grad.addColorStop(0, '#fed7aa');
       grad.addColorStop(0.3, '#f97316');
@@ -294,7 +297,6 @@
       c.beginPath(); c.ellipse(r * 0.26, 0, r * 0.43, r * 0.93, 0.05, 0, Math.PI * 2); c.fill(); c.stroke();
       c.beginPath(); c.ellipse(0, 0, r * 0.42, r * 0.96, 0, 0, Math.PI * 2); c.fill(); c.stroke();
 
-      // くり抜かれた目・鼻・口
       c.fillStyle = '#1c0502';
       c.beginPath();
       c.moveTo(-r * 0.38, -r * 0.12); c.lineTo(-r * 0.16, -r * 0.26); c.lineTo(-r * 0.20, -r * 0.04); c.closePath();
@@ -310,7 +312,6 @@
       c.closePath();
       c.fill();
 
-      // キャンドル発光
       c.fillStyle = '#fef08a';
       c.shadowColor = '#ea580c';
       c.shadowBlur = 8;
@@ -330,13 +331,11 @@
       c.ellipse(0, 0, r * 0.92, r * 0.88, 0, 0, Math.PI * 2);
       c.fill();
 
-      // ツヤハイライト
       c.fillStyle = 'rgba(255, 255, 255, 0.45)';
       c.beginPath();
       c.ellipse(-r * 0.42, -r * 0.35, r * 0.22, r * 0.12, -0.4, 0, Math.PI * 2);
       c.fill();
 
-      // 星型リーフヘタ
       c.fillStyle = '#15803d';
       c.beginPath();
       for (let i = 0; i < 5; i++) {
@@ -352,13 +351,11 @@
       c.closePath();
       c.fill();
 
-      // 右目パッチリ
       c.fillStyle = '#1e1b4b';
       c.beginPath(); c.arc(r * 0.32, -r * 0.1, r * 0.11, 0, Math.PI * 2); c.fill();
       c.fillStyle = '#fff';
       c.beginPath(); c.arc(r * 0.35, -r * 0.13, r * 0.04, 0, Math.PI * 2); c.fill();
 
-      // 左目ウインク
       c.strokeStyle = '#1e1b4b';
       c.lineWidth = Math.max(3, r * 0.05);
       c.beginPath();
@@ -367,7 +364,6 @@
       c.lineTo(-r * 0.42, -r * 0.01);
       c.stroke();
 
-      // 口と舌
       c.beginPath();
       c.arc(0, r * 0.15, r * 0.28, 0, Math.PI);
       c.fillStyle = '#7f1d1d';
@@ -396,7 +392,6 @@
       c.closePath();
       c.fill();
 
-      // 緑のトゲトゲヘタ帽
       c.fillStyle = '#15803d';
       c.beginPath();
       c.moveTo(-r * 0.45, -r * 0.6);
@@ -408,7 +403,6 @@
       c.closePath();
       c.fill();
 
-      // ニヤリ目
       c.fillStyle = '#fff';
       c.beginPath();
       c.ellipse(-r * 0.28, r * 0.05, r * 0.15, r * 0.12, 0.2, 0, Math.PI * 2);
@@ -420,7 +414,6 @@
       c.arc(r * 0.24, r * 0.06, r * 0.06, 0, Math.PI * 2);
       c.fill();
 
-      // ニヤリ口
       c.strokeStyle = '#0f172a';
       c.lineWidth = Math.max(3, r * 0.05);
       c.beginPath();
@@ -451,7 +444,6 @@
       c.quadraticCurveTo(0, -r * 0.75, -r * 0.5, -r * 0.65);
       c.fill();
 
-      // 横線
       c.strokeStyle = '#c2410c';
       c.lineWidth = Math.max(2, r * 0.035);
       c.beginPath();
@@ -460,7 +452,6 @@
       c.moveTo(-r * 0.25, r * 0.35); c.lineTo(0, r * 0.35);
       c.stroke();
 
-      // 目
       c.fillStyle = '#fff';
       c.beginPath();
       c.arc(-r * 0.2, -r * 0.1, r * 0.12, 0, Math.PI * 2);
@@ -472,7 +463,6 @@
       c.arc(r * 0.18, -r * 0.1, r * 0.05, 0, Math.PI * 2);
       c.fill();
 
-      // 出っ歯
       c.fillStyle = '#fff';
       c.strokeStyle = '#000';
       c.lineWidth = 2.5;
@@ -504,7 +494,6 @@
       c.moveTo(0, -r * 0.95); c.quadraticCurveTo(r * 0.45, 0, 0, r * 0.85);
       c.stroke();
 
-      // 笑い目 ^^
       c.strokeStyle = '#451a03';
       c.lineWidth = Math.max(3, r * 0.05);
       c.beginPath();
@@ -512,14 +501,12 @@
       c.arc(r * 0.3, 0, r * 0.12, Math.PI, 0);
       c.stroke();
 
-      // 涙滴
       c.fillStyle = '#38bdf8';
       c.beginPath();
       c.arc(-r * 0.42, r * 0.18, r * 0.07, 0, Math.PI * 2);
       c.arc(r * 0.42, r * 0.18, r * 0.07, 0, Math.PI * 2);
       c.fill();
 
-      // 大きな口
       c.fillStyle = '#7f1d1d';
       c.beginPath();
       c.arc(0, r * 0.22, r * 0.22, 0, Math.PI);
@@ -587,7 +574,6 @@
       }
       c.fill();
 
-      // 紳士目＆口ヒゲ
       c.fillStyle = '#064e3b';
       c.beginPath();
       c.arc(-r * 0.25, -r * 0.1, r * 0.08, 0, Math.PI * 2);
@@ -626,7 +612,6 @@
       c.quadraticCurveTo(0, -r * 0.72, -r * 0.48, -r * 0.65);
       c.fill();
 
-      // 仏の笑顔 ⌒ ⌒
       c.strokeStyle = '#334155';
       c.lineWidth = Math.max(3, r * 0.05);
       c.beginPath();
@@ -636,7 +621,6 @@
       c.arc(r * 0.22, -r * 0.1, r * 0.1, 0, Math.PI);
       c.stroke();
 
-      // ほっぺチーク
       c.fillStyle = 'rgba(251, 113, 133, 0.45)';
       c.beginPath();
       c.arc(-r * 0.28, r * 0.08, r * 0.09, 0, Math.PI * 2);
@@ -681,6 +665,10 @@
         for (const t of this.tracks) {
           t.vegType = Math.floor(Math.random() * VEGETABLE_TYPES.length);
         }
+      }
+
+      clear() {
+        this.tracks = [];
       }
 
       update(detections) {
@@ -760,7 +748,8 @@
     async function inferenceLoop() {
       if (!isRunning) return;
 
-      if (faceModel && video.readyState >= 2 && video.videoWidth > 0 && !isInferring) {
+      // カメラが安全に再生準備完了している時のみ推論を実行
+      if (isCameraReady && faceModel && !isInferring && video.readyState >= 2 && video.videoWidth > 0) {
         isInferring = true;
         try {
           const faces = await faceModel.estimateFaces(video, false);
@@ -842,7 +831,7 @@
           tracker.update(detections);
           badgeCount.textContent = `${tracker.getActiveTracks().length}人`;
         } catch (err) {
-          // モバイル低メモリ時のフレームスキップ
+          // カメラ切替タイミングなどでのフレーム破棄を安全に無視
         } finally {
           isInferring = false;
         }
@@ -867,7 +856,7 @@
 
       tracker.tickInterpolation();
 
-      if (video.readyState >= 2 && video.videoWidth > 0) {
+      if (isCameraReady && video.readyState >= 2 && video.videoWidth > 0) {
         const vw = video.videoWidth;
         const vh = video.videoHeight;
         const cw = canvas.width;
@@ -921,18 +910,42 @@
             ctx.restore();
           }
         }
+      } else {
+        // カメラ切り替え待機中は背景をクリア
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
       requestAnimationFrame(render);
     }
 
+    /**
+     * カメラの起動および切り替えライフサイクル管理
+     * 連続実行時のハードウェア競合（NotReadableError/AbortError）を徹底防止
+     */
     async function startCamera(facingMode) {
+      isCameraReady = false;
+
+      // 1. 既存ストリームの完全解放と破棄
       if (currentStream) {
-        currentStream.getTracks().forEach(tr => tr.stop());
+        currentStream.getTracks().forEach(tr => {
+          try { tr.stop(); } catch (e) {}
+        });
         currentStream = null;
       }
+      try {
+        video.pause();
+        video.srcObject = null;
+      } catch (e) {}
 
-      // モバイル向けに640x480の快適解像度を指定
+      // 既存トラックの追従キャッシュをリセット
+      tracker.clear();
+      badgeCount.textContent = '0人';
+
+      // 2. モバイルOSのカメラセンサーおよびハードウェア解放待ちクールダウン（250ms）
+      await new Promise(resolve => setTimeout(resolve, 250));
+
+      // 3. モバイル向けに640x480の快適解像度を指定
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
@@ -942,8 +955,9 @@
         audio: false
       };
 
-      currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = currentStream;
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      currentStream = stream;
+      video.srcObject = stream;
 
       // iOS Safari/Chrome等での完全自動再生設定
       video.muted = true;
@@ -952,20 +966,51 @@
       video.setAttribute('webkit-playsinline', '');
       await video.play();
 
+      // 4. ビデオフレームが正しく読み出せるまで確実に待機
       await new Promise(resolve => {
-        if (video.videoWidth > 0 && video.videoHeight > 0) return resolve();
-        video.onloadedmetadata = () => resolve();
+        if (video.readyState >= 2 && video.videoWidth > 0) return resolve();
+        const onReady = () => {
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            video.removeEventListener('loadeddata', onReady);
+            video.removeEventListener('canplay', onReady);
+            resolve();
+          }
+        };
+        video.addEventListener('loadeddata', onReady);
+        video.addEventListener('canplay', onReady);
+        // 万一のフォールバックタイムアウト
+        setTimeout(resolve, 1500);
       });
+
+      isCameraReady = true;
     }
 
-    // カメラ切り替え
+    // カメラ切り替えボタンのクリックハンドラ（二重呼び出し防止排他ガード付き）
     switchCameraBtn.addEventListener('click', async () => {
+      if (isSwitchingCamera) return;
+      isSwitchingCamera = true;
+      switchCameraBtn.disabled = true;
+
+      const prevBtnText = switchCameraBtn.textContent;
+      switchCameraBtn.textContent = '🔄 切替中...';
+
+      // 前面/背面のトグル
       isFrontCamera = !isFrontCamera;
-      switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
+
       try {
         await startCamera(isFrontCamera ? 'user' : 'environment');
+        switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
       } catch (err) {
         console.error("Camera switch error:", err);
+        // 万一失敗した場合は元に戻す
+        isFrontCamera = !isFrontCamera;
+        switchCameraBtn.textContent = prevBtnText;
+        try {
+          await startCamera(isFrontCamera ? 'user' : 'environment');
+        } catch (e) {}
+      } finally {
+        switchCameraBtn.disabled = false;
+        isSwitchingCamera = false;
       }
     });
 
@@ -976,15 +1021,14 @@
       if (isRunning) return;
       isRunning = true;
 
-      // 1. 描画ループを直ちに開始（カメラ映像が届き次第即表示）
+      // 1. 描画ループを直ちに開始
       requestAnimationFrame(render);
 
-      // 2. カメラの自動起動
+      // 2. カメラの自動起動（初回は研修用に背面カメラ）
       try {
         await startCamera(isFrontCamera ? 'user' : 'environment');
       } catch (err) {
         console.warn("Camera init retry listener attached:", err);
-        // 万一ブラウザの権限ポリシーに弾かれた場合のみ、任意のワンタップでカメラ起動をリトライ
         const fallback = async () => {
           window.removeEventListener('pointerdown', fallback);
           try {
