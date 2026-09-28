@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>人を野菜だと思え - 聴衆変身AR</title>
 
-  <!-- TensorFlow.js & BlazeFace (軽量CDN) -->
+  <!-- TensorFlow.js & BlazeFace (高信頼CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 
@@ -50,7 +50,7 @@
       z-index: -1;
     }
 
-    /* 最小限のフローティングHUDトグルボタン */
+    /* 右上：最小限のフローティングHUDトグルボタン */
     #hudBtn {
       position: absolute;
       top: 14px;
@@ -90,7 +90,7 @@
       font-weight: 700;
     }
 
-    /* 調整ドロワー（デフォルト非表示・本番プレゼン時は完全ゼロUI） */
+    /* 調整ドロワー（デフォルト非表示・本番プレゼン時は閉じてゼロUI） */
     #hudPanel {
       position: absolute;
       top: 58px;
@@ -173,10 +173,78 @@
       border-color: #3b82f6;
     }
 
+    /* 右下：片手親指で瞬時に切り替えられるズームピルUI */
+    #zoomPill {
+      position: absolute;
+      bottom: 24px;
+      right: 20px;
+      z-index: 35;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .zoom-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 22px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+    }
+
+    .zoom-btn:active {
+      transform: scale(0.92);
+    }
+
+    .zoom-btn.active {
+      background: #ea580c;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.5);
+    }
+
+    /* ズーム値フローティング表示バッジ */
+    #zoomFeedback {
+      position: absolute;
+      bottom: 80px;
+      right: 32px;
+      z-index: 35;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fed7aa;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: monospace;
+      padding: 4px 10px;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    #zoomFeedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     /* エラー通知バナー */
     #errorNotice {
       position: absolute;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(220, 38, 38, 0.9);
@@ -228,11 +296,26 @@
     </div>
   </div>
 
+  <!-- 片手操作用ズームピルUI -->
+  <div id="zoomFeedback">1.0x</div>
+  <div id="zoomPill">
+    <button class="zoom-btn active" data-zoom="1.0" type="button">1x</button>
+    <button class="zoom-btn" data-zoom="2.0" type="button">2x</button>
+    <button class="zoom-btn" data-zoom="3.0" type="button">3x</button>
+  </div>
+
   <script>
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d', { alpha: false });
 
+    // AI推論用オフスクリーンキャンバス（ズーム領域を切り出して高解像度でBlazeFaceに渡す）
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = 480;
+    cropCanvas.height = 360;
+    const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+
+    // DOM要素
     const hudBtn = document.getElementById('hudBtn');
     const hudPanel = document.getElementById('hudPanel');
     const thresholdSlider = document.getElementById('thresholdSlider');
@@ -245,12 +328,20 @@
     const badgeCount = document.getElementById('badgeCount');
     const badgeFps = document.getElementById('badgeFps');
     const errorNotice = document.getElementById('errorNotice');
+    const zoomPill = document.getElementById('zoomPill');
+    const zoomBtns = document.querySelectorAll('.zoom-btn');
+    const zoomFeedback = document.getElementById('zoomFeedback');
 
     // パラメータ状態変数
     let scoreThreshold = 0.40;
     let vegetableScale = 1.0;
     let isFrontCamera = false; // 研修本番用に背面カメラがデフォルト
     let showDebug = false;
+
+    // ズーム状態（1.0x 〜 3.0x）
+    let currentZoom = 1.0;
+    let targetZoom = 1.0;
+    let feedbackTimer = null;
 
     // カメラライフサイクルと推論の安全ガード
     let faceModel = null;
@@ -279,6 +370,78 @@
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
     resizeCanvas();
+
+    function setZoom(val, updateFeedback = true) {
+      targetZoom = Math.max(1.0, Math.min(3.0, val));
+
+      // ピルボタンのハイライト更新
+      zoomBtns.forEach(btn => {
+        const btnVal = parseFloat(btn.dataset.zoom);
+        btn.classList.toggle('active', Math.abs(btnVal - targetZoom) < 0.15);
+      });
+
+      if (updateFeedback) {
+        zoomFeedback.textContent = targetZoom.toFixed(1) + 'x';
+        zoomFeedback.classList.add('show');
+        clearTimeout(feedbackTimer);
+        feedbackTimer = setTimeout(() => {
+          zoomFeedback.classList.remove('show');
+        }, 1200);
+      }
+    }
+
+    // 1x / 2x / 3x ボタンタップ
+    zoomBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setZoom(parseFloat(btn.dataset.zoom));
+      });
+    });
+
+    // 2本指ピンチズーム ＆ ダブルタップズーム
+    let initialPinchDist = null;
+    let initialPinchZoom = 1.0;
+    let lastTapTime = 0;
+
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialPinchZoom = targetZoom;
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDist) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = dist / initialPinchDist;
+        setZoom(initialPinchZoom * factor);
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        initialPinchDist = null;
+      }
+      // ダブルタップで 1x -> 2x -> 3x -> 1x
+      if (e.touches.length === 0 && !e.target.closest('#hudPanel') && !e.target.closest('#hudBtn') && !e.target.closest('#zoomPill')) {
+        const now = performance.now();
+        if (now - lastTapTime < 300) {
+          if (targetZoom < 1.8) setZoom(2.0);
+          else if (targetZoom < 2.8) setZoom(3.0);
+          else setZoom(1.0);
+          lastTapTime = 0;
+        } else {
+          lastTapTime = now;
+        }
+      }
+    });
 
     hudBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -722,7 +885,7 @@
           for (let i = 0; i < detections.length; i++) {
             if (detections[i].assigned) continue;
             const dist = Math.hypot(track.targetX - detections[i].cx, track.targetY - detections[i].cy);
-            if (dist < minDist && dist < track.radius * 1.5) {
+            if (dist < minDist && dist < track.radius * 1.6) {
               minDist = dist;
               matchedIdx = i;
             }
@@ -795,27 +958,43 @@
       if (isCameraReady && !isDrainingInference && faceModel && !isInferring && video.readyState >= 2 && video.videoWidth > 0) {
         isInferring = true;
         try {
-          const faces = await faceModel.estimateFaces(video, false);
-
           const vw = video.videoWidth;
           const vh = video.videoHeight;
+          const z = currentZoom;
+
+          // ズーム切り出し領域の計算（中央基準）
+          const srcW = vw / z;
+          const srcH = vh / z;
+          const srcX = (vw - srcW) * 0.5;
+          const srcY = (vh - srcH) * 0.5;
+
+          // オフスクリーンCanvasに切り出し拡大描画（BlazeFaceはこの高密度画像で推論を行う！）
+          cropCtx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, cropCanvas.width, cropCanvas.height);
+
+          const faces = await faceModel.estimateFaces(cropCanvas, false);
+
           const cw = canvas.width;
           const ch = canvas.height;
 
-          const scale = Math.max(cw / vw, ch / vh);
-          const renderW = vw * scale;
-          const renderH = vh * scale;
+          // メインCanvasへのアスペクト比カバー計算
+          const scale = Math.max(cw / srcW, ch / srcH);
+          const renderW = srcW * scale;
+          const renderH = srcH * scale;
           const offsetX = (cw - renderW) / 2;
           const offsetY = (ch - renderH) / 2;
 
-          // インカメラ時はX座標を反転
-          const toScreenX = (vx) => {
+          // cropCanvas上の座標 (0〜cropCanvas.width, 0〜cropCanvas.height) を画面座標系へ投影
+          const toScreenX = (cropX) => {
+            const normX = cropX / cropCanvas.width;
             if (isFrontCamera) {
-              return cw - (offsetX + vx * scale);
+              return cw - (offsetX + normX * renderW);
             }
-            return offsetX + vx * scale;
+            return offsetX + normX * renderW;
           };
-          const toScreenY = (vy) => offsetY + vy * scale;
+          const toScreenY = (cropY) => {
+            const normY = cropY / cropCanvas.height;
+            return offsetY + normY * renderH;
+          };
 
           const detections = [];
 
@@ -827,10 +1006,10 @@
 
             const [vx1, vy1] = face.topLeft;
             const [vx2, vy2] = face.bottomRight;
-            const boxW = Math.abs(vx2 - vx1) * scale;
-            const boxH = Math.abs(vy2 - vy1) * scale;
+            const boxW = (Math.abs(vx2 - vx1) / cropCanvas.width) * renderW;
+            const boxH = (Math.abs(vy2 - vy1) / cropCanvas.height) * renderH;
 
-            // スライダーで指定された倍率を反映
+            // スライダーで指定された倍率を反映（自然な顔サイズ）
             const radius = Math.max(boxW, boxH) * 0.54 * vegetableScale;
 
             const ptRightEye = face.landmarks[0];
@@ -841,7 +1020,7 @@
             const eyeB = { x: toScreenX(ptLeftEye[0]), y: toScreenY(ptLeftEye[1]) };
             const noseScr = { x: toScreenX(ptNose[0]), y: toScreenY(ptNose[1]) };
 
-            // 画面空間上で左右の目をソートしてRoll角を算出（インカメラ鏡像でも反転しない）
+            // 画面空間上で左右の目をソートしてRoll角を算出（自撮り鏡像でも傾きが反転しない）
             const leftEyeScreen = eyeA.x < eyeB.x ? eyeA : eyeB;
             const rightEyeScreen = eyeA.x < eyeB.x ? eyeB : eyeA;
             const tiltAngle = Math.atan2(rightEyeScreen.y - leftEyeScreen.y, rightEyeScreen.x - leftEyeScreen.x);
@@ -882,6 +1061,9 @@
     function render(now) {
       if (!isRunning) return;
 
+      // ズームのスムーズなイージング補間
+      currentZoom += (targetZoom - currentZoom) * 0.25;
+
       // FPSカウンター
       fpsWindow.push(now);
       while (fpsWindow.length > 0 && fpsWindow[0] < now - 1000) {
@@ -899,10 +1081,17 @@
         const vh = video.videoHeight;
         const cw = canvas.width;
         const ch = canvas.height;
+        const z = currentZoom;
 
-        const scale = Math.max(cw / vw, ch / vh);
-        const renderW = vw * scale;
-        const renderH = vh * scale;
+        // ズーム切り出し領域
+        const srcW = vw / z;
+        const srcH = vh / z;
+        const srcX = (vw - srcW) * 0.5;
+        const srcY = (vh - srcH) * 0.5;
+
+        const scale = Math.max(cw / srcW, ch / srcH);
+        const renderW = srcW * scale;
+        const renderH = srcH * scale;
         const offsetX = (cw - renderW) / 2;
         const offsetY = (ch - renderH) / 2;
 
@@ -911,7 +1100,7 @@
           ctx.translate(cw, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, offsetX, offsetY, renderW, renderH);
+        ctx.drawImage(video, srcX, srcY, srcW, srcH, offsetX, offsetY, renderW, renderH);
         ctx.restore();
 
         const activeTracks = tracker.getActiveTracks();
