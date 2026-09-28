@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>人をカボチャだと思え - 聴衆変身AR</title>
+
+  <!-- TensorFlow.js & BlazeFace CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      touch-action: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* メイン描画キャンバス */
+    #viewCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* iOS/Androidで停止しない極小透過ビデオ */
+    #inputVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.001;
+      pointer-events: none;
+      z-index: -1;
+    }
+    /* 最小限の検証用HUDトグルボタン */
+    #hudToggleBtn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    /* 調整パネル（ワンタップで開閉） */
+    #controlPanel {
+      position: absolute;
+      top: 58px;
+      right: 14px;
+      z-index: 30;
+      background: rgba(15, 15, 15, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      width: 250px;
+      color: #f3f4f6;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #controlPanel.closed {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+    }
+
+    .ctrl-row {
+      margin-bottom: 12px;
+    }
+    .ctrl-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .ctrl-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #fed7aa;
+    }
+
+    .ctrl-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #374151;
+      outline: none;
+      accent-color: #f97316;
+      cursor: pointer;
+    }
+
+    .ctrl-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .ctrl-btn {
+      background: #27272a;
+      border: 1px solid #52525b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .ctrl-btn.active {
+      background: #ea580c;
+      border-color: #f97316;
+    }
+
+    /* 自動再生ブロックスクリーン */
+    #tapGuide {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      color: #fff;
+      cursor: pointer;
+    }
+    .guide-pumpkin {
+      font-size: 4rem;
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    .guide-msg {
+      margin-top: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fed7aa;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+  </style>
+</head>
+<body>
+  <video id="inputVideo" playsinline webkit-playsinline muted autoplay></video>
+  <canvas id="viewCanvas"></canvas>
+
+  <!-- 最小限の検証用HUD -->
+  <button id="hudToggleBtn" type="button">
+    <span>⚙️ 調整</span>
+    <span id="faceCountBadge" style="background:#ea580c;font-size:10px;padding:2px 6px;border-radius:10px;">0人</span>
+  </button>
+
+  <div id="controlPanel">
+    <div class="ctrl-row">
+      <div class="ctrl-label">
+        <span>検出閾値</span>
+        <span id="thresholdVal">0.60</span>
+      </div>
+      <input id="thresholdSlider" class="ctrl-slider" type="range" min="0.10" max="0.95" step="0.05" value="0.60">
+    </div>
+
+    <div class="ctrl-actions">
+      <button id="switchCameraBtn" class="ctrl-btn" type="button">📷 背面カメラ</button>
+      <button id="toggleDebugBtn" class="ctrl-btn" type="button">デバッグ枠 OFF</button>
+    </div>
+  </div>
+
+  <!-- 初回タップ開始用レイヤー -->
+  <div id="tapGuide" style="display:none;">
+    <div class="guide-pumpkin">🎃</div>
+    <div class="guide-msg">画面をタップして開始</div>
+  </div>
+  <script>
+    const video = document.getElementById('inputVideo');
+    const canvas = document.getElementById('viewCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    const hudToggleBtn = document.getElementById('hudToggleBtn');
+    const controlPanel = document.getElementById('controlPanel');
+    const thresholdSlider = document.getElementById('thresholdSlider');
+    const thresholdVal = document.getElementById('thresholdVal');
+    const switchCameraBtn = document.getElementById('switchCameraBtn');
+    const toggleDebugBtn = document.getElementById('toggleDebugBtn');
+    const faceCountBadge = document.getElementById('faceCountBadge');
+    const tapGuide = document.getElementById('tapGuide');
+
+    // 動作設定
+    let scoreThreshold = 0.60;
+    let isFrontCamera = false;
+    let showDebug = false;
+
+    let faceModel = null;
+    let currentStream = null;
+    let isStreamRequested = false;
+    let isInitialized = false;
+    let isDetecting = false;
+
+    // キャンバス解像度の最適化
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
+    resizeCanvas();
+
+    // HUDのトグル
+    hudToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      controlPanel.classList.toggle('closed');
+    });
+
+    thresholdSlider.addEventListener('input', (e) => {
+      scoreThreshold = parseFloat(e.target.value);
+      thresholdVal.textContent = scoreThreshold.toFixed(2);
+    });
+
+    toggleDebugBtn.addEventListener('click', () => {
+      showDebug = !showDebug;
+      toggleDebugBtn.textContent = showDebug ? 'デバッグ枠 ON' : 'デバッグ枠 OFF';
+      toggleDebugBtn.classList.toggle('active', showDebug);
+    });
+    /**
+     * 2D追従専用トラッカー（サイズ1.0固定・ロスト遅延バッファ）
+     */
+    class PumpkinTracker {
+      constructor() {
+        this.tracks = [];
+        this.nextId = 1;
+        this.lostMax = 12; // 瞬きなどの一時ロストをカバー（約0.3秒）
+      }
+
+      update(detectedFaces) {
+        for (const track of this.tracks) {
+          let nearestDist = Infinity;
+          let matchedIdx = -1;
+
+          for (let i = 0; i < detectedFaces.length; i++) {
+            if (detectedFaces[i].assigned) continue;
+            const dist = Math.hypot(track.cx - detectedFaces[i].cx, track.cy - detectedFaces[i].cy);
+            if (dist < nearestDist && dist < track.radius * 1.5) {
+              nearestDist = dist;
+              matchedIdx = i;
+            }
+          }
+
+          if (matchedIdx !== -1) {
+            const hit = detectedFaces[matchedIdx];
+            hit.assigned = true;
+
+            // スムージング
+            track.cx += (hit.cx - track.cx) * 0.4;
+            track.cy += (hit.cy - track.cy) * 0.4;
+            track.radius += (hit.radius - track.radius) * 0.3;
+
+            // 角度の最短回転補間（鏡像反転時も正しく動作）
+            let dAngle = hit.angle - track.angle;
+            while (dAngle < -Math.PI) dAngle += Math.PI * 2;
+            while (dAngle > Math.PI) dAngle -= Math.PI * 2;
+            track.angle += dAngle * 0.35;
+
+            track.lostFrames = 0;
+            track.rawScore = hit.score;
+            track.landmarks = hit.landmarks;
+          } else {
+            track.lostFrames++;
+          }
+        }
+
+        // 新規登録
+        for (const hit of detectedFaces) {
+          if (!hit.assigned) {
+            this.tracks.push({
+              id: this.nextId++,
+              cx: hit.cx,
+              cy: hit.cy,
+              radius: hit.radius,
+              angle: hit.angle,
+              rawScore: hit.score,
+              landmarks: hit.landmarks,
+              lostFrames: 0
+            });
+          }
+        }
+
+        this.tracks = this.tracks.filter(t => t.lostFrames <= this.lostMax);
+      }
+
+      getActiveTracks() {
+        return this.tracks;
+      }
+    }
+
+    const tracker = new PumpkinTracker();
+    /**
+     * 自然なサイズ1.0の対称2Dカボチャ描画
+     * （立体パースペクティブを排除し、鏡像反転時でも絶対に裏返らない対称構造）
+     */
+    function render2DPumpkin(context, cx, cy, r, angle, alpha = 1.0) {
+      context.save();
+      context.globalAlpha = alpha;
+      context.translate(cx, cy);
+      context.rotate(angle);
+
+      // キャンドルの揺らめき
+      const flicker = Math.sin(Date.now() * 0.015) * 0.05 + Math.cos(Date.now() * 0.035) * 0.03 + 0.95;
+
+      // 1. カボチャのヘタ（中央上部）
+      context.save();
+      const stemGrad = context.createLinearGradient(-r * 0.06, -r * 1.1, r * 0.06, -r * 0.7);
+      stemGrad.addColorStop(0, '#1e3a12');
+      stemGrad.addColorStop(1, '#11220a');
+      context.fillStyle = stemGrad;
+      context.beginPath();
+      context.moveTo(-r * 0.08, -r * 0.78);
+      context.quadraticCurveTo(-r * 0.16, -r * 1.12, -r * 0.04, -r * 1.15);
+      context.quadraticCurveTo(r * 0.14, -r * 1.05, r * 0.08, -r * 0.78);
+      context.closePath();
+      context.fill();
+      context.strokeStyle = '#2b541d';
+      context.lineWidth = Math.max(1.5, r * 0.025);
+      context.stroke();
+      context.restore();
+
+      // 2. カボチャ本体（美しい立体オレンジグラデーションの対称房）
+      const pumpkinGrad = context.createRadialGradient(0, -r * 0.2, r * 0.1, 0, 0, r * 1.05);
+      pumpkinGrad.addColorStop(0, '#fdba74');
+      pumpkinGrad.addColorStop(0.35, '#f97316');
+      pumpkinGrad.addColorStop(0.75, '#c2410c');
+      pumpkinGrad.addColorStop(1, '#431407');
+
+      context.fillStyle = pumpkinGrad;
+      context.strokeStyle = '#280c05';
+      context.lineWidth = Math.max(1.8, r * 0.028);
+
+      // 左右の外側の房
+      context.beginPath();
+      context.ellipse(-r * 0.52, 0, r * 0.42, r * 0.85, -0.12, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      context.beginPath();
+      context.ellipse(r * 0.52, 0, r * 0.42, r * 0.85, 0.12, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      // 中間の房
+      context.beginPath();
+      context.ellipse(-r * 0.26, 0, r * 0.43, r * 0.92, -0.05, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      context.beginPath();
+      context.ellipse(r * 0.26, 0, r * 0.43, r * 0.92, 0.05, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      // 中央の主房
+      context.beginPath();
+      context.ellipse(0, 0, r * 0.42, r * 0.96, 0, 0, Math.PI * 2);
+      context.fill();
+      context.stroke();
+
+      // 3. くり抜かれた顔パーツ（目・鼻・口）
+      function drawFeatures(c) {
+        // 左目
+        c.beginPath();
+        c.moveTo(-r * 0.38, -r * 0.12);
+        c.lineTo(-r * 0.16, -r * 0.26);
+        c.lineTo(-r * 0.20, -r * 0.04);
+        c.closePath();
+
+        // 右目
+        c.moveTo(r * 0.38, -r * 0.12);
+        c.lineTo(r * 0.16, -r * 0.26);
+        c.lineTo(r * 0.20, -r * 0.04);
+        c.closePath();
+
+        // 鼻
+        c.moveTo(0, -r * 0.10);
+        c.lineTo(-r * 0.08, 0.04 * r);
+        c.lineTo(r * 0.08, 0.04 * r);
+        c.closePath();
+
+        // ギザギザの笑顔
+        const mw = r * 0.56;
+        c.moveTo(-mw * 0.9, r * 0.22);
+        c.lineTo(-mw * 0.5, r * 0.35);
+        c.lineTo(-mw * 0.2, r * 0.24);
+        c.lineTo(0, r * 0.34);
+        c.lineTo(mw * 0.2, r * 0.24);
+        c.lineTo(mw * 0.5, r * 0.35);
+        c.lineTo(mw * 0.9, r * 0.22);
+
+        // 口の下部
+        c.lineTo(mw * 0.65, r * 0.48);
+        c.lineTo(mw * 0.35, r * 0.37);
+        c.lineTo(mw * 0.12, r * 0.50);
+        c.lineTo(-mw * 0.12, r * 0.38);
+        c.lineTo(-mw * 0.35, r * 0.50);
+        c.lineTo(-mw * 0.65, r * 0.37);
+        c.closePath();
+      }
+
+      // 暗黒の奥壁（生身の顔をしっかり隠蔽）
+      context.fillStyle = '#1c0502';
+      drawFeatures(context);
+      context.fill();
+
+      // 内側キャンドル発光
+      context.save();
+      context.shadowColor = '#f97316';
+      context.shadowBlur = 16 * flicker;
+      context.fillStyle = `rgba(254, 240, 138, ${0.92 * flicker})`;
+      drawFeatures(context);
+      context.fill();
+      context.restore();
+
+      context.restore();
+    }
+    /**
+     * BlazeFaceの顔検出ループ
+     * 鏡像（自撮りインカメラ）時の座標変換と角度反転を完全補正
+     */
+    async function runDetectionLoop() {
+      if (!isInitialized) return;
+
+      if (faceModel && video.readyState >= 2 && video.videoWidth > 0 && !isDetecting) {
+        isDetecting = true;
+        try {
+          const faces = await faceModel.estimateFaces(video, false);
+
+          const vw = video.videoWidth;
+          const vh = video.videoHeight;
+          const cw = canvas.width;
+          const ch = canvas.height;
+
+          // 画面全体を覆うカバー表示計算
+          const canvasAspect = cw / ch;
+          const videoAspect = vw / vh;
+          let renderW, renderH, offX, offY;
+
+          if (canvasAspect > videoAspect) {
+            renderW = cw;
+            renderH = cw / videoAspect;
+            offX = 0;
+            offY = (ch - renderH) / 2;
+          } else {
+            renderH = ch;
+            renderW = ch * videoAspect;
+            offX = (cw - renderW) / 2;
+            offY = 0;
+          }
+
+          const scale = renderW / vw;
+
+          // ビデオ座標から「画面上の絶対描画座標」への直接変換関数
+          // （インカメラ鏡像時はX軸をスクリーン基準で反転）
+          const toScreenX = (vx) => {
+            if (isFrontCamera) {
+              return cw - (offX + vx * scale);
+            }
+            return offX + vx * scale;
+          };
+          const toScreenY = (vy) => offY + vy * scale;
+
+          const currentDetections = [];
+
+          for (let i = 0; i < faces.length; i++) {
+            const face = faces[i];
+            const prob = face.probability ? (Array.isArray(face.probability) ? face.probability[0] : face.probability) : 1.0;
+
+            // スライダー閾値によるリアルタイム判定
+            if (prob < scoreThreshold) continue;
+
+            const [vx1, vy1] = face.topLeft;
+            const [vx2, vy2] = face.bottomRight;
+            const boxW = Math.abs(vx2 - vx1) * scale;
+            const boxH = Math.abs(vy2 - vy1) * scale;
+
+            // ご要望通り「大きさ1.0（顔枠にぴったり収まる自然なサイズ）」
+            const radius = Math.max(boxW, boxH) * 0.58;
+
+            // ランドマークの画面座標化
+            const rEye = face.landmarks[0]; // モデル基準右目
+            const lEye = face.landmarks[1]; // モデル基準左目
+            const nose = face.landmarks[2];
+
+            const rEyeScr = { x: toScreenX(rEye[0]), y: toScreenY(rEye[1]) };
+            const lEyeScr = { x: toScreenX(lEye[0]), y: toScreenY(lEye[1]) };
+            const noseScr = { x: toScreenX(nose[0]), y: toScreenY(nose[1]) };
+
+            // 画面上での目の傾き（Roll角）
+            // 画面座標系で直接計算するため、鏡像反転しても傾きが狂わない！
+            let dx = lEyeScr.x - rEyeScr.x;
+            let dy = lEyeScr.y - rEyeScr.y;
+            const rollAngle = Math.atan2(dy, dx);
+
+            // カボチャの中心（目の間と鼻の間）
+            const midEyeX = (rEyeScr.x + lEyeScr.x) * 0.5;
+            const midEyeY = (rEyeScr.y + lEyeScr.y) * 0.5;
+            const faceCenterX = midEyeX + (noseScr.x - midEyeX) * 0.25;
+            const faceCenterY = midEyeY + (noseScr.y - midEyeY) * 0.35;
+
+            // デバッグ描画用の全ランドマーク画面座標
+            const screenLandmarks = face.landmarks.map(pt => ({
+              x: toScreenX(pt[0]),
+              y: toScreenY(pt[1])
+            }));
+
+            currentDetections.push({
+              cx: faceCenterX,
+              cy: faceCenterY,
+              radius: radius,
+              angle: rollAngle,
+              score: prob,
+              landmarks: screenLandmarks,
+              assigned: false
+            });
+          }
+
+          tracker.update(currentDetections);
+          faceCountBadge.textContent = `${tracker.getActiveTracks().length}人`;
+
+        } catch (err) {
+          // フレームスキップ
+        } finally {
+          isDetecting = false;
+        }
+      }
+
+      setTimeout(runDetectionLoop, 32);
+    }
+    /**
+     * メイン画面レンダリングループ
+     */
+    function render() {
+      if (!isInitialized) return;
+
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const cw = canvas.width;
+        const ch = canvas.height;
+
+        const canvasAspect = cw / ch;
+        const videoAspect = vw / vh;
+        let renderW, renderH, offX, offY;
+
+        if (canvasAspect > videoAspect) {
+          renderW = cw;
+          renderH = cw / videoAspect;
+          offX = 0;
+          offY = (ch - renderH) / 2;
+        } else {
+          renderH = ch;
+          renderW = ch * videoAspect;
+          offX = (cw - renderW) / 2;
+          offY = 0;
+        }
+
+        // カメラ映像の描画（インカメラ時は鏡像反転）
+        ctx.save();
+        if (isFrontCamera) {
+          ctx.translate(cw, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, offX, offY, renderW, renderH);
+        ctx.restore();
+
+        // アクティブな顔にカボチャを描画
+        const activeTracks = tracker.getActiveTracks();
+        for (let i = 0; i < activeTracks.length; i++) {
+          const t = activeTracks[i];
+          let alpha = 1.0;
+          if (t.lostFrames > 3) {
+            alpha = Math.max(0, 1.0 - (t.lostFrames - 3) / (tracker.lostMax - 3));
+          }
+
+          // カボチャの描画
+          render2DPumpkin(ctx, t.cx, t.cy, t.radius, t.angle, alpha);
+
+          // デバッグ枠（ONの場合のみ表示）
+          if (showDebug) {
+            ctx.save();
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(t.cx - t.radius, t.cy - t.radius, t.radius * 2, t.radius * 2);
+
+            // 確信度
+            ctx.fillStyle = '#22c55e';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillText(`Score: ${(t.rawScore * 100).toFixed(1)}%`, t.cx - t.radius, t.cy - t.radius - 6);
+
+            // ランドマーク
+            if (t.landmarks) {
+              ctx.fillStyle = '#ef4444';
+              for (const pt of t.landmarks) {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+            ctx.restore();
+          }
+        }
+      }
+
+      requestAnimationFrame(render);
+    }
+    /**
+     * カメラの起動・切り替え
+     */
+    async function startCamera(facingMode) {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+      }
+
+      const constraints = {
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+
+      currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = currentStream;
+      await video.play();
+
+      // ビデオサイズ確定待機
+      await new Promise(resolve => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) return resolve();
+        video.onloadeddata = () => resolve();
+      });
+    }
+
+    switchCameraBtn.addEventListener('click', async () => {
+      isFrontCamera = !isFrontCamera;
+      switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
+      try {
+        await startCamera(isFrontCamera ? 'user' : 'environment');
+      } catch (e) {
+        console.error("Camera switch failed:", e);
+      }
+    });
+
+    async function initApp() {
+      if (isInitialized) return;
+
+      try {
+        await startCamera(isFrontCamera ? 'user' : 'environment');
+
+        if (!faceModel) {
+          // 動的スライダーで制御するため基盤閾値は低めにロード
+          faceModel = await blazeface.load({ maxFaces: 30, scoreThreshold: 0.15 });
+        }
+
+        tapGuide.style.display = 'none';
+        isInitialized = true;
+
+        runDetectionLoop();
+        requestAnimationFrame(render);
+      } catch (err) {
+        console.warn("Autoplay gesture needed:", err);
+        tapGuide.style.display = 'flex';
+      }
+    }
+
+    tapGuide.addEventListener('pointerdown', () => {
+      initApp();
+    }, { once: true });
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
