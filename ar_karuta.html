@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AR カルタ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    }
+    #camera-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    #ar-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: auto;
+    }
+    #ui-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+      padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px) 16px;
+    }
+    .interactive {
+      pointer-events: auto;
+    }
+    /* 上部ステータス */
+    #status-card {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 20px;
+      padding: 12px 20px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      margin: 0 auto;
+      max-width: 480px;
+      width: 100%;
+    }
+    #score-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    #message-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #666;
+    }
+    #target-word {
+      font-size: 48px;
+      font-weight: 900;
+      color: #1976D2;
+      line-height: 1.2;
+    }
+    /* レティクル（照準） */
+    #reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+    #reticle::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      background: #FF9800;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    /* 下部ボタン */
+    #controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .btn {
+      border: none;
+      outline: none;
+      font-size: 18px;
+      font-weight: bold;
+      padding: 12px 24px;
+      border-radius: 30px;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .btn:active {
+      transform: scale(0.95);
+    }
+    #btn-hint {
+      background: #FBC02D;
+      color: #333;
+    }
+    #btn-hint:disabled {
+      background: #BDBDBD;
+      color: #777;
+    }
+    /* スパークル演出オーバーレイ */
+    #sparkle-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+    }
+    /* 初期モーダル */
+    #start-modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 24px;
+      padding: 32px 24px;
+      text-align: center;
+      max-width: 380px;
+      width: 100%;
+    }
+    .modal-content h1 {
+      font-size: 28px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    .modal-content p {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    #btn-start-app {
+      background: #FF9800;
+      width: 100%;
+      padding: 16px;
+      font-size: 20px;
+    }
+  </style>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <video id="camera-video" autoplay playsinline muted></video>
+  <canvas id="ar-canvas"></canvas>
+  <canvas id="sparkle-overlay"></canvas>
+  <div id="reticle"></div>
+
+  <div id="ui-container">
+    <div id="status-card">
+      <div id="score-bar">
+        <span id="score-text">とったかず: 0 まい</span>
+        <span id="remain-text">のこり: 0 まい</span>
+      </div>
+      <div id="message-text">カードを みつけて タッチしよう！</div>
+      <div id="target-word">---</div>
+    </div>
+
+    <div id="controls">
+      <button id="btn-hint" class="btn interactive" disabled>💡 ヒント (3)</button>
+    </div>
+  </div>
+
+  <div id="start-modal">
+    <div class="modal-content">
+      <h1>AR カルタ</h1>
+      <p>カメラとジャイロセンサーを使って、部屋の空間に浮かぶひらがなカードを探すゲームです。<br>見つけたらカードをタップして取ろう！</p>
+      <button id="btn-start-app" class="btn interactive">あそびを はじめる</button>
+    </div>
+  </div>
+
+  <script>
+    // MARK: - 音声合成プレイヤー (Web Audio API)
+    class SoundSynth {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playGetSound() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // ド・ミ・ソ・ド
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.3, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.25);
+        });
+      }
+    }
+
+    // MARK: - ゲーム定数 & 状態
+    const WORDS_POOL = [
+      "いぬ", "ねこ", "くるま", "りんご", "ぼおる",
+      "ひこうき", "ばなな", "とけい", "ぼうし", "くつ",
+      "えんぴつ", "たいよう", "おはな", "とり", "さかな",
+      "でんしゃ", "ぱんだ", "きりん", "いちご", "ぶどう"
+    ];
+    const GAME_CARD_COUNT = 10;
+    let remainingWords = [];
+    let currentTargetWord = "";
+    let score = 0;
+    let hintCount = 3;
+    let hintActive = false;
+
+    // MARK: - Three.js & AR 管理
+    let scene, camera, renderer;
+    let cardMeshes = {};
+    let raycaster, tapPointer;
+    let laserLine = null;
+
+    // ジャイロ姿勢計算用
+    let deviceOrientation = {};
+    let screenOrientation = 0;
+
+    const synth = new SoundSynth();
+
+    // MARK: - アプリ初期化
+    document.getElementById("btn-start-app").addEventListener("click", async () => {
+      synth.init();
+      document.getElementById("start-modal").style.display = "none";
+      await requestDeviceOrientation();
+      await startCamera();
+      initThreeJS();
+      startGame();
+    });
+
+    // iOS 13+ のジャイロ許可リクエスト
+    async function requestDeviceOrientation() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', onDeviceOrientation, false);
+          }
+        } catch (e) {
+          console.error("DeviceOrientation permission error:", e);
+        }
+      } else {
+        window.addEventListener('deviceorientation', onDeviceOrientation, false);
+      }
+      window.addEventListener('orientationchange', () => {
+        screenOrientation = window.orientation || 0;
+      }, false);
+      screenOrientation = window.orientation || 0;
+    }
+
+    function onDeviceOrientation(event) {
+      deviceOrientation = event;
+    }
+
+    // 背面カメラ起動
+    async function startCamera() {
+      const video = document.getElementById("camera-video");
+      const constraints = {
+        audio: false,
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      };
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        await video.play();
+      } catch (err) {
+        alert("カメラの起動に失敗しました。カメラへのアクセスを許可してください。");
+      }
+    }
+
+    // Three.js 初期設定
+    function initThreeJS() {
+      const canvas = document.getElementById("ar-canvas");
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      raycaster = new THREE.Raycaster();
+      tapPointer = new THREE.Vector2();
+
+      // レーザービームオブジェクト（ヒント用）
+      const laserGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-1)]);
+      const laserMat = new THREE.LineBasicMaterial({ color: 0xFFEB3B, linewidth: 4 });
+      laserLine = new THREE.Line(laserGeo, laserMat);
+      laserLine.visible = false;
+      scene.add(laserLine);
+
+      // タップ判定
+      window.addEventListener('pointerdown', onScenePointerDown);
+      window.addEventListener('resize', onWindowResize);
+
+      document.getElementById("btn-hint").addEventListener("click", triggerHint);
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // MARK: - ゲーム進行
+    function startGame() {
+      score = 0;
+      hintCount = 3;
+      updateHintButton();
+      
+      // 単語をシャッフル抽出
+      const shuffledPool = [...WORDS_POOL].sort(() => 0.5 - Math.random());
+      remainingWords = shuffledPool.slice(0, GAME_CARD_COUNT);
+      
+      spawnCards(remainingWords);
+      nextTarget();
+    }
+
+    function nextTarget() {
+      if (remainingWords.length > 0) {
+        currentTargetWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+        document.getElementById("target-word").innerText = currentTargetWord;
+        document.getElementById("message-text").innerText = `「${currentTargetWord}」を さがそう！`;
+      } else {
+        currentTargetWord = "";
+        document.getElementById("target-word").innerText = "🎉";
+        document.getElementById("message-text").innerText = "ぜんぶ とれたよ！クリア！";
+      }
+      document.getElementById("score-text").innerText = `とったかず: ${score} まい`;
+      document.getElementById("remain-text").innerText = `のこり: ${remainingWords.length} まい`;
+    }
+
+    // カードの空間配置（プレイヤー中心の球面上に散開）
+    function spawnCards(words) {
+      // 既存カードの破棄
+      Object.values(cardMeshes).forEach(mesh => scene.remove(mesh));
+      cardMeshes = {};
+
+      const total = words.length;
+      words.forEach((word, idx) => {
+        const mesh = createCardMesh(word);
+        
+        // プレイヤーの周囲（半径2.2m〜2.8m、360度、上下角-25度〜+30度）に配置
+        const phi = THREE.MathUtils.degToRad(90 - (Math.random() * 55 - 25)); // 仰俯角
+        const theta = (idx / total) * Math.PI * 2 + (Math.random() * 0.4 - 0.2); // 方位角
+        const radius = 2.2 + Math.random() * 0.6;
+
+        mesh.position.set(
+          radius * Math.sin(phi) * Math.sin(theta),
+          radius * Math.cos(phi),
+          -radius * Math.sin(phi) * Math.cos(theta)
+        );
+        // カードを中央（プレイヤー位置）に向ける
+        mesh.lookAt(0, 0, 0);
+
+        scene.add(mesh);
+        cardMeshes[word] = mesh;
+      });
+    }
+
+    // 動的テクスチャ生成によるカードメッシュの構築
+    function createCardMesh(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 360;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+
+      // カード地
+      ctx.fillStyle = "#FFFFFF";
+      roundRect(ctx, 10, 10, 340, 460, 24);
+      ctx.fill();
+
+      // 青枠
+      ctx.strokeStyle = "#1E88E5";
+      ctx.lineWidth = 14;
+      roundRect(ctx, 10, 10, 340, 460, 24);
+      ctx.stroke();
+
+      // 文字描画（動的フォントスケーリング）
+      ctx.fillStyle = "#111111";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      let fontSize = 100;
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      while (ctx.measureText(text).width > 300 && fontSize > 30) {
+        fontSize -= 6;
+        ctx.font = `bold ${fontSize}px sans-serif`;
+      }
+      ctx.fillText(text, 180, 240);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+      const geo = new THREE.PlaneGeometry(0.36, 0.48);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.name = text;
+      return mesh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // MARK: - インタラクション（タップ判定）
+    function onScenePointerDown(event) {
+      if (!currentTargetWord) return;
+
+      tapPointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      tapPointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(tapPointer, camera);
+      const targetMesh = cardMeshes[currentTargetWord];
+      if (!targetMesh) return;
+
+      const intersects = raycaster.intersectObject(targetMesh);
+      if (intersects.length > 0) {
+        collectCard(currentTargetWord, targetMesh);
+      }
+    }
+
+    function collectCard(word, mesh) {
+      synth.playGetSound();
+      triggerSparkles(window.innerWidth / 2, window.innerHeight / 2);
+
+      // レーザー解除
+      laserLine.visible = false;
+      hintActive = false;
+
+      // 取得アニメーション（回転しながら縮小破棄）
+      const startScale = mesh.scale.x;
+      const startTime = performance.now();
+      function anim(now) {
+        const elapsed = (now - startTime) / 250;
+        if (elapsed < 1) {
+          const s = startScale * (1 - elapsed);
+          mesh.scale.set(s, s, s);
+          mesh.rotation.z += 0.2;
+          requestAnimationFrame(anim);
+        } else {
+          scene.remove(mesh);
+          delete cardMeshes[word];
+          score++;
+          remainingWords = remainingWords.filter(w => w !== word);
+          nextTarget();
+        }
+      }
+      requestAnimationFrame(anim);
+    }
+
+    // MARK: - ヒント（3Dレーザービーム照射）
+    function triggerHint() {
+      if (hintCount <= 0 || !currentTargetWord || hintActive) return;
+      hintCount--;
+      updateHintButton();
+      hintActive = true;
+
+      const targetMesh = cardMeshes[currentTargetWord];
+      if (!targetMesh) return;
+
+      laserLine.visible = true;
+
+      // 3秒後にレーザーを消去
+      setTimeout(() => {
+        laserLine.visible = false;
+        hintActive = false;
+      }, 3000);
+    }
+
+    function updateHintButton() {
+      const btn = document.getElementById("btn-hint");
+      btn.innerText = `💡 ヒント (${hintCount})`;
+      btn.disabled = (hintCount <= 0);
+    }
+
+    // MARK: - 画面全体スパークル描画 (2D Canvas)
+    function triggerSparkles(cx, cy) {
+      const canvas = document.getElementById("sparkle-overlay");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      const colors = ['#FFD700', '#FF9800', '#FFFFFF', '#00E5FF'];
+
+      for (let i = 0; i < 40; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 3;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 6 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1.0
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.025;
+          if (p.alpha > 0) {
+            alive = true;
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+        if (alive) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(draw);
+    }
+
+    // MARK: - デバイスジャイロのクォータニオン変換
+    const zee = new THREE.Vector3(0, 0, 1);
+    const euler = new THREE.Euler();
+    const q0 = new THREE.Quaternion();
+    const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -PI/2 around X
+
+    function updateCameraOrientation() {
+      if (!deviceOrientation || deviceOrientation.alpha === null) return;
+      const alpha = THREE.MathUtils.degToRad(deviceOrientation.alpha || 0);
+      const beta = THREE.MathUtils.degToRad(deviceOrientation.beta || 0);
+      const gamma = THREE.MathUtils.degToRad(deviceOrientation.gamma || 0);
+      const orient = THREE.MathUtils.degToRad(screenOrientation || 0);
+
+      euler.set(beta, alpha, -gamma, 'YXZ');
+      camera.quaternion.setFromEuler(euler);
+      camera.quaternion.multiply(q1);
+      camera.quaternion.multiply(q0.setFromAxisAngle(zee, -orient));
+    }
+
+    // MARK: - メインレンダーループ
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+
+      // ジャイロによる視点回転同期
+      updateCameraOrientation();
+
+      // ヒント発動中のレーザー更新（カメラ手元下部からターゲットカード中心へ照射）
+      if (laserLine && laserLine.visible && currentTargetWord && cardMeshes[currentTargetWord]) {
+        const targetPos = cardMeshes[currentTargetWord].position;
+        const camPos = camera.position.clone();
+        // カメラの手元（少し前方かつ右下）からビームを伸ばす
+        const handOffset = new THREE.Vector3(0.12, -0.15, -0.3).applyQuaternion(camera.quaternion);
+        const startPos = camPos.add(handOffset);
+
+        const positions = laserLine.geometry.attributes.position.array;
+        positions[0] = startPos.x; positions[1] = startPos.y; positions[2] = startPos.z;
+        positions[3] = targetPos.x; positions[4] = targetPos.y; positions[5] = targetPos.z;
+        laserLine.geometry.attributes.position.needsUpdate = true;
+      }
+
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
