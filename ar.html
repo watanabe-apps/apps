@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>人を野菜だと思え - 聴衆変身AR</title>
+  <title>人を野菜だと思え - 聴衆変身AR（高画質・広角対応版）</title>
 
-  <!-- TensorFlow.js & BlazeFace (高信頼CDN) -->
+  <!-- TensorFlow.js & BlazeFace 高速CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
 
@@ -27,7 +27,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* メイン描画キャンバス（全画面表示） */
+    /* メイン描画キャンバス（Retina対応） */
     #stage {
       position: absolute;
       top: 0;
@@ -38,7 +38,7 @@
       z-index: 1;
     }
 
-    /* バックグラウンド用ビデオ要素（完全非表示・インライン再生用） */
+    /* ビデオ要素（インライン再生用） */
     #webcam {
       position: fixed;
       top: 0;
@@ -56,20 +56,20 @@
       top: 14px;
       right: 14px;
       z-index: 40;
-      background: rgba(20, 20, 20, 0.65);
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
       padding: 8px 14px;
       font-size: 13px;
       font-weight: 600;
       border-radius: 22px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
       transition: background 0.2s, transform 0.1s;
     }
     #hudBtn:active {
@@ -90,7 +90,7 @@
       font-weight: 700;
     }
 
-    /* 調整ドロワー（デフォルト非表示・本番プレゼン時は閉じてゼロUI） */
+    /* 調整ドロワー（本番時は閉じてゼロUI） */
     #hudPanel {
       position: absolute;
       top: 58px;
@@ -100,7 +100,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 14px;
       padding: 14px 16px;
-      width: 260px;
+      width: 270px;
       color: #f1f5f9;
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -154,14 +154,16 @@
       border-radius: 8px;
       cursor: pointer;
       text-align: center;
-      transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+      transition: background 0.15s, border-color 0.15s, opacity 0.2s;
     }
     .hud-button:active:not(:disabled) {
       transform: scale(0.97);
     }
     .hud-button:disabled {
-      opacity: 0.4;
+      opacity: 0.45;
       cursor: not-allowed;
+      border-color: #334155;
+      color: #94a3b8;
     }
     .hud-button.active {
       background: #ea580c;
@@ -169,11 +171,11 @@
     }
     .hud-button.span-all {
       grid-column: span 2;
-      background: #2563eb;
-      border-color: #3b82f6;
+      background: #0284c7;
+      border-color: #38bdf8;
     }
 
-    /* 右下：片手親指で瞬時に切り替えられるズームピルUI */
+    /* 右下：片手操作用ズームピルUI */
     #zoomPill {
       position: absolute;
       bottom: 24px;
@@ -217,13 +219,13 @@
       box-shadow: 0 2px 8px rgba(234, 88, 12, 0.5);
     }
 
-    /* ズーム値フローティング表示バッジ */
+    /* ズーム値通知バッジ */
     #zoomFeedback {
       position: absolute;
       bottom: 80px;
       right: 32px;
       z-index: 35;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fed7aa;
       font-size: 13px;
@@ -241,7 +243,6 @@
       transform: translateY(0);
     }
 
-    /* エラー通知バナー */
     #errorNotice {
       position: absolute;
       bottom: 24px;
@@ -265,7 +266,7 @@
 
   <div id="errorNotice"></div>
 
-  <!-- プレゼン検証用HUD（デフォルトは格納・ワンタップで開閉） -->
+  <!-- プレゼン検証用HUD -->
   <button id="hudBtn" type="button">
     <span>⚙️ 調整</span>
     <span id="badgeCount" class="badge-count">0人</span>
@@ -290,13 +291,15 @@
     </div>
 
     <div class="hud-actions">
+      <!-- 画面クロップ/拡大感の解消用トグルボタン -->
+      <button id="toggleFovBtn" class="hud-button span-all" type="button">📐 画角: 広角全体 (Fit)</button>
       <button id="switchCameraBtn" class="hud-button" type="button">📷 背面カメラ</button>
       <button id="toggleDebugBtn" class="hud-button" type="button">デバッグ枠 OFF</button>
       <button id="shuffleVegBtn" class="hud-button span-all" type="button">🎲 野菜シャッフル</button>
     </div>
   </div>
 
-  <!-- 片手操作用ズームピルUI -->
+  <!-- 片手ズームピルUI -->
   <div id="zoomFeedback">1.0x</div>
   <div id="zoomPill">
     <button class="zoom-btn active" data-zoom="1.0" type="button">1x</button>
@@ -309,50 +312,53 @@
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d', { alpha: false });
 
-    // AI推論用オフスクリーンキャンバス（ズーム領域を切り出して高解像度でBlazeFaceに渡す）
-    const cropCanvas = document.createElement('canvas');
-    cropCanvas.width = 480;
-    cropCanvas.height = 360;
-    const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+    // AI推論専用オフスクリーンCanvas
+    const aiCanvas = document.createElement('canvas');
+    aiCanvas.width = 640;
+    aiCanvas.height = 480;
+    const aiCtx = aiCanvas.getContext('2d', { willReadFrequently: true });
 
-    // DOM要素
+    // UI要素
     const hudBtn = document.getElementById('hudBtn');
     const hudPanel = document.getElementById('hudPanel');
     const thresholdSlider = document.getElementById('thresholdSlider');
     const thresholdVal = document.getElementById('thresholdVal');
     const scaleSlider = document.getElementById('scaleSlider');
     const scaleVal = document.getElementById('scaleVal');
+    const toggleFovBtn = document.getElementById('toggleFovBtn');
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     const toggleDebugBtn = document.getElementById('toggleDebugBtn');
     const shuffleVegBtn = document.getElementById('shuffleVegBtn');
     const badgeCount = document.getElementById('badgeCount');
     const badgeFps = document.getElementById('badgeFps');
     const errorNotice = document.getElementById('errorNotice');
-    const zoomPill = document.getElementById('zoomPill');
     const zoomBtns = document.querySelectorAll('.zoom-btn');
     const zoomFeedback = document.getElementById('zoomFeedback');
 
-    // パラメータ状態変数
+    // パラメータ
     let scoreThreshold = 0.40;
     let vegetableScale = 1.0;
-    let isFrontCamera = false; // 研修本番用に背面カメラがデフォルト
+    let isFrontCamera = false;
+    let isMirrorMode = false; // 鏡像（左右反転）を適用するかどうか
     let showDebug = false;
+    let fovMode = 'fit'; // 'fit' = 4:3センサーの広角全体を一切クロップせず表示 / 'fill' = 全画面エッジいっぱいカバー
+    let availableVideoDevices = 0; // 検出されたカメラ台数
 
-    // ズーム状態（1.0x 〜 3.0x）
+    // ズーム制御
     let currentZoom = 1.0;
     let targetZoom = 1.0;
     let feedbackTimer = null;
 
-    // カメラライフサイクルと推論の安全ガード
+    // ライフサイクル & 安全ガード
     let faceModel = null;
     let currentStream = null;
     let isInferring = false;
-    let isDrainingInference = false; // カメラ破棄前の推論排出フラグ
+    let isDrainingInference = false;
     let isRunning = false;
     let isCameraReady = false;
     let isSwitchingCamera = false;
 
-    // FPS算出用
+    // FPS
     const fpsWindow = [];
     let lastFpsTextUpdate = 0;
 
@@ -362,8 +368,11 @@
       setTimeout(() => { errorNotice.style.display = 'none'; }, 4000);
     }
 
+    /**
+     * Retinaディスプレイ（iPhone 16 Pro & Mac外付けディスプレイ）完全対応の高解像度リサイズ
+     */
     function resizeCanvas() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       canvas.width = Math.floor(window.innerWidth * dpr);
       canvas.height = Math.floor(window.innerHeight * dpr);
     }
@@ -373,13 +382,10 @@
 
     function setZoom(val, updateFeedback = true) {
       targetZoom = Math.max(1.0, Math.min(3.0, val));
-
-      // ピルボタンのハイライト更新
       zoomBtns.forEach(btn => {
         const btnVal = parseFloat(btn.dataset.zoom);
         btn.classList.toggle('active', Math.abs(btnVal - targetZoom) < 0.15);
       });
-
       if (updateFeedback) {
         zoomFeedback.textContent = targetZoom.toFixed(1) + 'x';
         zoomFeedback.classList.add('show');
@@ -390,7 +396,6 @@
       }
     }
 
-    // 1x / 2x / 3x ボタンタップ
     zoomBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -398,7 +403,7 @@
       });
     });
 
-    // 2本指ピンチズーム ＆ ダブルタップズーム
+    // 2本指ピンチ & ダブルタップズーム
     let initialPinchDist = null;
     let initialPinchZoom = 1.0;
     let lastTapTime = 0;
@@ -420,16 +425,12 @@
           e.touches[0].clientX - e.touches[1].clientX,
           e.touches[0].clientY - e.touches[1].clientY
         );
-        const factor = dist / initialPinchDist;
-        setZoom(initialPinchZoom * factor);
+        setZoom(initialPinchZoom * (dist / initialPinchDist));
       }
     }, { passive: false });
 
     window.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) {
-        initialPinchDist = null;
-      }
-      // ダブルタップで 1x -> 2x -> 3x -> 1x
+      if (e.touches.length < 2) initialPinchDist = null;
       if (e.touches.length === 0 && !e.target.closest('#hudPanel') && !e.target.closest('#hudBtn') && !e.target.closest('#zoomPill')) {
         const now = performance.now();
         if (now - lastTapTime < 300) {
@@ -458,6 +459,14 @@
       scaleVal.textContent = vegetableScale.toFixed(1) + 'x';
     });
 
+    // 画角モード切替（拡大感の解消 ⇄ 全画面カバー）
+    toggleFovBtn.addEventListener('click', () => {
+      fovMode = (fovMode === 'fit') ? 'fill' : 'fit';
+      toggleFovBtn.textContent = (fovMode === 'fit')
+        ? '📐 画角: 広角全体 (Fit)'
+        : '📐 画角: 全画面 (Fill)';
+    });
+
     toggleDebugBtn.addEventListener('click', () => {
       showDebug = !showDebug;
       toggleDebugBtn.textContent = showDebug ? 'デバッグ枠 ON' : 'デバッグ枠 OFF';
@@ -468,18 +477,9 @@
       tracker.shuffle();
     });
 
-    const VEGETABLE_TYPES = [
-      'pumpkin',   // 0: カボチャ
-      'tomato',    // 1: トマト
-      'eggplant',  // 2: ナス
-      'carrot',    // 3: ニンジン
-      'onion',     // 4: タマネギ
-      'pepper',    // 5: ピーマン
-      'broccoli',  // 6: ブロッコリー
-      'daikon'     // 7: ダイコン
-    ];
+    const VEGETABLE_TYPES = ['pumpkin', 'tomato', 'eggplant', 'carrot', 'onion', 'pepper', 'broccoli', 'daikon'];
 
-    /** 1. カボチャ (Pumpkin) */
+    /** 1. カボチャ */
     function drawPumpkin(c, r) {
       c.fillStyle = '#1e3a12';
       c.beginPath();
@@ -525,7 +525,7 @@
       c.shadowBlur = 0;
     }
 
-    /** 2. トマト (Tomato) */
+    /** 2. トマト */
     function drawTomato(c, r) {
       const grad = c.createRadialGradient(-r * 0.25, -r * 0.25, r * 0.1, 0, 0, r);
       grad.addColorStop(0, '#f87171');
@@ -581,7 +581,7 @@
       c.fill();
     }
 
-    /** 3. ナス (Eggplant) */
+    /** 3. ナス */
     function drawEggplant(c, r) {
       const grad = c.createRadialGradient(-r * 0.2, -r * 0.1, r * 0.1, 0, 0.2 * r, r * 1.1);
       grad.addColorStop(0, '#c084fc');
@@ -627,7 +627,7 @@
       c.stroke();
     }
 
-    /** 4. ニンジン (Carrot) */
+    /** 4. ニンジン */
     function drawCarrot(c, r) {
       c.fillStyle = '#22c55e';
       c.beginPath();
@@ -677,7 +677,7 @@
       c.beginPath(); c.moveTo(0, r * 0.18); c.lineTo(0, r * 0.32); c.stroke();
     }
 
-    /** 5. タマネギ (Onion) */
+    /** 5. タマネギ */
     function drawOnion(c, r) {
       const grad = c.createRadialGradient(0, -r * 0.1, r * 0.1, 0, 0, r);
       grad.addColorStop(0, '#fef08a');
@@ -719,7 +719,7 @@
       c.fill();
     }
 
-    /** 6. ピーマン (Bell Pepper) */
+    /** 6. ピーマン */
     function drawPepper(c, r) {
       c.fillStyle = '#14532d';
       c.fillRect(-r * 0.08, -r * 1.0, r * 0.16, r * 0.3);
@@ -753,7 +753,7 @@
       c.fill();
     }
 
-    /** 7. ブロッコリー (Broccoli) */
+    /** 7. ブロッコリー */
     function drawBroccoli(c, r) {
       c.fillStyle = '#bbf7d0';
       c.fillRect(-r * 0.25, r * 0.15, r * 0.5, r * 0.75);
@@ -795,7 +795,7 @@
       c.stroke();
     }
 
-    /** 8. ダイコン (Radish) */
+    /** 8. ダイコン */
     function drawDaikon(c, r) {
       c.fillStyle = '#16a34a';
       c.beginPath();
@@ -839,7 +839,6 @@
       c.stroke();
     }
 
-    /** 野菜描画ディスパッチャー */
     function renderVegetable(context, typeIdx, cx, cy, r, angle, alpha = 1.0) {
       context.save();
       context.globalAlpha = alpha;
@@ -885,7 +884,7 @@
           for (let i = 0; i < detections.length; i++) {
             if (detections[i].assigned) continue;
             const dist = Math.hypot(track.targetX - detections[i].cx, track.targetY - detections[i].cy);
-            if (dist < minDist && dist < track.radius * 1.6) {
+            if (dist < minDist && dist < track.radius * 1.8) {
               minDist = dist;
               matchedIdx = i;
             }
@@ -907,7 +906,7 @@
           }
         }
 
-        // 新規登録
+        // 新規検出者の登録
         for (const hit of detections) {
           if (!hit.assigned) {
             this.tracks.push({
@@ -951,49 +950,61 @@
 
     const tracker = new FaceTracker();
 
+    /**
+     * 画面座標変換ヘルパー（広角全体優先 Fit / 全画面 Fill 両対応）
+     */
+    function computeViewport(vw, vh, cw, ch, z, mode) {
+      const srcW = vw / z;
+      const srcH = vh / z;
+      const srcX = (vw - srcW) * 0.5;
+      const srcY = (vh - srcH) * 0.5;
+
+      let scale;
+      if (mode === 'fit') {
+        // センサー全体を収める（一切クロップせず最大の広角で聴衆を捉える）
+        scale = Math.min(cw / srcW, ch / srcH);
+      } else {
+        // 画面全体を隙間なく埋める（端をクロップ）
+        scale = Math.max(cw / srcW, ch / srcH);
+      }
+
+      const renderW = srcW * scale;
+      const renderH = srcH * scale;
+      const offsetX = (cw - renderW) * 0.5;
+      const offsetY = (ch - renderH) * 0.5;
+
+      return { srcX, srcY, srcW, srcH, renderW, renderH, offsetX, offsetY };
+    }
+
     async function inferenceLoop() {
       if (!isRunning) return;
 
-      // カメラ再生準備完了時のみ実行（排出中または切り替え中はスキップ）
       if (isCameraReady && !isDrainingInference && faceModel && !isInferring && video.readyState >= 2 && video.videoWidth > 0) {
         isInferring = true;
         try {
           const vw = video.videoWidth;
           const vh = video.videoHeight;
-          const z = currentZoom;
-
-          // ズーム切り出し領域の計算（中央基準）
-          const srcW = vw / z;
-          const srcH = vh / z;
-          const srcX = (vw - srcW) * 0.5;
-          const srcY = (vh - srcH) * 0.5;
-
-          // オフスクリーンCanvasに切り出し拡大描画（BlazeFaceはこの高密度画像で推論を行う！）
-          cropCtx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, cropCanvas.width, cropCanvas.height);
-
-          const faces = await faceModel.estimateFaces(cropCanvas, false);
-
           const cw = canvas.width;
           const ch = canvas.height;
+          const z = currentZoom;
 
-          // メインCanvasへのアスペクト比カバー計算
-          const scale = Math.max(cw / srcW, ch / srcH);
-          const renderW = srcW * scale;
-          const renderH = srcH * scale;
-          const offsetX = (cw - renderW) / 2;
-          const offsetY = (ch - renderH) / 2;
+          const vp = computeViewport(vw, vh, cw, ch, z, fovMode);
 
-          // cropCanvas上の座標 (0〜cropCanvas.width, 0〜cropCanvas.height) を画面座標系へ投影
+          // ズーム領域をAI最適化キャンバスへ描画（高速推論）
+          aiCtx.drawImage(video, vp.srcX, vp.srcY, vp.srcW, vp.srcH, 0, 0, aiCanvas.width, aiCanvas.height);
+
+          const faces = await faceModel.estimateFaces(aiCanvas, false);
+
           const toScreenX = (cropX) => {
-            const normX = cropX / cropCanvas.width;
-            if (isFrontCamera) {
-              return cw - (offsetX + normX * renderW);
+            const normX = cropX / aiCanvas.width;
+            if (isMirrorMode) {
+              return cw - (vp.offsetX + normX * vp.renderW);
             }
-            return offsetX + normX * renderW;
+            return vp.offsetX + normX * vp.renderW;
           };
           const toScreenY = (cropY) => {
-            const normY = cropY / cropCanvas.height;
-            return offsetY + normY * renderH;
+            const normY = cropY / aiCanvas.height;
+            return vp.offsetY + normY * vp.renderH;
           };
 
           const detections = [];
@@ -1006,10 +1017,9 @@
 
             const [vx1, vy1] = face.topLeft;
             const [vx2, vy2] = face.bottomRight;
-            const boxW = (Math.abs(vx2 - vx1) / cropCanvas.width) * renderW;
-            const boxH = (Math.abs(vy2 - vy1) / cropCanvas.height) * renderH;
+            const boxW = (Math.abs(vx2 - vx1) / aiCanvas.width) * vp.renderW;
+            const boxH = (Math.abs(vy2 - vy1) / aiCanvas.height) * vp.renderH;
 
-            // スライダーで指定された倍率を反映（自然な顔サイズ）
             const radius = Math.max(boxW, boxH) * 0.54 * vegetableScale;
 
             const ptRightEye = face.landmarks[0];
@@ -1020,7 +1030,7 @@
             const eyeB = { x: toScreenX(ptLeftEye[0]), y: toScreenY(ptLeftEye[1]) };
             const noseScr = { x: toScreenX(ptNose[0]), y: toScreenY(ptNose[1]) };
 
-            // 画面空間上で左右の目をソートしてRoll角を算出（自撮り鏡像でも傾きが反転しない）
+            // 画面空間での左右ソートにより鏡像でも傾きが完全一致
             const leftEyeScreen = eyeA.x < eyeB.x ? eyeA : eyeB;
             const rightEyeScreen = eyeA.x < eyeB.x ? eyeB : eyeA;
             const tiltAngle = Math.atan2(rightEyeScreen.y - leftEyeScreen.y, rightEyeScreen.x - leftEyeScreen.x);
@@ -1049,7 +1059,7 @@
           tracker.update(detections);
           badgeCount.textContent = `${tracker.getActiveTracks().length}人`;
         } catch (err) {
-          // 切り替え直後のフレーム破棄等は安全に無視
+          // フレーム差し替え時の例外は安全にスキップ
         } finally {
           isInferring = false;
         }
@@ -1061,10 +1071,9 @@
     function render(now) {
       if (!isRunning) return;
 
-      // ズームのスムーズなイージング補間
       currentZoom += (targetZoom - currentZoom) * 0.25;
 
-      // FPSカウンター
+      // FPS測定
       fpsWindow.push(now);
       while (fpsWindow.length > 0 && fpsWindow[0] < now - 1000) {
         fpsWindow.shift();
@@ -1076,33 +1085,30 @@
 
       tracker.tickInterpolation();
 
+      const cw = canvas.width;
+      const ch = canvas.height;
+
+      // 毎フレーム背景クリア
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cw, ch);
+
       if (isCameraReady && video.readyState >= 2 && video.videoWidth > 0) {
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const cw = canvas.width;
-        const ch = canvas.height;
         const z = currentZoom;
 
-        // ズーム切り出し領域
-        const srcW = vw / z;
-        const srcH = vh / z;
-        const srcX = (vw - srcW) * 0.5;
-        const srcY = (vh - srcH) * 0.5;
-
-        const scale = Math.max(cw / srcW, ch / srcH);
-        const renderW = srcW * scale;
-        const renderH = srcH * scale;
-        const offsetX = (cw - renderW) / 2;
-        const offsetY = (ch - renderH) / 2;
+        const vp = computeViewport(vw, vh, cw, ch, z, fovMode);
 
         ctx.save();
-        if (isFrontCamera) {
+        if (isMirrorMode) {
           ctx.translate(cw, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, srcX, srcY, srcW, srcH, offsetX, offsetY, renderW, renderH);
+        // Full HDの高精細カメラ映像を直接Retina Canvasへ描画
+        ctx.drawImage(video, vp.srcX, vp.srcY, vp.srcW, vp.srcH, vp.offsetX, vp.offsetY, vp.renderW, vp.renderH);
         ctx.restore();
 
+        // 野菜描画
         const activeTracks = tracker.getActiveTracks();
         for (let i = 0; i < activeTracks.length; i++) {
           const t = activeTracks[i];
@@ -1134,22 +1140,52 @@
             ctx.restore();
           }
         }
-      } else {
-        // 切替待機中は黒背景
-        ctx.fillStyle = '#050505';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
       requestAnimationFrame(render);
     }
 
     /**
-     * カメラの安全な完全解放（Webkitバッファ破棄 ＆ 推論ドレイン待機 ＆ 500msクールダウン）
+     * 端末のカメラ台数を取得し、単一カメラ環境での反転バグを物理的に防止する
      */
+    async function updateCameraHardwareStatus() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        return;
+      }
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+        availableVideoDevices = videoInputs.length;
+
+        if (availableVideoDevices <= 1) {
+          // カメラが1台のみ（PCや単一カメラ端末）の場合
+          switchCameraBtn.disabled = true;
+          switchCameraBtn.style.opacity = '0.5';
+          switchCameraBtn.title = '利用可能なカメラが1台のみのため切り替えできません';
+          switchCameraBtn.textContent = '📷 カメラ1台 (固定)';
+
+          // 物理カメラが切り替わらないのに反転する不自然さを防ぐため鏡像を強制解除
+          isFrontCamera = false;
+          isMirrorMode = false;
+        } else {
+          // iPhoneなど複数カメラが存在する端末
+          switchCameraBtn.disabled = false;
+          switchCameraBtn.style.opacity = '1.0';
+          switchCameraBtn.title = '';
+          switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
+        }
+      } catch (err) {
+        console.warn("Camera enumeration error:", err);
+      }
+    }
+
+    if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+      navigator.mediaDevices.addEventListener('devicechange', updateCameraHardwareStatus);
+    }
+
     async function stopCamera() {
       isCameraReady = false;
 
-      // 1. 進行中推論の排出待機（最大1000ms）
       isDrainingInference = true;
       const drainStart = performance.now();
       while (isInferring && (performance.now() - drainStart < 1000)) {
@@ -1157,7 +1193,6 @@
       }
       isDrainingInference = false;
 
-      // 2. 既存トラックの停止
       if (currentStream) {
         currentStream.getTracks().forEach(tr => {
           try { tr.stop(); } catch (e) {}
@@ -1165,28 +1200,23 @@
         currentStream = null;
       }
 
-      // 3. WebKitデコーダーバッファの完全パージ（CRITICAL）
       try {
         video.pause();
         video.srcObject = null;
-        video.load(); // WebKit内部のメディアパイプラインを強制破棄
+        video.load(); // WebKitバッファ強制破棄
       } catch (e) {}
 
-      // 4. トラッカーのリセット
       tracker.clear();
       badgeCount.textContent = '0人';
 
-      // 5. モバイルOSのハードウェアカメラ排他ロック解除待ち（500ms）
+      // ハードウェア解放クールダウン（500ms）
       await new Promise(r => setTimeout(r, 500));
     }
 
-    /**
-     * タイムアウト付き安全なgetUserMedia呼び出し（ハングアップ防止）
-     */
     async function safeGetUserMedia(constraints, timeoutMs = 6000) {
       let timerId;
       const timeoutPromise = new Promise((_, reject) => {
-        timerId = setTimeout(() => reject(new Error('カメラの応答がタイムアウトしました。ブラウザをリロードしてください。')), timeoutMs);
+        timerId = setTimeout(() => reject(new Error('カメラの応答がタイムアウトしました。')), timeoutMs);
       });
       try {
         const stream = await Promise.race([
@@ -1202,21 +1232,34 @@
     }
 
     /**
-     * カメラ起動メインルーチン
+     * 高解像度（1080p Full HD & iPhoneセンサーのネイティブ4:3画角）カメラ起動
      */
     async function startCamera(facingMode) {
       await stopCamera();
 
+      // iPhoneのメインセンサーの最も広いネイティブ視野角（4:3）かつFull HDの高解像度を優先要求
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 640 },
-          height: { ideal: 480 }
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1440, min: 720 },
+          frameRate: { ideal: 60, min: 30 }
         },
         audio: false
       };
 
-      const stream = await safeGetUserMedia(constraints, 6000);
+      let stream;
+      try {
+        stream = await safeGetUserMedia(constraints, 6000);
+      } catch (e) {
+        // フォールバック（標準解像度）
+        console.warn("HD stream fallback triggered:", e);
+        stream = await safeGetUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+          audio: false
+        }, 5000);
+      }
+
       currentStream = stream;
       video.srcObject = stream;
 
@@ -1226,7 +1269,6 @@
       video.setAttribute('webkit-playsinline', '');
       await video.play();
 
-      // 解像度・フレーム確定待機
       await new Promise((resolve, reject) => {
         if (video.readyState >= 2 && video.videoWidth > 0) return resolve();
         let resolved = false;
@@ -1247,23 +1289,41 @@
           if (!resolved) {
             resolved = true;
             if (video.videoWidth > 0) resolve();
-            else reject(new Error('ビデオフレームの初期化に失敗しました。'));
+            else reject(new Error('ビデオ初期化がタイムアウトしました。'));
           }
         }, 3000);
       });
 
+      // 実際のトラック設定を確認
+      const track = stream.getVideoTracks()[0];
+      const settings = track ? track.getSettings() : {};
+
+      // カメラ台数を再確認してUIを更新
+      await updateCameraHardwareStatus();
+
+      // カメラが1台のみの場合は無条件で非鏡像（正立）に固定
+      if (availableVideoDevices <= 1) {
+        isMirrorMode = false;
+        isFrontCamera = false;
+      } else {
+        // 複数カメラが存在する場合のみ、前面（user）のとき鏡像化
+        isMirrorMode = isFrontCamera || (settings.facingMode === 'user');
+      }
+
       isCameraReady = true;
     }
 
-    // カメラ切り替えボタン（完全排他・多重押し防止）
     switchCameraBtn.addEventListener('click', async () => {
+      // カメラが1台以下の場合は切り替えを物理的に遮断
+      if (availableVideoDevices <= 1) {
+        return;
+      }
+
       if (isSwitchingCamera) return;
       isSwitchingCamera = true;
       switchCameraBtn.disabled = true;
 
-      const prevBtnText = switchCameraBtn.textContent;
       switchCameraBtn.textContent = '🔄 切替中...';
-
       isFrontCamera = !isFrontCamera;
 
       try {
@@ -1271,8 +1331,7 @@
         switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
       } catch (err) {
         console.error("Camera switch error:", err);
-        showError("カメラの切替に失敗しました。再試行します。");
-        // 元のカメラ設定にロールバック
+        showError("カメラの切替に失敗しました。");
         isFrontCamera = !isFrontCamera;
         try {
           await startCamera(isFrontCamera ? 'user' : 'environment');
@@ -1280,13 +1339,12 @@
         switchCameraBtn.textContent = isFrontCamera ? '🤳 前面カメラ' : '📷 背面カメラ';
       } finally {
         isSwitchingCamera = false;
-        switchCameraBtn.disabled = false;
+        if (availableVideoDevices > 1) {
+          switchCameraBtn.disabled = false;
+        }
       }
     });
 
-    /**
-     * アプリ起動ルーチン
-     */
     async function bootstrap() {
       if (isRunning) return;
       isRunning = true;
@@ -1294,14 +1352,14 @@
       requestAnimationFrame(render);
 
       try {
-        await startCamera(isFrontCamera ? 'user' : 'environment');
+        await startCamera('environment');
       } catch (err) {
         console.warn("Auto camera start blocked:", err);
         showError("画面をタップしてカメラを許可してください。");
         const fallback = async () => {
           window.removeEventListener('pointerdown', fallback);
           try {
-            await startCamera(isFrontCamera ? 'user' : 'environment');
+            await startCamera('environment');
           } catch (e) {
             showError("カメラへのアクセスが拒否されました。");
           }
@@ -1309,7 +1367,6 @@
         window.addEventListener('pointerdown', fallback);
       }
 
-      // BlazeFace非同期ロード
       try {
         faceModel = await blazeface.load({ maxFaces: 20, scoreThreshold: 0.15 });
         inferenceLoop();
