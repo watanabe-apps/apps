@@ -11,14 +11,14 @@
       overflow: hidden;
       font-family: sans-serif;
       user-select: none;
-      background-color: transparent;
+      background-color: #000;
     }
     #canvas-container {
       width: 100vw;
       height: 100vh;
       display: block;
     }
-    /* 全画面カラーフラッシュ（HTMLオーバーレイ） */
+    /* スマホ用全画面カラーフラッシュ（HTMLオーバーレイ） */
     #screen-flash {
       position: absolute;
       top: 0;
@@ -62,7 +62,7 @@
       top: 12px;
       left: 12px;
       right: 110px;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
       padding: 10px 14px;
       border-radius: 8px;
       color: #fff;
@@ -92,6 +92,16 @@
     input[type="range"] {
       height: 6px;
     }
+    #btn-start-sim {
+      background: #00e676;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
     .status-badge {
       font-size: 11px;
       padding: 3px 8px;
@@ -118,7 +128,6 @@
       border-radius: 30px;
       cursor: pointer;
       box-shadow: 0 4px 14px rgba(0,230,118,0.4);
-      display: none;
       z-index: 20;
     }
   </style>
@@ -129,18 +138,22 @@
 <div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
-<button id="btn-ar-start" class="interactive">ARを開始する</button>
+<button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
 
 <div id="ui-container">
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UI非表示</button>
 
   <div id="main-panel" class="interactive">
+    <!-- スタートボタン -->
+    <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
+
     <div class="setting-group">
       <strong>モード:</strong>
       <label><input type="radio" name="mode" value="signal" checked onchange="changeMode(this.value)"> 信号あり</label>
       <label><input type="radio" name="mode" value="no-signal" onchange="changeMode(this.value)"> 信号なし</label>
     </div>
 
+    <!-- 難易度（安全に渡れる空白時間制御） -->
     <div class="setting-group">
       <strong>難易度 (安全の隙間):</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
@@ -150,12 +163,14 @@
       </select>
     </div>
 
+    <!-- 道路の奥行き（歩行距離） -->
     <div class="setting-group">
       <strong>横断幅 (歩行距離):</strong>
       <input type="range" id="depth-slider" min="3.0" max="7.0" step="0.5" value="6.0" oninput="changeRoadDepth(this.value)">
       <span id="depth-label">6.0m</span>
     </div>
 
+    <!-- 信号強調（拡大＆パルス発光） -->
     <div class="setting-group">
       <strong>信号強調:</strong>
       <label><input type="checkbox" id="check-highlight" checked onchange="toggleSignalHighlight(this.checked)"> 発光拡大</label>
@@ -174,7 +189,7 @@
 
 <script>
   let scene, camera, renderer;
-  let roadAnchor, reticle;
+  let roadAnchor, reticle, flashMesh3D;
   let hitTestSource = null;
   let hitTestSourceRequested = false;
   let isPlaced = false;
@@ -197,9 +212,10 @@
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
-  let roadDepth = 6.0; // 実寸歩行奥行き (3.0m 〜 7.0m)
-  const crosswalkHalfWidth = 2.0; // 横断歩道幅 4m (-2.0 〜 +2.0)
+  let roadDepth = 6.0;
+  const crosswalkHalfWidth = 2.0;
 
+  // 難易度：交通流の継続時間と、車が完全に途切れる安全空白時間
   const diffConfigs = {
     easy:   { trafficDuration: 6.0, clearDuration: 8.5, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
     normal: { trafficDuration: 8.0, clearDuration: 5.5, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
@@ -262,13 +278,21 @@
     osc2.stop(now + 0.48);
   }
 
-  function flashScreen(colorHex, duration = 600) {
+  // 画面発光（Quest用の3D板とスマホ用のHTMLオーバーレイの両方を同時に発光）
+  function triggerFlash(colorHex, duration = 600) {
+    // 1. スマホ用HTMLフラッシュ
     const el = document.getElementById('screen-flash');
-    el.style.backgroundColor = colorHex;
-    el.style.opacity = '0.55';
-    setTimeout(() => {
-      el.style.opacity = '0';
-    }, duration);
+    if (el) {
+      el.style.backgroundColor = colorHex;
+      el.style.opacity = '0.55';
+      setTimeout(() => { el.style.opacity = '0'; }, duration);
+    }
+    // 2. Quest用3Dフラッシュ
+    if (flashMesh3D) {
+      flashMesh3D.material.color.setHex(parseInt(colorHex.replace('#', '0x')));
+      flashMesh3D.material.opacity = 0.5;
+      setTimeout(() => { flashMesh3D.material.opacity = 0.0; }, duration);
+    }
   }
 
   init();
@@ -280,11 +304,18 @@
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
 
+    // QuestのDOM非表示環境でも確実に画面全体を赤・緑に光らせる透過板
+    const fGeo = new THREE.PlaneGeometry(2, 2);
+    const fMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.0, depthTest: false });
+    flashMesh3D = new THREE.Mesh(fGeo, fMat);
+    flashMesh3D.position.set(0, 0, -0.15);
+    flashMesh3D.renderOrder = 9999;
+    camera.add(flashMesh3D);
+
     roadAnchor = new THREE.Group();
     roadAnchor.visible = false;
     scene.add(roadAnchor);
 
-    // 完全透過レンダラー（余計なドームや板によるカメラ遮蔽を完全排除）
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -311,33 +342,43 @@
     buildEnvironment();
     createPedestrianSignals();
 
-    checkWebXRSupport();
-
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
-  function checkWebXRSupport() {
-    const btn = document.getElementById('btn-ar-start');
-    if ('xr' in navigator) {
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (supported) {
-          btn.style.display = 'block';
-          btn.onclick = startARSession;
-        }
-      }).catch(() => {});
-    }
-  }
-
-  function startARSession() {
+  // Meta Quest Browserとスマホ（Android Chrome）の双方で確実にカメラ許可を呼ぶAR開始処理
+  async function startARSession() {
     initAudio();
-    navigator.xr.requestSession('immersive-ar', {
-      requiredFeatures: ['hit-test'],
-      optionalFeatures: ['local-floor', 'dom-overlay'],
-      domOverlay: { root: document.getElementById('ui-container') }
-    }).then((session) => {
+    if (!navigator.xr) {
+      alert('WebXR非対応ブラウザです。HTTPS接続かつMeta Quest BrowserまたはAndroid Chromeをご利用ください。');
+      return;
+    }
+
+    try {
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (!supported) {
+        alert('この端末・ブラウザはimmersive-arに対応していません。');
+        return;
+      }
+
+      let session = null;
+      // 1. スマホ向け：dom-overlay付きで要求
+      try {
+        session = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['hit-test'],
+          optionalFeatures: ['local-floor', 'dom-overlay'],
+          domOverlay: { root: document.getElementById('ui-container') }
+        });
+      } catch (domErr) {
+        // 2. Meta Quest向け：dom-overlay非対応のため標準構成でフォールバック要求
+        session = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['hit-test'],
+          optionalFeatures: ['local-floor']
+        });
+      }
+
       renderer.xr.setSession(session);
       document.getElementById('btn-ar-start').style.display = 'none';
 
@@ -345,11 +386,10 @@
       isRunning = false;
       roadAnchor.visible = false;
 
+      // 画面タップ（スマホ）またはトリガー（Quest）で足元配置
       session.addEventListener('select', () => {
         if (!isPlaced && reticle.visible) {
           anchorRoadToUserFeet();
-          isRunning = true;
-          resetSignalCycle();
         }
       });
 
@@ -361,12 +401,13 @@
         hitTestSourceRequested = false;
         hitTestSource = null;
       });
-    }).catch(e => {
-      alert('ARセッション開始エラー: ' + e.message);
-    });
+
+    } catch (err) {
+      alert('カメラ・ARの起動に失敗しました: ' + err.message);
+    }
   }
 
-  // 自分の足元を手前歩道端に合わせて道路を展開
+  // 足元を手前歩道端（横断歩道入口）として道路を展開
   function anchorRoadToUserFeet() {
     const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     const floorY = reticlePos.y;
@@ -393,6 +434,14 @@
 
     currentSide = 'near';
     resetCheckState();
+  }
+
+  // スタートボタン処理：シミュレーション開始とUI自動非表示
+  function startSimulation() {
+    initAudio();
+    isRunning = true;
+    hideUI();
+    resetSignalCycle();
   }
 
   function changeDifficulty(val) {
@@ -462,17 +511,24 @@
   }
 
   function toggleUIVisibility() {
-    isUIHidden = !isUIHidden;
-    const panel = document.getElementById('main-panel');
-    const btn = document.getElementById('btn-toggle-ui');
+    if (isUIHidden) showUI();
+    else hideUI();
+  }
 
-    if (isUIHidden) {
-      panel.style.display = 'none';
-      btn.innerText = 'UI表示';
-    } else {
-      panel.style.display = 'flex';
-      btn.innerText = 'UI非表示';
-    }
+  function hideUI() {
+    isUIHidden = true;
+    document.getElementById('main-panel').style.display = 'none';
+    const btn = document.getElementById('btn-toggle-ui');
+    btn.innerText = 'UI表示';
+    btn.style.background = 'rgba(0, 0, 0, 0.4)';
+  }
+
+  function showUI() {
+    isUIHidden = false;
+    document.getElementById('main-panel').style.display = 'flex';
+    const btn = document.getElementById('btn-toggle-ui');
+    btn.innerText = 'UI非表示';
+    btn.style.background = 'rgba(0, 0, 0, 0.7)';
   }
 
   function resetCheckState() {
@@ -502,6 +558,7 @@
       isRunning = false;
       roadAnchor.visible = false;
       reticle.visible = false;
+      showUI();
     }
   }
 
@@ -761,7 +818,7 @@
     spawnCarAt(spawnX, isNearLane);
   }
 
-  // 難易度（安全時間窓制御）ロジック
+  // 難易度別の安全横断ギャップ制御ロジック
   function updateCars(localPlayerPos) {
     const conf = diffConfigs[difficulty];
     trafficTimer += 0.016;
@@ -769,14 +826,14 @@
     if (!isClearPhase) {
       if (trafficTimer >= conf.trafficDuration) {
         trafficTimer = 0;
-        isClearPhase = true; // 安全な空白時間へ移行
+        isClearPhase = true; // 完全空白時間（安全時間窓）へ移行
       } else {
         if (Math.random() < 0.035 && cars.length < conf.maxCars) {
           spawnCar();
         }
       }
     } else {
-      // 完全空白時間（車をスポーンさせない）
+      // 空白時間中は車を生成しない
       if (trafficTimer >= conf.clearDuration) {
         trafficTimer = 0;
         isClearPhase = false; // 再び交通流へ
@@ -922,7 +979,7 @@
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#ff1744', 900); // 画面全体が真っ赤に発光
+    triggerFlash('#ff1744', 900); // 即座に赤色発光
 
     setTimeout(() => {
       resetCheckState();
@@ -932,8 +989,9 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#00e676', 900); // 画面全体が緑色に発光
+    triggerFlash('#00e676', 900); // 即座に緑色発光
 
+    // 反対側へ横断方向を反転
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
     setTimeout(() => {
