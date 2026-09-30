@@ -182,7 +182,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: auto;
     user-select: none;
     touch-action: none;
     transition: box-shadow 0.2s;
@@ -194,7 +194,6 @@
     box-shadow: inset 0 0 0 4px var(--purple-color);
   }
 
-  /* flex-shrink: 0 で親サイズ縮小時の変形を完全に防止 */
   .stage-wrapper {
     position: relative;
     background-color: #111115;
@@ -228,7 +227,6 @@
     opacity: 0.35 !important;
   }
 
-  /* transition を排除し、ドラッグ追従の遅延・増幅を根絶 */
   .character {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -473,15 +471,16 @@
     color: #fff;
   }
 
+  /* 縦横完全スクロール可能なタイムラインコンテナ */
   .timeline-sync-container {
     background: #13131a;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     max-height: 170px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: auto;
     display: flex;
     user-select: none;
+    position: relative;
   }
   .timeline-labels-col {
     width: 140px;
@@ -491,7 +490,9 @@
     background: #171720;
     display: flex;
     flex-direction: column;
-    z-index: 10;
+    position: sticky;
+    left: 0;
+    z-index: 100;
   }
   .timeline-label-cell {
     height: 28px;
@@ -520,7 +521,6 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     cursor: pointer;
   }
   .ruler-lane {
@@ -637,7 +637,6 @@
     font-size: 11px;
   }
 
-  /* 単一インスペクター構造 */
   .sidebar {
     width: 410px;
     background-color: var(--panel-bg);
@@ -797,6 +796,19 @@
   </div>
 
   <div class="header-group">
+    <label>画面サイズ:
+      <select id="stage-zoom-select" onchange="changeStageZoom(this.value)">
+        <option value="fit" selected>自動フィット</option>
+        <option value="0.5">50%</option>
+        <option value="0.75">75%</option>
+        <option value="1.0">100% (等倍)</option>
+        <option value="1.25">125%</option>
+        <option value="1.5">150%</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="header-group">
     <label>背景:
       <select id="bg-preset-select" onchange="applyBgPreset(this.value)">
         <option value="gym_stage" selected>体育館ステージ</option>
@@ -865,7 +877,6 @@
         </div>
       </div>
 
-      <!-- 保存選択モーダル -->
       <div class="modal-overlay" id="save-choice-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトの保存</div>
@@ -880,7 +891,6 @@
         </div>
       </div>
 
-      <!-- 終了確認モーダル -->
       <div class="modal-overlay" id="close-confirm-modal">
         <div class="modal-box">
           <div style="font-weight:bold; font-size:16px;">プロジェクトを閉じますか？</div>
@@ -927,7 +937,7 @@
         </span>
       </div>
 
-      <!-- 2カラム完全同期タイムライン -->
+      <!-- 縦横スクロール完全同期タイムライン -->
       <div class="timeline-sync-container" id="timeline-sync-wrap">
         <div class="timeline-labels-col" id="timeline-labels-col">
           <div class="timeline-label-cell ruler-header-cell">
@@ -958,7 +968,6 @@
     </div>
   </div>
 
-  <!-- サイドバー（単一インスペクター構造） -->
   <div class="sidebar" id="main-sidebar">
     <div class="chara-selector-section">
       <div class="chara-selector-header">
@@ -975,7 +984,20 @@
 </div>
 
 <script>
-// WebKit/Safari完全対応SVGエンコード関数
+// iOS Safariダブルタップズーム・ピンチズーム完全無効化
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = performance.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
+
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
 function createSafeSvgDataUri(svgString) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString.trim());
 }
@@ -1062,6 +1084,7 @@ let lastTimestamp = null;
 let logicalWidth = 1280;
 let logicalHeight = 720;
 let currentAspectRatio = '16:9';
+let currentStageZoom = 'fit';
 
 let audioCtx = null;
 let activeAudioNodes = [];
@@ -1072,15 +1095,8 @@ let micMeterInterval = null;
 let micAnalyser = null;
 let micDataArray = null;
 
-let activeDrag = {
-  isDragging: false,
-  leaderId: null,
-  offset: { x: 0, y: 0 },
-  groupOffsets: {},
-  currentStagePointer: { x: 0, y: 0 },
-  startRect: null,
-  startScale: 1.0
-};
+// マルチタッチ対応ポインター管理
+let activePointers = new Map();
 
 const defaultSVG = createSafeSvgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="22" fill="#60a5fa"/><path d="M 20 85 C 20 60, 80 60, 80 85 Z" fill="#60a5fa"/></svg>`);
 
@@ -1278,6 +1294,7 @@ function applyBgPreset(preset) {
   } else if (preset === 'none') {
     stageBg.src = '';
     stageBg.style.display = 'none';
+    stageCurtain.src = GYM_STAGE_CURTAIN_SVG;
     stageCurtain.style.display = isCurtainOverlayActive ? 'block' : 'none';
     bgColorGroup.style.display = 'flex';
     bgCustomGroup.style.display = 'none';
@@ -1367,13 +1384,24 @@ function changeAspectRatio(ratio) {
   markUnsaved();
 }
 
-// ステージの縦横変形を防ぐ完全スケール計算
+function changeStageZoom(val) {
+  currentStageZoom = val;
+  updateStageLayout();
+}
+
+// ステージの縦横歪み防止＆自由倍率切り替え
 function updateStageLayout() {
   const outerW = stageOuter.clientWidth - 20;
   const outerH = stageOuter.clientHeight - 20;
   if (outerW <= 0 || outerH <= 0) return;
 
-  const scale = Math.min(outerW / logicalWidth, outerH / logicalHeight);
+  let scale;
+  if (currentStageZoom === 'fit') {
+    scale = Math.min(outerW / logicalWidth, outerH / logicalHeight);
+  } else {
+    scale = parseFloat(currentStageZoom);
+  }
+
   stage.style.width = logicalWidth + 'px';
   stage.style.height = logicalHeight + 'px';
   stage.style.minWidth = logicalWidth + 'px';
@@ -1420,7 +1448,6 @@ function startCountdown(onComplete) {
   nextStep();
 }
 
-// 人物追加
 function addCharacter() {
   const id = 'c_' + Date.now();
   const chara = {
@@ -1459,13 +1486,13 @@ function loadImageObject(chara) {
   chara.imageObj = img;
 }
 
-// ポインター座標の論理スケール変換
-function getPointerLogicalPos(e) {
-  const rect = (activeDrag.isDragging && activeDrag.startRect) ? activeDrag.startRect : stage.getBoundingClientRect();
-  const scale = (activeDrag.isDragging && activeDrag.startScale) ? activeDrag.startScale : (rect.width / logicalWidth);
+// iPad対応：ステージRect基準の精密論理座標変換
+function getPointerLogicalPos(clientX, clientY) {
+  const rect = stage.getBoundingClientRect();
+  const scale = rect.width / logicalWidth;
   return {
-    x: (e.clientX - rect.left) / scale,
-    y: (e.clientY - rect.top) / scale
+    x: (clientX - rect.left) / scale,
+    y: (clientY - rect.top) / scale
   };
 }
 
@@ -1501,46 +1528,41 @@ function createStageElement(chara) {
 
   el.appendChild(imgBox);
 
-  // キャラクター本体を押した時のみドラッグ開始
+  // キャラクター本体を押した時のみドラッグ開始（マルチタッチ対応）
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 || isExporting || isTheaterMode) return;
     e.stopPropagation();
     e.preventDefault();
     getAudioContext();
     selectCharacter(chara.id);
-    startPuppetDrag(chara.id, e);
+    startMultiTouchDrag(chara.id, e);
   });
 
   stage.appendChild(el);
   updateStageElement(chara, currentTime);
 }
 
-// ドラッグ開始（※開始点を自動で◆打刻）
-function startPuppetDrag(leaderId, e) {
-  const leader = characters.find(c => c.id === leaderId);
+// マルチタッチドラッグ開始
+function startMultiTouchDrag(charaId, e) {
+  const leader = characters.find(c => c.id === charaId);
   if (!leader) return;
 
-  const rect = stage.getBoundingClientRect();
-  const scale = rect.width / logicalWidth;
-  activeDrag.startRect = rect;
-  activeDrag.startScale = scale;
-
-  const pos = getPointerLogicalPos(e);
+  const pos = getPointerLogicalPos(e.clientX, e.clientY);
   const leaderPos = getInterpolatedPosition(leader, currentTime);
 
-  activeDrag.isDragging = true;
-  activeDrag.leaderId = leader.id;
-  activeDrag.offset = { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y };
-  activeDrag.currentStagePointer = { x: pos.x, y: pos.y };
+  const touchState = {
+    leaderId: leader.id,
+    offset: { x: leaderPos.x - pos.x, y: leaderPos.y - pos.y },
+    groupOffsets: {}
+  };
 
-  // 開始点をキーフレーム（◆）として自動登録
+  // ドラッグ開始点を自動キーフレーム（◆）打刻
   recordManualKeyframe(leader, currentTime, leaderPos.x, leaderPos.y);
 
-  activeDrag.groupOffsets = {};
   if (leader.group !== 'none') {
     characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
       const mPos = getInterpolatedPosition(member, currentTime);
-      activeDrag.groupOffsets[member.id] = { x: mPos.x - leaderPos.x, y: mPos.y - leaderPos.y };
+      touchState.groupOffsets[member.id] = { x: mPos.x - leaderPos.x, y: mPos.y - leaderPos.y };
       recordManualKeyframe(member, currentTime, mPos.x, mPos.y);
     });
   }
@@ -1550,68 +1572,29 @@ function startPuppetDrag(leaderId, e) {
     leader._dragY = leaderPos.y;
   }
 
+  activePointers.set(e.pointerId, touchState);
+  try { e.target.setPointerCapture(e.pointerId); } catch(err){}
   updateStageElement(leader, currentTime);
 }
 
+// マルチタッチ移動
 window.addEventListener('pointermove', (e) => {
-  if (!activeDrag.isDragging) return;
+  if (!activePointers.has(e.pointerId)) return;
   e.preventDefault();
-  const pos = getPointerLogicalPos(e);
-  activeDrag.currentStagePointer.x = pos.x;
-  activeDrag.currentStagePointer.y = pos.y;
 
-  if (!isRecordingMotion) {
-    applyDirectPointerPosition();
-  }
-}, { passive: false });
-
-function endDragOperation() {
-  if (activeDrag.isDragging) {
-    if (!isRecordingMotion) {
-      commitCurrentDragKeyframe();
-    } else {
-      // 録画中のマウスアップ時：ドラッグ終了点を自動で◆打刻
-      const leader = characters.find(c => c.id === activeDrag.leaderId);
-      if (leader && leader.motion && leader.motion.length > 0) {
-        leader.motion[leader.motion.length - 1].isManual = true;
-      }
-      if (leader && leader.group !== 'none') {
-        characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
-          if (member.motion && member.motion.length > 0) {
-            member.motion[member.motion.length - 1].isManual = true;
-          }
-        });
-      }
-    }
-    activeDrag.isDragging = false;
-    activeDrag.leaderId = null;
-    activeDrag.startRect = null;
-    renderVisualTimeline();
-    renderInspector();
-    markUnsaved();
-  }
-}
-
-window.addEventListener('pointerup', () => endDragOperation());
-window.addEventListener('pointercancel', () => endDragOperation());
-
-function applyDirectPointerPosition() {
-  if (!activeDrag.isDragging) return;
-  const leader = characters.find(c => c.id === activeDrag.leaderId);
+  const touchState = activePointers.get(e.pointerId);
+  const leader = characters.find(c => c.id === touchState.leaderId);
   if (!leader) return;
 
-  const targetX = activeDrag.currentStagePointer.x + activeDrag.offset.x;
-  const targetY = activeDrag.currentStagePointer.y + activeDrag.offset.y;
+  const pos = getPointerLogicalPos(e.clientX, e.clientY);
+  const targetX = pos.x + touchState.offset.x;
+  const targetY = pos.y + touchState.offset.y;
 
   const targets = [{ chara: leader, x: targetX, y: targetY }];
   if (leader.group !== 'none') {
     characters.filter(c => c.group === leader.group && c.id !== leader.id).forEach(member => {
-      const gOffset = activeDrag.groupOffsets[member.id] || { x: 0, y: 0 };
-      targets.push({
-        chara: member,
-        x: targetX + gOffset.x,
-        y: targetY + gOffset.y
-      });
+      const gOffset = touchState.groupOffsets[member.id] || { x: 0, y: 0 };
+      targets.push({ chara: member, x: targetX + gOffset.x, y: targetY + gOffset.y });
     });
   }
 
@@ -1630,7 +1613,49 @@ function applyDirectPointerPosition() {
       el.style.top = y + 'px';
     }
   });
+}, { passive: false });
+
+// マルチタッチ終了
+function endMultiTouchDrag(pointerId) {
+  if (!activePointers.has(pointerId)) return;
+  const touchState = activePointers.get(pointerId);
+  const leader = characters.find(c => c.id === touchState.leaderId);
+
+  if (leader) {
+    const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
+    targets.forEach(c => {
+      let finalX, finalY;
+      if (isRecordingMotion) {
+        const curPos = getInterpolatedPosition(c, currentTime);
+        finalX = curPos.x;
+        finalY = curPos.y;
+        if (c.motion && c.motion.length > 0) {
+          c.motion[c.motion.length - 1].isManual = true; // ドラッグ終了点◆
+        }
+      } else {
+        finalX = c._dragX !== undefined ? c._dragX : getInterpolatedPosition(c, currentTime).x;
+        finalY = c._dragY !== undefined ? c._dragY : getInterpolatedPosition(c, currentTime).y;
+        recordManualKeyframe(c, currentTime, finalX, finalY); // ドラッグ終了点◆
+      }
+
+      if (currentTime === 0 || c.motion.length <= 1) {
+        c.x = finalX;
+        c.y = finalY;
+      }
+      delete c._dragX;
+      delete c._dragY;
+      updateStageElement(c, currentTime);
+    });
+  }
+
+  activePointers.delete(pointerId);
+  renderVisualTimeline();
+  renderInspector();
+  markUnsaved();
 }
+
+window.addEventListener('pointerup', (e) => endMultiTouchDrag(e.pointerId));
+window.addEventListener('pointercancel', (e) => endMultiTouchDrag(e.pointerId));
 
 function recordContinuousMotionPoint(chara, t, x, y) {
   t = Math.round(t * 100) / 100;
@@ -1644,23 +1669,6 @@ function recordContinuousMotionPoint(chara, t, x, y) {
     m[m.length - 1].x = x;
     m[m.length - 1].y = y;
   }
-}
-
-function commitCurrentDragKeyframe() {
-  const leader = characters.find(c => c.id === activeDrag.leaderId);
-  if (!leader) return;
-  const targets = (leader.group !== 'none') ? characters.filter(c => c.group === leader.group) : [leader];
-  targets.forEach(c => {
-    if (c._dragX !== undefined && c._dragY !== undefined) {
-      recordManualKeyframe(c, currentTime, c._dragX, c._dragY);
-      if (currentTime === 0 || c.motion.length <= 1) {
-        c.x = c._dragX;
-        c.y = c._dragY;
-      }
-      delete c._dragX;
-      delete c._dragY;
-    }
-  });
 }
 
 function selectCharacter(id) {
@@ -1725,7 +1733,6 @@ function setCharacterGroup(id, grp) {
   markUnsaved();
 }
 
-// 手動・要点打刻（◆）
 function recordManualKeyframe(chara, t, x, y) {
   t = Math.round(t * 100) / 100;
   x = Math.round(x);
@@ -1855,7 +1862,6 @@ function calculateOpacity(chara, t) {
   return Math.max(0, Math.min(1, op));
 }
 
-// 表示更新（ドラッグ中および録画中は常時完全表示）
 function updateStageElement(chara, t) {
   const el = document.getElementById('stage_' + chara.id);
   if (!el) return;
@@ -1864,10 +1870,14 @@ function updateStageElement(chara, t) {
   const rawOpacity = calculateOpacity(chara, t);
   const inTimeline = (t >= chara.inTime && t <= chara.outTime);
 
-  const isBeingDragged = activeDrag.isDragging && (
-    activeDrag.leaderId === chara.id || 
-    (chara.group !== 'none' && characters.find(c => c.id === activeDrag.leaderId)?.group === chara.group)
-  );
+  // ドラッグ操作中判定
+  let isBeingDragged = false;
+  for (const touchState of activePointers.values()) {
+    if (touchState.leaderId === chara.id || (chara.group !== 'none' && characters.find(c => c.id === touchState.leaderId)?.group === chara.group)) {
+      isBeingDragged = true;
+      break;
+    }
+  }
 
   const activeHl = (chara.highlights || []).find(h => t >= h.start && t <= h.end);
   const scaleMultiplier = activeHl ? (activeHl.scale || 1.3) : 1.0;
@@ -1880,7 +1890,6 @@ function updateStageElement(chara, t) {
   el.style.height = charaSize + 'px';
   el.style.transform = `translate(-50%, -50%) scale(${scaleMultiplier})`;
 
-  // 操作中・録画中の選択人物はZ-Index 150(前面カーテンより手前)＆完全表示
   if (isBeingDragged || (isRecordingMotion && selectedCharaId === chara.id)) {
     el.style.zIndex = 150;
     el.style.opacity = '1.0';
@@ -1973,10 +1982,6 @@ function updateLoop(timestamp) {
       pause();
     }
     syncTimelineUI();
-
-    if (isRecordingMotion && activeDrag.isDragging) {
-      applyDirectPointerPosition();
-    }
   }
 
   characters.forEach(c => updateStageElement(c, currentTime));
@@ -2043,8 +2048,9 @@ function syncTimelineUI() {
   timeText.textContent = txt;
   theaterTimeText.textContent = txt;
 
-  const pct = (currentTime / duration) * 100;
-  timelinePlayhead.style.left = `${pct}%`;
+  const laneWidth = rulerLane.clientWidth || 1200;
+  const pct = (currentTime / duration);
+  timelinePlayhead.style.left = `${pct * laneWidth}px`;
 }
 
 function updateTotalDuration(val) {
@@ -2122,14 +2128,20 @@ function exitTheaterMode() {
   characters.forEach(c => updateStageElement(c, currentTime));
 }
 
+// タイムライン描画（横スクロール対応：1秒あたり40pxで展開）
 function renderVisualTimeline() {
+  const pxPerSec = 40;
+  const laneTotalWidth = Math.max(800, duration * pxPerSec);
+
+  timelineLanesArea.style.width = laneTotalWidth + 'px';
+  rulerLane.style.width = laneTotalWidth + 'px';
   rulerLane.innerHTML = '';
+
   const step = duration <= 15 ? 1 : (duration <= 45 ? 5 : 10);
   for (let t = 0; t <= duration; t += step) {
     const tick = document.createElement('div');
     tick.className = 'ruler-tick';
-    const pct = (t / duration) * 100;
-    tick.style.left = `${pct}%`;
+    tick.style.left = `${(t / duration) * laneTotalWidth}px`;
     tick.textContent = t + 's';
     rulerLane.appendChild(tick);
   }
@@ -2165,6 +2177,7 @@ function renderVisualTimeline() {
     const laneRow = document.createElement('div');
     laneRow.className = 'track-lane-row' + (c.id === selectedCharaId ? ' selected' : '');
     laneRow.id = 'track_lane_row_' + c.id;
+    laneRow.style.width = laneTotalWidth + 'px';
 
     const lifeSpan = document.createElement('div');
     lifeSpan.className = 'lane-span span-life';
@@ -2198,7 +2211,6 @@ function renderVisualTimeline() {
       laneRow.appendChild(mSpan);
     }
 
-    // ひし形は要点（isManual: true）にのみ表示
     m.filter(pt => pt.isManual).forEach(pt => {
       const marker = document.createElement('div');
       marker.className = 'keyframe-marker';
@@ -2256,6 +2268,7 @@ function renderVisualTimeline() {
     const aLaneRow = document.createElement('div');
     aLaneRow.className = 'track-lane-row' + (isAct ? ' audio-active' : '');
     aLaneRow.style.background = '#181822';
+    aLaneRow.style.width = laneTotalWidth + 'px';
     aLaneRow.onclick = (e) => {
       e.stopPropagation();
       activeAudioTrackId = t.id;
@@ -2285,7 +2298,7 @@ function handleTimelineAreaClick(e) {
   seekTo(ratio * duration);
 }
 
-// 動き記録
+// 動き記録（開始点のみ自動打刻）
 function toggleMotionRecord(id) {
   if (!id || isExporting || isTheaterMode) return;
   selectCharacter(id);
@@ -2301,7 +2314,7 @@ function toggleMotionRecord(id) {
         trimMotionAfter(id);
         delete chara._dragX;
         delete chara._dragY;
-        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 録画開始点◆
+        recordManualKeyframe(chara, currentTime, curPos.x, curPos.y); // 開始点◆
       }
       isRecordingMotion = true;
       stageOuter.classList.add('recording-active');
@@ -2634,7 +2647,6 @@ function addDialogue(charaId) {
     end: end
   });
 
-  // 字幕開始・終了点◆
   const curPos = getInterpolatedPosition(chara, cur);
   recordManualKeyframe(chara, cur, curPos.x, curPos.y);
   const endPos = getInterpolatedPosition(chara, end);
@@ -3048,7 +3060,7 @@ async function exportVideo() {
   requestAnimationFrame(renderExportFrame);
 }
 
-// 単一インスペクター描画処理（完全復元）
+// 単一インスペクター描画処理
 function renderInspector() {
   charaPillsContainer.innerHTML = '';
   characters.forEach(c => {
