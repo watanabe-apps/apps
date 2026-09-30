@@ -25,31 +25,51 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       box-sizing: border-box;
-      padding: 16px;
+      padding: 14px;
       z-index: 10;
     }
     .interactive {
       pointer-events: auto;
     }
-    .top-panel {
+
+    /* UI隠蔽トグルボタン（常に最前面） */
+    #btn-toggle-ui {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 50;
+    }
+
+    /* 設定・状態表示パネル */
+    #main-panel {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 120px; /* トグルボタンと被らないようマージン確保 */
       background: rgba(0, 0, 0, 0.85);
-      padding: 10px 16px;
+      padding: 10px 14px;
       border-radius: 8px;
       color: #fff;
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
+      transition: opacity 0.2s, transform 0.2s;
     }
     .setting-group {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 14px;
+      font-size: 13px;
     }
     .setting-group label {
       cursor: pointer;
@@ -58,14 +78,15 @@
       border-radius: 4px;
       border: 1px solid #666;
       background: #222;
+      height: 6px;
     }
     .status-area {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-left: auto;
     }
     .status-badge {
-      font-size: 13px;
+      font-size: 12px;
       padding: 4px 8px;
       border-radius: 4px;
       background: #444;
@@ -74,6 +95,7 @@
     .status-badge.checked {
       background: #2e7d32;
     }
+
     #btn-ar-start {
       position: absolute;
       bottom: 30px;
@@ -106,7 +128,7 @@
       pointer-events: auto;
       min-width: 240px;
       max-width: 80%;
-      z-index: 30;
+      z-index: 60;
     }
     #result-title {
       font-size: 28px;
@@ -137,7 +159,10 @@
 <button id="btn-ar-start" class="interactive">ARを開始する</button>
 
 <div id="ui-overlay">
-  <div class="top-panel interactive">
+  <!-- UI表示/非表示切り替えボタン -->
+  <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
+
+  <div id="main-panel" class="interactive">
     <div class="setting-group">
       <strong>モード:</strong>
       <label><input type="radio" name="mode" value="signal" checked onchange="changeMode(this.value)"> 信号あり</label>
@@ -147,11 +172,18 @@
     <div class="setting-group">
       <strong>サイズ:</strong>
       <input type="range" id="scale-slider" min="0.2" max="1.0" step="0.1" value="1.0" oninput="changeScale(this.value)">
-      <span id="scale-label">1/1 (実寸大)</span>
+      <span id="scale-label">1/1</span>
+    </div>
+
+    <!-- 背景減光（没入感）スライダー -->
+    <div class="setting-group">
+      <strong>背景の暗さ:</strong>
+      <input type="range" id="dim-slider" min="0" max="100" step="5" value="0" oninput="changeBackgroundDim(this.value)">
+      <span id="dim-label">0% (透明)</span>
     </div>
 
     <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:5px 12px; background:#455a64; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">位置再設定</button>
+      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">位置再設定</button>
     </div>
 
     <div class="status-area">
@@ -169,10 +201,11 @@
 
 <script>
   let scene, camera, renderer;
-  let roadAnchor, reticle;
+  let roadAnchor, reticle, dimDome;
   let hitTestSource = null;
   let hitTestSourceRequested = false;
   let isPlaced = false;
+  let isUIHidden = false;
 
   let signalPole, redLampMesh, greenLampMesh;
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
@@ -253,6 +286,18 @@
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
 
+    // 現実のパススルー背景のみを暗く落とす全天球ディマー（最奥に配置）
+    const dimGeo = new THREE.SphereGeometry(200, 32, 16);
+    const dimMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.BackSide,
+      depthWrite: false
+    });
+    dimDome = new THREE.Mesh(dimGeo, dimMat);
+    scene.add(dimDome);
+
     roadAnchor = new THREE.Group();
     roadAnchor.visible = false;
     scene.add(roadAnchor);
@@ -317,7 +362,6 @@
       roadAnchor.visible = false;
 
       session.addEventListener('select', (e) => {
-        // UIタップ時は床面設置を行わない
         if (isPlaced) return;
         if (reticle.visible) {
           anchorRoadToUserFeet();
@@ -336,28 +380,20 @@
     });
   }
 
-  // 自分の足元を手前歩道（ローカルZ = 4.2）として道路を配置
   function anchorRoadToUserFeet() {
-    // 1. レティクルから床面の高さを取得
     const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     const floorY = reticlePos.y;
 
-    // 2. カメラの現在位置（X, Z）を取得
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
 
-    // 3. カメラの水平方向（正面ベクトル）を取得
     const camDir = new THREE.Vector3();
     camera.getWorldDirection(camDir);
     camDir.y = 0;
     camDir.normalize();
 
-    // 4. 道路の向きをカメラの水平正面に合わせる
-    // 道路モデルは -Z 方向が前（対岸側）、+Z 方向が手前歩道側
-    const angle = Math.atan2(camDir.x, camDir.z) + Math.PI; // -Zがカメラ正面になるよう設定
+    const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
-    // 5. 自分の立っている足元がローカル座標 (0, 0, 4.2 * currentScale) になるよう道路中心をオフセット
-    // 道路中心（Z=0）は、ユーザー位置から前方（camDir方向）に 4.2 * currentScale メートル先
     const offsetDist = 4.2 * currentScale;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
@@ -386,9 +422,37 @@
     roadAnchor.scale.set(currentScale, currentScale, currentScale);
 
     const label = document.getElementById('scale-label');
-    if (currentScale >= 0.95) label.innerText = '1/1 (実寸大)';
-    else if (currentScale >= 0.45 && currentScale <= 0.55) label.innerText = '1/2 (室内向け)';
+    if (currentScale >= 0.95) label.innerText = '1/1';
+    else if (currentScale >= 0.45 && currentScale <= 0.55) label.innerText = '1/2';
     else label.innerText = `${currentScale.toFixed(1)}倍`;
+  }
+
+  // 背景の透明度・減光調整（0: 完全に現実が見える 〜 100: 真っ暗）
+  function changeBackgroundDim(val) {
+    const opacity = parseFloat(val) / 100.0;
+    dimDome.material.opacity = opacity;
+
+    const label = document.getElementById('dim-label');
+    if (val == 0) label.innerText = '0% (透明)';
+    else if (val == 100) label.innerText = '100% (真っ暗)';
+    else label.innerText = `${val}%`;
+  }
+
+  // UI表示／非表示のトグル切り替え
+  function toggleUIVisibility() {
+    isUIHidden = !isUIHidden;
+    const panel = document.getElementById('main-panel');
+    const btn = document.getElementById('btn-toggle-ui');
+
+    if (isUIHidden) {
+      panel.style.display = 'none';
+      btn.innerText = 'UI表示';
+      btn.style.background = 'rgba(0, 0, 0, 0.4)';
+    } else {
+      panel.style.display = 'flex';
+      btn.innerText = 'UIを隠す';
+      btn.style.background = 'rgba(0, 0, 0, 0.75)';
+    }
   }
 
   function createPedestrianCanvas(type, isOn) {
@@ -466,7 +530,6 @@
   }
 
   function buildEnvironment() {
-    // 歩道（半透明）
     const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x78909c, transparent: true, opacity: 0.85 });
 
     const sidewalkNear = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
@@ -479,14 +542,12 @@
     sidewalkFar.position.set(0, 0.005, -4.75);
     roadAnchor.add(sidewalkFar);
 
-    // 車道
     const roadMat = new THREE.MeshLambertMaterial({ color: 0x263238, transparent: true, opacity: 0.92 });
     const road = new THREE.Mesh(new THREE.PlaneGeometry(160, 7.0), roadMat);
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0.01, 0);
     roadAnchor.add(road);
 
-    // 中央線
     for (let x = -75; x < 80; x += 8) {
       const line = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.2), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       line.rotation.x = -Math.PI / 2;
@@ -494,7 +555,6 @@
       roadAnchor.add(line);
     }
 
-    // 横断歩道白線
     for (let z = -2.8; z <= 2.8; z += 0.9) {
       const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.45), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       stripe.rotation.x = -Math.PI / 2;
@@ -502,7 +562,6 @@
       roadAnchor.add(stripe);
     }
 
-    // 停止線
     const stopMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const stopLine1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
     stopLine1.rotation.x = -Math.PI / 2;
@@ -794,6 +853,9 @@
   function renderLoop(timestamp, frame) {
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
+
+      // ディマードームを常にカメラに追従させ、視界全体を均一に覆う
+      dimDome.position.copy(camera.position);
 
       if (!hitTestSourceRequested) {
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
