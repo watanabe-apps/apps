@@ -37,51 +37,31 @@
       height: 100%;
       pointer-events: none;
       box-sizing: border-box;
-      padding: 12px;
+      padding: 14px;
       z-index: 10;
     }
     .interactive {
       pointer-events: auto;
     }
-
-    /* 内部診断用HUD */
-    #debug-hud {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(0, 0, 0, 0.85);
-      border: 1px solid #00e676;
-      color: #00e676;
-      font-family: monospace;
-      font-size: 11px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      z-index: 100;
-      pointer-events: none;
-      white-space: pre-line;
-      line-height: 1.4;
-    }
-
     #btn-toggle-ui {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 14px;
+      right: 14px;
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.5);
       color: #fff;
       font-size: 13px;
       font-weight: bold;
-      padding: 6px 14px;
-      border-radius: 16px;
+      padding: 8px 16px;
+      border-radius: 20px;
       cursor: pointer;
       z-index: 50;
     }
-
     #main-panel {
       position: absolute;
-      top: 80px; /* デバッグHUDと被らない配置 */
-      left: 12px;
-      right: 12px;
+      top: 14px;
+      left: 14px;
+      right: 120px;
       background: rgba(0, 0, 0, 0.88);
       padding: 10px 14px;
       border-radius: 8px;
@@ -113,7 +93,6 @@
     input[type="range"] {
       height: 6px;
     }
-
     #btn-start-sim {
       background: #00e676;
       color: #000;
@@ -124,7 +103,6 @@
       cursor: pointer;
       font-size: 14px;
     }
-
     .status-badge {
       font-size: 11px;
       padding: 4px 8px;
@@ -137,7 +115,6 @@
       background: #2e7d32;
       color: #fff;
     }
-
     #btn-ar-start {
       position: absolute;
       bottom: 30px;
@@ -148,12 +125,12 @@
       border: none;
       font-weight: bold;
       font-size: 16px;
-      padding: 14px 32px;
+      padding: 14px 28px;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,230,118,0.4);
+      box-shadow: 0 4px 12px rgba(0,230,118,0.4);
+      display: none;
       z-index: 20;
-      display: block;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -163,11 +140,9 @@
 <div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
-<button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
+<button id="btn-ar-start" class="interactive">ARを開始する</button>
 
 <div id="ui-overlay">
-  <div id="debug-hud">診断待機中...</div>
-
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
 
   <div id="main-panel" class="interactive">
@@ -180,7 +155,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度:</strong>
+      <strong>難易度 (安全の隙間):</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
         <option value="easy">かんたん（空白 8.5秒）</option>
         <option value="normal" selected>ふつう（空白 5.5秒）</option>
@@ -221,8 +196,6 @@
   let roadAnchor, reticle, dimDome;
   let hitTestSource = null;
   let hitTestSourceRequested = false;
-  let lastErrorMsg = "None";
-
   let isPlaced = false;
   let isRunning = false;
   let isUIHidden = false;
@@ -246,6 +219,7 @@
   let roadDepth = 7.0;
   const crosswalkHalfWidth = 2.0;
 
+  // 難易度設定：安全に渡れる空白時間（clearDuration）と交通流時間（trafficDuration）
   const diffConfigs = {
     easy:   { trafficDuration: 6.0, clearDuration: 8.5, spawnProb: 0.020, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
     normal: { trafficDuration: 8.0, clearDuration: 5.5, spawnProb: 0.030, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
@@ -368,19 +342,28 @@
     buildEnvironment();
     createPedestrianSignals();
 
+    checkWebXRSupport();
+
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
+  function checkWebXRSupport() {
+    const btn = document.getElementById('btn-ar-start');
+    if ('xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+        if (supported) {
+          btn.style.display = 'block';
+          btn.onclick = startARSession;
+        }
+      }).catch(() => {});
+    }
+  }
+
   function startARSession() {
     initAudio();
-    if (!navigator.xr) {
-      alert('お使いのブラウザはWebXRに対応していません。');
-      return;
-    }
-
     navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
       optionalFeatures: ['local-floor', 'dom-overlay'],
@@ -409,7 +392,6 @@
         hitTestSource = null;
       });
     }).catch(e => {
-      lastErrorMsg = e.message;
       alert('ARセッション開始エラー: ' + e.message);
     });
   }
@@ -493,44 +475,51 @@
   }
 
   function applySignalHighlight() {
+    if (!poleNear || !poleFar) return;
     const scaleFactor = isSignalHighlighted ? 1.45 : 1.0;
     poleNear.scale.set(scaleFactor, scaleFactor, scaleFactor);
     poleFar.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-    haloNear.visible = isSignalHighlighted;
-    haloFar.visible = isSignalHighlighted;
+    if (haloNear) haloNear.visible = isSignalHighlighted;
+    if (haloFar) haloFar.visible = isSignalHighlighted;
   }
 
   function updateRoadGeometry() {
+    if (!roadMesh) return;
     roadMesh.geometry.dispose();
     roadMesh.geometry = new THREE.PlaneGeometry(160, roadDepth);
 
     const halfDepth = roadDepth * 0.5;
-    sidewalkNear.position.set(0, 0.005, halfDepth + 1.25);
-    sidewalkFar.position.set(0, 0.005, -(halfDepth + 1.25));
+    if (sidewalkNear) sidewalkNear.position.set(0, 0.005, halfDepth + 1.25);
+    if (sidewalkFar) sidewalkFar.position.set(0, 0.005, -(halfDepth + 1.25));
 
     const laneOffset = halfDepth * 0.5;
-    stopLineNear.position.set(3.2, 0.02, laneOffset);
-    stopLineFar.position.set(-3.2, 0.02, -laneOffset);
+    if (stopLineNear) stopLineNear.position.set(3.2, 0.02, laneOffset);
+    if (stopLineFar) stopLineFar.position.set(-3.2, 0.02, -laneOffset);
 
-    while (crosswalkGroup.children.length > 0) {
-      crosswalkGroup.remove(crosswalkGroup.children[0]);
-    }
-    const numStripes = Math.max(3, Math.floor(roadDepth / 0.85));
-    const step = (roadDepth - 0.6) / numStripes;
-    for (let i = 0; i <= numStripes; i++) {
-      const z = -halfDepth + 0.3 + i * step;
-      const stripe = new THREE.Mesh(
-        new THREE.PlaneGeometry(crosswalkHalfWidth * 2.0, 0.42),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
-      );
-      stripe.rotation.x = -Math.PI / 2;
-      stripe.position.set(0, 0.02, z);
-      crosswalkGroup.add(stripe);
+    if (crosswalkGroup) {
+      while (crosswalkGroup.children.length > 0) {
+        crosswalkGroup.remove(crosswalkGroup.children[0]);
+      }
+      const numStripes = Math.max(3, Math.floor(roadDepth / 0.85));
+      const step = (roadDepth - 0.6) / numStripes;
+      for (let i = 0; i <= numStripes; i++) {
+        const z = -halfDepth + 0.3 + i * step;
+        const stripe = new THREE.Mesh(
+          new THREE.PlaneGeometry(crosswalkHalfWidth * 2.0, 0.42),
+          new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(0, 0.02, z);
+        crosswalkGroup.add(stripe);
+      }
     }
 
-    poleFar.position.set(2.6, 0, -(halfDepth + 0.9));
-    poleNear.position.set(-2.6, 0, halfDepth + 0.9);
+    // 信号機オブジェクトが初期化されている場合のみ位置更新
+    if (poleFar && poleNear) {
+      poleFar.position.set(2.6, 0, -(halfDepth + 0.9));
+      poleNear.position.set(-2.6, 0, halfDepth + 0.9);
+    }
   }
 
   function changeBackgroundDim(val) {
@@ -920,6 +909,7 @@
         }
       }
 
+      // 車道横断中の危険接近：衝突させず直前停車＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -965,7 +955,7 @@
 
     updateSignalLamps();
 
-    if (isSignalHighlighted) {
+    if (isSignalHighlighted && haloNear && haloFar) {
       const pulse = 1.0 + Math.sin(signalTimer * 8.0) * 0.18;
       haloNear.scale.set(pulse, pulse, 1.0);
       haloFar.scale.set(pulse, pulse, 1.0);
@@ -973,6 +963,7 @@
   }
 
   function updateSignalLamps() {
+    if (!redLampNear || !greenLampNear) return;
     const redMap = isGreenLight ? redTexOff : redTexOn;
     let greenMap = greenTexOff;
 
@@ -1015,8 +1006,6 @@
   }
 
   function renderLoop(timestamp, frame) {
-    let hitsCount = 0;
-
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
       dimDome.position.copy(camera.position);
@@ -1025,45 +1014,23 @@
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
           session.requestHitTestSource({ space: referenceSpace }).then((source) => {
             hitTestSource = source;
-          }).catch(err => {
-            lastErrorMsg = "ReqHitSrc: " + err.message;
           });
-        }).catch(err => {
-          lastErrorMsg = "ReqRefViewer: " + err.message;
         });
         hitTestSourceRequested = true;
       }
 
-      if (hitTestSource && !isPlaced && frame) {
+      if (hitTestSource && !isPlaced) {
         const referenceSpace = renderer.xr.getReferenceSpace();
-        if (referenceSpace) {
-          const hitTestResults = frame.getHitTestResults(hitTestSource);
-          hitsCount = hitTestResults.length;
+        const hitTestResults = frame.getHitTestResults(hitTestSource);
 
-          if (hitsCount > 0) {
-            const hit = hitTestResults[0];
-            const pose = hit.getPose(referenceSpace);
-            if (pose) {
-              reticle.visible = true;
-              reticle.matrix.fromArray(pose.transform.matrix);
-            }
-          } else {
-            reticle.visible = false;
-          }
+        if (hitTestResults.length > 0) {
+          const hit = hitTestResults[0];
+          const pose = hit.getPose(referenceSpace);
+          reticle.visible = true;
+          reticle.matrix.fromArray(pose.transform.matrix);
+        } else {
+          reticle.visible = false;
         }
-      }
-
-      // HUD更新
-      const refSpace = renderer.xr.getReferenceSpace();
-      const hud = document.getElementById('debug-hud');
-      if (hud) {
-        hud.innerText = 
-          `[AR State]\n` +
-          `Source: ${hitTestSource ? 'OK' : 'null'}\n` +
-          `Space:  ${refSpace ? 'OK' : 'null'}\n` +
-          `Hits:   ${hitsCount}\n` +
-          `Vis:    ${reticle.visible}\n` +
-          `Err:    ${lastErrorMsg}`;
       }
 
       if (isPlaced && isRunning) {
@@ -1085,7 +1052,6 @@
         }
 
         const halfDepth = roadDepth * 0.5;
-
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
