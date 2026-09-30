@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>横断歩道 ARシミュレーター (WebXR 6DoF)</title>
+  <title>横断歩道 ARシミュレーター</title>
   <style>
     body {
       margin: 0;
@@ -37,12 +37,12 @@
     }
     .top-panel {
       background: rgba(0, 0, 0, 0.85);
-      padding: 12px 18px;
+      padding: 10px 16px;
       border-radius: 8px;
       color: #fff;
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
     .setting-group {
@@ -73,21 +73,6 @@
     }
     .status-badge.checked {
       background: #2e7d32;
-    }
-    #guide-banner {
-      position: absolute;
-      top: 85px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: #ffeb3b;
-      padding: 10px 22px;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: bold;
-      border: 1px solid #ffeb3b;
-      text-align: center;
-      pointer-events: none;
     }
     #btn-ar-start {
       position: absolute;
@@ -160,13 +145,13 @@
     </div>
 
     <div class="setting-group">
-      <strong>サイズ比率:</strong>
+      <strong>サイズ:</strong>
       <input type="range" id="scale-slider" min="0.2" max="1.0" step="0.1" value="1.0" oninput="changeScale(this.value)">
-      <span id="scale-label">1/1 (実寸大: 歩道含め幅約11m)</span>
+      <span id="scale-label">1/1 (実寸大)</span>
     </div>
 
     <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:5px 12px; background:#455a64; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">位置を再設定</button>
+      <button onclick="repositionRoad()" style="padding:5px 12px; background:#455a64; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">位置再設定</button>
     </div>
 
     <div class="status-area">
@@ -174,8 +159,6 @@
       <span id="badge-right" class="status-badge">右未確認</span>
     </div>
   </div>
-
-  <div id="guide-banner">床を映して、リングが表示されたらタップして道路を設置</div>
 </div>
 
 <div id="result-modal">
@@ -270,7 +253,6 @@
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
 
-    // 現実の床面にアンカー固定される3D道路グループ
     roadAnchor = new THREE.Group();
     roadAnchor.visible = false;
     scene.add(roadAnchor);
@@ -282,7 +264,6 @@
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // 床面検出用レティクル（リング）
     const reticleGeo = new THREE.RingGeometry(0.18, 0.22, 32).rotateX(-Math.PI / 2);
     const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
     reticle = new THREE.Mesh(reticleGeo, reticleMat);
@@ -317,14 +298,8 @@
         if (supported) {
           btn.style.display = 'block';
           btn.onclick = startARSession;
-        } else {
-          document.getElementById('guide-banner').innerText = 'お使いの環境はWebXR(AR)に非対応です (Meta Quest Browser / Android Chrome推奨)';
         }
-      }).catch(() => {
-        document.getElementById('guide-banner').innerText = 'WebXRの確認に失敗しました (HTTPS接続が必要です)';
-      });
-    } else {
-      document.getElementById('guide-banner').innerText = 'WebXR APIが利用できません (HTTPS環境が必要です)';
+      }).catch(() => {});
     }
   }
 
@@ -340,42 +315,60 @@
 
       isPlaced = false;
       roadAnchor.visible = false;
-      document.getElementById('guide-banner').style.display = 'block';
-      document.getElementById('guide-banner').innerText = '床を映して、緑のリングが出たら画面をタップ';
 
-      session.addEventListener('select', () => {
-        if (!isPlaced && reticle.visible) {
-          anchorRoadToFloor();
+      session.addEventListener('select', (e) => {
+        // UIタップ時は床面設置を行わない
+        if (isPlaced) return;
+        if (reticle.visible) {
+          anchorRoadToUserFeet();
         }
       });
 
       session.addEventListener('end', () => {
         document.getElementById('btn-ar-start').style.display = 'block';
-        document.getElementById('guide-banner').style.display = 'none';
         isPlaced = false;
         roadAnchor.visible = false;
         hitTestSourceRequested = false;
         hitTestSource = null;
       });
     }).catch(e => {
-      alert('ARセッションの開始に失敗しました: ' + e.message);
+      alert('ARセッション開始エラー: ' + e.message);
     });
   }
 
-  // 現実の床に道路をアンカー固定
-  function anchorRoadToFloor() {
-    roadAnchor.position.setFromMatrixPosition(reticle.matrix);
+  // 自分の足元を手前歩道（ローカルZ = 4.2）として道路を配置
+  function anchorRoadToUserFeet() {
+    // 1. レティクルから床面の高さを取得
+    const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+    const floorY = reticlePos.y;
 
-    // カメラの現在の水平方向と正対するように回転を固定
+    // 2. カメラの現在位置（X, Z）を取得
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
-    const angle = Math.atan2(camPos.x - roadAnchor.position.x, camPos.z - roadAnchor.position.z);
-    roadAnchor.rotation.y = angle;
+
+    // 3. カメラの水平方向（正面ベクトル）を取得
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
+    camDir.y = 0;
+    camDir.normalize();
+
+    // 4. 道路の向きをカメラの水平正面に合わせる
+    // 道路モデルは -Z 方向が前（対岸側）、+Z 方向が手前歩道側
+    const angle = Math.atan2(camDir.x, camDir.z) + Math.PI; // -Zがカメラ正面になるよう設定
+    roadAnchor.rotation.set(0, angle, 0);
+
+    // 5. 自分の立っている足元がローカル座標 (0, 0, 4.2 * currentScale) になるよう道路中心をオフセット
+    // 道路中心（Z=0）は、ユーザー位置から前方（camDir方向）に 4.2 * currentScale メートル先
+    const offsetDist = 4.2 * currentScale;
+    roadAnchor.position.set(
+      camPos.x + camDir.x * offsetDist,
+      floorY,
+      camPos.z + camDir.z * offsetDist
+    );
 
     roadAnchor.visible = true;
     isPlaced = true;
     reticle.visible = false;
 
-    document.getElementById('guide-banner').innerText = '左右を確認して、自分の足で前へ歩いて渡ってください';
     resetGame();
   }
 
@@ -384,8 +377,6 @@
       isPlaced = false;
       roadAnchor.visible = false;
       reticle.visible = false;
-      document.getElementById('guide-banner').style.display = 'block';
-      document.getElementById('guide-banner').innerText = '床を映して、緑のリングが出たら画面をタップ';
       document.getElementById('result-modal').style.display = 'none';
     }
   }
@@ -395,8 +386,8 @@
     roadAnchor.scale.set(currentScale, currentScale, currentScale);
 
     const label = document.getElementById('scale-label');
-    if (currentScale >= 0.95) label.innerText = '1/1 (実寸大: 歩道含め幅約11m)';
-    else if (currentScale >= 0.45 && currentScale <= 0.55) label.innerText = '1/2 (室内向け: 幅約5.5m)';
+    if (currentScale >= 0.95) label.innerText = '1/1 (実寸大)';
+    else if (currentScale >= 0.45 && currentScale <= 0.55) label.innerText = '1/2 (室内向け)';
     else label.innerText = `${currentScale.toFixed(1)}倍`;
   }
 
@@ -474,9 +465,8 @@
     greenTexOff = createPedestrianCanvas('green', false);
   }
 
-  // 実寸大基準：車道幅7.0m（片側3.5m）、手前歩道Z=+3.5〜+5.5、奥歩道Z=-3.5〜-5.5
   function buildEnvironment() {
-    // 歩道（現実の床が見えるよう半透明）
+    // 歩道（半透明）
     const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x78909c, transparent: true, opacity: 0.85 });
 
     const sidewalkNear = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
@@ -504,7 +494,7 @@
       roadAnchor.add(line);
     }
 
-    // 横断歩道白線（幅4.0m）
+    // 横断歩道白線
     for (let z = -2.8; z <= 2.8; z += 0.9) {
       const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.45), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       stripe.rotation.x = -Math.PI / 2;
@@ -562,7 +552,6 @@
     greenLampMesh.position.set(0, 2.05, 0.135);
     signalPole.add(greenLampMesh);
 
-    // 対岸歩道側 (Z = -4.2)
     signalPole.position.set(2.5, 0, -4.2);
     roadAnchor.add(signalPole);
   }
@@ -724,7 +713,6 @@
         continue;
       }
 
-      // 物理的に車道に進入している場合の接近・接触判定
       if (isCrossing && !isFinished) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -807,7 +795,6 @@
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
 
-      // --- 1. 床面ヒットテスト ---
       if (!hitTestSourceRequested) {
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
           session.requestHitTestSource({ space: referenceSpace }).then((source) => {
@@ -831,33 +818,28 @@
         }
       }
 
-      // --- 2. 実空間での首振り＆歩行移動の処理 ---
       if (isPlaced && !isFinished) {
         updateSignal();
 
-        // プレイヤー（カメラ）の実空間ワールド座標を道路のローカル座標へ逆変換
         const camWorldPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
         const localPlayerPos = roadAnchor.worldToLocal(camWorldPos.clone());
 
-        // 視線方向の判定（道路のX軸＝左右方向に対する首振りの角度）
         const camDir = new THREE.Vector3();
         camera.getWorldDirection(camDir);
-        // 道路から見た視線の向きベクトル
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
         
-        // 道路の横断方向（-Zが前、-Xが左、+Xが右）
+        // 道路のX軸に対する首振り判定（左: -X, 右: +X）
         if (localDir.x < -0.55) setChecked('left');
         else if (localDir.x > 0.55) setChecked('right');
 
-        // 実空間で前へ歩き、車道（local Z < 3.5）に足を踏み入れた瞬間に横断中と判定
+        // 車道（Z < 3.5）進入判定
         if (localPlayerPos.z < 3.5 && !isCrossing) {
           isCrossing = true;
         }
 
-        // 車の移動と接触判定
         updateCars(localPlayerPos);
 
-        // 対岸の歩道（local Z <= -3.5）まで実際に歩ききった場合の成否判定
+        // 対岸（Z <= -3.5）到達判定
         if (localPlayerPos.z <= -3.5 && isCrossing) {
           if (currentMode === 'signal' && !isGreenLight) {
             endGame(false, 'あか信号です');
