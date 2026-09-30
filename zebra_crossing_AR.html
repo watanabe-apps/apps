@@ -33,6 +33,19 @@
       pointer-events: auto;
     }
 
+    /* 視覚フィードバック用カラーフラッシュ（全画面） */
+    #screen-flash {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
+    }
+
     #btn-toggle-ui {
       position: absolute;
       top: 14px;
@@ -42,7 +55,7 @@
       color: #fff;
       font-size: 13px;
       font-weight: bold;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
       cursor: pointer;
       z-index: 50;
@@ -90,55 +103,42 @@
       color: #000;
       border: none;
       font-weight: bold;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
     }
 
-    /* 左右確認インジケーター（UI非表示時でも画面上部に控えめに常時表示） */
+    /* 左右確認状態の最小インジケーター（アイコン表示） */
     #status-bar {
       position: absolute;
-      top: 14px;
-      left: 14px;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      gap: 8px;
+      gap: 16px;
       pointer-events: none;
       z-index: 20;
     }
-    .status-badge {
-      font-size: 12px;
-      padding: 5px 10px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #aaa;
-      border: 1px solid #555;
+    .status-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
       font-weight: bold;
+      font-size: 16px;
       transition: all 0.2s;
     }
-    .status-badge.checked {
-      background: rgba(46, 125, 50, 0.9);
-      color: #fff;
-      border-color: #00e676;
-    }
-
-    /* 渡りきり／警告トースト通知（画面を止めず一時表示） */
-    #toast-msg {
-      position: absolute;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      color: #fff;
-      padding: 12px 28px;
-      border-radius: 30px;
-      font-size: 20px;
-      font-weight: bold;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-      display: none;
-      z-index: 60;
-      pointer-events: none;
-      text-align: center;
+    .status-dot.checked {
+      background: #00e676;
+      border-color: #fff;
+      color: #000;
+      box-shadow: 0 0 12px #00e676;
     }
 
     #btn-ar-start {
@@ -163,6 +163,7 @@
 </head>
 <body>
 
+<div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
 <button id="btn-ar-start" class="interactive">ARを開始する</button>
@@ -171,8 +172,8 @@
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
 
   <div id="status-bar">
-    <span id="badge-left" class="status-badge">左：未確認</span>
-    <span id="badge-right" class="status-badge">右：未確認</span>
+    <div id="dot-left" class="status-dot">◀</div>
+    <div id="dot-right" class="status-dot">▶</div>
   </div>
 
   <div id="main-panel" class="interactive">
@@ -193,10 +194,11 @@
       </select>
     </div>
 
+    <!-- 信号や車を小さくせず、横断する距離（部屋の広さ）だけを可変にするスライダー -->
     <div class="setting-group">
-      <strong>サイズ:</strong>
-      <input type="range" id="scale-slider" min="0.2" max="1.0" step="0.1" value="1.0" oninput="changeScale(this.value)">
-      <span id="scale-label">1/1</span>
+      <strong>横断の広さ:</strong>
+      <input type="range" id="depth-slider" min="2.5" max="7.0" step="0.5" value="7.0" oninput="changeRoadDepth(this.value)">
+      <span id="depth-label">7.0m (実寸大)</span>
     </div>
 
     <div class="setting-group">
@@ -209,8 +211,6 @@
       <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
     </div>
   </div>
-
-  <div id="toast-msg"></div>
 </div>
 
 <script>
@@ -222,12 +222,16 @@
   let isRunning = false;
   let isUIHidden = false;
 
-  // 往復横断の状態管理 ('near': Z>0の手前歩道から奥へ, 'far': Z<0の奥歩道から手前へ)
-  let currentSide = 'near';
+  // 往復状態管理
+  let currentSide = 'near'; // 'near': 手前歩道から奥へ, 'far': 奥歩道から手前へ
   let isCrossing = false;
   let isCooldown = false;
 
-  // 信号機（手前用と対岸用の2本）
+  // 道路・環境メッシュ
+  let roadMesh, sidewalkNear, sidewalkFar, stopLineNear, stopLineFar;
+  let centerLineGroup, crosswalkGroup;
+
+  // 信号機（実寸大固定）
   let poleNear, poleFar;
   let redLampNear, greenLampNear, redLampFar, greenLampFar;
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
@@ -235,13 +239,12 @@
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
-  let currentScale = 1.0;
+  let roadDepth = 7.0; // 車道幅（奥行き）: 2.5m 〜 7.0m
 
-  // 難易度別パラメータ
   const diffConfigs = {
-    easy:   { rushDuration: 5, gapDuration: 8.0, spawnProb: 0.015, maxCars: 3, baseSpeedMin: 0.14, baseSpeedMax: 0.18, greenDur: 22, redDur: 10 },
-    normal: { rushDuration: 7, gapDuration: 6.5, spawnProb: 0.025, maxCars: 5, baseSpeedMin: 0.18, baseSpeedMax: 0.24, greenDur: 18, redDur: 12 },
-    hard:   { rushDuration: 8, gapDuration: 5.0, spawnProb: 0.035, maxCars: 6, baseSpeedMin: 0.22, baseSpeedMax: 0.28, greenDur: 14, redDur: 14 }
+    easy:   { rushDuration: 5, gapDuration: 8.0, spawnProb: 0.015, maxCars: 3, speedMin: 0.15, speedMax: 0.20, greenDur: 20, redDur: 10 },
+    normal: { rushDuration: 7, gapDuration: 6.5, spawnProb: 0.024, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
+    hard:   { rushDuration: 8, gapDuration: 5.0, spawnProb: 0.034, maxCars: 6, speedMin: 0.25, speedMax: 0.32, greenDur: 14, redDur: 14 }
   };
 
   const blinkDuration = 4;
@@ -250,12 +253,12 @@
   let checkedRight = false;
   let wasHonked = false;
 
-  // 初期状態は「赤信号」から開始
+  // 初期赤信号
   let signalTimer = 0;
   let isGreenLight = false;
   let isBlinking = false;
+  let prevGreenState = false;
 
-  let toastTimer = null;
   let audioCtx = null;
 
   function initAudio() {
@@ -286,8 +289,8 @@
     filter.frequency.setValueAtTime(1200, now);
 
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.04);
-    gain.gain.setValueAtTime(0.2, now + 0.38);
+    gain.gain.linearRampToValueAtTime(0.22, now + 0.04);
+    gain.gain.setValueAtTime(0.22, now + 0.38);
     gain.gain.linearRampToValueAtTime(0, now + 0.48);
 
     osc1.connect(filter);
@@ -299,6 +302,16 @@
     osc2.start(now);
     osc1.stop(now + 0.48);
     osc2.stop(now + 0.48);
+  }
+
+  // 画面全体のカラーフラッシュ演出
+  function flashScreen(colorHex, duration = 600) {
+    const el = document.getElementById('screen-flash');
+    el.style.backgroundColor = colorHex;
+    el.style.opacity = '0.55';
+    setTimeout(() => {
+      el.style.opacity = '0';
+    }, duration);
   }
 
   init();
@@ -339,10 +352,10 @@
     reticle.visible = false;
     scene.add(reticle);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
     dirLight.position.set(10, 20, 10);
     dirLight.castShadow = true;
     scene.add(dirLight);
@@ -405,6 +418,7 @@
     });
   }
 
+  // 設置時、現在の足元を手前歩道の先端位置に合わせる
   function anchorRoadToUserFeet() {
     const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     const floorY = reticlePos.y;
@@ -418,7 +432,8 @@
     const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
-    const offsetDist = 4.2 * currentScale;
+    // 手前歩道端（Z = roadDepth * 0.5 + 0.8）が現在足元になるよう配置
+    const offsetDist = roadDepth * 0.5 + 0.8;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
       floorY,
@@ -436,10 +451,8 @@
   function startSimulation() {
     initAudio();
     isRunning = true;
-    // スタート時に自動で設定パネルを非表示
     hideUI();
     resetSignalCycle();
-    showToast('信号が青になるのを待ってください', '#ffeb3b', 2500);
   }
 
   function repositionRoad() {
@@ -464,14 +477,52 @@
     resetCheckState();
   }
 
-  function changeScale(val) {
-    currentScale = parseFloat(val);
-    roadAnchor.scale.set(currentScale, currentScale, currentScale);
+  // 信号や車を縮小せず、道路の奥行き（歩行距離）のみを動的に変形
+  function changeRoadDepth(val) {
+    roadDepth = parseFloat(val);
+    const label = document.getElementById('depth-label');
+    if (roadDepth >= 6.8) label.innerText = '7.0m (実寸大)';
+    else if (roadDepth <= 3.0) label.innerText = `${roadDepth.toFixed(1)}m (省スペース)`;
+    else label.innerText = `${roadDepth.toFixed(1)}m`;
 
-    const label = document.getElementById('scale-label');
-    if (currentScale >= 0.95) label.innerText = '1/1';
-    else if (currentScale >= 0.45 && currentScale <= 0.55) label.innerText = '1/2';
-    else label.innerText = `${currentScale.toFixed(1)}倍`;
+    updateRoadGeometry();
+  }
+
+  function updateRoadGeometry() {
+    // 車道メッシュの奥行きを更新
+    roadMesh.geometry.dispose();
+    roadMesh.geometry = new THREE.PlaneGeometry(160, roadDepth);
+
+    // 歩道位置の再調整
+    const halfDepth = roadDepth * 0.5;
+    sidewalkNear.position.set(0, 0.005, halfDepth + 1.25);
+    sidewalkFar.position.set(0, 0.005, -(halfDepth + 1.25));
+
+    // 停止線位置の更新
+    const laneOffset = halfDepth * 0.5;
+    stopLineNear.position.set(3.2, 0.02, laneOffset);
+    stopLineFar.position.set(-3.2, 0.02, -laneOffset);
+
+    // 横断歩道白線の再生成
+    while (crosswalkGroup.children.length > 0) {
+      crosswalkGroup.remove(crosswalkGroup.children[0]);
+    }
+    const numStripes = Math.max(3, Math.floor(roadDepth / 0.85));
+    const step = (roadDepth - 0.6) / numStripes;
+    for (let i = 0; i <= numStripes; i++) {
+      const z = -halfDepth + 0.3 + i * step;
+      const stripe = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.8, 0.42),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      stripe.rotation.x = -Math.PI / 2;
+      stripe.position.set(0, 0.02, z);
+      crosswalkGroup.add(stripe);
+    }
+
+    // 信号機（等身大固定）のZ位置のみ再配置
+    poleFar.position.set(2.5, 0, -(halfDepth + 0.9));
+    poleNear.position.set(-2.5, 0, halfDepth + 0.9);
   }
 
   function changeBackgroundDim(val) {
@@ -500,37 +551,21 @@
     btn.style.background = 'rgba(0, 0, 0, 0.75)';
   }
 
-  function showToast(text, color, duration = 3000) {
-    const toast = document.getElementById('toast-msg');
-    toast.innerText = text;
-    toast.style.color = color;
-    toast.style.borderColor = color;
-    toast.style.display = 'block';
-
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.style.display = 'none';
-    }, duration);
-  }
-
   function resetCheckState() {
     checkedLeft = false;
     checkedRight = false;
     isCrossing = false;
     wasHonked = false;
 
-    const bL = document.getElementById('badge-left');
-    const bR = document.getElementById('badge-right');
-    bL.className = 'status-badge';
-    bL.innerText = '左：未確認';
-    bR.className = 'status-badge';
-    bR.innerText = '右：未確認';
+    document.getElementById('dot-left').className = 'status-dot';
+    document.getElementById('dot-right').className = 'status-dot';
   }
 
   function resetSignalCycle() {
     signalTimer = 0;
     isGreenLight = false;
     isBlinking = false;
+    prevGreenState = false;
     updateSignalLamps();
   }
 
@@ -611,51 +646,49 @@
   function buildEnvironment() {
     const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x78909c, transparent: true, opacity: 0.85 });
 
-    const sidewalkNear = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
+    sidewalkNear = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
     sidewalkNear.rotation.x = -Math.PI / 2;
-    sidewalkNear.position.set(0, 0.005, 4.75);
     roadAnchor.add(sidewalkNear);
 
-    const sidewalkFar = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
+    sidewalkFar = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.5), sidewalkMat);
     sidewalkFar.rotation.x = -Math.PI / 2;
-    sidewalkFar.position.set(0, 0.005, -4.75);
     roadAnchor.add(sidewalkFar);
 
     const roadMat = new THREE.MeshLambertMaterial({ color: 0x263238, transparent: true, opacity: 0.92 });
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(160, 7.0), roadMat);
-    road.rotation.x = -Math.PI / 2;
-    road.position.set(0, 0.01, 0);
-    roadAnchor.add(road);
+    roadMesh = new THREE.Mesh(new THREE.PlaneGeometry(160, roadDepth), roadMat);
+    roadMesh.rotation.x = -Math.PI / 2;
+    roadMesh.position.set(0, 0.01, 0);
+    roadAnchor.add(roadMesh);
 
+    // 中央白線
+    centerLineGroup = new THREE.Group();
     for (let x = -75; x < 80; x += 8) {
       const line = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.2), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       line.rotation.x = -Math.PI / 2;
       line.position.set(x, 0.015, 0);
-      roadAnchor.add(line);
+      centerLineGroup.add(line);
     }
+    roadAnchor.add(centerLineGroup);
 
-    for (let z = -2.8; z <= 2.8; z += 0.9) {
-      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.45), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      stripe.rotation.x = -Math.PI / 2;
-      stripe.position.set(0, 0.02, z);
-      roadAnchor.add(stripe);
-    }
+    crosswalkGroup = new THREE.Group();
+    roadAnchor.add(crosswalkGroup);
 
     const stopMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const stopLine1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
-    stopLine1.rotation.x = -Math.PI / 2;
-    stopLine1.position.set(3.2, 0.02, 1.75);
-    roadAnchor.add(stopLine1);
+    stopLineNear = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
+    stopLineNear.rotation.x = -Math.PI / 2;
+    roadAnchor.add(stopLineNear);
 
-    const stopLine2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
-    stopLine2.rotation.x = -Math.PI / 2;
-    stopLine2.position.set(-3.2, 0.02, -1.75);
-    roadAnchor.add(stopLine2);
+    stopLineFar = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
+    stopLineFar.rotation.x = -Math.PI / 2;
+    roadAnchor.add(stopLineFar);
+
+    updateRoadGeometry();
   }
 
   function createSignalUnit(facingAngle) {
     const group = new THREE.Group();
 
+    // 等身大スケール（高さ3.2mの支柱）
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.08, 3.2),
       new THREE.MeshLambertMaterial({ color: 0x546e7a })
@@ -697,70 +730,62 @@
     return { group, redLamp, greenLamp };
   }
 
-  // 手前歩道・奥歩道の両方に信号機を設置
   function createPedestrianSignals() {
-    // 奥歩道側の信号機（手前側から見る：facingAngle = 0）
     const farUnit = createSignalUnit(0);
-    farUnit.group.position.set(2.5, 0, -4.2);
-    roadAnchor.add(farUnit.group);
     poleFar = farUnit.group;
     redLampFar = farUnit.redLamp;
     greenLampFar = farUnit.greenLamp;
+    roadAnchor.add(poleFar);
 
-    // 手前歩道側の信号機（奥側から振り返って見る：facingAngle = Math.PI）
     const nearUnit = createSignalUnit(Math.PI);
-    nearUnit.group.position.set(-2.5, 0, 4.2);
-    roadAnchor.add(nearUnit.group);
     poleNear = nearUnit.group;
     redLampNear = nearUnit.redLamp;
     greenLampNear = nearUnit.greenLamp;
+    roadAnchor.add(poleNear);
+
+    updateRoadGeometry();
   }
 
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
-      const b = document.getElementById('badge-left');
-      b.className = 'status-badge checked';
-      b.innerText = '左：確認済 ✓';
+      document.getElementById('dot-left').className = 'status-dot checked';
     } else if (side === 'right' && !checkedRight) {
       checkedRight = true;
-      const b = document.getElementById('badge-right');
-      b.className = 'status-badge checked';
-      b.innerText = '右：確認済 ✓';
+      document.getElementById('dot-right').className = 'status-dot checked';
     }
   }
 
+  // 実寸大スケール（全長4.0m、全幅1.68m、全高1.4m）の迫力ある車両
   function createCarMesh(direction) {
     const carGroup = new THREE.Group();
     const colors = [0xd32f2f, 0x1976d2, 0xfbc02d, 0x388e3c, 0xf5f5f5, 0x333333];
     const color = colors[Math.floor(Math.random() * colors.length)];
 
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(4.2, 0.9, 1.7),
+      new THREE.BoxGeometry(4.0, 0.88, 1.68),
       new THREE.MeshLambertMaterial({ color })
     );
-    body.position.y = 0.55;
+    body.position.y = 0.54;
     carGroup.add(body);
 
     const roof = new THREE.Mesh(
-      new THREE.BoxGeometry(2.3, 0.65, 1.5),
+      new THREE.BoxGeometry(2.2, 0.64, 1.48),
       new THREE.MeshLambertMaterial({ color: 0x222222 })
     );
-    roof.position.set(-0.25 * direction, 1.25, 0);
+    roof.position.set(-0.24 * direction, 1.22, 0);
     carGroup.add(roof);
     return carGroup;
   }
 
   function spawnCarAt(xPos, isNearLane) {
     const direction = isNearLane ? -1 : 1;
-    const zPos = isNearLane ? 1.75 : -1.75;
-    const conf = diffConfigs[difficulty];
+    // 車道の現在幅（奥行き）に応じたレーン位置
+    const laneOffset = (roadDepth * 0.5) * 0.5;
+    const zPos = isNearLane ? laneOffset : -laneOffset;
 
-    // スケール縮小時の速度補正:
-    // スケールSが小さくなっても見た目の速さを保つため、1 / Math.sqrt(currentScale) を乗算してブースト
-    const speedBoost = 1.0 / Math.sqrt(Math.max(0.2, currentScale));
-    const rawSpeed = conf.baseSpeedMin + Math.random() * (conf.baseSpeedMax - conf.baseSpeedMin);
-    const baseSpeed = rawSpeed * speedBoost;
+    const conf = diffConfigs[difficulty];
+    const baseSpeed = conf.speedMin + Math.random() * (conf.speedMax - conf.speedMin);
 
     const carGroup = createCarMesh(direction);
     carGroup.position.set(xPos, 0, zPos);
@@ -772,7 +797,8 @@
       direction: direction,
       baseSpeed: baseSpeed,
       currentSpeed: baseSpeed,
-      hasHonked: false
+      hasHonked: false,
+      isEmergencyStopped: false
     });
   }
 
@@ -809,6 +835,7 @@
       const car = cars[i];
       let targetSpeed = car.baseSpeed;
 
+      // 信号停止処理
       if (carMustStopForSignal) {
         if (car.isNearLane) {
           const stopTargetX = 5.4;
@@ -839,6 +866,7 @@
         }
       }
 
+      // 車間距離維持
       for (let j = 0; j < cars.length; j++) {
         if (i === j) continue;
         const other = cars[j];
@@ -867,7 +895,29 @@
         }
       }
 
-      car.currentSpeed += (targetSpeed - car.currentSpeed) * 0.12;
+      // --- 教育的配慮：衝突ではなく、直前での急停車＆クラクション ---
+      if (isCrossing && !isCooldown) {
+        const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
+        const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
+
+        // 自車の進行方向にプレイヤーがいて近づいている場合
+        const isHeadingToPlayer = (car.direction === -1 && car.mesh.position.x > localPlayerPos.x) ||
+                                  (car.direction === 1 && car.mesh.position.x < localPlayerPos.x);
+
+        if (isHeadingToPlayer && dx < 5.8 && dz < 1.6) {
+          // 危険接近：クラクションを鳴らし、直前で完全停車
+          targetSpeed = 0;
+          car.currentSpeed = 0;
+          if (!car.hasHonked) {
+            playHorn();
+            car.hasHonked = true;
+            wasHonked = true;
+            flashScreen('#d50000', 700); // 警告赤フラッシュ
+          }
+        }
+      }
+
+      car.currentSpeed += (targetSpeed - car.currentSpeed) * 0.15;
       car.mesh.position.x += car.currentSpeed * car.direction;
 
       if (Math.abs(car.mesh.position.x) > 85) {
@@ -875,42 +925,27 @@
         cars.splice(i, 1);
         continue;
       }
-
-      if (isCrossing && !isCooldown) {
-        const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
-        const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
-
-        if (dx < 7.0 && dz < 2.2 && car.currentSpeed > 0.04) {
-          if (!car.hasHonked) {
-            playHorn();
-            car.hasHonked = true;
-            wasHonked = true;
-          }
-        }
-
-        if (dx < 2.2 && dz < 1.1) {
-          triggerFail('車にぶつかりました');
-          break;
-        }
-      }
     }
   }
 
-  // 初期赤信号サイクル制御
   function updateSignal() {
     if (currentMode !== 'signal') return;
 
     const conf = diffConfigs[difficulty];
     signalTimer += 0.016;
 
-    // 赤時間 -> 青時間 のサイクル
     const totalCycle = conf.redDur + conf.greenDur;
     if (signalTimer >= totalCycle) signalTimer = 0;
 
-    // 0 〜 redDur: 赤 / redDur 〜 totalCycle: 青
     isGreenLight = (signalTimer >= conf.redDur);
     const greenTimeLeft = totalCycle - signalTimer;
     isBlinking = isGreenLight && (greenTimeLeft <= blinkDuration);
+
+    // 赤から青に変わった瞬間にふわっと青緑フラッシュで通知
+    if (isGreenLight && !prevGreenState) {
+      flashScreen('#00e676', 450);
+    }
+    prevGreenState = isGreenLight;
 
     updateSignalLamps();
   }
@@ -934,29 +969,28 @@
     greenLampFar.material.map = greenMap;
   }
 
-  // 横断成功：反対側への横断サイクルへ自然に移行
+  // 成功：画面が緑色に光り、反対側への横断へ移行
   function triggerSuccess() {
     isCooldown = true;
-    showToast('よくできました！ 反対側へも渡れます', '#00e676', 3500);
+    flashScreen('#00e676', 900); // 成功緑フラッシュ
 
-    // 進行方向を反転
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
     setTimeout(() => {
       resetCheckState();
       isCooldown = false;
-    }, 3000);
+    }, 1800);
   }
 
-  // 横断失敗：アラート表示後、その歩道から再開
-  function triggerFail(msg) {
+  // 失敗：画面が赤く光り、リセット
+  function triggerFail() {
     isCooldown = true;
-    showToast(msg, '#ff5252', 3000);
+    flashScreen('#ff1744', 900); // 警告赤フラッシュ
 
     setTimeout(() => {
       resetCheckState();
       isCooldown = false;
-    }, 2500);
+    }, 1800);
   }
 
   function renderLoop(timestamp, frame) {
@@ -997,46 +1031,53 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 左右確認の判定（歩道の位置に応じて左右の向きを自動整合）
+        // 左右確認判定（進行方向に応じて自動反転）
         if (currentSide === 'near') {
-          // 手前（-Z向き）：左は -X、右は +X
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
         } else {
-          // 奥（+Z向き）：左は +X、右は -X
           if (localDir.x > 0.55) setChecked('left');
           else if (localDir.x < -0.55) setChecked('right');
         }
 
-        // 車道への足の踏み入れ判定
+        const halfDepth = roadDepth * 0.5;
+
+        // 車道進入判定
         if (!isCrossing && !isCooldown) {
-          if (currentSide === 'near' && localPlayerPos.z < 3.5) {
+          if (currentSide === 'near' && localPlayerPos.z < halfDepth) {
             isCrossing = true;
-          } else if (currentSide === 'far' && localPlayerPos.z > -3.5) {
+          } else if (currentSide === 'far' && localPlayerPos.z > -halfDepth) {
             isCrossing = true;
           }
         }
 
         updateCars(localPlayerPos);
 
-        // 対岸到達の判定
+        // 対岸到達判定
         if (isCrossing && !isCooldown) {
-          let hasReachedOpposite = false;
-          if (currentSide === 'near' && localPlayerPos.z <= -3.5) {
-            hasReachedOpposite = true;
-          } else if (currentSide === 'far' && localPlayerPos.z >= 3.5) {
-            hasReachedOpposite = true;
+          let reached = false;
+          if (currentSide === 'near' && localPlayerPos.z <= -halfDepth) {
+            reached = true;
+          } else if (currentSide === 'far' && localPlayerPos.z >= halfDepth) {
+            reached = true;
           }
 
-          if (hasReachedOpposite) {
-            if (currentMode === 'signal' && !isGreenLight) {
-              triggerFail('あか信号でわたってしまいました');
-            } else if (!checkedLeft || !checkedRight) {
-              triggerFail('左右のかくにんをしていません');
-            } else if (wasHonked) {
-              triggerFail('クラクションをならされました');
+          if (reached) {
+            // --- 判定ロジック ---
+            if (currentMode === 'signal') {
+              // 信号あり：赤信号で渡った場合、またはクラクションを鳴らされた場合は失敗。左右確認は必須としない
+              if (!isGreenLight || wasHonked) {
+                triggerFail();
+              } else {
+                triggerSuccess();
+              }
             } else {
-              triggerSuccess();
+              // 信号なし：左右確認が必須、かつクラクションが鳴っていなければ成功
+              if (!checkedLeft || !checkedRight || wasHonked) {
+                triggerFail();
+              } else {
+                triggerSuccess();
+              }
             }
           }
         }
