@@ -18,6 +18,21 @@
       height: 100vh;
       display: block;
     }
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      box-sizing: border-box;
+      padding: 14px;
+      z-index: 10;
+    }
+    .interactive {
+      pointer-events: auto;
+    }
+
     #screen-flash {
       position: absolute;
       top: 0;
@@ -29,33 +44,36 @@
       opacity: 0;
       transition: opacity 0.25s ease-out;
     }
-    #xr-overlay {
+
+    #btn-toggle-ui {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      box-sizing: border-box;
-      padding: 12px;
-      z-index: 10;
+      top: 14px;
+      right: 14px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 50;
     }
-    .interactive {
-      pointer-events: auto;
-    }
+
     #main-panel {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
+      top: 14px;
+      left: 14px;
+      right: 120px;
       background: rgba(0, 0, 0, 0.88);
       padding: 10px 14px;
       border-radius: 8px;
       color: #fff;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
+      transition: opacity 0.2s;
     }
     .setting-group {
       display: flex;
@@ -78,48 +96,52 @@
     input[type="range"] {
       height: 6px;
     }
+
     #btn-start-sim {
       background: #00e676;
       color: #000;
       border: none;
       font-weight: bold;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
     }
-    .status-badge {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: #444;
-      font-weight: bold;
-      color: #aaa;
-    }
-    .status-badge.checked {
-      background: #2e7d32;
-      color: #fff;
-    }
-    #guide-banner {
+
+    #status-bar {
       position: absolute;
-      bottom: 80px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85);
-      color: #ffeb3b;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: center;
+      display: flex;
+      gap: 16px;
       pointer-events: none;
-      white-space: nowrap;
-      border: 1px solid #ffeb3b;
-      display: none;
+      z-index: 20;
     }
+    .status-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .status-dot.checked {
+      background: #00e676;
+      border-color: #fff;
+      color: #000;
+      box-shadow: 0 0 12px #00e676;
+    }
+
     #btn-ar-start {
       position: absolute;
-      bottom: 24px;
+      bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       background: #00e676;
@@ -127,35 +149,30 @@
       border: none;
       font-weight: bold;
       font-size: 16px;
-      padding: 14px 32px;
+      padding: 14px 28px;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,230,118,0.4);
+      box-shadow: 0 4px 12px rgba(0,230,118,0.4);
+      display: none;
       z-index: 20;
-    }
-    #btn-toggle-ui {
-      background: rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #fff;
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: auto;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
+<div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
-<div id="xr-overlay">
-  <div id="screen-flash"></div>
+<button id="btn-ar-start" class="interactive">ARを開始する</button>
 
-  <button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
+<div id="ui-overlay">
+  <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
 
-  <div id="guide-banner">床を映して緑の輪が出たら画面をタップ</div>
+  <div id="status-bar">
+    <div id="dot-left" class="status-dot">◀</div>
+    <div id="dot-right" class="status-dot">▶</div>
+  </div>
 
   <div id="main-panel" class="interactive">
     <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
@@ -167,7 +184,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度:</strong>
+      <strong>難易度 (安全の隙間):</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
         <option value="easy">かんたん（空白 8.5秒）</option>
         <option value="normal" selected>ふつう（空白 5.5秒）</option>
@@ -176,32 +193,31 @@
     </div>
 
     <div class="setting-group">
-      <strong>横断幅:</strong>
-      <input type="range" id="depth-slider" min="3.0" max="7.0" step="0.5" value="6.0" oninput="changeRoadDepth(this.value)">
-      <span id="depth-label">6.0m</span>
+      <strong>横断の広さ:</strong>
+      <input type="range" id="depth-slider" min="2.5" max="7.0" step="0.5" value="7.0" oninput="changeRoadDepth(this.value)">
+      <span id="depth-label">7.0m (実寸大)</span>
     </div>
 
     <div class="setting-group">
       <strong>信号強調:</strong>
-      <label><input type="checkbox" id="check-highlight" checked onchange="toggleSignalHighlight(this.checked)"> 発光拡大</label>
+      <label><input type="checkbox" id="check-highlight" checked onchange="toggleSignalHighlight(this.checked)"> 発光＆拡大</label>
     </div>
 
     <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:3px 8px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
+      <strong>背景の暗さ:</strong>
+      <input type="range" id="dim-slider" min="0" max="100" step="5" value="0" oninput="changeBackgroundDim(this.value)">
+      <span id="dim-label">0%</span>
     </div>
 
     <div class="setting-group">
-      <span id="badge-left" class="status-badge">左未確認</span>
-      <span id="badge-right" class="status-badge">右未確認</span>
+      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
     </div>
-
-    <button id="btn-toggle-ui" onclick="toggleUIVisibility()">隠す</button>
   </div>
 </div>
 
 <script>
   let scene, camera, renderer;
-  let roadAnchor, reticle;
+  let roadAnchor, reticle, dimDome;
   let hitTestSource = null;
   let hitTestSourceRequested = false;
   let isPlaced = false;
@@ -221,20 +237,25 @@
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
 
   let isSignalHighlighted = true;
+
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
-  let roadDepth = 6.0;
+  let roadDepth = 7.0;
+
   const crosswalkHalfWidth = 2.0;
 
+  // 難易度設定：車両群が流れる時間と、車が完全に途切れる安全空白時間
   const diffConfigs = {
-    easy:   { trafficDuration: 6.0, clearDuration: 8.5, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
-    normal: { trafficDuration: 8.0, clearDuration: 5.5, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
-    hard:   { trafficDuration: 12.0, clearDuration: 3.5, maxCars: 6, speedMin: 0.24, speedMax: 0.30, greenDur: 14, redDur: 14 }
+    easy:   { trafficDuration: 6.0, clearDuration: 8.5, spawnProb: 0.020, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
+    normal: { trafficDuration: 8.0, clearDuration: 5.5, spawnProb: 0.030, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
+    hard:   { trafficDuration: 11.0, clearDuration: 3.5, spawnProb: 0.040, maxCars: 6, speedMin: 0.24, speedMax: 0.30, greenDur: 14, redDur: 14 }
   };
 
   let trafficTimer = 0;
   let isClearPhase = false;
+
+  const blinkDuration = 4;
   let checkedLeft = false;
   let checkedRight = false;
   let wasHonked = false;
@@ -242,7 +263,6 @@
   let signalTimer = 0;
   let isGreenLight = false;
   let isBlinking = false;
-  const blinkDuration = 4;
 
   let audioCtx = null;
 
@@ -308,6 +328,17 @@
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
 
+    const dimGeo = new THREE.SphereGeometry(200, 32, 16);
+    const dimMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.BackSide,
+      depthWrite: false
+    });
+    dimDome = new THREE.Mesh(dimGeo, dimMat);
+    scene.add(dimDome);
+
     roadAnchor = new THREE.Group();
     roadAnchor.visible = false;
     scene.add(roadAnchor);
@@ -319,9 +350,8 @@
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // 床面検出用レティクル（はっきりと見える厚みのある緑リング）
-    const reticleGeo = new THREE.RingGeometry(0.15, 0.22, 32).rotateX(-Math.PI / 2);
-    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676, side: THREE.DoubleSide });
+    const reticleGeo = new THREE.RingGeometry(0.18, 0.22, 32).rotateX(-Math.PI / 2);
+    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
     reticle = new THREE.Mesh(reticleGeo, reticleMat);
     reticle.matrixAutoUpdate = false;
     reticle.visible = false;
@@ -339,70 +369,63 @@
     buildEnvironment();
     createPedestrianSignals();
 
+    checkWebXRSupport();
+
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
-  // Android Chrome 向けの WebXR Hit-test 起動
-  async function startARSession() {
-    initAudio();
-
-    if (!navigator.xr) {
-      alert('お使いのブラウザはWebXRに対応していません。ARCore対応端末のAndroid Chrome（HTTPS接続）をご利用ください。');
-      return;
+  function checkWebXRSupport() {
+    const btn = document.getElementById('btn-ar-start');
+    if ('xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+        if (supported) {
+          btn.style.display = 'block';
+          btn.onclick = startARSession;
+        }
+      }).catch(() => {});
     }
+  }
 
-    try {
-      const supported = await navigator.xr.isSessionSupported('immersive-ar');
-      if (!supported) {
-        alert('この端末はimmersive-arに対応していません。');
-        return;
-      }
-
-      const session = await navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['hit-test'],
-        optionalFeatures: ['local-floor', 'dom-overlay'],
-        domOverlay: { root: document.getElementById('xr-overlay') }
-      });
-
+  function startARSession() {
+    initAudio();
+    navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['hit-test'],
+      optionalFeatures: ['local-floor', 'dom-overlay'],
+      domOverlay: { root: document.getElementById('ui-overlay') }
+    }).then((session) => {
       renderer.xr.setSession(session);
       document.getElementById('btn-ar-start').style.display = 'none';
-      document.getElementById('guide-banner').style.display = 'block';
 
       isPlaced = false;
       isRunning = false;
       roadAnchor.visible = false;
-      hitTestSourceRequested = false;
-      hitTestSource = null;
 
-      // 画面タップでレティクル位置に配置
-      session.addEventListener('select', (e) => {
-        if (!isPlaced && reticle.visible) {
-          anchorRoadToReticle();
+      session.addEventListener('select', () => {
+        if (isPlaced) return;
+        if (reticle.visible) {
+          anchorRoadToUserFeet();
         }
       });
 
       session.addEventListener('end', () => {
         document.getElementById('btn-ar-start').style.display = 'block';
-        document.getElementById('guide-banner').style.display = 'none';
         isPlaced = false;
         isRunning = false;
         roadAnchor.visible = false;
-        reticle.visible = false;
         hitTestSourceRequested = false;
         hitTestSource = null;
       });
-
-    } catch (err) {
-      alert('ARセッション開始エラー: ' + err.message);
-    }
+    }).catch(e => {
+      alert('ARセッション開始エラー: ' + e.message);
+    });
   }
 
-  // レティクル位置に道路を固定設置
-  function anchorRoadToReticle() {
+  function anchorRoadToUserFeet() {
     const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+    const floorY = reticlePos.y;
 
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const camDir = new THREE.Vector3();
@@ -410,22 +433,19 @@
     camDir.y = 0;
     camDir.normalize();
 
-    // 視線の水平方向と正対させる
     const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
-    // 現在の足元が手前歩道の端（Z = roadDepth * 0.5 + 0.8）になるよう中心をオフセット
     const offsetDist = roadDepth * 0.5 + 0.8;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
-      reticlePos.y,
+      floorY,
       camPos.z + camDir.z * offsetDist
     );
 
     roadAnchor.visible = true;
     isPlaced = true;
     reticle.visible = false;
-    document.getElementById('guide-banner').style.display = 'none';
 
     currentSide = 'near';
     resetCheckState();
@@ -434,12 +454,22 @@
   function startSimulation() {
     initAudio();
     if (!isPlaced) {
-      alert('先に床を映して緑の輪が出たら画面をタップし、道路を設置してください。');
+      alert('床に緑の輪が出たら画面をタップし、道路を設置してからスタートしてください。');
       return;
     }
     isRunning = true;
     hideUI();
     resetSignalCycle();
+  }
+
+  function repositionRoad() {
+    if (renderer.xr.isPresenting) {
+      isPlaced = false;
+      isRunning = false;
+      roadAnchor.visible = false;
+      reticle.visible = false;
+      showUI();
+    }
   }
 
   function changeDifficulty(val) {
@@ -458,7 +488,11 @@
 
   function changeRoadDepth(val) {
     roadDepth = parseFloat(val);
-    document.getElementById('depth-label').innerText = `${roadDepth.toFixed(1)}m`;
+    const label = document.getElementById('depth-label');
+    if (roadDepth >= 6.8) label.innerText = '7.0m (実寸大)';
+    else if (roadDepth <= 3.0) label.innerText = `${roadDepth.toFixed(1)}m (省スペース)`;
+    else label.innerText = `${roadDepth.toFixed(1)}m`;
+
     updateRoadGeometry();
   }
 
@@ -508,6 +542,11 @@
     poleNear.position.set(-2.6, 0, halfDepth + 0.9);
   }
 
+  function changeBackgroundDim(val) {
+    dimDome.material.opacity = parseFloat(val) / 100.0;
+    document.getElementById('dim-label').innerText = `${val}%`;
+  }
+
   function toggleUIVisibility() {
     if (isUIHidden) showUI();
     else hideUI();
@@ -518,14 +557,15 @@
     document.getElementById('main-panel').style.display = 'none';
     const btn = document.getElementById('btn-toggle-ui');
     btn.innerText = 'UI表示';
-    btn.style.display = 'block';
+    btn.style.background = 'rgba(0, 0, 0, 0.4)';
   }
 
   function showUI() {
     isUIHidden = false;
     document.getElementById('main-panel').style.display = 'flex';
     const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = '隠す';
+    btn.innerText = 'UIを隠す';
+    btn.style.background = 'rgba(0, 0, 0, 0.75)';
   }
 
   function resetCheckState() {
@@ -534,12 +574,8 @@
     isCrossing = false;
     wasHonked = false;
 
-    const bL = document.getElementById('badge-left');
-    const bR = document.getElementById('badge-right');
-    bL.className = 'status-badge';
-    bL.innerText = '左未確認';
-    bR.className = 'status-badge';
-    bR.innerText = '右未確認';
+    document.getElementById('dot-left').className = 'status-dot';
+    document.getElementById('dot-right').className = 'status-dot';
   }
 
   function resetSignalCycle() {
@@ -547,17 +583,6 @@
     isGreenLight = false;
     isBlinking = false;
     updateSignalLamps();
-  }
-
-  function repositionRoad() {
-    if (renderer.xr.isPresenting) {
-      isPlaced = false;
-      isRunning = false;
-      roadAnchor.visible = false;
-      reticle.visible = false;
-      document.getElementById('guide-banner').style.display = 'block';
-      showUI();
-    }
   }
 
   function createPedestrianCanvas(type, isOn) {
@@ -752,14 +777,10 @@
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
-      const b = document.getElementById('badge-left');
-      b.className = 'status-badge checked';
-      b.innerText = '左確認済';
+      document.getElementById('dot-left').className = 'status-dot checked';
     } else if (side === 'right' && !checkedRight) {
       checkedRight = true;
-      const b = document.getElementById('badge-right');
-      b.className = 'status-badge checked';
-      b.innerText = '右確認済';
+      document.getElementById('dot-right').className = 'status-dot checked';
     }
   }
 
@@ -820,19 +841,20 @@
     const conf = diffConfigs[difficulty];
     trafficTimer += 0.016;
 
+    // 安全時間窓（クリアフェーズ）の制御ロジック
     if (!isClearPhase) {
       if (trafficTimer >= conf.trafficDuration) {
         trafficTimer = 0;
-        isClearPhase = true;
+        isClearPhase = true; // 車が全く来ない安全な時間へ移行
       } else {
-        if (Math.random() < 0.035 && cars.length < conf.maxCars) {
+        if (Math.random() < conf.spawnProb && cars.length < conf.maxCars) {
           spawnCar();
         }
       }
     } else {
       if (trafficTimer >= conf.clearDuration) {
         trafficTimer = 0;
-        isClearPhase = false;
+        isClearPhase = false; // 再び交通流へ
       }
     }
 
@@ -900,6 +922,7 @@
         }
       }
 
+      // 車道横断中の危険接近：衝突させず直前停車＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -974,7 +997,7 @@
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#ff1744', 900);
+    flashScreen('#ff1744', 900); // 即時赤色発光
 
     setTimeout(() => {
       resetCheckState();
@@ -984,7 +1007,7 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#00e676', 900);
+    flashScreen('#00e676', 900); // 即時緑色発光
 
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
@@ -997,39 +1020,34 @@
   function renderLoop(timestamp, frame) {
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
+      dimDome.position.copy(camera.position);
 
-      // Three.js標準仕様：viewerリファレンススペースからヒットテストソースを取得
+      // ヒットテストソースの取得（提示コードと同一の確実な構造）
       if (!hitTestSourceRequested) {
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
           session.requestHitTestSource({ space: referenceSpace }).then((source) => {
             hitTestSource = source;
           });
         });
-        session.addEventListener('end', () => {
-          hitTestSourceRequested = false;
-          hitTestSource = null;
-        });
         hitTestSourceRequested = true;
       }
 
-      // 未設置時：カメラから床へのレイキャスト結果を取得してレティクルを描画
-      if (hitTestSource && !isPlaced && frame) {
+      // 未配置時：床面レイキャスト結果の描画
+      if (hitTestSource && !isPlaced) {
         const referenceSpace = renderer.xr.getReferenceSpace();
         const hitTestResults = frame.getHitTestResults(hitTestSource);
 
         if (hitTestResults.length > 0) {
           const hit = hitTestResults[0];
           const pose = hit.getPose(referenceSpace);
-          if (pose) {
-            reticle.visible = true;
-            reticle.matrix.fromArray(pose.transform.matrix);
-          }
+          reticle.visible = true;
+          reticle.matrix.fromArray(pose.transform.matrix);
         } else {
           reticle.visible = false;
         }
       }
 
-      // 設置後かつスタート後：シミュレーション計算
+      // 配置後かつスタート後：シミュレーション計算
       if (isPlaced && isRunning) {
         updateSignal();
 
@@ -1040,6 +1058,7 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
+        // 左右確認判定（進行方向に応じて自動反転）
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1050,15 +1069,18 @@
 
         const halfDepth = roadDepth * 0.5;
 
+        // 車道境界への進入チェック
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
         if (isEnteringRoad && !isCooldown) {
+          // 1. 横断歩道外（白線エリア外）からの進入判定
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
             return;
           }
 
+          // 2. 赤信号進入判定
           if (currentMode === 'signal' && !isGreenLight) {
             triggerImmediateViolation();
             return;
@@ -1071,6 +1093,7 @@
 
         updateCars(localPlayerPos);
 
+        // 対岸到達判定
         if (isCrossing && !isCooldown) {
           let reached = false;
           if (currentSide === 'near' && localPlayerPos.z <= -halfDepth) {
