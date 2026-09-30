@@ -18,7 +18,6 @@
       height: 100vh;
       display: block;
     }
-    /* 全画面カラーフラッシュ（HTMLオーバーレイ） */
     #screen-flash {
       position: absolute;
       top: 0;
@@ -30,7 +29,6 @@
       opacity: 0;
       transition: opacity 0.2s ease-out;
     }
-    /* WebXR domOverlay 用の親ルートコンテナ */
     #xr-root {
       position: absolute;
       top: 0;
@@ -120,9 +118,9 @@
       bottom: 90px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       color: #ffeb3b;
-      padding: 8px 18px;
+      padding: 10px 20px;
       border-radius: 20px;
       font-size: 14px;
       font-weight: bold;
@@ -155,13 +153,12 @@
 
 <div id="canvas-container"></div>
 
-<!-- 全体を束ねる単一XRルート要素（domOverlay必須要件） -->
 <div id="xr-root">
   <div id="screen-flash"></div>
 
   <button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
 
-  <div id="guide-banner">床を映して、緑の輪が出たら画面をタップ</div>
+  <div id="guide-banner">床をカメラに映してください（画面タップで即時設置も可能）</div>
 
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UI非表示</button>
 
@@ -208,8 +205,8 @@
 <script>
   let scene, camera, renderer;
   let roadAnchor, reticle, flashMesh3D;
-  let hitTestSource = null;
-  let hitTestSourceRequested = false;
+  let xrHitTestSource = null;
+  let xrViewerSpace = null;
   let isPlaced = false;
   let isRunning = false;
   let isUIHidden = false;
@@ -336,11 +333,17 @@
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // スマホの床面検出マーカー（緑のリング）
-    const reticleGeo = new THREE.RingGeometry(0.18, 0.22, 32).rotateX(-Math.PI / 2);
-    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
-    reticle = new THREE.Mesh(reticleGeo, reticleMat);
-    reticle.matrixAutoUpdate = false;
+    // 視認性の高い二重リングレティクル（緑＋白枠）
+    const reticleGroup = new THREE.Group();
+    const ringGeo1 = new THREE.RingGeometry(0.18, 0.24, 32).rotateX(-Math.PI / 2);
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00e676, side: THREE.DoubleSide });
+    reticleGroup.add(new THREE.Mesh(ringGeo1, ringMat1));
+
+    const ringGeo2 = new THREE.RingGeometry(0.04, 0.08, 16).rotateX(-Math.PI / 2);
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    reticleGroup.add(new THREE.Mesh(ringGeo2, ringMat2));
+
+    reticle = reticleGroup;
     reticle.visible = false;
     scene.add(reticle);
 
@@ -371,25 +374,20 @@
         if (supported) {
           btn.style.display = 'block';
         } else {
-          alert('端末またはブラウザがWebXR(AR)に対応していません。ARCore対応のAndroid Chromeをご利用ください。');
+          alert('お使いの端末またはブラウザはWebXR(AR)に対応していません。');
         }
       }).catch((e) => {
         alert('WebXR確認エラー: ' + e.message);
       });
-    } else {
-      alert('HTTPS環境ではありません。WebXRの起動にはHTTPS接続が必要です。');
     }
   }
 
-  // スマホブラウザで確実にカメラ権限ダイアログを起動するセッション要求
   async function startARSession() {
     initAudio();
-
     const xrRoot = document.getElementById('xr-root');
     let session = null;
 
     try {
-      // 1. スマホ向け（domOverlayを正しく付与）
       session = await navigator.xr.requestSession('immersive-ar', {
         requiredFeatures: ['hit-test'],
         optionalFeatures: ['local-floor', 'dom-overlay'],
@@ -397,13 +395,12 @@
       });
     } catch (err1) {
       try {
-        // 2. dom-overlayに失敗した場合のフォールバック
         session = await navigator.xr.requestSession('immersive-ar', {
           requiredFeatures: ['hit-test'],
           optionalFeatures: ['local-floor']
         });
       } catch (err2) {
-        alert('カメラの起動に失敗しました。Chromeの「カメラの権限」が許可されているか確認してください。\n詳細: ' + err2.message);
+        alert('カメラ・ARの起動に失敗しました: ' + err2.message);
         return;
       }
     }
@@ -415,19 +412,40 @@
     isPlaced = false;
     isRunning = false;
     roadAnchor.visible = false;
-    hitTestSourceRequested = false;
-    hitTestSource = null;
+    xrHitTestSource = null;
 
-    // 画面タップで床面リング位置に道路を固定
+    // セッション開始直後に確実に viewer space と hit-test source を作成
+    session.requestReferenceSpace('viewer').then((space) => {
+      xrViewerSpace = space;
+      session.requestHitTestSource({ space: xrViewerSpace }).then((source) => {
+        xrHitTestSource = source;
+      }).catch(err => {
+        console.warn('Hit-test source request failed:', err);
+      });
+    });
+
+    // 画面タップイベント
     session.addEventListener('select', (e) => {
-      // UI要素のタップ時は道路配置を実行しない
-      if (e.inputSource && e.inputSource.targetRayMode === 'screen') {
-        const target = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
-        if (target && target.closest('.interactive')) return;
-      }
+      if (isPlaced) return;
 
-      if (!isPlaced && reticle.visible) {
-        anchorRoadToReticle();
+      // 輪が出ている場合はその位置に配置
+      if (reticle.visible) {
+        anchorRoadAtPosition(reticle.position);
+      } else {
+        // 輪がまだ検出できていない場合でも、目の前の床面（高さ-1.2m）に強制展開して開始
+        const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+        camDir.y = 0;
+        camDir.normalize();
+
+        const fallbackFloorY = camPos.y - 1.3; // 目線から約1.3m下を床面と推定
+        const targetPos = new THREE.Vector3(
+          camPos.x + camDir.x * 2.0,
+          fallbackFloorY,
+          camPos.z + camDir.z * 2.0
+        );
+        anchorRoadAtPosition(targetPos);
       }
     });
 
@@ -437,16 +455,13 @@
       isPlaced = false;
       isRunning = false;
       roadAnchor.visible = false;
-      hitTestSourceRequested = false;
-      hitTestSource = null;
+      xrHitTestSource = null;
+      reticle.visible = false;
     });
   }
 
-  // 床面検出リングの位置に道路を固定
-  function anchorRoadToReticle() {
-    const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
-    const floorY = reticlePos.y;
-
+  // 確定位置に道路を固定展開
+  function anchorRoadAtPosition(targetPos) {
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const camDir = new THREE.Vector3();
     camera.getWorldDirection(camDir);
@@ -456,11 +471,10 @@
     const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
-    // 足元位置（Z = roadDepth * 0.5 + 0.8）が現在のカメラ位置になるよう配置
     const offsetDist = roadDepth * 0.5 + 0.8;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
-      floorY,
+      targetPos.y,
       camPos.z + camDir.z * offsetDist
     );
 
@@ -473,12 +487,16 @@
     resetCheckState();
   }
 
-  // パネル内の「▶ スタート」ボタン
   function startSimulation() {
     initAudio();
     if (!isPlaced) {
-      alert('先に床を映して画面をタップし、道路を設置してください。');
-      return;
+      // 未配置なら目の前に即時展開
+      const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+      const camDir = new THREE.Vector3();
+      camera.getWorldDirection(camDir);
+      camDir.y = 0;
+      camDir.normalize();
+      anchorRoadAtPosition(new THREE.Vector3(camPos.x, camPos.y - 1.3, camPos.z));
     }
     isRunning = true;
     hideUI();
@@ -867,7 +885,7 @@
     if (!isClearPhase) {
       if (trafficTimer >= conf.trafficDuration) {
         trafficTimer = 0;
-        isClearPhase = true; // 安全空白時間へ移行
+        isClearPhase = true;
       } else {
         if (Math.random() < 0.035 && cars.length < conf.maxCars) {
           spawnCar();
@@ -944,7 +962,6 @@
         }
       }
 
-      // 車道横断中の危険接近：直前停車＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -1041,36 +1058,35 @@
 
   function renderLoop(timestamp, frame) {
     if (renderer.xr.isPresenting) {
-      const session = renderer.xr.getSession();
-
-      // ヒットテストの要求（viewer座標系）
-      if (!hitTestSourceRequested) {
-        session.requestReferenceSpace('viewer').then((referenceSpace) => {
-          session.requestHitTestSource({ space: referenceSpace }).then((source) => {
-            hitTestSource = source;
-          }).catch(() => {});
-        }).catch(() => {});
-        hitTestSourceRequested = true;
-      }
-
-      // 未配置時：床面レイキャスト結果の描画
-      if (hitTestSource && !isPlaced && frame) {
+      // 1. 床面ヒットテストの更新
+      if (xrHitTestSource && !isPlaced && frame) {
         const referenceSpace = renderer.xr.getReferenceSpace();
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
+        const hitTestResults = frame.getHitTestResults(xrHitTestSource);
 
         if (hitTestResults.length > 0) {
           const hit = hitTestResults[0];
           const pose = hit.getPose(referenceSpace);
           if (pose) {
             reticle.visible = true;
-            reticle.matrix.fromArray(pose.transform.matrix);
+            // Matrixを直接代入し、positionとquaternionを確実に伝播
+            reticle.position.set(
+              pose.transform.position.x,
+              pose.transform.position.y,
+              pose.transform.position.z
+            );
+            reticle.quaternion.set(
+              pose.transform.orientation.x,
+              pose.transform.orientation.y,
+              pose.transform.orientation.z,
+              pose.transform.orientation.w
+            );
           }
         } else {
           reticle.visible = false;
         }
       }
 
-      // 配置後かつスタート済み：シミュレーション実行
+      // 2. 設置後・スタート後のシミュレーション
       if (isPlaced && isRunning) {
         updateSignal();
 
@@ -1081,7 +1097,6 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 左右確認判定
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1091,19 +1106,15 @@
         }
 
         const halfDepth = roadDepth * 0.5;
-
-        // 車道への足の踏み入れ判定
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
         if (isEnteringRoad && !isCooldown) {
-          // 1. 横断歩道外（白線エリア外）からの進入判定
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
             return;
           }
 
-          // 2. 赤信号進入判定
           if (currentMode === 'signal' && !isGreenLight) {
             triggerImmediateViolation();
             return;
@@ -1116,7 +1127,6 @@
 
         updateCars(localPlayerPos);
 
-        // 対岸到達判定
         if (isCrossing && !isCooldown) {
           let reached = false;
           if (currentSide === 'near' && localPlayerPos.z <= -halfDepth) {
