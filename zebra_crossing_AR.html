@@ -27,9 +27,9 @@
       pointer-events: none;
       z-index: 5;
       opacity: 0;
-      transition: opacity 0.2s ease-out;
+      transition: opacity 0.25s ease-out;
     }
-    #xr-root {
+    #xr-overlay {
       position: absolute;
       top: 0;
       left: 0;
@@ -43,31 +43,18 @@
     .interactive {
       pointer-events: auto;
     }
-    #btn-toggle-ui {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(0, 0, 0, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #fff;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 6px 14px;
-      border-radius: 16px;
-      cursor: pointer;
-    }
     #main-panel {
       position: absolute;
       top: 12px;
       left: 12px;
-      right: 110px;
+      right: 12px;
       background: rgba(0, 0, 0, 0.88);
       padding: 10px 14px;
       border-radius: 8px;
       color: #fff;
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
     }
     .setting-group {
@@ -96,7 +83,7 @@
       color: #000;
       border: none;
       font-weight: bold;
-      padding: 6px 16px;
+      padding: 6px 14px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
@@ -115,24 +102,24 @@
     }
     #guide-banner {
       position: absolute;
-      bottom: 90px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.85);
       color: #ffeb3b;
-      padding: 10px 20px;
+      padding: 8px 18px;
       border-radius: 20px;
       font-size: 14px;
       font-weight: bold;
       text-align: center;
       pointer-events: none;
-      display: none;
       white-space: nowrap;
       border: 1px solid #ffeb3b;
+      display: none;
     }
     #btn-ar-start {
       position: absolute;
-      bottom: 28px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       background: #00e676;
@@ -146,6 +133,16 @@
       box-shadow: 0 4px 14px rgba(0,230,118,0.4);
       z-index: 20;
     }
+    #btn-toggle-ui {
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: auto;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -153,14 +150,12 @@
 
 <div id="canvas-container"></div>
 
-<div id="xr-root">
+<div id="xr-overlay">
   <div id="screen-flash"></div>
 
   <button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
 
-  <div id="guide-banner">床をカメラに映してください（画面タップで即時設置も可能）</div>
-
-  <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UI非表示</button>
+  <div id="guide-banner">床を映して緑の輪が出たら画面をタップ</div>
 
   <div id="main-panel" class="interactive">
     <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
@@ -172,7 +167,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度 (安全の隙間):</strong>
+      <strong>難易度:</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
         <option value="easy">かんたん（空白 8.5秒）</option>
         <option value="normal" selected>ふつう（空白 5.5秒）</option>
@@ -181,7 +176,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>横断幅 (歩行距離):</strong>
+      <strong>横断幅:</strong>
       <input type="range" id="depth-slider" min="3.0" max="7.0" step="0.5" value="6.0" oninput="changeRoadDepth(this.value)">
       <span id="depth-label">6.0m</span>
     </div>
@@ -192,21 +187,23 @@
     </div>
 
     <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
+      <button onclick="repositionRoad()" style="padding:3px 8px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
     </div>
 
-    <div class="setting-group" style="margin-left:auto;">
+    <div class="setting-group">
       <span id="badge-left" class="status-badge">左未確認</span>
       <span id="badge-right" class="status-badge">右未確認</span>
     </div>
+
+    <button id="btn-toggle-ui" onclick="toggleUIVisibility()">隠す</button>
   </div>
 </div>
 
 <script>
   let scene, camera, renderer;
-  let roadAnchor, reticle, flashMesh3D;
-  let xrHitTestSource = null;
-  let xrViewerSpace = null;
+  let roadAnchor, reticle;
+  let hitTestSource = null;
+  let hitTestSourceRequested = false;
   let isPlaced = false;
   let isRunning = false;
   let isUIHidden = false;
@@ -292,18 +289,14 @@
     osc2.stop(now + 0.48);
   }
 
-  function triggerFlash(colorHex, duration = 600) {
+  function flashScreen(colorHex, duration = 600) {
     const el = document.getElementById('screen-flash');
-    if (el) {
-      el.style.backgroundColor = colorHex;
-      el.style.opacity = '0.55';
-      setTimeout(() => { el.style.opacity = '0'; }, duration);
-    }
-    if (flashMesh3D) {
-      flashMesh3D.material.color.setHex(parseInt(colorHex.replace('#', '0x')));
-      flashMesh3D.material.opacity = 0.5;
-      setTimeout(() => { flashMesh3D.material.opacity = 0.0; }, duration);
-    }
+    if (!el) return;
+    el.style.backgroundColor = colorHex;
+    el.style.opacity = '0.55';
+    setTimeout(() => {
+      el.style.opacity = '0';
+    }, duration);
   }
 
   init();
@@ -314,13 +307,6 @@
 
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
-
-    const fGeo = new THREE.PlaneGeometry(2, 2);
-    const fMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.0, depthTest: false });
-    flashMesh3D = new THREE.Mesh(fGeo, fMat);
-    flashMesh3D.position.set(0, 0, -0.15);
-    flashMesh3D.renderOrder = 9999;
-    camera.add(flashMesh3D);
 
     roadAnchor = new THREE.Group();
     roadAnchor.visible = false;
@@ -333,17 +319,11 @@
     renderer.xr.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // 視認性の高い二重リングレティクル（緑＋白枠）
-    const reticleGroup = new THREE.Group();
-    const ringGeo1 = new THREE.RingGeometry(0.18, 0.24, 32).rotateX(-Math.PI / 2);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00e676, side: THREE.DoubleSide });
-    reticleGroup.add(new THREE.Mesh(ringGeo1, ringMat1));
-
-    const ringGeo2 = new THREE.RingGeometry(0.04, 0.08, 16).rotateX(-Math.PI / 2);
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-    reticleGroup.add(new THREE.Mesh(ringGeo2, ringMat2));
-
-    reticle = reticleGroup;
+    // 床面検出用レティクル（はっきりと見える厚みのある緑リング）
+    const reticleGeo = new THREE.RingGeometry(0.15, 0.22, 32).rotateX(-Math.PI / 2);
+    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676, side: THREE.DoubleSide });
+    reticle = new THREE.Mesh(reticleGeo, reticleMat);
+    reticle.matrixAutoUpdate = false;
     reticle.visible = false;
     scene.add(reticle);
 
@@ -359,122 +339,86 @@
     buildEnvironment();
     createPedestrianSignals();
 
-    checkWebXRSupport();
-
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
-  function checkWebXRSupport() {
-    const btn = document.getElementById('btn-ar-start');
-    if ('xr' in navigator) {
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (supported) {
-          btn.style.display = 'block';
-        } else {
-          alert('お使いの端末またはブラウザはWebXR(AR)に対応していません。');
-        }
-      }).catch((e) => {
-        alert('WebXR確認エラー: ' + e.message);
-      });
-    }
-  }
-
+  // Android Chrome 向けの WebXR Hit-test 起動
   async function startARSession() {
     initAudio();
-    const xrRoot = document.getElementById('xr-root');
-    let session = null;
 
-    try {
-      session = await navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['hit-test'],
-        optionalFeatures: ['local-floor', 'dom-overlay'],
-        domOverlay: { root: xrRoot }
-      });
-    } catch (err1) {
-      try {
-        session = await navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['hit-test'],
-          optionalFeatures: ['local-floor']
-        });
-      } catch (err2) {
-        alert('カメラ・ARの起動に失敗しました: ' + err2.message);
-        return;
-      }
+    if (!navigator.xr) {
+      alert('お使いのブラウザはWebXRに対応していません。ARCore対応端末のAndroid Chrome（HTTPS接続）をご利用ください。');
+      return;
     }
 
-    renderer.xr.setSession(session);
-    document.getElementById('btn-ar-start').style.display = 'none';
-    document.getElementById('guide-banner').style.display = 'block';
-
-    isPlaced = false;
-    isRunning = false;
-    roadAnchor.visible = false;
-    xrHitTestSource = null;
-
-    // セッション開始直後に確実に viewer space と hit-test source を作成
-    session.requestReferenceSpace('viewer').then((space) => {
-      xrViewerSpace = space;
-      session.requestHitTestSource({ space: xrViewerSpace }).then((source) => {
-        xrHitTestSource = source;
-      }).catch(err => {
-        console.warn('Hit-test source request failed:', err);
-      });
-    });
-
-    // 画面タップイベント
-    session.addEventListener('select', (e) => {
-      if (isPlaced) return;
-
-      // 輪が出ている場合はその位置に配置
-      if (reticle.visible) {
-        anchorRoadAtPosition(reticle.position);
-      } else {
-        // 輪がまだ検出できていない場合でも、目の前の床面（高さ-1.2m）に強制展開して開始
-        const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
-        const camDir = new THREE.Vector3();
-        camera.getWorldDirection(camDir);
-        camDir.y = 0;
-        camDir.normalize();
-
-        const fallbackFloorY = camPos.y - 1.3; // 目線から約1.3m下を床面と推定
-        const targetPos = new THREE.Vector3(
-          camPos.x + camDir.x * 2.0,
-          fallbackFloorY,
-          camPos.z + camDir.z * 2.0
-        );
-        anchorRoadAtPosition(targetPos);
+    try {
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (!supported) {
+        alert('この端末はimmersive-arに対応していません。');
+        return;
       }
-    });
 
-    session.addEventListener('end', () => {
-      document.getElementById('btn-ar-start').style.display = 'block';
-      document.getElementById('guide-banner').style.display = 'none';
+      const session = await navigator.xr.requestSession('immersive-ar', {
+        requiredFeatures: ['hit-test'],
+        optionalFeatures: ['local-floor', 'dom-overlay'],
+        domOverlay: { root: document.getElementById('xr-overlay') }
+      });
+
+      renderer.xr.setSession(session);
+      document.getElementById('btn-ar-start').style.display = 'none';
+      document.getElementById('guide-banner').style.display = 'block';
+
       isPlaced = false;
       isRunning = false;
       roadAnchor.visible = false;
-      xrHitTestSource = null;
-      reticle.visible = false;
-    });
+      hitTestSourceRequested = false;
+      hitTestSource = null;
+
+      // 画面タップでレティクル位置に配置
+      session.addEventListener('select', (e) => {
+        if (!isPlaced && reticle.visible) {
+          anchorRoadToReticle();
+        }
+      });
+
+      session.addEventListener('end', () => {
+        document.getElementById('btn-ar-start').style.display = 'block';
+        document.getElementById('guide-banner').style.display = 'none';
+        isPlaced = false;
+        isRunning = false;
+        roadAnchor.visible = false;
+        reticle.visible = false;
+        hitTestSourceRequested = false;
+        hitTestSource = null;
+      });
+
+    } catch (err) {
+      alert('ARセッション開始エラー: ' + err.message);
+    }
   }
 
-  // 確定位置に道路を固定展開
-  function anchorRoadAtPosition(targetPos) {
+  // レティクル位置に道路を固定設置
+  function anchorRoadToReticle() {
+    const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const camDir = new THREE.Vector3();
     camera.getWorldDirection(camDir);
     camDir.y = 0;
     camDir.normalize();
 
+    // 視線の水平方向と正対させる
     const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
+    // 現在の足元が手前歩道の端（Z = roadDepth * 0.5 + 0.8）になるよう中心をオフセット
     const offsetDist = roadDepth * 0.5 + 0.8;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
-      targetPos.y,
+      reticlePos.y,
       camPos.z + camDir.z * offsetDist
     );
 
@@ -490,13 +434,8 @@
   function startSimulation() {
     initAudio();
     if (!isPlaced) {
-      // 未配置なら目の前に即時展開
-      const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
-      const camDir = new THREE.Vector3();
-      camera.getWorldDirection(camDir);
-      camDir.y = 0;
-      camDir.normalize();
-      anchorRoadAtPosition(new THREE.Vector3(camPos.x, camPos.y - 1.3, camPos.z));
+      alert('先に床を映して緑の輪が出たら画面をタップし、道路を設置してください。');
+      return;
     }
     isRunning = true;
     hideUI();
@@ -579,15 +518,14 @@
     document.getElementById('main-panel').style.display = 'none';
     const btn = document.getElementById('btn-toggle-ui');
     btn.innerText = 'UI表示';
-    btn.style.background = 'rgba(0, 0, 0, 0.4)';
+    btn.style.display = 'block';
   }
 
   function showUI() {
     isUIHidden = false;
     document.getElementById('main-panel').style.display = 'flex';
     const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = 'UI非表示';
-    btn.style.background = 'rgba(0, 0, 0, 0.75)';
+    btn.innerText = '隠す';
   }
 
   function resetCheckState() {
@@ -1036,7 +974,7 @@
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    triggerFlash('#ff1744', 900);
+    flashScreen('#ff1744', 900);
 
     setTimeout(() => {
       resetCheckState();
@@ -1046,7 +984,7 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    triggerFlash('#00e676', 900);
+    flashScreen('#00e676', 900);
 
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
@@ -1058,35 +996,40 @@
 
   function renderLoop(timestamp, frame) {
     if (renderer.xr.isPresenting) {
-      // 1. 床面ヒットテストの更新
-      if (xrHitTestSource && !isPlaced && frame) {
+      const session = renderer.xr.getSession();
+
+      // Three.js標準仕様：viewerリファレンススペースからヒットテストソースを取得
+      if (!hitTestSourceRequested) {
+        session.requestReferenceSpace('viewer').then((referenceSpace) => {
+          session.requestHitTestSource({ space: referenceSpace }).then((source) => {
+            hitTestSource = source;
+          });
+        });
+        session.addEventListener('end', () => {
+          hitTestSourceRequested = false;
+          hitTestSource = null;
+        });
+        hitTestSourceRequested = true;
+      }
+
+      // 未設置時：カメラから床へのレイキャスト結果を取得してレティクルを描画
+      if (hitTestSource && !isPlaced && frame) {
         const referenceSpace = renderer.xr.getReferenceSpace();
-        const hitTestResults = frame.getHitTestResults(xrHitTestSource);
+        const hitTestResults = frame.getHitTestResults(hitTestSource);
 
         if (hitTestResults.length > 0) {
           const hit = hitTestResults[0];
           const pose = hit.getPose(referenceSpace);
           if (pose) {
             reticle.visible = true;
-            // Matrixを直接代入し、positionとquaternionを確実に伝播
-            reticle.position.set(
-              pose.transform.position.x,
-              pose.transform.position.y,
-              pose.transform.position.z
-            );
-            reticle.quaternion.set(
-              pose.transform.orientation.x,
-              pose.transform.orientation.y,
-              pose.transform.orientation.z,
-              pose.transform.orientation.w
-            );
+            reticle.matrix.fromArray(pose.transform.matrix);
           }
         } else {
           reticle.visible = false;
         }
       }
 
-      // 2. 設置後・スタート後のシミュレーション
+      // 設置後かつスタート後：シミュレーション計算
       if (isPlaced && isRunning) {
         updateSignal();
 
@@ -1106,6 +1049,7 @@
         }
 
         const halfDepth = roadDepth * 0.5;
+
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
