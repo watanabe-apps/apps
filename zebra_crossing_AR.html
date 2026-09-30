@@ -18,21 +18,6 @@
       height: 100vh;
       display: block;
     }
-    #ui-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      box-sizing: border-box;
-      padding: 14px;
-      z-index: 10;
-    }
-    .interactive {
-      pointer-events: auto;
-    }
-
     #screen-flash {
       position: absolute;
       top: 0;
@@ -44,27 +29,59 @@
       opacity: 0;
       transition: opacity 0.25s ease-out;
     }
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      box-sizing: border-box;
+      padding: 12px;
+      z-index: 10;
+    }
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* 内部診断用HUD */
+    #debug-hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid #00e676;
+      color: #00e676;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      z-index: 100;
+      pointer-events: none;
+      white-space: pre-line;
+      line-height: 1.4;
+    }
 
     #btn-toggle-ui {
       position: absolute;
-      top: 14px;
-      right: 14px;
+      top: 12px;
+      right: 12px;
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.5);
       color: #fff;
       font-size: 13px;
       font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 20px;
+      padding: 6px 14px;
+      border-radius: 16px;
       cursor: pointer;
       z-index: 50;
     }
 
     #main-panel {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 120px;
+      top: 80px; /* デバッグHUDと被らない配置 */
+      left: 12px;
+      right: 12px;
       background: rgba(0, 0, 0, 0.88);
       padding: 10px 14px;
       border-radius: 8px;
@@ -121,7 +138,6 @@
       color: #fff;
     }
 
-    /* 最初から確実に表示されるAR開始ボタン */
     #btn-ar-start {
       position: absolute;
       bottom: 30px;
@@ -150,6 +166,8 @@
 <button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
 
 <div id="ui-overlay">
+  <div id="debug-hud">診断待機中...</div>
+
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
 
   <div id="main-panel" class="interactive">
@@ -203,6 +221,8 @@
   let roadAnchor, reticle, dimDome;
   let hitTestSource = null;
   let hitTestSourceRequested = false;
+  let lastErrorMsg = "None";
+
   let isPlaced = false;
   let isRunning = false;
   let isUIHidden = false;
@@ -226,7 +246,6 @@
   let roadDepth = 7.0;
   const crosswalkHalfWidth = 2.0;
 
-  // 難易度設定：車両流の継続時間と安全な空白時間
   const diffConfigs = {
     easy:   { trafficDuration: 6.0, clearDuration: 8.5, spawnProb: 0.020, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
     normal: { trafficDuration: 8.0, clearDuration: 5.5, spawnProb: 0.030, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
@@ -374,7 +393,6 @@
       isRunning = false;
       roadAnchor.visible = false;
 
-      // 画面タップで緑の輪の位置に道路を設置
       session.addEventListener('select', () => {
         if (isPlaced) return;
         if (reticle.visible) {
@@ -391,6 +409,7 @@
         hitTestSource = null;
       });
     }).catch(e => {
+      lastErrorMsg = e.message;
       alert('ARセッション開始エラー: ' + e.message);
     });
   }
@@ -750,7 +769,6 @@
     updateRoadGeometry();
   }
 
-  // 端末の首振りによる左右確認
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
@@ -822,11 +840,10 @@
     const conf = diffConfigs[difficulty];
     trafficTimer += 0.016;
 
-    // 安全時間窓（車が途切れるギャップ）の制御
     if (!isClearPhase) {
       if (trafficTimer >= conf.trafficDuration) {
         trafficTimer = 0;
-        isClearPhase = true; // 車の来ない安全な時間へ
+        isClearPhase = true;
       } else {
         if (Math.random() < conf.spawnProb && cars.length < conf.maxCars) {
           spawnCar();
@@ -835,7 +852,7 @@
     } else {
       if (trafficTimer >= conf.clearDuration) {
         trafficTimer = 0;
-        isClearPhase = false; // 再び交通流へ
+        isClearPhase = false;
       }
     }
 
@@ -903,7 +920,6 @@
         }
       }
 
-      // 直前急停止＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -978,7 +994,7 @@
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#ff1744', 900); // 違反時は即座に赤色発光
+    flashScreen('#ff1744', 900);
 
     setTimeout(() => {
       resetCheckState();
@@ -988,7 +1004,7 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#00e676', 900); // 成功時は緑色発光
+    flashScreen('#00e676', 900);
 
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
@@ -999,36 +1015,57 @@
   }
 
   function renderLoop(timestamp, frame) {
+    let hitsCount = 0;
+
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
       dimDome.position.copy(camera.position);
 
-      // 提示コードと完全に同一のヒットテスト取得処理
       if (!hitTestSourceRequested) {
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
           session.requestHitTestSource({ space: referenceSpace }).then((source) => {
             hitTestSource = source;
+          }).catch(err => {
+            lastErrorMsg = "ReqHitSrc: " + err.message;
           });
+        }).catch(err => {
+          lastErrorMsg = "ReqRefViewer: " + err.message;
         });
         hitTestSourceRequested = true;
       }
 
-      // 未配置時：床面検出結果を緑の輪に反映
-      if (hitTestSource && !isPlaced) {
+      if (hitTestSource && !isPlaced && frame) {
         const referenceSpace = renderer.xr.getReferenceSpace();
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
+        if (referenceSpace) {
+          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          hitsCount = hitTestResults.length;
 
-        if (hitTestResults.length > 0) {
-          const hit = hitTestResults[0];
-          const pose = hit.getPose(referenceSpace);
-          reticle.visible = true;
-          reticle.matrix.fromArray(pose.transform.matrix);
-        } else {
-          reticle.visible = false;
+          if (hitsCount > 0) {
+            const hit = hitTestResults[0];
+            const pose = hit.getPose(referenceSpace);
+            if (pose) {
+              reticle.visible = true;
+              reticle.matrix.fromArray(pose.transform.matrix);
+            }
+          } else {
+            reticle.visible = false;
+          }
         }
       }
 
-      // 配置後かつスタート後
+      // HUD更新
+      const refSpace = renderer.xr.getReferenceSpace();
+      const hud = document.getElementById('debug-hud');
+      if (hud) {
+        hud.innerText = 
+          `[AR State]\n` +
+          `Source: ${hitTestSource ? 'OK' : 'null'}\n` +
+          `Space:  ${refSpace ? 'OK' : 'null'}\n` +
+          `Hits:   ${hitsCount}\n` +
+          `Vis:    ${reticle.visible}\n` +
+          `Err:    ${lastErrorMsg}`;
+      }
+
       if (isPlaced && isRunning) {
         updateSignal();
 
@@ -1039,7 +1076,6 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 首振り判定
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1054,13 +1090,11 @@
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
         if (isEnteringRoad && !isCooldown) {
-          // 横断歩道外の進入判定
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
             return;
           }
 
-          // 赤信号進入判定
           if (currentMode === 'signal' && !isGreenLight) {
             triggerImmediateViolation();
             return;
@@ -1073,7 +1107,6 @@
 
         updateCars(localPlayerPos);
 
-        // 対岸到達判定
         if (isCrossing && !isCooldown) {
           let reached = false;
           if (currentSide === 'near' && localPlayerPos.z <= -halfDepth) {
