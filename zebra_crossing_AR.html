@@ -155,7 +155,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度 (安全の隙間):</strong>
+      <strong>難易度:</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
         <option value="easy">かんたん（空白 8.5秒）</option>
         <option value="normal" selected>ふつう（空白 5.5秒）</option>
@@ -166,7 +166,7 @@
     <div class="setting-group">
       <strong>横断幅 (歩行距離):</strong>
       <input type="range" id="depth-slider" min="2.0" max="7.0" step="0.5" value="3.5" oninput="changeRoadDepth(this.value)">
-      <span id="depth-label">3.5m</span>
+      <span id="depth-label">3.5m (室内適正)</span>
     </div>
 
     <div class="setting-group">
@@ -217,7 +217,7 @@
   let currentMode = 'signal';
   let difficulty = 'normal';
   let roadDepth = 3.5;
-  const crosswalkHalfWidth = 3.5; // スケール縮小時の歩行ブレを許容
+  const crosswalkHalfWidth = 3.5;
 
   const diffConfigs = {
     easy:   { trafficDuration: 6.0, clearDuration: 8.5, spawnProb: 0.020, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
@@ -341,19 +341,28 @@
     buildEnvironment();
     createPedestrianSignals();
 
+    checkWebXRSupport();
+
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
+  function checkWebXRSupport() {
+    const btn = document.getElementById('btn-ar-start');
+    if ('xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+        if (supported) {
+          btn.style.display = 'block';
+          btn.onclick = startARSession;
+        }
+      }).catch(() => {});
+    }
+  }
+
   function startARSession() {
     initAudio();
-    if (!navigator.xr) {
-      alert('お使いのブラウザはWebXRに対応していません。');
-      return;
-    }
-
     navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
       optionalFeatures: ['local-floor', 'dom-overlay'],
@@ -387,8 +396,7 @@
   }
 
   function anchorRoadToUserFeet() {
-    const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
-    const floorY = reticlePos.y;
+    const floorY = reticle.visible ? new THREE.Vector3().setFromMatrixPosition(reticle.matrix).y : roadAnchor.position.y;
 
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const camDir = new THREE.Vector3();
@@ -451,8 +459,17 @@
 
   function changeRoadDepth(val) {
     roadDepth = parseFloat(val);
-    document.getElementById('depth-label').innerText = `${roadDepth.toFixed(1)}m`;
+    const label = document.getElementById('depth-label');
+    if (roadDepth >= 6.8) label.innerText = '7.0m (実寸大)';
+    else if (roadDepth <= 3.8) label.innerText = `${roadDepth.toFixed(1)}m (室内適正)`;
+    else label.innerText = `${roadDepth.toFixed(1)}m`;
+
     updateRoadGeometry();
+
+    // 設置済みの場合は、新しいスケールに合わせて足元とのオフセットを即座に再同期
+    if (isPlaced && !isRunning) {
+      anchorRoadToUserFeet();
+    }
   }
 
   function toggleSignalHighlight(enabled) {
@@ -894,22 +911,24 @@
         }
       }
 
-      // 危険接近時の直前停車とクラクション
+      // 危険接近判定：プレイヤーがその車の走行レーン内にいる場合のみ判定
       if (isCrossing && !isCooldown) {
-        const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
-        const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
+        const playerInCarLane = (car.isNearLane && localPlayerPos.z > 0) || (!car.isNearLane && localPlayerPos.z < 0);
 
-        const isHeadingToPlayer = (car.direction === -1 && car.mesh.position.x > localPlayerPos.x) ||
-                                  (car.direction === 1 && car.mesh.position.x < localPlayerPos.x);
+        if (playerInCarLane) {
+          const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
+          const isHeadingToPlayer = (car.direction === -1 && car.mesh.position.x > localPlayerPos.x) ||
+                                    (car.direction === 1 && car.mesh.position.x < localPlayerPos.x);
 
-        if (isHeadingToPlayer && dx < 5.8 && dz < 1.6) {
-          targetSpeed = 0;
-          car.currentSpeed = 0;
-          if (!car.hasHonked) {
-            playHorn();
-            car.hasHonked = true;
-            wasHonked = true;
-            triggerImmediateViolation();
+          if (isHeadingToPlayer && dx < 5.8) {
+            targetSpeed = 0;
+            car.currentSpeed = 0;
+            if (!car.hasHonked) {
+              playHorn();
+              car.hasHonked = true;
+              wasHonked = true;
+              triggerImmediateViolation();
+            }
           }
         }
       }
@@ -982,7 +1001,6 @@
     isCooldown = true;
     flashScreen('#00e676', 900);
 
-    // 進行方向を反転して往復横断へ移行
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
     setTimeout(() => {
@@ -1039,16 +1057,12 @@
 
         const halfDepth = roadDepth * 0.5;
 
-        // 1. 車道進入フラグの検知（スタート歩道から0.2m前進した時点で確定）
+        // 1. 車道進入判定
         if (!isCrossing && !isCooldown) {
-          if (currentSide === 'near' && localPlayerPos.z <= (halfDepth + 0.4)) {
-            // 赤信号進入判定
-            if (currentMode === 'signal' && !isGreenLight) {
-              triggerImmediateViolation();
-              return;
-            }
-            isCrossing = true;
-          } else if (currentSide === 'far' && localPlayerPos.z >= -(halfDepth + 0.4)) {
+          const steppedOffNear = (currentSide === 'near' && localPlayerPos.z <= (halfDepth + 0.3));
+          const steppedOffFar  = (currentSide === 'far'  && localPlayerPos.z >= -(halfDepth + 0.3));
+
+          if (steppedOffNear || steppedOffFar) {
             if (currentMode === 'signal' && !isGreenLight) {
               triggerImmediateViolation();
               return;
@@ -1057,7 +1071,7 @@
           }
         }
 
-        // 2. 横ずれ判定（車道横断中のみ判定・十分なマージンを確保）
+        // 2. 横ずれ判定
         if (isCrossing && !isCooldown) {
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
@@ -1067,12 +1081,12 @@
 
         updateCars(localPlayerPos);
 
-        // 3. 到達判定（対岸手前0.3mから奥側すべてを通過ゾーンとして判定）
+        // 3. 到達判定（対岸境界から手前0.2m〜通過領域すべて）
         if (isCrossing && !isCooldown) {
           let reached = false;
-          if (currentSide === 'near' && localPlayerPos.z <= -(halfDepth - 0.3)) {
+          if (currentSide === 'near' && localPlayerPos.z <= -(halfDepth - 0.2)) {
             reached = true;
-          } else if (currentSide === 'far' && localPlayerPos.z >= (halfDepth - 0.3)) {
+          } else if (currentSide === 'far' && localPlayerPos.z >= (halfDepth - 0.2)) {
             reached = true;
           }
 
