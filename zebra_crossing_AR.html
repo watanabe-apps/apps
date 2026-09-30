@@ -18,7 +18,7 @@
       height: 100vh;
       display: block;
     }
-    #ui-overlay {
+    #setup-ui {
       position: absolute;
       top: 0;
       left: 0;
@@ -26,54 +26,26 @@
       height: 100%;
       pointer-events: none;
       box-sizing: border-box;
-      padding: 14px;
+      padding: 16px;
       z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .interactive {
       pointer-events: auto;
     }
-
-    #screen-flash {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 5;
-      opacity: 0;
-      transition: opacity 0.25s ease-out;
-    }
-
-    #btn-toggle-ui {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      background: rgba(0, 0, 0, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      color: #fff;
-      font-size: 13px;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      z-index: 50;
-    }
-
-    #main-panel {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 120px;
+    .panel {
       background: rgba(0, 0, 0, 0.88);
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 12px 16px;
+      border-radius: 10px;
       color: #fff;
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
-      transition: opacity 0.2s;
+      max-width: 900px;
+      margin: 0 auto;
     }
     .setting-group {
       display: flex;
@@ -91,92 +63,33 @@
       color: #fff;
     }
     select {
-      padding: 3px 6px;
+      padding: 4px 8px;
     }
     input[type="range"] {
       height: 6px;
     }
-
-    #btn-start-sim {
-      background: #00e676;
-      color: #000;
-      border: none;
-      font-weight: bold;
-      padding: 6px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    #status-bar {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 16px;
-      pointer-events: none;
-      z-index: 20;
-    }
-    .status-dot {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid #555;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #777;
-      font-weight: bold;
-      font-size: 16px;
-      transition: all 0.2s;
-    }
-    .status-dot.checked {
-      background: #00e676;
-      border-color: #fff;
-      color: #000;
-      box-shadow: 0 0 12px #00e676;
-    }
-
     #btn-ar-start {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
       background: #00e676;
       color: #000;
       border: none;
       font-weight: bold;
-      font-size: 16px;
-      padding: 14px 28px;
-      border-radius: 30px;
+      font-size: 18px;
+      padding: 16px 36px;
+      border-radius: 36px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,230,118,0.4);
+      box-shadow: 0 4px 16px rgba(0,230,118,0.5);
+      margin: 0 auto 30px auto;
       display: none;
-      z-index: 20;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
-<button id="btn-ar-start" class="interactive">ARを開始する</button>
-
-<div id="ui-overlay">
-  <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
-
-  <div id="status-bar">
-    <div id="dot-left" class="status-dot">◀</div>
-    <div id="dot-right" class="status-dot">▶</div>
-  </div>
-
-  <div id="main-panel" class="interactive">
-    <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
-
+<div id="setup-ui">
+  <div class="panel interactive">
     <div class="setting-group">
       <strong>モード:</strong>
       <label><input type="radio" name="mode" value="signal" checked onchange="changeMode(this.value)"> 信号あり</label>
@@ -184,11 +97,11 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度:</strong>
+      <strong>難易度 (安全タイミング):</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
-        <option value="easy">かんたん</option>
-        <option value="normal" selected>ふつう</option>
-        <option value="hard">むずかしい</option>
+        <option value="easy">かんたん（長い空白 8.5秒）</option>
+        <option value="normal" selected>ふつう（標準空白 5.5秒）</option>
+        <option value="hard">むずかしい（短い空白 3.5秒）</option>
       </select>
     </div>
 
@@ -198,34 +111,33 @@
       <span id="depth-label">7.0m (実寸大)</span>
     </div>
 
-    <!-- 信号強調設定 -->
     <div class="setting-group">
       <strong>信号強調:</strong>
       <label><input type="checkbox" id="check-highlight" checked onchange="toggleSignalHighlight(this.checked)"> 発光＆拡大</label>
     </div>
 
     <div class="setting-group">
-      <strong>背景の暗さ:</strong>
+      <strong>背景減光:</strong>
       <input type="range" id="dim-slider" min="0" max="100" step="5" value="0" oninput="changeBackgroundDim(this.value)">
       <span id="dim-label">0%</span>
     </div>
-
-    <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
-    </div>
   </div>
+
+  <button id="btn-ar-start" class="interactive">ARを開始する</button>
 </div>
 
 <script>
   let scene, camera, renderer;
   let roadAnchor, reticle, dimDome;
+  let flashMesh; // カメラ直下の全画面カラーフラッシュ板（Quest/スマホ完全対応）
+  let hudDotLeft, hudDotRight; // カメラ直下の3D左右確認インジケーター
+
   let hitTestSource = null;
   let hitTestSourceRequested = false;
   let isPlaced = false;
   let isRunning = false;
-  let isUIHidden = false;
 
-  let currentSide = 'near';
+  let currentSide = 'near'; // 'near': 手前歩道から奥へ, 'far': 奥歩道から手前へ
   let isCrossing = false;
   let isCooldown = false;
 
@@ -238,22 +150,22 @@
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
 
   let isSignalHighlighted = true;
-
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
   let roadDepth = 7.0;
 
-  const crosswalkHalfWidth = 2.0; // 横断歩道白線エリアの半幅（X = -2.0 〜 +2.0）
+  const crosswalkHalfWidth = 2.0;
 
+  // 難易度設定：安全に渡れる空白時間（clearDuration）と交通流時間（trafficDuration）
   const diffConfigs = {
-    easy:   { rushDuration: 5, gapDuration: 8.0, spawnProb: 0.015, maxCars: 3, speedMin: 0.15, speedMax: 0.20, greenDur: 20, redDur: 10 },
-    normal: { rushDuration: 7, gapDuration: 6.5, spawnProb: 0.024, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
-    hard:   { rushDuration: 8, gapDuration: 5.0, spawnProb: 0.034, maxCars: 6, speedMin: 0.25, speedMax: 0.32, greenDur: 14, redDur: 14 }
+    easy:   { trafficDuration: 6.0, clearDuration: 8.5, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
+    normal: { trafficDuration: 8.0, clearDuration: 5.5, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
+    hard:   { trafficDuration: 12.0, clearDuration: 3.5, maxCars: 6, speedMin: 0.25, speedMax: 0.32, greenDur: 14, redDur: 14 }
   };
 
-  const blinkDuration = 4;
-  let waveTimer = 0;
+  let trafficTimer = 0;
+  let isClearPhase = false; // trueの期間は車が一切来ない安全時間窓
   let checkedLeft = false;
   let checkedRight = false;
   let wasHonked = false;
@@ -261,7 +173,9 @@
   let signalTimer = 0;
   let isGreenLight = false;
   let isBlinking = false;
+  const blinkDuration = 4;
 
+  let flashTimeout = null;
   let audioCtx = null;
 
   function initAudio() {
@@ -307,15 +221,6 @@
     osc2.stop(now + 0.48);
   }
 
-  function flashScreen(colorHex, duration = 600) {
-    const el = document.getElementById('screen-flash');
-    el.style.backgroundColor = colorHex;
-    el.style.opacity = '0.55';
-    setTimeout(() => {
-      el.style.opacity = '0';
-    }, duration);
-  }
-
   init();
 
   function init() {
@@ -325,6 +230,34 @@
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
 
+    // 1. 全端末対応 3Dカラーフラッシュ板（カメラ直下に固定）
+    const flashGeo = new THREE.PlaneGeometry(2, 2);
+    const flashMat = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0.0,
+      depthTest: false,
+      depthWrite: false
+    });
+    flashMesh = new THREE.Mesh(flashGeo, flashMat);
+    flashMesh.position.set(0, 0, -0.15); // カメラの目前15cm
+    flashMesh.renderOrder = 9999;
+    camera.add(flashMesh);
+
+    // 2. 全端末対応 3D左右確認インジケーター（視界下部に固定）
+    const dotGeo = new THREE.RingGeometry(0.008, 0.012, 16);
+    const dotMatLeft = new THREE.MeshBasicMaterial({ color: 0x555555, depthTest: false });
+    const dotMatRight = new THREE.MeshBasicMaterial({ color: 0x555555, depthTest: false });
+
+    hudDotLeft = new THREE.Mesh(dotGeo, dotMatLeft);
+    hudDotLeft.position.set(-0.04, -0.065, -0.2);
+    camera.add(hudDotLeft);
+
+    hudDotRight = new THREE.Mesh(dotGeo, dotMatRight);
+    hudDotRight.position.set(0.04, -0.065, -0.2);
+    camera.add(hudDotRight);
+
+    // 背景減光用ドーム
     const dimGeo = new THREE.SphereGeometry(200, 32, 16);
     const dimMat = new THREE.MeshBasicMaterial({
       color: 0x000000,
@@ -390,25 +323,26 @@
     initAudio();
     navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
-      optionalFeatures: ['local-floor', 'dom-overlay'],
-      domOverlay: { root: document.getElementById('ui-overlay') }
+      optionalFeatures: ['local-floor']
     }).then((session) => {
       renderer.xr.setSession(session);
-      document.getElementById('btn-ar-start').style.display = 'none';
+      document.getElementById('setup-ui').style.display = 'none';
 
       isPlaced = false;
       isRunning = false;
       roadAnchor.visible = false;
 
+      // 画面タップ（スマホ）またはコントローラーのトリガー（Quest）で配置
       session.addEventListener('select', () => {
-        if (isPlaced) return;
-        if (reticle.visible) {
+        if (!isPlaced && reticle.visible) {
           anchorRoadToUserFeet();
+          isRunning = true; // 配置と同時に自動スタート
+          resetSignalCycle();
         }
       });
 
       session.addEventListener('end', () => {
-        document.getElementById('btn-ar-start').style.display = 'block';
+        document.getElementById('setup-ui').style.display = 'flex';
         isPlaced = false;
         isRunning = false;
         roadAnchor.visible = false;
@@ -448,25 +382,10 @@
     resetCheckState();
   }
 
-  function startSimulation() {
-    initAudio();
-    isRunning = true;
-    hideUI();
-    resetSignalCycle();
-  }
-
-  function repositionRoad() {
-    if (renderer.xr.isPresenting) {
-      isPlaced = false;
-      isRunning = false;
-      roadAnchor.visible = false;
-      reticle.visible = false;
-      showUI();
-    }
-  }
-
   function changeDifficulty(val) {
     difficulty = val;
+    trafficTimer = 0;
+    isClearPhase = false;
     resetSignalCycle();
   }
 
@@ -538,35 +457,14 @@
     document.getElementById('dim-label').innerText = `${val}%`;
   }
 
-  function toggleUIVisibility() {
-    if (isUIHidden) showUI();
-    else hideUI();
-  }
-
-  function hideUI() {
-    isUIHidden = true;
-    document.getElementById('main-panel').style.display = 'none';
-    const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = 'UI表示';
-    btn.style.background = 'rgba(0, 0, 0, 0.4)';
-  }
-
-  function showUI() {
-    isUIHidden = false;
-    document.getElementById('main-panel').style.display = 'flex';
-    const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = 'UIを隠す';
-    btn.style.background = 'rgba(0, 0, 0, 0.75)';
-  }
-
   function resetCheckState() {
     checkedLeft = false;
     checkedRight = false;
     isCrossing = false;
     wasHonked = false;
 
-    document.getElementById('dot-left').className = 'status-dot';
-    document.getElementById('dot-right').className = 'status-dot';
+    hudDotLeft.material.color.setHex(0x555555);
+    hudDotRight.material.color.setHex(0x555555);
   }
 
   function resetSignalCycle() {
@@ -574,6 +472,17 @@
     isGreenLight = false;
     isBlinking = false;
     updateSignalLamps();
+  }
+
+  // 3Dカラーフラッシュ（全端末で完全動作）
+  function trigger3DFlash(colorHex, duration = 650) {
+    flashMesh.material.color.setHex(colorHex);
+    flashMesh.material.opacity = 0.55;
+
+    if (flashTimeout) clearTimeout(flashTimeout);
+    flashTimeout = setTimeout(() => {
+      flashMesh.material.opacity = 0.0;
+    }, duration);
   }
 
   function createPedestrianCanvas(type, isOn) {
@@ -729,7 +638,6 @@
     greenLamp.position.set(0, 2.05, 0.135);
     head.add(greenLamp);
 
-    // 強調用の発光パルスリング（黄色のリング）
     const haloGeo = new THREE.RingGeometry(0.55, 0.72, 32);
     const haloMat = new THREE.MeshBasicMaterial({
       color: 0xffeb3b,
@@ -769,10 +677,10 @@
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
-      document.getElementById('dot-left').className = 'status-dot checked';
+      hudDotLeft.material.color.setHex(0x00e676);
     } else if (side === 'right' && !checkedRight) {
       checkedRight = true;
-      document.getElementById('dot-right').className = 'status-dot checked';
+      hudDotRight.material.color.setHex(0x00e676);
     }
   }
 
@@ -829,21 +737,28 @@
     spawnCarAt(spawnX, isNearLane);
   }
 
-  function spawnInitialCars() {
-    spawnCarAt(18, true);
-    spawnCarAt(42, true);
-    spawnCarAt(-24, false);
-    spawnCarAt(-50, false);
-  }
-
+  // 安全横断タイミング制御ロジック
   function updateCars(localPlayerPos) {
     const conf = diffConfigs[difficulty];
-    waveTimer += 0.016;
-    const waveCycle = conf.rushDuration + conf.gapDuration;
-    const isRushPeriod = (waveTimer % waveCycle) < conf.rushDuration;
+    trafficTimer += 0.016;
 
-    if (isRushPeriod && Math.random() < conf.spawnProb && cars.length < conf.maxCars) {
-      spawnCar();
+    // 1. 車両流フェーズと安全空白（クリア）フェーズのステート遷移
+    if (!isClearPhase) {
+      // 車両流期間中
+      if (trafficTimer >= conf.trafficDuration) {
+        trafficTimer = 0;
+        isClearPhase = true; // 安全空白フェーズへ移行（新規スポーン停止）
+      } else {
+        if (Math.random() < 0.032 && cars.length < conf.maxCars) {
+          spawnCar();
+        }
+      }
+    } else {
+      // 安全空白期間中：車はスポーンしない
+      if (trafficTimer >= conf.clearDuration) {
+        trafficTimer = 0;
+        isClearPhase = false; // 再び車両流フェーズへ
+      }
     }
 
     const carMustStopForSignal = (currentMode === 'signal' && isGreenLight);
@@ -910,7 +825,7 @@
         }
       }
 
-      // 車道横断中の危険接近：衝突させず直前で完全停車＋警告
+      // 車道横断中の危険接近：直前停車＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -925,7 +840,7 @@
             playHorn();
             car.hasHonked = true;
             wasHonked = true;
-            triggerImmediateViolation(); // 危険接近で即座に赤フラッシュ
+            triggerImmediateViolation();
           }
         }
       }
@@ -956,7 +871,6 @@
 
     updateSignalLamps();
 
-    // 強調発光リングのパルスアニメーション
     if (isSignalHighlighted) {
       const pulse = 1.0 + Math.sin(signalTimer * 8.0) * 0.18;
       haloNear.scale.set(pulse, pulse, 1.0);
@@ -983,11 +897,10 @@
     greenLampFar.material.map = greenMap;
   }
 
-  // ルール違反時の即時赤フラッシュ
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#ff1744', 900); // 画面全体が真っ赤に発光
+    trigger3DFlash(0xff1744, 900); // 3D赤フラッシュ
 
     setTimeout(() => {
       resetCheckState();
@@ -997,7 +910,7 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#00e676', 900); // 画面全体が緑色に発光
+    trigger3DFlash(0x00e676, 900); // 3D緑フラッシュ
 
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
@@ -1045,7 +958,7 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 左右確認判定
+        // 左右確認の判定
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1056,18 +969,18 @@
 
         const halfDepth = roadDepth * 0.5;
 
-        // 車道境界の進入チェック
+        // 車道への足の踏み入れ判定
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
         if (isEnteringRoad && !isCooldown) {
-          // 1. 横断歩道外（白線エリア外）からの進入判定
+          // 1. 横断歩道外（白線エリア外）からの進入チェック
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
             return;
           }
 
-          // 2. 赤信号進入の即時判定（車道に入った瞬間に赤フラッシュ）
+          // 2. 赤信号進入チェック
           if (currentMode === 'signal' && !isGreenLight) {
             triggerImmediateViolation();
             return;
@@ -1091,14 +1004,12 @@
 
           if (reached) {
             if (currentMode === 'signal') {
-              // 信号あり：クラクションを鳴らされていなければ成功（左右確認は必須としない）
               if (wasHonked) {
                 triggerImmediateViolation();
               } else {
                 triggerSuccess();
               }
             } else {
-              // 信号なし：左右両方の確認が必須
               if (!checkedLeft || !checkedRight || wasHonked) {
                 triggerImmediateViolation();
               } else {
