@@ -108,37 +108,20 @@
       font-size: 14px;
     }
 
-    #status-bar {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 16px;
-      pointer-events: none;
-      z-index: 20;
-    }
-    .status-dot {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid #555;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #777;
+    .status-badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #444;
       font-weight: bold;
-      font-size: 16px;
-      transition: all 0.2s;
+      color: #aaa;
     }
-    .status-dot.checked {
-      background: #00e676;
-      border-color: #fff;
-      color: #000;
-      box-shadow: 0 0 12px #00e676;
+    .status-badge.checked {
+      background: #2e7d32;
+      color: #fff;
     }
 
+    /* 最初から確実に表示されるAR開始ボタン */
     #btn-ar-start {
       position: absolute;
       bottom: 30px;
@@ -149,12 +132,12 @@
       border: none;
       font-weight: bold;
       font-size: 16px;
-      padding: 14px 28px;
+      padding: 14px 32px;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,230,118,0.4);
-      display: none;
+      box-shadow: 0 4px 14px rgba(0,230,118,0.4);
       z-index: 20;
+      display: block;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -164,15 +147,10 @@
 <div id="screen-flash"></div>
 <div id="canvas-container"></div>
 
-<button id="btn-ar-start" class="interactive">ARを開始する</button>
+<button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
 
 <div id="ui-overlay">
   <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">UIを隠す</button>
-
-  <div id="status-bar">
-    <div id="dot-left" class="status-dot">◀</div>
-    <div id="dot-right" class="status-dot">▶</div>
-  </div>
 
   <div id="main-panel" class="interactive">
     <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
@@ -184,7 +162,7 @@
     </div>
 
     <div class="setting-group">
-      <strong>難易度 (安全の隙間):</strong>
+      <strong>難易度:</strong>
       <select id="diff-select" onchange="changeDifficulty(this.value)">
         <option value="easy">かんたん（空白 8.5秒）</option>
         <option value="normal" selected>ふつう（空白 5.5秒）</option>
@@ -212,6 +190,11 @@
     <div class="setting-group">
       <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
     </div>
+
+    <div class="setting-group" style="margin-left:auto;">
+      <span id="badge-left" class="status-badge">左未確認</span>
+      <span id="badge-right" class="status-badge">右未確認</span>
+    </div>
   </div>
 </div>
 
@@ -237,15 +220,13 @@
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
 
   let isSignalHighlighted = true;
-
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
   let roadDepth = 7.0;
-
   const crosswalkHalfWidth = 2.0;
 
-  // 難易度設定：車両群が流れる時間と、車が完全に途切れる安全空白時間
+  // 難易度設定：車両流の継続時間と安全な空白時間
   const diffConfigs = {
     easy:   { trafficDuration: 6.0, clearDuration: 8.5, spawnProb: 0.020, maxCars: 3, speedMin: 0.16, speedMax: 0.20, greenDur: 20, redDur: 10 },
     normal: { trafficDuration: 8.0, clearDuration: 5.5, spawnProb: 0.030, maxCars: 5, speedMin: 0.20, speedMax: 0.26, greenDur: 16, redDur: 12 },
@@ -254,7 +235,6 @@
 
   let trafficTimer = 0;
   let isClearPhase = false;
-
   const blinkDuration = 4;
   let checkedLeft = false;
   let checkedRight = false;
@@ -369,28 +349,19 @@
     buildEnvironment();
     createPedestrianSignals();
 
-    checkWebXRSupport();
-
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('pointerdown', initAudio, { once: true });
 
     renderer.setAnimationLoop(renderLoop);
   }
 
-  function checkWebXRSupport() {
-    const btn = document.getElementById('btn-ar-start');
-    if ('xr' in navigator) {
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (supported) {
-          btn.style.display = 'block';
-          btn.onclick = startARSession;
-        }
-      }).catch(() => {});
-    }
-  }
-
   function startARSession() {
     initAudio();
+    if (!navigator.xr) {
+      alert('お使いのブラウザはWebXRに対応していません。');
+      return;
+    }
+
     navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
       optionalFeatures: ['local-floor', 'dom-overlay'],
@@ -403,6 +374,7 @@
       isRunning = false;
       roadAnchor.visible = false;
 
+      // 画面タップで緑の輪の位置に道路を設置
       session.addEventListener('select', () => {
         if (isPlaced) return;
         if (reticle.visible) {
@@ -574,8 +546,12 @@
     isCrossing = false;
     wasHonked = false;
 
-    document.getElementById('dot-left').className = 'status-dot';
-    document.getElementById('dot-right').className = 'status-dot';
+    const bL = document.getElementById('badge-left');
+    const bR = document.getElementById('badge-right');
+    bL.className = 'status-badge';
+    bL.innerText = '左未確認';
+    bR.className = 'status-badge';
+    bR.innerText = '右未確認';
   }
 
   function resetSignalCycle() {
@@ -774,13 +750,18 @@
     updateRoadGeometry();
   }
 
+  // 端末の首振りによる左右確認
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
-      document.getElementById('dot-left').className = 'status-dot checked';
+      const b = document.getElementById('badge-left');
+      b.className = 'status-badge checked';
+      b.innerText = '左確認済';
     } else if (side === 'right' && !checkedRight) {
       checkedRight = true;
-      document.getElementById('dot-right').className = 'status-dot checked';
+      const b = document.getElementById('badge-right');
+      b.className = 'status-badge checked';
+      b.innerText = '右確認済';
     }
   }
 
@@ -841,11 +822,11 @@
     const conf = diffConfigs[difficulty];
     trafficTimer += 0.016;
 
-    // 安全時間窓（クリアフェーズ）の制御ロジック
+    // 安全時間窓（車が途切れるギャップ）の制御
     if (!isClearPhase) {
       if (trafficTimer >= conf.trafficDuration) {
         trafficTimer = 0;
-        isClearPhase = true; // 車が全く来ない安全な時間へ移行
+        isClearPhase = true; // 車の来ない安全な時間へ
       } else {
         if (Math.random() < conf.spawnProb && cars.length < conf.maxCars) {
           spawnCar();
@@ -922,7 +903,7 @@
         }
       }
 
-      // 車道横断中の危険接近：衝突させず直前停車＋クラクション
+      // 直前急停止＋クラクション
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
@@ -997,7 +978,7 @@
   function triggerImmediateViolation() {
     if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#ff1744', 900); // 即時赤色発光
+    flashScreen('#ff1744', 900); // 違反時は即座に赤色発光
 
     setTimeout(() => {
       resetCheckState();
@@ -1007,7 +988,7 @@
 
   function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#00e676', 900); // 即時緑色発光
+    flashScreen('#00e676', 900); // 成功時は緑色発光
 
     currentSide = (currentSide === 'near') ? 'far' : 'near';
 
@@ -1022,7 +1003,7 @@
       const session = renderer.xr.getSession();
       dimDome.position.copy(camera.position);
 
-      // ヒットテストソースの取得（提示コードと同一の確実な構造）
+      // 提示コードと完全に同一のヒットテスト取得処理
       if (!hitTestSourceRequested) {
         session.requestReferenceSpace('viewer').then((referenceSpace) => {
           session.requestHitTestSource({ space: referenceSpace }).then((source) => {
@@ -1032,7 +1013,7 @@
         hitTestSourceRequested = true;
       }
 
-      // 未配置時：床面レイキャスト結果の描画
+      // 未配置時：床面検出結果を緑の輪に反映
       if (hitTestSource && !isPlaced) {
         const referenceSpace = renderer.xr.getReferenceSpace();
         const hitTestResults = frame.getHitTestResults(hitTestSource);
@@ -1047,7 +1028,7 @@
         }
       }
 
-      // 配置後かつスタート後：シミュレーション計算
+      // 配置後かつスタート後
       if (isPlaced && isRunning) {
         updateSignal();
 
@@ -1058,7 +1039,7 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 左右確認判定（進行方向に応じて自動反転）
+        // 首振り判定
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1069,18 +1050,17 @@
 
         const halfDepth = roadDepth * 0.5;
 
-        // 車道境界への進入チェック
         const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
                                (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
 
         if (isEnteringRoad && !isCooldown) {
-          // 1. 横断歩道外（白線エリア外）からの進入判定
+          // 横断歩道外の進入判定
           if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
             triggerImmediateViolation();
             return;
           }
 
-          // 2. 赤信号進入判定
+          // 赤信号進入判定
           if (currentMode === 'signal' && !isGreenLight) {
             triggerImmediateViolation();
             return;
