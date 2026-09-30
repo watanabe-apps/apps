@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>横断歩道ARシミュレーター</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>横断歩道 ARシミュレーター</title>
   <style>
     body {
       margin: 0;
@@ -14,10 +14,24 @@
       background-color: #000;
       touch-action: none;
     }
-    #canvas-container {
+    /* 背面の現実カメラ映像 */
+    #camera-video {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      display: block;
+      object-fit: cover;
+      z-index: 1;
+    }
+    /* 前面の3D描画キャンバス（完全透過） */
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 2;
     }
     #ui-overlay {
       position: absolute;
@@ -43,7 +57,7 @@
       color: #fff;
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
     .setting-group {
@@ -81,28 +95,26 @@
       background: #2e7d32;
     }
 
-    /* 設置案内バナー */
-    #placement-guide {
+    #guide-banner {
       position: absolute;
       top: 90px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.85);
       color: #ffeb3b;
-      padding: 10px 20px;
+      padding: 10px 22px;
       border-radius: 20px;
       font-size: 15px;
       font-weight: bold;
-      pointer-events: auto;
       border: 1px solid #ffeb3b;
       text-align: center;
-      display: none;
+      pointer-events: none;
     }
 
     .btn-ctrl {
-      width: 100px;
-      height: 100px;
-      font-size: 50px;
+      width: 104px;
+      height: 104px;
+      font-size: 54px;
       padding: 0;
       display: flex;
       justify-content: center;
@@ -112,7 +124,7 @@
       background-color: #1976d2;
       color: #fff;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
       transition: background 0.2s, transform 0.1s;
     }
     .btn-ctrl:active {
@@ -125,9 +137,9 @@
       opacity: 0.5;
     }
     .btn-action {
-      width: 100px;
-      height: 100px;
-      font-size: 54px;
+      width: 104px;
+      height: 104px;
+      font-size: 60px;
       background-color: #e65100;
     }
     
@@ -146,23 +158,6 @@
       gap: 16px;
     }
 
-    #custom-ar-button {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85);
-      border: 2px solid #00e676;
-      color: #00e676;
-      font-weight: bold;
-      font-size: 16px;
-      padding: 14px 28px;
-      border-radius: 30px;
-      cursor: pointer;
-      display: none;
-      z-index: 20;
-    }
-
     #result-modal {
       position: absolute;
       top: 50%;
@@ -173,7 +168,7 @@
       padding: 24px 36px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       display: none;
       pointer-events: auto;
       min-width: 240px;
@@ -204,9 +199,10 @@
 </head>
 <body>
 
-<div id="canvas-container"></div>
+<!-- カメラ映像表示要素 -->
+<video id="camera-video" autoplay playsinline muted></video>
 
-<button id="custom-ar-button" class="interactive">START AR (現実空間に投影)</button>
+<div id="canvas-container"></div>
 
 <div id="ui-overlay">
   <div class="settings-panel interactive">
@@ -217,13 +213,13 @@
     </div>
 
     <div class="setting-group">
-      <strong>サイズ比率:</strong>
-      <input type="range" id="scale-slider" min="0.1" max="1.0" step="0.05" value="1.0" oninput="changeWorldScale(this.value)">
-      <span id="scale-label">1/1 (実寸大)</span>
+      <strong>サイズ:</strong>
+      <input type="range" id="scale-slider" min="0.1" max="1.0" step="0.05" value="0.5" oninput="changeWorldScale(this.value)">
+      <span id="scale-label">1/2 (室内向け)</span>
     </div>
 
     <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置を再設定</button>
+      <button onclick="repositionRoad()" style="padding:5px 12px; background:#455a64; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">位置リセット</button>
     </div>
 
     <div class="status-area">
@@ -232,7 +228,7 @@
     </div>
   </div>
 
-  <div id="placement-guide">床をカメラに映し、タップして道路を設置してください</div>
+  <div id="guide-banner">床（または机）を映して画面をタップしてください</div>
 
   <button id="btn-left" class="btn-ctrl interactive" onclick="look('left')" aria-label="左を見る">◀</button>
   
@@ -250,9 +246,7 @@
 
 <script>
   let scene, camera, renderer;
-  let worldGroup, reticle;
-  let hitTestSource = null;
-  let hitTestSourceRequested = false;
+  let roadGroup;
   let isPlaced = false;
 
   let player;
@@ -261,7 +255,7 @@
   let cars = [];
 
   let currentMode = 'signal';
-  let worldScale = 1.0;
+  let worldScale = 0.5; // 初期値：室内で見渡しやすい1/2スケール
   let greenDuration = 20;
   let redDuration = 25;
   const blinkDuration = 4;
@@ -277,7 +271,7 @@
   let checkedRight = false;
   let wasHonked = false;
 
-  let playerLocalZ = 4.2; // 道路中心からの手前歩道位置（実寸換算）
+  let playerLocalZ = 4.0;
   let targetYaw = 0;
   let currentYaw = 0;
 
@@ -332,41 +326,30 @@
 
   init();
 
-  function init() {
+  async function init() {
     const container = document.getElementById('canvas-container');
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 1000);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.rotation.order = 'YXZ';
+    camera.position.set(0, 1.2, 0);
     scene.add(camera);
 
-    // 全ての3Dコンテンツをまとめるルートグループ（スケール・位置制御用）
-    worldGroup = new THREE.Group();
-    scene.add(worldGroup);
+    roadGroup = new THREE.Group();
+    roadGroup.visible = false;
+    scene.add(roadGroup);
 
+    // Three.jsキャンバスを完全透過で初期化
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
 
-    // 床面検出用レティクル（リング）
-    const reticleGeo = new THREE.RingGeometry(0.2, 0.25, 32).rotateX(-Math.PI / 2);
-    const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
-    reticle = new THREE.Mesh(reticleGeo, reticleMat);
-    reticle.matrixAutoUpdate = false;
-    reticle.visible = false;
-    scene.add(reticle);
-
-    if ('xr' in navigator) {
-      renderer.xr.enabled = true;
-      setupCustomARButton();
-    }
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.75);
     dirLight.position.set(20, 40, 20);
     dirLight.castShadow = true;
     scene.add(dirLight);
@@ -376,108 +359,130 @@
     createPlayer();
     createPedestrianSignal();
 
+    changeWorldScale(worldScale);
+
+    // カメラ映像の取得と再生
+    await startCamera();
+
+    // ジャイロの登録
+    enableDeviceOrientation();
+
     window.addEventListener('resize', onWindowResize);
-    window.addEventListener('pointerdown', (e) => {
-      initAudio();
-      // ARモードで未設置の場合、画面タップで道路を床に配置
-      if (renderer.xr.isPresenting && !isPlaced && reticle.visible) {
-        placeRoadAtReticle();
-      }
-    });
+    window.addEventListener('pointerdown', handleScreenTap);
 
-    // 初期非ARプレビュー状態
-    scene.background = new THREE.Color(0x87ceeb);
-    camera.position.set(0, 1.5, 4.2);
-    resetGame();
-
-    renderer.setAnimationLoop(renderLoop);
+    animate();
   }
 
-  function setupCustomARButton() {
-    const btn = document.getElementById('custom-ar-button');
-    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-      if (supported) {
-        btn.style.display = 'block';
-        let currentSession = null;
-
-        btn.onclick = () => {
-          initAudio();
-          if (currentSession === null) {
-            navigator.xr.requestSession('immersive-ar', {
-              requiredFeatures: ['hit-test'],
-              optionalFeatures: ['local-floor', 'dom-overlay'],
-              domOverlay: { root: document.getElementById('ui-overlay') }
-            }).then((session) => {
-              currentSession = session;
-              renderer.xr.setSession(session);
-              btn.style.display = 'none';
-              scene.background = null; // 現実世界のパススルーを背景化
-
-              isPlaced = false;
-              worldGroup.visible = false;
-              document.getElementById('placement-guide').style.display = 'block';
-
-              session.addEventListener('select', () => {
-                if (!isPlaced && reticle.visible) {
-                  placeRoadAtReticle();
-                }
-              });
-
-              session.addEventListener('end', () => {
-                currentSession = null;
-                btn.style.display = 'block';
-                scene.background = new THREE.Color(0x87ceeb);
-                isPlaced = false;
-                worldGroup.visible = true;
-                worldGroup.position.set(0, 0, 0);
-                worldGroup.rotation.set(0, 0, 0);
-                document.getElementById('placement-guide').style.display = 'none';
-                hitTestSourceRequested = false;
-                hitTestSource = null;
-              });
-            }).catch(e => console.error(e));
-          } else {
-            currentSession.end();
-          }
-        };
+  // 背面カメラ起動
+  async function startCamera() {
+    const video = document.getElementById('camera-video');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (err) {
+      console.warn('背面カメラの取得に失敗。代替カメラを試行:', err);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+      } catch (e) {
+        alert('カメラの起動に失敗しました。HTTPSで接続されているか、カメラ権限が許可されているか確認してください。');
       }
-    }).catch(() => {});
+    }
   }
 
-  // 床面へ道路グループを固定配置
-  function placeRoadAtReticle() {
-    worldGroup.position.setFromMatrixPosition(reticle.matrix);
-    
-    // カメラの正面を向くように道路の回転を合わせる
-    const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
-    const angle = Math.atan2(camPos.x - worldGroup.position.x, camPos.z - worldGroup.position.z);
-    worldGroup.rotation.y = angle;
+  function handleScreenTap(e) {
+    initAudio();
 
-    worldGroup.visible = true;
+    // UIボタン等の操作タップ時は床面設置を行わない
+    if (e.target.closest('.interactive')) return;
+
+    // 未設置の場合、カメラ正面の床面（前方約3m、高さ0）に道路を設置
+    if (!isPlaced) {
+      placeRoad();
+    }
+  }
+
+  function placeRoad() {
+    // カメラの向いている水平方向を取得
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    dir.y = 0;
+    dir.normalize();
+
+    // 視線の先（3.5m手前）の地面位置に配置
+    const distance = 3.5 * worldScale;
+    roadGroup.position.copy(camera.position).add(dir.clone().multiplyScalar(distance));
+    roadGroup.position.y = 0; // 床面レベル
+
+    // カメラと正対するように回転
+    const angle = Math.atan2(camera.position.x - roadGroup.position.x, camera.position.z - roadGroup.position.z);
+    roadGroup.rotation.y = angle;
+
+    roadGroup.visible = true;
     isPlaced = true;
-    reticle.visible = false;
-    document.getElementById('placement-guide').style.display = 'none';
+    document.getElementById('guide-banner').style.display = 'none';
 
     resetGame();
   }
 
   function repositionRoad() {
-    if (renderer.xr.isPresenting) {
-      isPlaced = false;
-      worldGroup.visible = false;
-      document.getElementById('placement-guide').style.display = 'block';
-    }
+    isPlaced = false;
+    roadGroup.visible = false;
+    document.getElementById('guide-banner').style.display = 'block';
   }
 
   function changeWorldScale(val) {
     worldScale = parseFloat(val);
-    worldGroup.scale.set(worldScale, worldScale, worldScale);
+    roadGroup.scale.set(worldScale, worldScale, worldScale);
     
     const label = document.getElementById('scale-label');
     if (worldScale >= 0.95) label.innerText = '1/1 (実寸大)';
     else if (worldScale >= 0.45 && worldScale <= 0.55) label.innerText = '1/2 (室内向け)';
     else if (worldScale <= 0.15) label.innerText = '1/10 (卓上サイズ)';
     else label.innerText = `${worldScale.toFixed(2)}倍`;
+
+    if (isPlaced) {
+      placeRoad();
+    }
+  }
+
+  // ジャイロによる端末の向き追従
+  function enableDeviceOrientation() {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      window.addEventListener('click', async () => {
+        try {
+          const perm = await DeviceOrientationEvent.requestPermission();
+          if (perm === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        } catch (e) {}
+      }, { once: true });
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+  }
+
+  function handleOrientation(e) {
+    if (e.alpha === null) return;
+    const orientation = window.orientation || (screen.orientation ? screen.orientation.angle : 0) || 0;
+
+    // 端末の姿勢をカメラ回転へ反映
+    const alpha = THREE.MathUtils.degToRad(e.alpha);
+    const beta = THREE.MathUtils.degToRad(e.beta);
+    const gamma = THREE.MathUtils.degToRad(e.gamma);
+
+    // 首振りの相対角度による左右確認
+    if (isPlaced) {
+      let relativeYaw = -(gamma);
+      if (orientation === 90) relativeYaw = -beta;
+      else if (orientation === -90) relativeYaw = beta;
+
+      if (relativeYaw > 0.6) setChecked('left');
+      else if (relativeYaw < -0.6) setChecked('right');
+    }
   }
 
   function createPedestrianCanvas(type, isOn) {
@@ -554,63 +559,55 @@
     greenTexOff = createPedestrianCanvas('green', false);
   }
 
-  // 実寸大基準の環境構築（車道幅7m、車線幅3.5m）
   function buildEnvironment() {
-    // 歩道（手前・奥）
-    const sidewalkGeo = new THREE.PlaneGeometry(160, 4);
-    const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x90a4ae });
+    // 実空間に重ねるため、歩道アスファルトは半透明にして床面が見える仕様
+    const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x90a4ae, transparent: true, opacity: 0.85 });
 
-    const sidewalkNear = new THREE.Mesh(sidewalkGeo, sidewalkMat);
+    const sidewalkNear = new THREE.Mesh(new THREE.PlaneGeometry(160, 4), sidewalkMat);
     sidewalkNear.rotation.x = -Math.PI / 2;
     sidewalkNear.position.set(0, 0, 5.5);
-    worldGroup.add(sidewalkNear);
+    roadGroup.add(sidewalkNear);
 
-    const sidewalkFar = new THREE.Mesh(sidewalkGeo, sidewalkMat);
+    const sidewalkFar = new THREE.Mesh(new THREE.PlaneGeometry(160, 4), sidewalkMat);
     sidewalkFar.rotation.x = -Math.PI / 2;
     sidewalkFar.position.set(0, 0, -5.5);
-    worldGroup.add(sidewalkFar);
+    roadGroup.add(sidewalkFar);
 
-    // 車道 (幅7m: Z = -3.5 〜 +3.5)
-    const roadGeo = new THREE.PlaneGeometry(160, 7.0);
-    const roadMat = new THREE.MeshLambertMaterial({ color: 0x37474f });
-    const road = new THREE.Mesh(roadGeo, roadMat);
+    // 車道
+    const roadMat = new THREE.MeshLambertMaterial({ color: 0x263238, transparent: true, opacity: 0.92 });
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(160, 7.0), roadMat);
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0.01, 0);
-    worldGroup.add(road);
+    roadGroup.add(road);
 
     // 中央線
     for (let x = -75; x < 80; x += 8) {
-      const lineGeo = new THREE.PlaneGeometry(4.0, 0.2);
-      const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const line = new THREE.Mesh(lineGeo, lineMat);
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.2), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       line.rotation.x = -Math.PI / 2;
       line.position.set(x, 0.02, 0);
-      worldGroup.add(line);
+      roadGroup.add(line);
     }
 
-    // 横断歩道（幅4.0m、白線幅0.45m、間隔0.45m）
+    // 横断歩道白線
     for (let z = -2.8; z <= 2.8; z += 0.9) {
-      const stripeGeo = new THREE.PlaneGeometry(4.0, 0.45);
-      const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+      const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.45), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       stripe.rotation.x = -Math.PI / 2;
       stripe.position.set(0, 0.025, z);
-      worldGroup.add(stripe);
+      roadGroup.add(stripe);
     }
 
-    // 停止線 (幅3.2m)
-    const stopGeo = new THREE.PlaneGeometry(0.4, 3.2);
+    // 停止線
     const stopMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-    const stopLine1 = new THREE.Mesh(stopGeo, stopMat);
+    const stopLine1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
     stopLine1.rotation.x = -Math.PI / 2;
-    stopLine1.position.set(3.2, 0.025, 1.75); // 手前車線用
-    worldGroup.add(stopLine1);
+    stopLine1.position.set(3.2, 0.025, 1.75);
+    roadGroup.add(stopLine1);
 
-    const stopLine2 = new THREE.Mesh(stopGeo, stopMat);
+    const stopLine2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 3.2), stopMat);
     stopLine2.rotation.x = -Math.PI / 2;
-    stopLine2.position.set(-3.2, 0.025, -1.75); // 奥車線用
-    worldGroup.add(stopLine2);
+    stopLine2.position.set(-3.2, 0.025, -1.75);
+    roadGroup.add(stopLine2);
   }
 
   function createPlayer() {
@@ -630,14 +627,13 @@
     group.add(head);
 
     group.position.set(0, 0, playerLocalZ);
-    worldGroup.add(group);
+    roadGroup.add(group);
     player = group;
   }
 
   function createPedestrianSignal() {
     signalPole = new THREE.Group();
 
-    // 柱 (高さ3m)
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.08, 3.2),
       new THREE.MeshLambertMaterial({ color: 0x546e7a })
@@ -645,20 +641,20 @@
     pole.position.y = 1.6;
     signalPole.add(pole);
 
-    const boxMat = new THREE.MeshLambertMaterial({ color: 0x212121 });
-    const box = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.26), boxMat);
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(0.55, 1.1, 0.26),
+      new THREE.MeshLambertMaterial({ color: 0x212121 })
+    );
     box.position.set(0, 2.3, 0);
     signalPole.add(box);
 
     const visorMat = new THREE.MeshLambertMaterial({ color: 0x151515 });
-    const visorGeo = new THREE.BoxGeometry(0.5, 0.06, 0.2);
-    
-    const topVisor = new THREE.Mesh(visorGeo, visorMat);
+    const topVisor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.2), visorMat);
     topVisor.position.set(0, 2.7, 0.16);
     topVisor.rotation.x = 0.2;
     signalPole.add(topVisor);
 
-    const midVisor = new THREE.Mesh(visorGeo, visorMat);
+    const midVisor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.2), visorMat);
     midVisor.position.set(0, 2.23, 0.16);
     midVisor.rotation.x = 0.2;
     signalPole.add(midVisor);
@@ -672,9 +668,8 @@
     greenLampMesh.position.set(0, 2.05, 0.135);
     signalPole.add(greenLampMesh);
 
-    // 対岸歩道側 (Z = -4.2)
     signalPole.position.set(2.4, 0, -4.2);
-    worldGroup.add(signalPole);
+    roadGroup.add(signalPole);
   }
 
   function changeMode(mode) {
@@ -695,13 +690,8 @@
     }
   }
 
-  function checkAngleStatus(yaw) {
-    if (yaw > 0.65) setChecked('left');
-    else if (yaw < -0.65) setChecked('right');
-  }
-
   function look(direction) {
-    if (renderer.xr.isPresenting || isCrossing || isFinished) return;
+    if (isCrossing || isFinished) return;
     initAudio();
 
     if (direction === 'left') {
@@ -736,7 +726,6 @@
     }
   }
 
-  // 実寸大サイズ（全長4.2m、全幅1.7m、全高1.4m）の車両モデル
   function createCarMesh(direction) {
     const carGroup = new THREE.Group();
     const colors = [0xd32f2f, 0x1976d2, 0xfbc02d, 0x388e3c, 0xf5f5f5, 0x333333];
@@ -765,7 +754,7 @@
 
     const carGroup = createCarMesh(direction);
     carGroup.position.set(xPos, 0, zPos);
-    worldGroup.add(carGroup);
+    roadGroup.add(carGroup);
 
     cars.push({
       mesh: carGroup,
@@ -871,12 +860,11 @@
       car.mesh.position.x += car.currentSpeed * car.direction;
 
       if (Math.abs(car.mesh.position.x) > 85) {
-        worldGroup.remove(car.mesh);
+        roadGroup.remove(car.mesh);
         cars.splice(i, 1);
         continue;
       }
 
-      // 横断中の危険接近・接触判定
       if (isCrossing && !isFinished) {
         const dx = Math.abs(car.mesh.position.x - player.position.x);
         const dz = Math.abs(car.mesh.position.z - player.position.z);
@@ -940,7 +928,7 @@
     checkedRight = false;
     wasHonked = false;
 
-    playerLocalZ = 4.2;
+    playerLocalZ = 4.0;
     targetYaw = 0;
     currentYaw = 0;
     signalTimer = 0;
@@ -948,7 +936,7 @@
 
     player.position.set(0, 0, playerLocalZ);
 
-    cars.forEach(c => worldGroup.remove(c.mesh));
+    cars.forEach(c => roadGroup.remove(c.mesh));
     cars = [];
     spawnInitialCars();
 
@@ -964,66 +952,10 @@
     document.getElementById('result-modal').style.display = 'none';
   }
 
-  function renderLoop(timestamp, frame) {
-    const isAR = renderer.xr.isPresenting;
+  function animate() {
+    requestAnimationFrame(animate);
 
-    // --- AR Hit-Test (床面・平面検出処理) ---
-    if (isAR) {
-      const session = renderer.xr.getSession();
-
-      if (!hitTestSourceRequested) {
-        session.requestReferenceSpace('viewer').then((referenceSpace) => {
-          session.requestHitTestSource({ space: referenceSpace }).then((source) => {
-            hitTestSource = source;
-          });
-        });
-        session.addEventListener('end', () => {
-          hitTestSourceRequested = false;
-          hitTestSource = null;
-        });
-        hitTestSourceRequested = true;
-      }
-
-      if (hitTestSource && !isPlaced) {
-        const referenceSpace = renderer.xr.getReferenceSpace();
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-        if (hitTestResults.length > 0) {
-          const hit = hitTestResults[0];
-          const pose = hit.getPose(referenceSpace);
-          reticle.visible = true;
-          reticle.matrix.fromArray(pose.transform.matrix);
-        } else {
-          reticle.visible = false;
-        }
-      }
-
-      // AR時の頭部回転から左右確認判定
-      if (isPlaced) {
-        const headEuler = new THREE.Euler(0, 0, 0, 'YXZ');
-        headEuler.setFromQuaternion(camera.quaternion);
-        // 道路の配置回転角（worldGroup.rotation.y）に対する相対角度で判定
-        const relativeYaw = headEuler.y - worldGroup.rotation.y;
-        checkAngleStatus(relativeYaw);
-      }
-    }
-
-    // --- 通常2D/プレビュー時の視線と追従 ---
-    if (!isAR) {
-      currentYaw += (targetYaw - currentYaw) * 0.08;
-      camera.rotation.set(0, currentYaw, 0);
-
-      if (!isCrossing) {
-        camera.position.set(0, 1.5, playerLocalZ);
-      } else {
-        const targetPos = new THREE.Vector3(player.position.x, 14.0, player.position.z + 8.5);
-        camera.position.lerp(targetPos, 0.08);
-        camera.lookAt(player.position.x, 0.0, player.position.z - 1.5);
-      }
-    }
-
-    // --- 横断前進ロジック ---
-    if (isPlaced || !isAR) {
+    if (isPlaced) {
       updateSignal();
       updateCars();
 
@@ -1036,6 +968,10 @@
         }
       }
     }
+
+    // ボタン首振り操作の補間（ジャイロ未動作時用）
+    currentYaw += (targetYaw - currentYaw) * 0.08;
+    camera.rotation.y = currentYaw;
 
     renderer.render(scene, camera);
   }
