@@ -33,7 +33,6 @@
       pointer-events: auto;
     }
 
-    /* 視覚フィードバック用カラーフラッシュ（全画面） */
     #screen-flash {
       position: absolute;
       top: 0;
@@ -43,7 +42,7 @@
       pointer-events: none;
       z-index: 5;
       opacity: 0;
-      transition: opacity 0.3s ease-out;
+      transition: opacity 0.25s ease-out;
     }
 
     #btn-toggle-ui {
@@ -109,7 +108,6 @@
       font-size: 14px;
     }
 
-    /* 左右確認状態の最小インジケーター（アイコン表示） */
     #status-bar {
       position: absolute;
       bottom: 20px;
@@ -194,11 +192,16 @@
       </select>
     </div>
 
-    <!-- 信号や車を小さくせず、横断する距離（部屋の広さ）だけを可変にするスライダー -->
     <div class="setting-group">
       <strong>横断の広さ:</strong>
       <input type="range" id="depth-slider" min="2.5" max="7.0" step="0.5" value="7.0" oninput="changeRoadDepth(this.value)">
       <span id="depth-label">7.0m (実寸大)</span>
+    </div>
+
+    <!-- 信号強調設定 -->
+    <div class="setting-group">
+      <strong>信号強調:</strong>
+      <label><input type="checkbox" id="check-highlight" checked onchange="toggleSignalHighlight(this.checked)"> 発光＆拡大</label>
     </div>
 
     <div class="setting-group">
@@ -222,24 +225,26 @@
   let isRunning = false;
   let isUIHidden = false;
 
-  // 往復状態管理
-  let currentSide = 'near'; // 'near': 手前歩道から奥へ, 'far': 奥歩道から手前へ
+  let currentSide = 'near';
   let isCrossing = false;
   let isCooldown = false;
 
-  // 道路・環境メッシュ
   let roadMesh, sidewalkNear, sidewalkFar, stopLineNear, stopLineFar;
   let centerLineGroup, crosswalkGroup;
 
-  // 信号機（実寸大固定）
   let poleNear, poleFar;
   let redLampNear, greenLampNear, redLampFar, greenLampFar;
+  let haloNear, haloFar;
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
+
+  let isSignalHighlighted = true;
 
   let cars = [];
   let currentMode = 'signal';
   let difficulty = 'normal';
-  let roadDepth = 7.0; // 車道幅（奥行き）: 2.5m 〜 7.0m
+  let roadDepth = 7.0;
+
+  const crosswalkHalfWidth = 2.0; // 横断歩道白線エリアの半幅（X = -2.0 〜 +2.0）
 
   const diffConfigs = {
     easy:   { rushDuration: 5, gapDuration: 8.0, spawnProb: 0.015, maxCars: 3, speedMin: 0.15, speedMax: 0.20, greenDur: 20, redDur: 10 },
@@ -253,11 +258,9 @@
   let checkedRight = false;
   let wasHonked = false;
 
-  // 初期赤信号
   let signalTimer = 0;
   let isGreenLight = false;
   let isBlinking = false;
-  let prevGreenState = false;
 
   let audioCtx = null;
 
@@ -304,7 +307,6 @@
     osc2.stop(now + 0.48);
   }
 
-  // 画面全体のカラーフラッシュ演出
   function flashScreen(colorHex, duration = 600) {
     const el = document.getElementById('screen-flash');
     el.style.backgroundColor = colorHex;
@@ -418,7 +420,6 @@
     });
   }
 
-  // 設置時、現在の足元を手前歩道の先端位置に合わせる
   function anchorRoadToUserFeet() {
     const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     const floorY = reticlePos.y;
@@ -432,7 +433,6 @@
     const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
     roadAnchor.rotation.set(0, angle, 0);
 
-    // 手前歩道端（Z = roadDepth * 0.5 + 0.8）が現在足元になるよう配置
     const offsetDist = roadDepth * 0.5 + 0.8;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
@@ -477,7 +477,6 @@
     resetCheckState();
   }
 
-  // 信号や車を縮小せず、道路の奥行き（歩行距離）のみを動的に変形
   function changeRoadDepth(val) {
     roadDepth = parseFloat(val);
     const label = document.getElementById('depth-label');
@@ -488,22 +487,32 @@
     updateRoadGeometry();
   }
 
+  function toggleSignalHighlight(enabled) {
+    isSignalHighlighted = enabled;
+    applySignalHighlight();
+  }
+
+  function applySignalHighlight() {
+    const scaleFactor = isSignalHighlighted ? 1.45 : 1.0;
+    poleNear.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    poleFar.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    haloNear.visible = isSignalHighlighted;
+    haloFar.visible = isSignalHighlighted;
+  }
+
   function updateRoadGeometry() {
-    // 車道メッシュの奥行きを更新
     roadMesh.geometry.dispose();
     roadMesh.geometry = new THREE.PlaneGeometry(160, roadDepth);
 
-    // 歩道位置の再調整
     const halfDepth = roadDepth * 0.5;
     sidewalkNear.position.set(0, 0.005, halfDepth + 1.25);
     sidewalkFar.position.set(0, 0.005, -(halfDepth + 1.25));
 
-    // 停止線位置の更新
     const laneOffset = halfDepth * 0.5;
     stopLineNear.position.set(3.2, 0.02, laneOffset);
     stopLineFar.position.set(-3.2, 0.02, -laneOffset);
 
-    // 横断歩道白線の再生成
     while (crosswalkGroup.children.length > 0) {
       crosswalkGroup.remove(crosswalkGroup.children[0]);
     }
@@ -512,7 +521,7 @@
     for (let i = 0; i <= numStripes; i++) {
       const z = -halfDepth + 0.3 + i * step;
       const stripe = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.8, 0.42),
+        new THREE.PlaneGeometry(crosswalkHalfWidth * 2.0, 0.42),
         new THREE.MeshBasicMaterial({ color: 0xffffff })
       );
       stripe.rotation.x = -Math.PI / 2;
@@ -520,9 +529,8 @@
       crosswalkGroup.add(stripe);
     }
 
-    // 信号機（等身大固定）のZ位置のみ再配置
-    poleFar.position.set(2.5, 0, -(halfDepth + 0.9));
-    poleNear.position.set(-2.5, 0, halfDepth + 0.9);
+    poleFar.position.set(2.6, 0, -(halfDepth + 0.9));
+    poleNear.position.set(-2.6, 0, halfDepth + 0.9);
   }
 
   function changeBackgroundDim(val) {
@@ -565,7 +573,6 @@
     signalTimer = 0;
     isGreenLight = false;
     isBlinking = false;
-    prevGreenState = false;
     updateSignalLamps();
   }
 
@@ -660,7 +667,6 @@
     roadMesh.position.set(0, 0.01, 0);
     roadAnchor.add(roadMesh);
 
-    // 中央白線
     centerLineGroup = new THREE.Group();
     for (let x = -75; x < 80; x += 8) {
       const line = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 0.2), new THREE.MeshBasicMaterial({ color: 0xffffff }));
@@ -688,7 +694,6 @@
   function createSignalUnit(facingAngle) {
     const group = new THREE.Group();
 
-    // 等身大スケール（高さ3.2mの支柱）
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.08, 3.2),
       new THREE.MeshLambertMaterial({ color: 0x546e7a })
@@ -724,10 +729,22 @@
     greenLamp.position.set(0, 2.05, 0.135);
     head.add(greenLamp);
 
+    // 強調用の発光パルスリング（黄色のリング）
+    const haloGeo = new THREE.RingGeometry(0.55, 0.72, 32);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0xffeb3b,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide
+    });
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    halo.position.set(0, 2.3, 0.14);
+    head.add(halo);
+
     head.rotation.y = facingAngle;
     group.add(head);
 
-    return { group, redLamp, greenLamp };
+    return { group, redLamp, greenLamp, halo };
   }
 
   function createPedestrianSignals() {
@@ -735,14 +752,17 @@
     poleFar = farUnit.group;
     redLampFar = farUnit.redLamp;
     greenLampFar = farUnit.greenLamp;
+    haloFar = farUnit.halo;
     roadAnchor.add(poleFar);
 
     const nearUnit = createSignalUnit(Math.PI);
     poleNear = nearUnit.group;
     redLampNear = nearUnit.redLamp;
     greenLampNear = nearUnit.greenLamp;
+    haloNear = nearUnit.halo;
     roadAnchor.add(poleNear);
 
+    applySignalHighlight();
     updateRoadGeometry();
   }
 
@@ -756,7 +776,6 @@
     }
   }
 
-  // 実寸大スケール（全長4.0m、全幅1.68m、全高1.4m）の迫力ある車両
   function createCarMesh(direction) {
     const carGroup = new THREE.Group();
     const colors = [0xd32f2f, 0x1976d2, 0xfbc02d, 0x388e3c, 0xf5f5f5, 0x333333];
@@ -780,7 +799,6 @@
 
   function spawnCarAt(xPos, isNearLane) {
     const direction = isNearLane ? -1 : 1;
-    // 車道の現在幅（奥行き）に応じたレーン位置
     const laneOffset = (roadDepth * 0.5) * 0.5;
     const zPos = isNearLane ? laneOffset : -laneOffset;
 
@@ -797,8 +815,7 @@
       direction: direction,
       baseSpeed: baseSpeed,
       currentSpeed: baseSpeed,
-      hasHonked: false,
-      isEmergencyStopped: false
+      hasHonked: false
     });
   }
 
@@ -835,7 +852,6 @@
       const car = cars[i];
       let targetSpeed = car.baseSpeed;
 
-      // 信号停止処理
       if (carMustStopForSignal) {
         if (car.isNearLane) {
           const stopTargetX = 5.4;
@@ -866,7 +882,6 @@
         }
       }
 
-      // 車間距離維持
       for (let j = 0; j < cars.length; j++) {
         if (i === j) continue;
         const other = cars[j];
@@ -895,24 +910,22 @@
         }
       }
 
-      // --- 教育的配慮：衝突ではなく、直前での急停車＆クラクション ---
+      // 車道横断中の危険接近：衝突させず直前で完全停車＋警告
       if (isCrossing && !isCooldown) {
         const dx = Math.abs(car.mesh.position.x - localPlayerPos.x);
         const dz = Math.abs(car.mesh.position.z - localPlayerPos.z);
 
-        // 自車の進行方向にプレイヤーがいて近づいている場合
         const isHeadingToPlayer = (car.direction === -1 && car.mesh.position.x > localPlayerPos.x) ||
                                   (car.direction === 1 && car.mesh.position.x < localPlayerPos.x);
 
         if (isHeadingToPlayer && dx < 5.8 && dz < 1.6) {
-          // 危険接近：クラクションを鳴らし、直前で完全停車
           targetSpeed = 0;
           car.currentSpeed = 0;
           if (!car.hasHonked) {
             playHorn();
             car.hasHonked = true;
             wasHonked = true;
-            flashScreen('#d50000', 700); // 警告赤フラッシュ
+            triggerImmediateViolation(); // 危険接近で即座に赤フラッシュ
           }
         }
       }
@@ -941,13 +954,14 @@
     const greenTimeLeft = totalCycle - signalTimer;
     isBlinking = isGreenLight && (greenTimeLeft <= blinkDuration);
 
-    // 赤から青に変わった瞬間にふわっと青緑フラッシュで通知
-    if (isGreenLight && !prevGreenState) {
-      flashScreen('#00e676', 450);
-    }
-    prevGreenState = isGreenLight;
-
     updateSignalLamps();
+
+    // 強調発光リングのパルスアニメーション
+    if (isSignalHighlighted) {
+      const pulse = 1.0 + Math.sin(signalTimer * 8.0) * 0.18;
+      haloNear.scale.set(pulse, pulse, 1.0);
+      haloFar.scale.set(pulse, pulse, 1.0);
+    }
   }
 
   function updateSignalLamps() {
@@ -969,12 +983,11 @@
     greenLampFar.material.map = greenMap;
   }
 
-  // 成功：画面が緑色に光り、反対側への横断へ移行
-  function triggerSuccess() {
+  // ルール違反時の即時赤フラッシュ
+  function triggerImmediateViolation() {
+    if (isCooldown) return;
     isCooldown = true;
-    flashScreen('#00e676', 900); // 成功緑フラッシュ
-
-    currentSide = (currentSide === 'near') ? 'far' : 'near';
+    flashScreen('#ff1744', 900); // 画面全体が真っ赤に発光
 
     setTimeout(() => {
       resetCheckState();
@@ -982,10 +995,11 @@
     }, 1800);
   }
 
-  // 失敗：画面が赤く光り、リセット
-  function triggerFail() {
+  function triggerSuccess() {
     isCooldown = true;
-    flashScreen('#ff1744', 900); // 警告赤フラッシュ
+    flashScreen('#00e676', 900); // 画面全体が緑色に発光
+
+    currentSide = (currentSide === 'near') ? 'far' : 'near';
 
     setTimeout(() => {
       resetCheckState();
@@ -1031,7 +1045,7 @@
         camera.getWorldDirection(camDir);
         const localDir = camDir.clone().transformDirection(new THREE.Matrix4().copy(roadAnchor.matrixWorld).invert());
 
-        // 左右確認判定（進行方向に応じて自動反転）
+        // 左右確認判定
         if (currentSide === 'near') {
           if (localDir.x < -0.55) setChecked('left');
           else if (localDir.x > 0.55) setChecked('right');
@@ -1042,11 +1056,24 @@
 
         const halfDepth = roadDepth * 0.5;
 
-        // 車道進入判定
-        if (!isCrossing && !isCooldown) {
-          if (currentSide === 'near' && localPlayerPos.z < halfDepth) {
-            isCrossing = true;
-          } else if (currentSide === 'far' && localPlayerPos.z > -halfDepth) {
+        // 車道境界の進入チェック
+        const isEnteringRoad = (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) ||
+                               (currentSide === 'far' && localPlayerPos.z > -halfDepth && localPlayerPos.z < halfDepth);
+
+        if (isEnteringRoad && !isCooldown) {
+          // 1. 横断歩道外（白線エリア外）からの進入判定
+          if (Math.abs(localPlayerPos.x) > crosswalkHalfWidth) {
+            triggerImmediateViolation();
+            return;
+          }
+
+          // 2. 赤信号進入の即時判定（車道に入った瞬間に赤フラッシュ）
+          if (currentMode === 'signal' && !isGreenLight) {
+            triggerImmediateViolation();
+            return;
+          }
+
+          if (!isCrossing) {
             isCrossing = true;
           }
         }
@@ -1063,18 +1090,17 @@
           }
 
           if (reached) {
-            // --- 判定ロジック ---
             if (currentMode === 'signal') {
-              // 信号あり：赤信号で渡った場合、またはクラクションを鳴らされた場合は失敗。左右確認は必須としない
-              if (!isGreenLight || wasHonked) {
-                triggerFail();
+              // 信号あり：クラクションを鳴らされていなければ成功（左右確認は必須としない）
+              if (wasHonked) {
+                triggerImmediateViolation();
               } else {
                 triggerSuccess();
               }
             } else {
-              // 信号なし：左右確認が必須、かつクラクションが鳴っていなければ成功
+              // 信号なし：左右両方の確認が必須
               if (!checkedLeft || !checkedRight || wasHonked) {
-                triggerFail();
+                triggerImmediateViolation();
               } else {
                 triggerSuccess();
               }
