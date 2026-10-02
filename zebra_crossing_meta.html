@@ -2,236 +2,63 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>横断歩道 ARシミュレーター</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>横断歩道 ARシミュレーター (Meta Quest専用版)</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background-color: #000;
       font-family: sans-serif;
       user-select: none;
-      background-color: #000;
     }
-    #canvas-container {
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      display: block;
-    }
-    #ui-overlay {
+    #enter-ar-btn {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      height: 100dvh;
-      pointer-events: none;
-      box-sizing: border-box;
-      padding: 12px;
-      z-index: 10;
-    }
-    .interactive {
-      pointer-events: auto;
-    }
-
-    #screen-flash {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0;
-      transition: opacity 0.2s ease-out;
-    }
-
-    #sparkle-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    #btn-toggle-ui {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      color: #fff;
-      font-size: 13px;
-      font-weight: bold;
-      padding: 8px 14px;
-      border-radius: 16px;
-      cursor: pointer;
-      z-index: 50;
-    }
-
-    #main-panel {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 110px;
-      background: rgba(0, 0, 0, 0.88);
-      padding: 10px 14px;
-      border-radius: 8px;
-      color: #fff;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      transition: opacity 0.2s;
-      z-index: 50;
-    }
-    .setting-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-    }
-    .setting-group label {
-      cursor: pointer;
-    }
-    select, input[type="range"] {
-      border-radius: 4px;
-      border: 1px solid #666;
-      background: #222;
-      color: #fff;
-    }
-    select {
-      padding: 3px 6px;
-    }
-    input[type="range"] {
-      height: 6px;
-    }
-
-    #btn-start-sim {
-      background: #00e676;
-      color: #000;
-      border: none;
-      font-weight: bold;
-      padding: 6px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .status-badge {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background: #444;
-      font-weight: bold;
-      color: #aaa;
-    }
-    .status-badge.checked {
-      background: #2e7d32;
-      color: #fff;
-    }
-
-    #btn-ar-start {
-      position: absolute;
-      bottom: 24px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
       background: #00e676;
       color: #000;
       border: none;
       font-weight: bold;
-      font-size: 16px;
-      padding: 14px 32px;
-      border-radius: 30px;
+      font-size: 20px;
+      padding: 18px 40px;
+      border-radius: 40px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0,230,118,0.4);
-      z-index: 20;
-      display: block;
+      box-shadow: 0 4px 16px rgba(0, 230, 118, 0.5);
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<div id="canvas-container"></div>
-
-<button id="btn-ar-start" class="interactive" onclick="startARSession()">ARを開始する</button>
-
-<div id="ui-overlay">
-  <div id="screen-flash"></div>
-  <canvas id="sparkle-canvas"></canvas>
-
-  <button id="btn-toggle-ui" class="interactive" onclick="toggleUIVisibility()">設定を隠す</button>
-
-  <div id="main-panel" class="interactive">
-    <button id="btn-start-sim" onclick="startSimulation()">▶ スタート</button>
-
-    <div class="setting-group">
-      <strong>モード:</strong>
-      <label><input type="radio" name="mode" value="signal" onchange="changeMode(this.value)"> 信号あり</label>
-      <label><input type="radio" name="mode" value="no-signal" checked onchange="changeMode(this.value)"> 信号なし</label>
-    </div>
-
-    <div class="setting-group">
-      <strong>難易度 (安全の隙間):</strong>
-      <select id="diff-select" onchange="changeDifficulty(this.value)">
-        <option value="easy">かんたん（空白 8.5秒）</option>
-        <option value="normal" selected>ふつう（空白 5.5秒）</option>
-        <option value="hard">むずかしい（空白 3.5秒）</option>
-      </select>
-    </div>
-
-    <div class="setting-group">
-      <strong>横断幅 (歩行距離):</strong>
-      <input type="range" id="depth-slider" min="2.0" max="7.0" step="0.5" value="3.0" oninput="changeRoadDepth(this.value)">
-      <span id="depth-label">3.0m (室内適正)</span>
-    </div>
-
-    <div class="setting-group">
-      <strong>信号強調:</strong>
-      <label><input type="checkbox" id="check-highlight" onchange="toggleSignalHighlight(this.checked)"> 灯器拡大</label>
-    </div>
-
-    <div class="setting-group">
-      <strong>背景の暗さ:</strong>
-      <input type="range" id="dim-slider" min="0" max="100" step="5" value="50" oninput="changeBackgroundDim(this.value)">
-      <span id="dim-label">50%</span>
-    </div>
-
-    <div class="setting-group">
-      <button onclick="repositionRoad()" style="padding:4px 10px; background:#455a64; color:#fff; border:none; border-radius:4px; cursor:pointer;">位置再設定</button>
-    </div>
-
-    <div class="setting-group" style="margin-left:auto;">
-      <span id="badge-left" class="status-badge">左未確認</span>
-      <span id="badge-right" class="status-badge">右未確認</span>
-    </div>
-  </div>
-</div>
+<button id="enter-ar-btn" onclick="startXRSession()">Meta QuestでARを開始</button>
 
 <script>
   let scene, camera, renderer;
-  let roadAnchor, reticle, dimDome;
-  let flashMesh3D;
+  let roadAnchor, dimDome, reticle;
+  let flashMesh3D, sparkleGroup;
+  let sparkles = [];
   let hitTestSource = null;
   let hitTestSourceRequested = false;
+
+  let controller, raycaster;
+  let laserLine, pointerDot;
+
+  let uiMesh, uiCanvas, uiCtx, uiTexture;
+
   let isPlaced = false;
   let isRunning = false;
-  let isUIHidden = false;
-
   let currentSide = 'near';
   let isCrossing = false;
   let isCooldown = false;
-  let isOffCrosswalkWarned = false; // 枠外立ち止まり中の点滅ループ防止用（枠内に戻れば即解除）
+  let isOffCrosswalkWarned = false;
 
   let roadMesh, sidewalkNear, sidewalkFar, stopLineNear, stopLineFar;
   let centerLineGroup, crosswalkGroup;
 
-  let poleNear, poleFar;
-  let headNear, headFar;
+  let poleNear, poleFar, headNear, headFar;
   let redLampNear, greenLampNear, redLampFar, greenLampFar;
   let redTexOn, redTexOff, greenTexOn, greenTexOff;
 
@@ -240,6 +67,7 @@
   let currentMode = 'no-signal';
   let difficulty = 'normal';
   let roadDepth = 3.0;
+  let backgroundDim = 50;
   const crosswalkHalfWidth = 3.5;
 
   const diffConfigs = {
@@ -260,10 +88,6 @@
   let isBlinking = false;
 
   let audioCtx = null;
-
-  let sparkleCanvas, sparkleCtx;
-  let sparkles = [];
-  let sparkleAnimId = null;
 
   function initAudio() {
     if (!audioCtx) {
@@ -340,17 +164,7 @@
   }
 
   function triggerRedFlash(duration = 800) {
-    const el = document.getElementById('screen-flash');
-    if (el) {
-      el.style.backgroundColor = '#ff1744';
-      el.style.opacity = '0.6';
-      setTimeout(() => {
-        el.style.opacity = '0';
-      }, duration);
-    }
-
     if (flashMesh3D) {
-      flashMesh3D.material.color.setHex(0xff1744);
       flashMesh3D.material.opacity = 0.55;
       setTimeout(() => {
         flashMesh3D.material.opacity = 0.0;
@@ -358,97 +172,73 @@
     }
   }
 
-  function triggerSparkles() {
-    const { width, height } = getViewportSize();
-    sparkles = [];
-    const colors = ['#ffd700', '#fff', '#00e676', '#ffeb3b', '#00e5ff'];
-    const count = 75;
-
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 4 + Math.random() * 9;
-      sparkles.push({
-        x: width * 0.5 + (Math.random() - 0.5) * 80,
-        y: height * 0.45 + (Math.random() - 0.5) * 80,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2.5,
-        size: 5 + Math.random() * 8,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * Math.PI,
-        rotSpeed: (Math.random() - 0.5) * 0.3,
-        alpha: 1.0,
-        decay: 0.016 + Math.random() * 0.012
-      });
-    }
-
-    if (!sparkleAnimId) {
-      animateSparkles();
-    }
-  }
-
-  function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+  function createStarGeometry(outerRadius, innerRadius, points) {
+    const shape = new THREE.Shape();
     let rot = Math.PI / 2 * 3;
-    let x = cx;
-    let y = cy;
-    const step = Math.PI / spikes;
+    const step = Math.PI / points;
 
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - outerRadius);
-    for (let i = 0; i < spikes; i++) {
-      x = cx + Math.cos(rot) * outerRadius;
-      y = cy + Math.sin(rot) * outerRadius;
-      ctx.lineTo(x, y);
+    shape.moveTo(0, -outerRadius);
+    for (let i = 0; i < points; i++) {
+      shape.lineTo(Math.cos(rot) * outerRadius, Math.sin(rot) * outerRadius);
       rot += step;
-
-      x = cx + Math.cos(rot) * innerRadius;
-      y = cy + Math.sin(rot) * innerRadius;
-      ctx.lineTo(x, y);
+      shape.lineTo(Math.cos(rot) * innerRadius, Math.sin(rot) * innerRadius);
       rot += step;
     }
-    ctx.lineTo(cx, cy - outerRadius);
-    ctx.closePath();
-    ctx.fill();
+    shape.closePath();
+    return new THREE.ShapeGeometry(shape);
   }
 
-  function animateSparkles() {
-    const { width, height } = getViewportSize();
-    sparkleCtx.clearRect(0, 0, width, height);
+  function triggerSparkles() {
+    const starGeo = createStarGeometry(0.07, 0.03, 4);
+    const colors = [0xffd700, 0xffffff, 0x00e676, 0xffeb3b, 0x00e5ff];
+    const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
 
+    const spawnOrigin = camPos.clone().add(camDir.multiplyScalar(1.2));
+
+    for (let i = 0; i < 45; i++) {
+      const mat = new THREE.MeshBasicMaterial({
+        color: colors[Math.floor(Math.random() * colors.length)],
+        transparent: true,
+        opacity: 1.0,
+        side: THREE.DoubleSide
+      });
+      const mesh = new THREE.Mesh(starGeo, mat);
+      mesh.position.copy(spawnOrigin);
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.8 + Math.random() * 1.6;
+      mesh.userData = {
+        vx: Math.cos(angle) * speed * 0.016,
+        vy: (Math.sin(angle) * speed + 0.5) * 0.016,
+        vz: (Math.random() - 0.5) * 0.01,
+        rotSpeed: (Math.random() - 0.5) * 0.15,
+        decay: 0.018 + Math.random() * 0.012
+      };
+
+      sparkleGroup.add(mesh);
+      sparkles.push(mesh);
+    }
+  }
+
+  function updateSparkles() {
     for (let i = sparkles.length - 1; i >= 0; i--) {
       const p = sparkles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.18;
-      p.rotation += p.rotSpeed;
-      p.alpha -= p.decay;
+      p.position.x += p.userData.vx;
+      p.position.y += p.userData.vy;
+      p.position.z += p.userData.vz;
+      p.userData.vy -= 0.0008;
+      p.rotation.z += p.userData.rotSpeed;
+      p.material.opacity -= p.userData.decay;
 
-      if (p.alpha <= 0) {
+      if (p.material.opacity <= 0) {
+        sparkleGroup.remove(p);
+        p.geometry.dispose();
+        p.material.dispose();
         sparkles.splice(i, 1);
-        continue;
       }
-
-      sparkleCtx.save();
-      sparkleCtx.globalAlpha = Math.max(0, p.alpha);
-      sparkleCtx.fillStyle = p.color;
-      sparkleCtx.translate(p.x, p.y);
-      sparkleCtx.rotate(p.rotation);
-      drawStar(sparkleCtx, 0, 0, 4, p.size, p.size * 0.4);
-      sparkleCtx.restore();
     }
-
-    if (sparkles.length > 0) {
-      sparkleAnimId = requestAnimationFrame(animateSparkles);
-    } else {
-      sparkleCtx.clearRect(0, 0, width, height);
-      sparkleAnimId = null;
-    }
-  }
-
-  function getViewportSize() {
-    if (window.visualViewport) {
-      return { width: window.visualViewport.width, height: window.visualViewport.height };
-    }
-    return { width: window.innerWidth, height: window.innerHeight };
   }
 
   function getCarScale() {
@@ -458,17 +248,9 @@
   init();
 
   function init() {
-    const container = document.getElementById('canvas-container');
     scene = new THREE.Scene();
-
-    const { width, height } = getViewportSize();
-    camera = new THREE.PerspectiveCamera(70, width / height, 0.01, 1000);
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 1000);
     scene.add(camera);
-
-    sparkleCanvas = document.getElementById('sparkle-canvas');
-    sparkleCanvas.width = width;
-    sparkleCanvas.height = height;
-    sparkleCtx = sparkleCanvas.getContext('2d');
 
     const flashGeo = new THREE.PlaneGeometry(2, 2);
     const flashMat = new THREE.MeshBasicMaterial({
@@ -482,6 +264,9 @@
     flashMesh3D.position.set(0, 0, -0.1);
     flashMesh3D.renderOrder = 99999;
     camera.add(flashMesh3D);
+
+    sparkleGroup = new THREE.Group();
+    scene.add(sparkleGroup);
 
     const dimGeo = new THREE.SphereGeometry(200, 32, 16);
     const dimMat = new THREE.MeshBasicMaterial({
@@ -499,11 +284,11 @@
     scene.add(roadAnchor);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.xr.enabled = true;
-    container.appendChild(renderer.domElement);
+    document.body.appendChild(renderer.domElement);
 
     const reticleGeo = new THREE.RingGeometry(0.18, 0.22, 32).rotateX(-Math.PI / 2);
     const reticleMat = new THREE.MeshBasicMaterial({ color: 0x00e676 });
@@ -527,53 +312,280 @@
     poleNear.visible = false;
     poleFar.visible = false;
 
-    checkWebXRSupport();
+    setupQuestControllers();
+    buildFloating3DUI();
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', onWindowResize);
-    } else {
-      window.addEventListener('resize', onWindowResize);
-    }
-    window.addEventListener('pointerdown', initAudio, { once: true });
-
+    window.addEventListener('resize', onWindowResize);
     renderer.setAnimationLoop(renderLoop);
   }
 
-  function checkWebXRSupport() {
-    const btn = document.getElementById('btn-ar-start');
-    if ('xr' in navigator) {
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (supported) {
-          btn.style.display = 'block';
-          btn.onclick = startARSession;
+  function setupQuestControllers() {
+    raycaster = new THREE.Raycaster();
+
+    controller = renderer.xr.getController(0);
+    controller.addEventListener('selectstart', onSelectStart);
+    scene.add(controller);
+
+    const laserGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, -2.5)
+    ]);
+    const laserMat = new THREE.LineBasicMaterial({ color: 0x00e676, transparent: true, opacity: 0.7 });
+    laserLine = new THREE.Line(laserGeo, laserMat);
+    controller.add(laserLine);
+
+    const dotGeo = new THREE.RingGeometry(0.01, 0.015, 16);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0x00e676, side: THREE.DoubleSide });
+    pointerDot = new THREE.Mesh(dotGeo, dotMat);
+    pointerDot.visible = false;
+    scene.add(pointerDot);
+  }
+
+  function buildFloating3DUI() {
+    uiCanvas = document.createElement('canvas');
+    uiCanvas.width = 1024;
+    uiCanvas.height = 512;
+    uiCtx = uiCanvas.getContext('2d');
+
+    uiTexture = new THREE.CanvasTexture(uiCanvas);
+    const uiGeo = new THREE.PlaneGeometry(1.2, 0.6);
+    const uiMat = new THREE.MeshBasicMaterial({ map: uiTexture, transparent: true, side: THREE.DoubleSide });
+
+    uiMesh = new THREE.Mesh(uiGeo, uiMat);
+    uiMesh.position.set(0, 1.3, -1.2);
+    scene.add(uiMesh);
+
+    renderCanvasUI();
+  }
+
+  const uiHitBoxes = [
+    { id: 'btn_start', x: 40, y: 30, w: 220, h: 65 },
+    { id: 'btn_repose', x: 280, y: 30, w: 200, h: 65 },
+    { id: 'btn_mode', x: 40, y: 120, w: 440, h: 60 },
+    { id: 'btn_diff', x: 40, y: 200, w: 440, h: 60 },
+    { id: 'width_minus', x: 260, y: 280, w: 65, h: 60 },
+    { id: 'width_plus', x: 415, y: 280, w: 65, h: 60 },
+    { id: 'btn_highlight', x: 40, y: 360, w: 440, h: 60 },
+    { id: 'dim_minus', x: 740, y: 120, w: 65, h: 60 },
+    { id: 'dim_plus', x: 910, y: 120, w: 65, h: 60 },
+    { id: 'btn_bring_ui', x: 540, y: 360, w: 440, h: 60 }
+  ];
+
+  function renderCanvasUI() {
+    const ctx = uiCtx;
+    ctx.clearRect(0, 0, 1024, 512);
+
+    ctx.fillStyle = 'rgba(15, 20, 25, 0.92)';
+    ctx.strokeStyle = '#00e676';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 1004, 492, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isRunning ? '#ff5252' : '#00e676';
+    ctx.beginPath();
+    ctx.roundRect(40, 30, 220, 65, 12);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(isRunning ? '■ 停止' : '▶ スタート', 150, 73);
+
+    ctx.fillStyle = '#37474f';
+    ctx.beginPath();
+    ctx.roundRect(280, 30, 200, 65, 12);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('位置再設定', 380, 72);
+
+    drawButton(ctx, 40, 120, 440, 60, `モード: ${currentMode === 'signal' ? '信号あり' : '信号なし'}`);
+    const diffText = difficulty === 'easy' ? '難易度: かんたん (8.5s)' : difficulty === 'normal' ? '難易度: ふつう (5.5s)' : '難易度: むずかしい (3.5s)';
+    drawButton(ctx, 40, 200, 440, 60, diffText);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`横断幅: ${roadDepth.toFixed(1)}m`, 40, 320);
+    drawButton(ctx, 260, 280, 65, 60, '－');
+    drawButton(ctx, 415, 280, 65, 60, '＋');
+
+    drawButton(ctx, 40, 360, 440, 60, `灯器拡大: ${isSignalHighlighted ? 'ON' : 'OFF'}`);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`背景の暗さ: ${backgroundDim}%`, 540, 160);
+    drawButton(ctx, 740, 120, 65, 60, '－');
+    drawButton(ctx, 910, 120, 65, 60, '＋');
+
+    ctx.fillStyle = '#1e282d';
+    ctx.beginPath();
+    ctx.roundRect(540, 200, 440, 120, 14);
+    ctx.fill();
+    ctx.fillStyle = '#90a4ae';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('首振り安全確認', 760, 235);
+
+    ctx.fillStyle = checkedLeft ? '#2e7d32' : '#455a64';
+    ctx.beginPath();
+    ctx.roundRect(570, 255, 170, 45, 8);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(checkedLeft ? '左確認済' : '左未確認', 655, 285);
+
+    ctx.fillStyle = checkedRight ? '#2e7d32' : '#455a64';
+    ctx.beginPath();
+    ctx.roundRect(780, 255, 170, 45, 8);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(checkedRight ? '右確認済' : '右未確認', 865, 285);
+
+    drawButton(ctx, 540, 360, 440, 60, 'UIを目の前に呼ぶ');
+
+    ctx.fillStyle = '#78909c';
+    ctx.font = '18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(isPlaced ? '道路設置済 (床を歩いて横断)' : 'トリガーまたはボタンで道路を足元に設置', 512, 475);
+
+    uiTexture.needsUpdate = true;
+  }
+
+  function drawButton(ctx, x, y, w, h, text) {
+    ctx.fillStyle = '#263238';
+    ctx.strokeStyle = '#455a64';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x + w / 2, y + h / 2 + 8);
+  }
+
+  function bringUIToFront() {
+    const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
+    camDir.y = 0;
+    camDir.normalize();
+
+    uiMesh.position.set(
+      camPos.x + camDir.x * 1.2,
+      camPos.y - 0.1,
+      camPos.z + camDir.z * 1.2
+    );
+    uiMesh.lookAt(camPos.x, camPos.y - 0.1, camPos.z);
+  }
+
+  function onSelectStart() {
+    initAudio();
+
+    if (!controller) return;
+    const tempMatrix = new THREE.Matrix4();
+    tempMatrix.identity().extractRotation(controller.matrixWorld);
+
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+    const intersects = raycaster.intersectObject(uiMesh);
+
+    if (intersects.length > 0) {
+      const uv = intersects[0].uv;
+      const cx = uv.x * 1024;
+      const cy = (1 - uv.y) * 512;
+
+      for (const btn of uiHitBoxes) {
+        if (cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
+          handleUIButton(btn.id);
+          break;
         }
-      }).catch(() => {});
+      }
+    } else {
+      if (!isPlaced && reticle.visible) {
+        anchorRoadToReticle();
+      }
     }
   }
 
-  function startARSession() {
+  function handleUIButton(id) {
+    switch (id) {
+      case 'btn_start':
+        if (!isPlaced) anchorRoadToUserFeet();
+        isRunning = !isRunning;
+        if (isRunning) resetSignalCycle();
+        break;
+      case 'btn_repose':
+        anchorRoadToUserFeet();
+        break;
+      case 'btn_mode':
+        currentMode = (currentMode === 'signal') ? 'no-signal' : 'signal';
+        poleNear.visible = (currentMode === 'signal');
+        poleFar.visible = (currentMode === 'signal');
+        resetCheckState();
+        break;
+      case 'btn_diff':
+        if (difficulty === 'easy') difficulty = 'normal';
+        else if (difficulty === 'normal') difficulty = 'hard';
+        else difficulty = 'easy';
+        trafficTimer = 0;
+        isClearPhase = false;
+        resetSignalCycle();
+        break;
+      case 'width_minus':
+        if (roadDepth > 2.0) {
+          roadDepth = Math.max(2.0, roadDepth - 0.5);
+          updateRoadGeometryAndCars();
+        }
+        break;
+      case 'width_plus':
+        if (roadDepth < 7.0) {
+          roadDepth = Math.min(7.0, roadDepth + 0.5);
+          updateRoadGeometryAndCars();
+        }
+        break;
+      case 'btn_highlight':
+        isSignalHighlighted = !isSignalHighlighted;
+        applySignalHighlight();
+        break;
+      case 'dim_minus':
+        backgroundDim = Math.max(0, backgroundDim - 10);
+        dimDome.material.opacity = backgroundDim / 100.0;
+        break;
+      case 'dim_plus':
+        backgroundDim = Math.min(100, backgroundDim + 10);
+        dimDome.material.opacity = backgroundDim / 100.0;
+        break;
+      case 'btn_bring_ui':
+        bringUIToFront();
+        break;
+    }
+    renderCanvasUI();
+  }
+
+  function startXRSession() {
     initAudio();
+    if (!navigator.xr) {
+      alert('Meta Quest Browserで開いてください。');
+      return;
+    }
+
     navigator.xr.requestSession('immersive-ar', {
-      requiredFeatures: ['hit-test'],
-      optionalFeatures: ['local-floor', 'dom-overlay'],
-      domOverlay: { root: document.getElementById('ui-overlay') }
+      requiredFeatures: ['local-floor'],
+      optionalFeatures: ['hit-test']
     }).then((session) => {
       renderer.xr.setSession(session);
-      document.getElementById('btn-ar-start').style.display = 'none';
+      document.getElementById('enter-ar-btn').style.display = 'none';
 
-      isPlaced = false;
-      isRunning = false;
-      roadAnchor.visible = false;
-
-      session.addEventListener('select', () => {
-        if (isPlaced) return;
-        if (reticle.visible) {
-          anchorRoadToUserFeet();
-        }
-      });
+      bringUIToFront();
 
       session.addEventListener('end', () => {
-        document.getElementById('btn-ar-start').style.display = 'block';
+        document.getElementById('enter-ar-btn').style.display = 'block';
         isPlaced = false;
         isRunning = false;
         roadAnchor.visible = false;
@@ -581,13 +593,11 @@
         hitTestSource = null;
       });
     }).catch(e => {
-      alert('ARセッション開始エラー: ' + e.message);
+      alert('XR起動エラー: ' + e.message);
     });
   }
 
   function anchorRoadToUserFeet() {
-    const floorY = reticle.visible ? new THREE.Vector3().setFromMatrixPosition(reticle.matrix).y : roadAnchor.position.y;
-
     const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
     const camDir = new THREE.Vector3();
     camera.getWorldDirection(camDir);
@@ -600,60 +610,45 @@
     const offsetDist = roadDepth * 0.5 + 0.6;
     roadAnchor.position.set(
       camPos.x + camDir.x * offsetDist,
-      floorY,
+      0,
       camPos.z + camDir.z * offsetDist
     );
 
     roadAnchor.visible = true;
     isPlaced = true;
     reticle.visible = false;
-
     currentSide = 'near';
     resetCheckState();
+    renderCanvasUI();
   }
 
-  function startSimulation() {
-    initAudio();
-    if (!isPlaced) {
-      alert('床に緑の輪が出たら画面をタップし、道路を設置してからスタートしてください。');
-      return;
-    }
-    isRunning = true;
-    hideUI();
-    resetSignalCycle();
-  }
+  function anchorRoadToReticle() {
+    const reticlePos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+    const camPos = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+    const camDir = new THREE.Vector3();
+    camera.getWorldDirection(camDir);
+    camDir.y = 0;
+    camDir.normalize();
 
-  function repositionRoad() {
-    if (renderer.xr.isPresenting) {
-      isPlaced = false;
-      isRunning = false;
-      roadAnchor.visible = false;
-      reticle.visible = false;
-      showUI();
-    }
-  }
+    const angle = Math.atan2(camDir.x, camDir.z) + Math.PI;
+    roadAnchor.rotation.set(0, angle, 0);
 
-  function changeDifficulty(val) {
-    difficulty = val;
-    trafficTimer = 0;
-    isClearPhase = false;
-    resetSignalCycle();
-  }
+    const offsetDist = roadDepth * 0.5 + 0.6;
+    roadAnchor.position.set(
+      camPos.x + camDir.x * offsetDist,
+      reticlePos.y,
+      camPos.z + camDir.z * offsetDist
+    );
 
-  function changeMode(mode) {
-    currentMode = mode;
-    poleNear.visible = (mode === 'signal');
-    poleFar.visible = (mode === 'signal');
+    roadAnchor.visible = true;
+    isPlaced = true;
+    reticle.visible = false;
+    currentSide = 'near';
     resetCheckState();
+    renderCanvasUI();
   }
 
-  function changeRoadDepth(val) {
-    roadDepth = parseFloat(val);
-    const label = document.getElementById('depth-label');
-    if (roadDepth >= 6.8) label.innerText = '7.0m (実寸大)';
-    else if (roadDepth <= 3.8) label.innerText = `${roadDepth.toFixed(1)}m (室内適正)`;
-    else label.innerText = `${roadDepth.toFixed(1)}m`;
-
+  function updateRoadGeometryAndCars() {
     updateRoadGeometry();
 
     const carScale = getCarScale();
@@ -667,18 +662,6 @@
     if (isPlaced && !isRunning) {
       anchorRoadToUserFeet();
     }
-  }
-
-  function toggleSignalHighlight(enabled) {
-    isSignalHighlighted = enabled;
-    applySignalHighlight();
-  }
-
-  function applySignalHighlight() {
-    if (!headNear || !headFar) return;
-    const scaleFactor = isSignalHighlighted ? 1.6 : 1.0;
-    headNear.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    headFar.scale.set(scaleFactor, scaleFactor, scaleFactor);
   }
 
   function updateRoadGeometry() {
@@ -718,30 +701,11 @@
     }
   }
 
-  function changeBackgroundDim(val) {
-    dimDome.material.opacity = parseFloat(val) / 100.0;
-    document.getElementById('dim-label').innerText = `${val}%`;
-  }
-
-  function toggleUIVisibility() {
-    if (isUIHidden) showUI();
-    else hideUI();
-  }
-
-  function hideUI() {
-    isUIHidden = true;
-    document.getElementById('main-panel').style.display = 'none';
-    const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = '設定表示';
-    btn.style.background = 'rgba(0, 0, 0, 0.4)';
-  }
-
-  function showUI() {
-    isUIHidden = false;
-    document.getElementById('main-panel').style.display = 'flex';
-    const btn = document.getElementById('btn-toggle-ui');
-    btn.innerText = '設定を隠す';
-    btn.style.background = 'rgba(0, 0, 0, 0.75)';
+  function applySignalHighlight() {
+    if (!headNear || !headFar) return;
+    const scaleFactor = isSignalHighlighted ? 1.6 : 1.0;
+    headNear.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    headFar.scale.set(scaleFactor, scaleFactor, scaleFactor);
   }
 
   function resetCheckState() {
@@ -750,13 +714,7 @@
     isCrossing = false;
     wasHonked = false;
     isOffCrosswalkWarned = false;
-
-    const bL = document.getElementById('badge-left');
-    const bR = document.getElementById('badge-right');
-    bL.className = 'status-badge';
-    bL.innerText = '左未確認';
-    bR.className = 'status-badge';
-    bR.innerText = '右未確認';
+    renderCanvasUI();
   }
 
   function resetSignalCycle() {
@@ -948,14 +906,10 @@
   function setChecked(side) {
     if (side === 'left' && !checkedLeft) {
       checkedLeft = true;
-      const b = document.getElementById('badge-left');
-      b.className = 'status-badge checked';
-      b.innerText = '左確認済';
+      renderCanvasUI();
     } else if (side === 'right' && !checkedRight) {
       checkedRight = true;
-      const b = document.getElementById('badge-right');
-      b.className = 'status-badge checked';
-      b.innerText = '右確認済';
+      renderCanvasUI();
     }
   }
 
@@ -1043,7 +997,6 @@
       let targetSpeed = car.baseSpeed;
       let forceFullStop = false;
 
-      // 1. 信号による停止線手前停車
       if (carMustStopForSignal) {
         if (car.isNearLane) {
           const stopTargetX = 5.4;
@@ -1066,7 +1019,6 @@
         }
       }
 
-      // 2. 前走車との車間距離保持
       for (let j = 0; j < cars.length; j++) {
         if (i === j) continue;
         const other = cars[j];
@@ -1091,7 +1043,6 @@
         }
       }
 
-      // 3. プレイヤーへの危険接近（個別の車ごとに1回のみクラクション発火）
       const halfDepth = roadDepth * 0.5;
       const playerInRoad = (localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth);
 
@@ -1109,7 +1060,6 @@
 
           const isSignalSafe = (currentMode === 'signal' && isGreenLight);
 
-          // この車からまだクラクションを鳴らされていない場合のみ発火（別の車が突っ込んできたら何度でも発火）
           if (!isSignalSafe && isCrossing && !isCooldown && !car.hasHonked) {
             playHorn();
             car.hasHonked = true;
@@ -1194,6 +1144,27 @@
     }, 1800);
   }
 
+  function updateControllerRay() {
+    if (!controller) return;
+
+    const tempMatrix = new THREE.Matrix4();
+    tempMatrix.identity().extractRotation(controller.matrixWorld);
+
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+    const intersects = raycaster.intersectObject(uiMesh);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0];
+      pointerDot.visible = true;
+      pointerDot.position.copy(hit.point);
+      pointerDot.lookAt(camera.position);
+    } else {
+      pointerDot.visible = false;
+    }
+  }
+
   function renderLoop(timestamp, frame) {
     if (renderer.xr.isPresenting) {
       const session = renderer.xr.getSession();
@@ -1220,6 +1191,9 @@
           reticle.visible = false;
         }
       }
+
+      updateControllerRay();
+      updateSparkles();
 
       if (isPlaced && isRunning) {
         updateSignal();
@@ -1262,7 +1236,7 @@
         }
 
         if (reached) {
-          isCrossing = false; // 到達した瞬間に横断状態を終了（連続判定の防止）
+          isCrossing = false;
 
           if (currentMode === 'no-signal' && (!checkedLeft || !checkedRight)) {
             triggerImmediateViolation();
@@ -1272,13 +1246,12 @@
             triggerSuccess();
           }
 
-          // 次の横断（復路）に向けて進行方向を反転
           currentSide = (currentSide === 'near') ? 'far' : 'near';
           resetCheckState();
           return;
         }
 
-        // 2. 車道進入判定（車道内に入った瞬間に開始）
+        // 2. 車道進入判定
         if (!isCrossing && !isCooldown) {
           let steppedIn = false;
           if (currentSide === 'near' && localPlayerPos.z < halfDepth && localPlayerPos.z > -halfDepth) {
@@ -1298,7 +1271,7 @@
           }
         }
 
-        // 3. 横ずれ判定（枠内に戻るまでは同じ立ち止まりでの連続警告を抑止。戻った後の再逸脱は何度でも警告）
+        // 3. 横ずれ判定
         if (isCrossing && !isCooldown) {
           const isOffPath = Math.abs(localPlayerPos.x) > crosswalkHalfWidth;
           if (isOffPath) {
@@ -1308,7 +1281,7 @@
               return;
             }
           } else {
-            isOffCrosswalkWarned = false; // 枠内に復帰したら再検知可能にする
+            isOffCrosswalkWarned = false;
           }
         }
 
@@ -1321,15 +1294,9 @@
   }
 
   function onWindowResize() {
-    const { width, height } = getViewportSize();
-    camera.aspect = width / height;
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-
-    if (sparkleCanvas) {
-      sparkleCanvas.width = width;
-      sparkleCanvas.height = height;
-    }
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 </script>
 </body>
