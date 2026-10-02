@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AR ぷに育成 WebXR</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #000;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+    }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+      z-index: 10;
+    }
+    .interactive {
+      pointer-events: auto;
+    }
+    #status-msg {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      margin-top: 10px;
+      transition: all 0.2s ease;
+      text-align: center;
+      max-width: 90vw;
+      line-height: 1.45;
+    }
+    #control-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      max-width: 650px;
+      width: 100%;
+      max-height: 48dvh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 2px 4px 6px;
+      scrollbar-width: none;
+    }
+    #control-panel::-webkit-scrollbar {
+      display: none;
+    }
+    .sub-menu {
+      display: none;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+    .sub-menu.active {
+      display: flex;
+    }
+    .main-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    button {
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 18px;
+      min-height: 44px;
+      padding: 10px 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      transition: transform 0.1s ease;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:focus-visible {
+      outline: 3px solid #1649a0;
+      outline-offset: 3px;
+    }
+    button:active {
+      transform: scale(0.94);
+    }
+    .btn-feed { background: #ff4770; color: white; }
+    .btn-feed.active { background: #ff9800; }
+    .btn-action { background: #4caf50; color: white; }
+    .btn-evolve { background: #ff9800; color: white; }
+    .btn-menu { background: rgba(255, 255, 255, 0.92); color: #333; }
+    .btn-sub {
+      background: #f0f0f5;
+      color: #333;
+      min-height: 40px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+    .btn-clear {
+      background: #ffe0e0;
+      color: #d32f2f;
+      min-height: 40px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 12px;
+    }
+    #ARButton {
+      left: 50% !important;
+      bottom: max(20px, env(safe-area-inset-bottom, 0px)) !important;
+      transform: translateX(-50%);
+      width: min(220px, calc(100vw - 40px)) !important;
+      min-height: 50px;
+      padding: 13px 20px !important;
+      border: 1px solid rgba(255,255,255,.8) !important;
+      border-radius: 28px !important;
+      background: rgba(28, 35, 49, .82) !important;
+      color: #fff !important;
+      font: 600 15px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+      opacity: 1 !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 6px 24px rgba(0,0,0,.28);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    @media (max-height: 520px) and (orientation: landscape) {
+      #status-msg {
+        align-self: flex-start;
+        max-width: min(46vw, 440px);
+        margin-top: 0;
+      }
+      #control-panel {
+        align-self: flex-end;
+        width: min(620px, 70vw);
+        max-height: 58dvh;
+        margin-bottom: 4px;
+      }
+      .main-buttons { gap: 7px; }
+      .main-buttons button { min-height: 42px; padding: 8px 11px; }
+      #ARButton { bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="overlay">
+    <div id="status-msg" class="interactive" role="status" aria-live="polite">ARを開始してください</div>
+
+    <div id="control-panel" class="interactive" style="display: none;">
+      <!-- 家具メニュー -->
+      <div id="furniture-menu" class="sub-menu">
+        <button class="btn-sub" onclick="addFurniture('cushion')">クッション</button>
+        <button class="btn-sub" onclick="addFurniture('table')">ミニ机</button>
+        <button class="btn-sub" onclick="addFurniture('plant')">観葉植物</button>
+        <button class="btn-sub" onclick="addFurniture('rug')">マット</button>
+        <button class="btn-clear" onclick="clearFurniture()">片付</button>
+      </div>
+
+      <!-- 変身メニュー -->
+      <div id="stage-menu" class="sub-menu">
+        <button class="btn-sub" onclick="setAllStage(0)">たまご</button>
+        <button class="btn-sub" onclick="setAllStage(1)">ベビー</button>
+        <button class="btn-sub" onclick="setAllStage(2)">うさぎ</button>
+        <button class="btn-sub" onclick="setAllStage(3)">ほし</button>
+        <button class="btn-sub" onclick="setAllStage(4)">てんし</button>
+      </div>
+
+      <!-- メインボタン -->
+      <div class="main-buttons">
+        <button id="btn-feed-mode" class="btn-feed" onclick="toggleFeedMode()">エサを置く</button>
+        <button class="btn-action" onclick="addCompanion()">増やす (<span id="pet-count">1</span>)</button>
+        <button class="btn-menu" onclick="toggleMenu('furniture-menu')">家具</button>
+        <button class="btn-evolve" onclick="evolveAll()">進化</button>
+        <button class="btn-menu" onclick="toggleMenu('stage-menu')">変身</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+    let camera, scene, renderer;
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+    let xrRefSpace = null;
+    let reticle;
+    let isPlaced = false;
+
+    // ゲーム内階層
+    const worldGroup = new THREE.Group();
+    const furnitureGroup = new THREE.Group();
+    worldGroup.add(furnitureGroup);
+
+    // 形態データ
+    const STAGES = [
+      { id: 'egg', name: 'たまご' },
+      { id: 'baby', name: 'ベビーぷに' },
+      { id: 'bunny', name: 'うさぷに' },
+      { id: 'starry', name: 'ほしぷに' },
+      { id: 'angel', name: 'てんしぷに' }
+    ];
+
+    // ゲーム状態
+    const pets = [];
+    let activeFoodMesh = null;
+    let activeFoodPos = null;
+    let activeFoodElapsed = 0;
+    let activeFoodBites = 0;
+    let isFeedMode = false;
+    const clock = new THREE.Clock();
+    const raycaster = new THREE.Raycaster();
+
+    // MARK: - 自律ペットクラス
+    class AutonomousPet {
+      constructor(stageIndex, position) {
+        this.stageIndex = stageIndex;
+        this.root = new THREE.Group();
+        this.root.position.copy(position);
+        this.root.userData.petInstance = this; // レイキャスト識別用
+
+        // スケール破壊防止コンテナ
+        this.scaleContainer = new THREE.Group();
+        this.scaleContainer.scale.set(1.12, 0.94, 1.12);
+        this.root.add(this.scaleContainer);
+
+        this.visual = this.buildVisual(stageIndex);
+        this.scaleContainer.add(this.visual);
+
+        this.targetPos = new THREE.Vector3();
+        this.waitTimer = 2.0;
+        this.walkCycle = 0;
+        this.breatheCycle = Math.random() * 5;
+        this.isEating = false;
+        this.eatCount = 0;
+        this.lastPetTime = 0;
+
+        this.pickNewTarget();
+        worldGroup.add(this.root);
+      }
+
+      pickNewTarget() {
+        const rx = (Math.random() - 0.5) * 0.35;
+        const rz = (Math.random() - 0.5) * 0.35;
+        this.targetPos.set(rx, 0, rz);
+        this.isEating = false;
+        this.waitTimer = 1.5 + Math.random() * 2.5;
+      }
+
+      update(delta) {
+        this.breatheCycle += delta * 2.5;
+
+        // エサへ向かう処理
+        if (activeFoodPos) {
+          const distToFood = new THREE.Vector2(this.root.position.x - activeFoodPos.x, this.root.position.z - activeFoodPos.z).length();
+          if (distToFood < 0.04) {
+            this.isEating = true;
+            this.visual.position.y = 0;
+            return;
+          }
+          this.moveTo(activeFoodPos, 0.08, delta, 0.008);
+          return;
+        }
+
+        // 通常歩行
+        const dist = new THREE.Vector2(this.root.position.x - this.targetPos.x, this.root.position.z - this.targetPos.z).length();
+        if (dist < 0.02) {
+          this.visual.position.y = 0;
+          this.waitTimer -= delta;
+          if (this.waitTimer <= 0) {
+            this.pickNewTarget();
+          }
+        } else {
+          this.moveTo(this.targetPos, 0.035, delta, 0.006);
+        }
+      }
+
+      moveTo(target, speed, delta, hopHeight) {
+        const dir = new THREE.Vector3().subVectors(target, this.root.position);
+        dir.y = 0;
+        dir.normalize();
+
+        const angle = Math.atan2(dir.x, dir.z);
+        this.root.rotation.y = angle;
+
+        this.root.position.addScaledVector(dir, speed * delta);
+        this.root.position.y = 0;
+
+        // テーブル境界制御（境界到達時に即座に目標を反転・再設定）
+        if (this.root.position.length() > 0.22) {
+          this.root.position.clampLength(0, 0.22);
+          this.pickNewTarget();
+        }
+
+        this.walkCycle += delta * 7.0;
+        this.visual.position.y = Math.abs(Math.sin(this.walkCycle)) * hopHeight;
+      }
+
+      bounce() {
+        const origY = this.visual.position.y;
+        this.visual.position.y += 0.025;
+        setTimeout(() => {
+          this.visual.position.y = origY;
+        }, 120);
+      }
+
+      pet() {
+        const now = performance.now();
+        if (now - this.lastPetTime < 600) return;
+        this.lastPetTime = now;
+
+        this.bounce();
+        setTimeout(() => this.bounce(), 150);
+        spawnHeart(this.root.position);
+        updateStatus(`「${STAGES[this.stageIndex].name}」をなでなで！喜んでいます`);
+      }
+
+      setStage(newIndex) {
+        this.stageIndex = newIndex;
+        disposeObjectTree(this.visual);
+        this.scaleContainer.remove(this.visual);
+        this.visual = this.buildVisual(newIndex);
+        this.scaleContainer.add(this.visual);
+        this.bounce();
+      }
+
+      buildVisual(stageIdx) {
+        const group = new THREE.Group();
+        const stage = STAGES[stageIdx];
+
+        if (stage.id === 'egg') {
+          const geo = new THREE.SphereGeometry(0.030, 24, 24);
+          const mat = new THREE.MeshStandardMaterial({ color: 0xfff5ea, roughness: 0.3 });
+          const m = new THREE.Mesh(geo, mat);
+          m.position.y = 0.030;
+          group.add(m);
+        } else {
+          let bodyColor = 0xffe6a3;
+          if (stage.id === 'bunny') bodyColor = 0xffc7d9;
+          if (stage.id === 'starry') bodyColor = 0xbfe3ff;
+          if (stage.id === 'angel') bodyColor = 0xfcfcfc;
+
+          // ふっくらボディ
+          const bodyGeo = new THREE.SphereGeometry(0.030, 24, 24);
+          const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3 });
+          const body = new THREE.Mesh(bodyGeo, bodyMat);
+          body.position.y = 0.028;
+
+          // 目
+          const eyeGeo = new THREE.SphereGeometry(0.003, 16, 16);
+          const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+          const lEye = new THREE.Mesh(eyeGeo, eyeMat);
+          lEye.position.set(-0.010, 0.003, 0.028);
+          const rEye = new THREE.Mesh(eyeGeo, eyeMat);
+          rEye.position.set(0.010, 0.003, 0.028);
+          body.add(lEye, rEye);
+
+          // ほっぺ
+          const cheekGeo = new THREE.SphereGeometry(0.0038, 16, 16);
+          const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff7b90, transparent: true, opacity: 0.65 });
+          const lCheek = new THREE.Mesh(cheekGeo, cheekMat);
+          lCheek.position.set(-0.015, -0.003, 0.026);
+          const rCheek = new THREE.Mesh(cheekGeo, cheekMat);
+          rCheek.position.set(0.015, -0.003, 0.026);
+          body.add(lCheek, rCheek);
+
+          // 頭部パーツ
+          if (stage.id === 'baby') {
+            const leafGeo = new THREE.SphereGeometry(0.006, 16, 16);
+            leafGeo.scale(0.4, 1.0, 0.4);
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x4caf50 });
+            const leaf = new THREE.Mesh(leafGeo, leafMat);
+            leaf.position.set(0, 0.031, 0);
+            body.add(leaf);
+          } else if (stage.id === 'bunny') {
+            const earGeo = new THREE.BoxGeometry(0.008, 0.020, 0.005);
+            const earMat = new THREE.MeshStandardMaterial({ color: 0xffc7d9, roughness: 0.3 });
+            const lEar = new THREE.Mesh(earGeo, earMat);
+            lEar.position.set(-0.013, 0.032, 0);
+            lEar.rotation.z = 0.15;
+            const rEar = new THREE.Mesh(earGeo, earMat);
+            rEar.position.set(0.013, 0.032, 0);
+            rEar.rotation.z = -0.15;
+            body.add(lEar, rEar);
+          } else if (stage.id === 'starry') {
+            const starGeo = new THREE.SphereGeometry(0.008, 16, 16);
+            const starMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 0.6 });
+            const star = new THREE.Mesh(starGeo, starMat);
+            star.position.set(0, 0.032, 0);
+            body.add(star);
+          } else if (stage.id === 'angel') {
+            const ringGeo = new THREE.TorusGeometry(0.015, 0.002, 16, 24).rotateX(Math.PI / 2);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.1, metalness: 0.6 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.set(0, 0.038, 0);
+            body.add(ring);
+          }
+
+          group.add(body);
+        }
+        return group;
+      }
+    }
+
+    // MARK: - 初期化
+    init();
+
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 2.5);
+      hemiLight.position.set(0.5, 1, 0.25);
+      scene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
+      dirLight.position.set(0.2, 1, 0.5);
+      scene.add(dirLight);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
+      document.body.appendChild(renderer.domElement);
+
+      const overlay = document.getElementById('overlay');
+      const arButton = ARButton.createButton(renderer, {
+        requiredFeatures: ['hit-test'],
+        optionalFeatures: ['dom-overlay'],
+        domOverlay: { root: overlay }
+      });
+      document.body.appendChild(arButton);
+
+      // DOM Overlay操作時のXRタップイベント貫通防止
+      overlay.addEventListener('beforexrselect', (e) => {
+        e.preventDefault();
+      });
+
+      // レティクル（机検出リング）
+      const ringGeo = new THREE.RingGeometry(0.04, 0.05, 32).rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+      reticle = new THREE.Mesh(ringGeo, ringMat);
+      reticle.matrixAutoUpdate = false;
+      reticle.visible = false;
+      scene.add(reticle);
+
+      scene.add(worldGroup);
+
+      // ARコントローラー（画面タップ）
+      const controller = renderer.xr.getController(0);
+      controller.addEventListener('select', onSelect);
+      scene.add(controller);
+
+      window.addEventListener('resize', onWindowResize);
+      renderer.setAnimationLoop(render);
+
+      renderer.xr.addEventListener('sessionstart', () => {
+        updateStatus("机をカメラに映してください");
+      });
+      renderer.xr.addEventListener('sessionend', () => {
+        hitTestSource?.cancel();
+        hitTestSource = null;
+        hitTestSourceRequested = false;
+        xrRefSpace = null;
+        reticle.visible = false;
+        resetGame();
+        updateStatus("ARを終了しました。もう一度開始できます");
+      });
+      checkWebXRSupport();
+    }
+
+    async function checkWebXRSupport() {
+      if (!window.isSecureContext) {
+        updateStatus("ARを使うにはHTTPS接続が必要です");
+        return;
+      }
+      if (!navigator.xr) {
+        updateStatus("このブラウザはWebXR ARに対応していません。対応端末・ブラウザで開いてください");
+        return;
+      }
+      try {
+        const supported = await navigator.xr.isSessionSupported('immersive-ar');
+        if (!supported && !renderer.xr.isPresenting) {
+          updateStatus("この端末ではARを利用できません。WebXR対応ブラウザで開いてください");
+        }
+      } catch (error) {
+        if (!renderer.xr.isPresenting) {
+          updateStatus("ARの対応状況を確認できませんでした。HTTPS接続をご確認ください");
+        }
+      }
+    }
+
+    // MARK: - タップ・選択イベント
+    function onSelect(event) {
+      if (!isPlaced && reticle.visible) {
+        // 初回配置
+        worldGroup.position.setFromMatrixPosition(reticle.matrix);
+        worldGroup.rotation.y = camera.rotation.y;
+
+        const firstPet = new AutonomousPet(1, new THREE.Vector3(0, 0, 0));
+        pets.push(firstPet);
+        document.getElementById('pet-count').innerText = pets.length;
+
+        isPlaced = true;
+        reticle.visible = false;
+
+        updateStatus("ぷにが登場！エサボタンを押して机をタップしてね");
+        document.getElementById('control-panel').style.display = "flex";
+        return;
+      }
+
+      if (isPlaced) {
+        if (isFeedMode && reticle.visible) {
+          // エサの設置（レティクルの位置へ）
+          const hitPos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+          const localHitPos = worldGroup.worldToLocal(hitPos);
+
+          spawnFood(localHitPos);
+          isFeedMode = false;
+          document.getElementById('btn-feed-mode').classList.remove('active');
+          document.getElementById('btn-feed-mode').innerText = "エサを置く";
+          updateStatus("エサを置きました！ぷに達が集まってきます");
+          return;
+        }
+
+        // コントローラー光線による正確な3Dレイキャストなでなで判定
+        const tempMatrix = new THREE.Matrix4();
+        tempMatrix.identity().extractRotation(event.target.matrixWorld);
+        raycaster.ray.origin.setFromMatrixPosition(event.target.matrixWorld);
+        raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+        const petRoots = pets.map(p => p.root);
+        const intersects = raycaster.intersectObjects(petRoots, true);
+
+        if (intersects.length > 0) {
+          let hitObj = intersects[0].object;
+          while (hitObj.parent && !hitObj.userData.petInstance) {
+            hitObj = hitObj.parent;
+          }
+          if (hitObj.userData.petInstance) {
+            hitObj.userData.petInstance.pet();
+            return;
+          }
+        }
+
+        // フォールバック（画面中央からのタップ）
+        raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        const centerIntersects = raycaster.intersectObjects(petRoots, true);
+        if (centerIntersects.length > 0) {
+          let hitObj = centerIntersects[0].object;
+          while (hitObj.parent && !hitObj.userData.petInstance) {
+            hitObj = hitObj.parent;
+          }
+          if (hitObj.userData.petInstance) {
+            hitObj.userData.petInstance.pet();
+          }
+        }
+      }
+    }
+
+    // MARK: - エサの生成と食事
+    function spawnFood(localPos) {
+      if (activeFoodMesh) {
+        disposeObjectTree(activeFoodMesh);
+        worldGroup.remove(activeFoodMesh);
+      }
+      const geo = new THREE.SphereGeometry(0.010, 16, 16);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xff3b5c, roughness: 0.2 });
+      activeFoodMesh = new THREE.Mesh(geo, mat);
+      activeFoodMesh.position.set(localPos.x, 0.008, localPos.z);
+      worldGroup.add(activeFoodMesh);
+
+      activeFoodPos = activeFoodMesh.position;
+      activeFoodElapsed = 0;
+      activeFoodBites = 0;
+    }
+
+    function processEating(delta) {
+      if (!activeFoodMesh) return;
+
+      const eater = pets.find(pet => pet.isEating);
+      if (!eater) return;
+
+      activeFoodElapsed += delta;
+      if (activeFoodElapsed < 0.8) return;
+      activeFoodElapsed = 0;
+      activeFoodBites++;
+      eater.bounce();
+      activeFoodMesh.scale.setScalar(Math.pow(0.72, activeFoodBites));
+
+      if (activeFoodBites >= 3) {
+        const foodPosition = eater.root.position.clone();
+        disposeObjectTree(activeFoodMesh);
+        worldGroup.remove(activeFoodMesh);
+        activeFoodMesh = null;
+        activeFoodPos = null;
+        pets.forEach(pet => {
+          pet.eatCount = 0;
+          pet.pickNewTarget();
+        });
+        spawnHeart(foodPosition);
+        updateStatus(`「${STAGES[eater.stageIndex].name}」が美味しく完食！`);
+      }
+    }
+
+    function disposeObjectTree(root) {
+      const geometries = new Set();
+      const materials = new Set();
+      root.traverse(object => {
+        if (object.geometry) geometries.add(object.geometry);
+        if (Array.isArray(object.material)) object.material.forEach(material => materials.add(material));
+        else if (object.material) materials.add(object.material);
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose());
+    }
+
+    // MARK: - ハートエフェクト
+    function spawnHeart(localPos) {
+      const geo = new THREE.SphereGeometry(0.007, 16, 16);
+      const mat = new THREE.MeshBasicMaterial({ color: 0xff6b8b, transparent: true, opacity: 0.85 });
+      const heart = new THREE.Mesh(geo, mat);
+      heart.position.set(localPos.x, localPos.y + 0.04, localPos.z);
+      worldGroup.add(heart);
+
+      let elapsed = 0;
+      const interval = setInterval(() => {
+        elapsed += 0.03;
+        heart.position.y += 0.002;
+        mat.opacity -= 0.04;
+        if (elapsed > 0.6) {
+          clearInterval(interval);
+          geo.dispose();
+          mat.dispose();
+          worldGroup.remove(heart);
+        }
+      }, 30);
+    }
+
+    // MARK: - ぷに同士の衝突判定
+    function resolvePetCollisions() {
+      for (let i = 0; i < pets.length - 1; i++) {
+        for (let j = i + 1; j < pets.length; j++) {
+          const p1 = pets[i].root.position;
+          const p2 = pets[j].root.position;
+          const diff = new THREE.Vector2(p1.x - p2.x, p1.z - p2.z);
+          const dist = diff.length();
+          const minDist = 0.07;
+
+          if (dist < minDist && dist > 0.0001) {
+            const overlap = (minDist - dist) * 0.5;
+            diff.normalize();
+            p1.x += diff.x * overlap;
+            p1.z += diff.y * overlap;
+            p2.x -= diff.x * overlap;
+            p2.z -= diff.y * overlap;
+
+            pets[i].bounce();
+            pets[j].bounce();
+            pets[i].pickNewTarget();
+            pets[j].pickNewTarget();
+          }
+        }
+      }
+    }
+
+    // MARK: - UI連携関数
+    window.toggleFeedMode = function() {
+      isFeedMode = !isFeedMode;
+      const btn = document.getElementById('btn-feed-mode');
+      if (isFeedMode) {
+        btn.classList.add('active');
+        btn.innerText = "机をタップ！";
+        updateStatus("置きたい机の場所をタップしてエサを設置してね");
+      } else {
+        btn.classList.remove('active');
+        btn.innerText = "エサを置く";
+        updateStatus("エサの設置をキャンセルしました");
+      }
+    };
+
+    window.addCompanion = function() {
+      if (pets.length >= 6) {
+        updateStatus("机がいっぱいです！");
+        return;
+      }
+      const stageIdx = (pets.length) % STAGES.length;
+      const pos = new THREE.Vector3((Math.random() - 0.5) * 0.15, 0, (Math.random() - 0.5) * 0.15);
+      const newPet = new AutonomousPet(stageIdx, pos);
+      pets.push(newPet);
+      document.getElementById('pet-count').innerText = pets.length;
+      newPet.bounce();
+      updateStatus(`仲間「${STAGES[stageIdx].name}」がやってきました！`);
+    };
+
+    window.evolveAll = function() {
+      pets.forEach(p => {
+        const next = (p.stageIndex + 1) % STAGES.length;
+        p.setStage(next);
+      });
+      updateStatus("みんな一斉に進化したよ！");
+    };
+
+    window.setAllStage = function(idx) {
+      pets.forEach(p => p.setStage(idx));
+      updateStatus(`みんな「${STAGES[idx].name}」に変身！`);
+      closeAllMenus();
+    };
+
+    window.addFurniture = function(type) {
+      const itemGroup = new THREE.Group();
+      if (type === 'cushion') {
+        const geo = new THREE.BoxGeometry(0.08, 0.014, 0.08);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xf5ebe0, roughness: 0.8 });
+        const m = new THREE.Mesh(geo, mat);
+        m.position.y = 0.007;
+        itemGroup.add(m);
+      } else if (type === 'table') {
+        const topGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.005, 32);
+        const topMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 });
+        const top = new THREE.Mesh(topGeo, topMat);
+        top.position.y = 0.035;
+        const legGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.035, 16);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.y = 0.0175;
+        itemGroup.add(top, leg);
+      } else if (type === 'plant') {
+        const potGeo = new THREE.CylinderGeometry(0.016, 0.012, 0.03, 16);
+        const potMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const pot = new THREE.Mesh(potGeo, potMat);
+        pot.position.y = 0.015;
+        const leafGeo = new THREE.SphereGeometry(0.018, 16, 16);
+        const leafMat = new THREE.MeshStandardMaterial({ color: 0x588157, roughness: 0.5 });
+        const leaf = new THREE.Mesh(leafGeo, leafMat);
+        leaf.position.y = 0.038;
+        itemGroup.add(pot, leaf);
+      } else if (type === 'rug') {
+        const rugGeo = new THREE.CircleGeometry(0.10, 32).rotateX(-Math.PI / 2);
+        const rugMat = new THREE.MeshStandardMaterial({ color: 0xe0eec6, roughness: 0.9 });
+        const rug = new THREE.Mesh(rugGeo, rugMat);
+        rug.position.y = 0.001;
+        itemGroup.add(rug);
+      }
+
+      itemGroup.position.set((Math.random() - 0.5) * 0.25, 0, (Math.random() - 0.5) * 0.25);
+      furnitureGroup.add(itemGroup);
+      updateStatus("家具を置きました");
+      closeAllMenus();
+    };
+
+    window.clearFurniture = function() {
+      while (furnitureGroup.children.length > 0) {
+        const obj = furnitureGroup.children[0];
+        disposeObjectTree(obj);
+        furnitureGroup.remove(obj);
+      }
+      updateStatus("家具をお片付けしました");
+      closeAllMenus();
+    };
+
+    window.toggleMenu = function(id) {
+      const el = document.getElementById(id);
+      const isAct = el.classList.contains('active');
+      closeAllMenus();
+      if (!isAct) el.classList.add('active');
+    };
+
+    function closeAllMenus() {
+      document.querySelectorAll('.sub-menu').forEach(m => m.classList.remove('active'));
+    }
+
+    function updateStatus(msg) {
+      const status = document.getElementById('status-msg');
+      if (status.innerText !== msg) status.innerText = msg;
+    }
+
+    function resetGame() {
+      pets.forEach(pet => {
+        worldGroup.remove(pet.root);
+        disposeObjectTree(pet.root);
+      });
+      pets.length = 0;
+      window.clearFurniture();
+      if (activeFoodMesh) {
+        worldGroup.remove(activeFoodMesh);
+        disposeObjectTree(activeFoodMesh);
+      }
+      activeFoodMesh = null;
+      activeFoodPos = null;
+      activeFoodElapsed = 0;
+      activeFoodBites = 0;
+      isPlaced = false;
+      isFeedMode = false;
+      document.getElementById('pet-count').innerText = '0';
+      document.getElementById('control-panel').style.display = 'none';
+      document.getElementById('btn-feed-mode').classList.remove('active');
+      document.getElementById('btn-feed-mode').innerText = 'エサを置く';
+      closeAllMenus();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // MARK: - メインレンダーループ
+    function render(timestamp, frame) {
+      const delta = clock.getDelta();
+
+      pets.forEach(p => p.update(delta));
+      resolvePetCollisions();
+
+      processEating(delta);
+
+      if (frame) {
+        const session = renderer.xr.getSession();
+
+        if (hitTestSourceRequested === false) {
+          hitTestSourceRequested = true;
+          session.requestReferenceSpace('viewer')
+            .then(referenceSpace => session.requestHitTestSource({ space: referenceSpace }))
+            .then(source => {
+              if (renderer.xr.getSession() === session) hitTestSource = source;
+              else source.cancel();
+            })
+            .catch(() => {
+              if (renderer.xr.getSession() !== session) return;
+              hitTestSourceRequested = false;
+              updateStatus("机を認識できません。カメラの使用を許可して再度お試しください");
+            });
+          session.requestReferenceSpace('local')
+            .then(space => {
+              if (renderer.xr.getSession() === session) xrRefSpace = space;
+            })
+            .catch(() => {
+              if (renderer.xr.getSession() === session) {
+                updateStatus("AR空間を初期化できませんでした。もう一度お試しください");
+              }
+            });
+        }
+
+        if (hitTestSource && xrRefSpace) {
+          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          if (hitTestResults.length > 0) {
+            const hit = hitTestResults[0];
+            const pose = hit.getPose(xrRefSpace);
+            reticle.visible = Boolean(pose && (!isPlaced || isFeedMode));
+            if (pose) reticle.matrix.fromArray(pose.transform.matrix);
+            if (!isPlaced) {
+              updateStatus("机を認識しました！画面をタップして召喚");
+            }
+          } else {
+            reticle.visible = false;
+          }
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
