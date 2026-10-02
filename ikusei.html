@@ -118,6 +118,8 @@
     .btn-action { background: #4caf50; color: white; }
     .btn-evolve { background: #ff9800; color: white; }
     .btn-menu { background: rgba(255, 255, 255, 0.92); color: #333; }
+    .btn-menu.active { background: #d9f2ff; color: #075985; }
+    button:disabled { opacity: 0.52; cursor: not-allowed; }
     .btn-sub {
       background: #f0f0f5;
       color: #333;
@@ -209,10 +211,12 @@
 
       <!-- メインボタン -->
       <div class="main-buttons">
-        <button id="btn-feed-mode" class="btn-feed" onclick="toggleFeedMode()">エサを置く</button>
+        <button id="btn-feed-mode" class="btn-feed" onclick="toggleFeedMode()">エサを置く (0)</button>
         <button class="btn-action" onclick="addCompanion()">増やす (<span id="pet-count">1</span>)</button>
         <button class="btn-menu" onclick="toggleMenu('furniture-menu')">家具</button>
-        <button class="btn-evolve" onclick="evolveAll()">進化</button>
+        <button id="btn-select-pet" class="btn-menu" onclick="togglePetSelection()">ぷにを選ぶ</button>
+        <button id="btn-evolve-selected" class="btn-evolve" onclick="evolveSelected()" disabled>選んだ子を進化</button>
+        <button class="btn-evolve" onclick="evolveAll()">みんな進化</button>
         <button class="btn-menu" onclick="toggleMenu('stage-menu')">変身</button>
       </div>
     </div>
@@ -264,10 +268,12 @@
 
     // ゲーム状態
     const pets = [];
-    let activeFoodMesh = null;
-    let activeFoodPos = null;
-    let activeFoodElapsed = 0;
-    let activeFoodBites = 0;
+    const foods = [];
+    const AUTO_EVOLVE_FOOD_COUNT = 3;
+    const MAX_FOODS = 10;
+    let nextFoodId = 1;
+    let selectedPet = null;
+    let isSelectingPet = false;
     let isFeedMode = false;
     const clock = new THREE.Clock();
     const raycaster = new THREE.Raycaster();
@@ -276,6 +282,7 @@
     class AutonomousPet {
       constructor(stageIndex, position) {
         this.stageIndex = stageIndex;
+        this.id = pets.length;
         this.root = new THREE.Group();
         this.root.position.copy(position);
         this.root.userData.petInstance = this; // レイキャスト識別用
@@ -287,6 +294,13 @@
 
         this.visual = this.buildVisual(stageIndex);
         this.scaleContainer.add(this.visual);
+        this.selectionRing = new THREE.Mesh(
+          new THREE.RingGeometry(0.045, 0.051, 32).rotateX(-Math.PI / 2),
+          new THREE.MeshBasicMaterial({ color: 0x48c8ff, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
+        );
+        this.selectionRing.position.y = 0.002;
+        this.selectionRing.visible = false;
+        this.root.add(this.selectionRing);
 
         this.targetPos = new THREE.Vector3();
         this.waitTimer = 2.0;
@@ -294,6 +308,7 @@
         this.breatheCycle = Math.random() * 5;
         this.isEating = false;
         this.eatCount = 0;
+        this.targetFoodId = null;
         this.lastPetTime = 0;
         this.handBlockedUntil = 0;
 
@@ -312,21 +327,27 @@
       update(delta) {
         this.breatheCycle += delta * 2.5;
         if (performance.now() < this.handBlockedUntil) {
+          this.isEating = false;
           this.visual.position.y = 0;
           return;
         }
 
-        // エサへ向かう処理
-        if (activeFoodPos) {
-          const distToFood = new THREE.Vector2(this.root.position.x - activeFoodPos.x, this.root.position.z - activeFoodPos.z).length();
-          if (distToFood < 0.04) {
+        const food = getNearestFood(this);
+        if (food) {
+          this.targetFoodId = food.id;
+          const approachPos = getFoodApproachPoint(food, this);
+          const distToFood = new THREE.Vector2(this.root.position.x - approachPos.x, this.root.position.z - approachPos.z).length();
+          if (distToFood < 0.018) {
             this.isEating = true;
             this.visual.position.y = 0;
             return;
           }
-          this.moveTo(activeFoodPos, 0.08, delta, 0.008);
+          this.isEating = false;
+          this.moveTo(approachPos, 0.08, delta, 0.008);
           return;
         }
+        this.targetFoodId = null;
+        this.isEating = false;
 
         // 通常歩行
         const dist = new THREE.Vector2(this.root.position.x - this.targetPos.x, this.root.position.z - this.targetPos.z).length();
@@ -362,7 +383,7 @@
         const endWorld = worldGroup.localToWorld(nextPosition.clone().add(new THREE.Vector3(0, lift, 0)));
         if (isMovementBlocked(startWorld, endWorld)) {
           this.visual.position.y = 0;
-          if (activeFoodPos) this.handBlockedUntil = performance.now() + 350;
+          if (foods.length > 0) this.handBlockedUntil = performance.now() + 180;
           else this.pickNewTarget();
           return;
         }
@@ -594,6 +615,10 @@
 
       if (isPlaced) {
         if (isFeedMode && reticle.visible) {
+          if (foods.length >= MAX_FOODS) {
+            updateStatus(`エサは最大${MAX_FOODS}個まで置けます`);
+            return;
+          }
           // エサの設置（レティクルの位置へ）
           const hitPos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
           const localHitPos = worldGroup.worldToLocal(hitPos);
@@ -601,8 +626,8 @@
           spawnFood(localHitPos);
           isFeedMode = false;
           document.getElementById('btn-feed-mode').classList.remove('active');
-          document.getElementById('btn-feed-mode').innerText = "エサを置く";
-          updateStatus("エサを置きました！ぷに達が集まってきます");
+          updateFoodButton();
+          updateStatus(`エサを置きました（${foods.length}個）。ぷにが近いエサに集まります`);
           return;
         }
 
@@ -621,7 +646,7 @@
             hitObj = hitObj.parent;
           }
           if (hitObj.userData.petInstance) {
-            hitObj.userData.petInstance.pet();
+            handlePetTap(hitObj.userData.petInstance);
             return;
           }
         }
@@ -635,55 +660,109 @@
             hitObj = hitObj.parent;
           }
           if (hitObj.userData.petInstance) {
-            hitObj.userData.petInstance.pet();
+            handlePetTap(hitObj.userData.petInstance);
           }
         }
       }
     }
 
+    function handlePetTap(pet) {
+      if (isSelectingPet) {
+        selectPet(pet);
+        return;
+      }
+      pet.pet();
+    }
+
+    function selectPet(pet) {
+      if (selectedPet) selectedPet.selectionRing.visible = false;
+      selectedPet = pet;
+      selectedPet.selectionRing.visible = true;
+      document.getElementById('btn-evolve-selected').disabled = false;
+      isSelectingPet = false;
+      document.getElementById('btn-select-pet').classList.remove('active');
+      document.getElementById('btn-select-pet').innerText = 'ぷにを選ぶ';
+      updateStatus(`「${STAGES[pet.stageIndex].name}」を選択中。選んだ子を進化できます`);
+    }
+
     // MARK: - エサの生成と食事
     function spawnFood(localPos) {
-      if (activeFoodMesh) {
-        disposeObjectTree(activeFoodMesh);
-        worldGroup.remove(activeFoodMesh);
-      }
       const geo = new THREE.SphereGeometry(0.010, 16, 16);
       const mat = new THREE.MeshStandardMaterial({ color: 0xff3b5c, roughness: 0.2 });
-      activeFoodMesh = new THREE.Mesh(geo, mat);
-      activeFoodMesh.position.set(localPos.x, 0.008, localPos.z);
-      worldGroup.add(activeFoodMesh);
-
-      activeFoodPos = activeFoodMesh.position;
-      activeFoodElapsed = 0;
-      activeFoodBites = 0;
+      const mesh = new THREE.Mesh(geo, mat);
+      const boundedPosition = new THREE.Vector3(localPos.x, 0, localPos.z).clampLength(0, 0.14);
+      mesh.position.set(boundedPosition.x, 0.008, boundedPosition.z);
+      worldGroup.add(mesh);
+      foods.push({ id: nextFoodId++, mesh, elapsed: 0, bites: 0 });
+      updateFoodButton();
     }
 
     function processEating(delta) {
-      if (!activeFoodMesh) return;
+      for (const food of [...foods]) {
+        const eaters = pets.filter(pet => pet.isEating && pet.targetFoodId === food.id);
+        if (eaters.length === 0) continue;
 
-      const eater = pets.find(pet => pet.isEating);
-      if (!eater) return;
+        food.elapsed += delta;
+        if (food.elapsed < 0.8) continue;
+        food.elapsed = 0;
+        food.bites++;
+        food.mesh.scale.setScalar(Math.pow(0.72, food.bites));
+        eaters.forEach(pet => pet.bounce());
 
-      activeFoodElapsed += delta;
-      if (activeFoodElapsed < 0.8) return;
-      activeFoodElapsed = 0;
-      activeFoodBites++;
-      eater.bounce();
-      activeFoodMesh.scale.setScalar(Math.pow(0.72, activeFoodBites));
-
-      if (activeFoodBites >= 3) {
-        const foodPosition = eater.root.position.clone();
-        disposeObjectTree(activeFoodMesh);
-        worldGroup.remove(activeFoodMesh);
-        activeFoodMesh = null;
-        activeFoodPos = null;
-        pets.forEach(pet => {
-          pet.eatCount = 0;
-          pet.pickNewTarget();
-        });
-        spawnHeart(foodPosition);
-        updateStatus(`「${STAGES[eater.stageIndex].name}」が美味しく完食！`);
+        if (food.bites >= 3) {
+          const foodPosition = food.mesh.position.clone();
+          disposeObjectTree(food.mesh);
+          worldGroup.remove(food.mesh);
+          foods.splice(foods.indexOf(food), 1);
+          updateFoodButton();
+          eaters.forEach(pet => {
+            pet.eatCount++;
+            if (pet.eatCount >= AUTO_EVOLVE_FOOD_COUNT && pet.stageIndex < STAGES.length - 1) {
+              pet.eatCount = 0;
+              pet.setStage(pet.stageIndex + 1);
+              updateStatus(`「${STAGES[pet.stageIndex].name}」がごはんを食べて進化！`);
+            } else if (pet.stageIndex >= STAGES.length - 1) {
+              pet.eatCount = 0;
+              updateStatus(`「${STAGES[pet.stageIndex].name}」がおいしく完食！`);
+            } else {
+              updateStatus(`「${STAGES[pet.stageIndex].name}」が完食！（進化まで あと${AUTO_EVOLVE_FOOD_COUNT - pet.eatCount}回）`);
+            }
+            spawnHeart(pet.root.position);
+          });
+          if (eaters.length === 0) spawnHeart(foodPosition);
+        }
       }
+    }
+
+    function getNearestFood(pet) {
+      let nearest = null;
+      let nearestDistance = Infinity;
+      for (const food of foods) {
+        const dx = pet.root.position.x - food.mesh.position.x;
+        const dz = pet.root.position.z - food.mesh.position.z;
+        const distance = dx * dx + dz * dz;
+        if (distance < nearestDistance) {
+          nearest = food;
+          nearestDistance = distance;
+        }
+      }
+      return nearest;
+    }
+
+    function getFoodApproachPoint(food, pet) {
+      const angle = (pet.id % 6) * (Math.PI / 3);
+      const radius = 0.078;
+      return new THREE.Vector3(
+        food.mesh.position.x + Math.cos(angle) * radius,
+        0,
+        food.mesh.position.z + Math.sin(angle) * radius
+      ).clampLength(0, 0.20);
+    }
+
+    function updateFoodButton() {
+      document.getElementById('btn-feed-mode').innerText = isFeedMode
+        ? '置く場所をタップ'
+        : `エサを置く (${foods.length})`;
     }
 
     function disposeObjectTree(root) {
@@ -738,8 +817,13 @@
 
     function updateDepthViews(frame, session) {
       depthViews = [];
-      if (!xrRefSpace || session.depthUsage !== 'cpu-optimized' ||
-          typeof frame.getDepthInformation !== 'function') return;
+      if (!xrRefSpace || typeof frame.getDepthInformation !== 'function') return;
+      try {
+        if (session.depthUsage !== 'cpu-optimized') return;
+      } catch (error) {
+        // Optional depth sensing was not negotiated for this session.
+        return;
+      }
 
       let viewerPose;
       try {
@@ -756,6 +840,7 @@
           depthViews.push({
             information,
             viewMatrix: new THREE.Matrix4().fromArray(view.transform.inverse.matrix),
+            cameraWorldMatrix: new THREE.Matrix4().fromArray(view.transform.matrix),
             projectionMatrix: new THREE.Matrix4().fromArray(view.projectionMatrix)
           });
         } catch (error) {
@@ -765,28 +850,57 @@
     }
 
     function depthOcclusionAmount(worldPosition) {
-      let maximumOcclusion = null;
+      let bestOcclusion = null;
       for (const depthView of depthViews) {
         const viewPosition = worldPosition.clone().applyMatrix4(depthView.viewMatrix);
         if (viewPosition.z >= 0) continue;
-        const ndcPosition = viewPosition.clone().applyMatrix4(depthView.projectionMatrix);
-        if (ndcPosition.x < -1 || ndcPosition.x > 1 || ndcPosition.y < -1 || ndcPosition.y > 1 ||
-          ndcPosition.z < -1 || ndcPosition.z > 1) continue;
 
-        const u = (ndcPosition.x + 1) * 0.5;
-        const v = (1 - ndcPosition.y) * 0.5;
-        let realDepth;
-        try {
-          realDepth = depthView.information.getDepthInMeters(u, v);
-        } catch (error) {
-          continue;
+        const elements = depthView.cameraWorldMatrix.elements;
+        const right = new THREE.Vector3(elements[0], elements[1], elements[2]);
+        const up = new THREE.Vector3(elements[4], elements[5], elements[6]);
+        const samples = [
+          worldPosition,
+          worldPosition.clone().addScaledVector(right, 0.025),
+          worldPosition.clone().addScaledVector(right, -0.025),
+          worldPosition.clone().addScaledVector(up, 0.025),
+          worldPosition.clone().addScaledVector(up, -0.025)
+        ];
+        let validSamples = 0;
+        let occludedSamples = 0;
+        let viewOcclusion = 0;
+
+        for (const sample of samples) {
+          const sampleViewPosition = sample.clone().applyMatrix4(depthView.viewMatrix);
+          const ndcPosition = sampleViewPosition.clone().applyMatrix4(depthView.projectionMatrix);
+          if (ndcPosition.x < -1 || ndcPosition.x > 1 || ndcPosition.y < -1 || ndcPosition.y > 1 ||
+              ndcPosition.z < -1 || ndcPosition.z > 1) continue;
+
+          const u = (ndcPosition.x + 1) * 0.5;
+          const v = (1 - ndcPosition.y) * 0.5;
+          let realDepth;
+          try {
+            // getDepthInMeters maps normalized view coordinates into depth-buffer coordinates.
+            realDepth = depthView.information.getDepthInMeters(u, v);
+          } catch (error) {
+            continue;
+          }
+          if (!Number.isFinite(realDepth) || realDepth <= 0) continue;
+
+          validSamples++;
+          const penetration = -sampleViewPosition.z - realDepth - 0.025;
+          if (penetration > 0) {
+            occludedSamples++;
+            viewOcclusion = Math.max(viewOcclusion, penetration);
+          }
         }
-        if (!Number.isFinite(realDepth) || realDepth <= 0) continue;
 
-        const occlusion = -viewPosition.z - realDepth - 0.06;
-        maximumOcclusion = Math.max(maximumOcclusion ?? 0, occlusion);
+        if (validSamples >= 3 && occludedSamples / validSamples >= 0.6) {
+          bestOcclusion = Math.max(bestOcclusion ?? 0, viewOcclusion);
+        } else if (bestOcclusion === null && validSamples > 0) {
+          bestOcclusion = 0;
+        }
       }
-      return maximumOcclusion;
+      return bestOcclusion;
     }
 
     function pointToSegmentDistanceSquared(point, start, end) {
@@ -859,39 +973,67 @@
           const p1 = pets[i].root.position;
           const p2 = pets[j].root.position;
           const diff = new THREE.Vector2(p1.x - p2.x, p1.z - p2.z);
-          const dist = diff.length();
-          const minDist = 0.07;
-
-          if (dist < minDist && dist > 0.0001) {
-            const overlap = (minDist - dist) * 0.5;
-            diff.normalize();
-            p1.x += diff.x * overlap;
-            p1.z += diff.y * overlap;
-            p2.x -= diff.x * overlap;
-            p2.z -= diff.y * overlap;
-
-            pets[i].bounce();
-            pets[j].bounce();
-            pets[i].pickNewTarget();
-            pets[j].pickNewTarget();
+          let dist = diff.length();
+          const minDist = 0.058;
+          if (dist >= minDist) continue;
+          if (dist < 0.0001) {
+            const angle = (pets[i].id * 2.399963229728653) % (Math.PI * 2);
+            diff.set(Math.cos(angle), Math.sin(angle));
+            dist = 0;
+          } else {
+            diff.multiplyScalar(1 / dist);
           }
+
+          const overlap = (minDist - dist) * 0.5;
+          p1.x += diff.x * overlap;
+          p1.z += diff.y * overlap;
+          p2.x -= diff.x * overlap;
+          p2.z -= diff.y * overlap;
+          p1.clampLength(0, 0.22);
+          p2.clampLength(0, 0.22);
         }
       }
     }
 
     // MARK: - UI連携関数
     window.toggleFeedMode = function() {
+      if (foods.length >= MAX_FOODS && !isFeedMode) {
+        updateStatus(`エサは最大${MAX_FOODS}個まで置けます`);
+        return;
+      }
       isFeedMode = !isFeedMode;
       const btn = document.getElementById('btn-feed-mode');
       if (isFeedMode) {
         btn.classList.add('active');
-        btn.innerText = "机をタップ！";
+        btn.innerText = "置く場所をタップ";
         updateStatus("置きたい机の場所をタップしてエサを設置してね");
       } else {
         btn.classList.remove('active');
-        btn.innerText = "エサを置く";
+        updateFoodButton();
         updateStatus("エサの設置をキャンセルしました");
       }
+    };
+
+    window.togglePetSelection = function() {
+      isSelectingPet = !isSelectingPet;
+      const button = document.getElementById('btn-select-pet');
+      button.classList.toggle('active', isSelectingPet);
+      button.innerText = isSelectingPet ? 'ぷにをタップして選択' : 'ぷにを選ぶ';
+      updateStatus(isSelectingPet ? '進化させたいぷにをタップしてください' : 'ぷに選択をキャンセルしました');
+    };
+
+    window.evolveSelected = function() {
+      if (!selectedPet) {
+        updateStatus('先に「ぷにを選ぶ」を押して、ぷにをタップしてください');
+        return;
+      }
+      if (selectedPet.stageIndex >= STAGES.length - 1) {
+        updateStatus(`「${STAGES[selectedPet.stageIndex].name}」は最終形態です`);
+        return;
+      }
+      selectedPet.setStage(selectedPet.stageIndex + 1);
+      selectedPet.eatCount = 0;
+      updateStatus(`選んだぷにが「${STAGES[selectedPet.stageIndex].name}」に進化！`);
     };
 
     window.addCompanion = function() {
@@ -996,21 +1138,24 @@
         disposeObjectTree(pet.root);
       });
       pets.length = 0;
+      if (selectedPet) selectedPet.selectionRing.visible = false;
+      selectedPet = null;
+      isSelectingPet = false;
       window.clearFurniture();
-      if (activeFoodMesh) {
-        worldGroup.remove(activeFoodMesh);
-        disposeObjectTree(activeFoodMesh);
-      }
-      activeFoodMesh = null;
-      activeFoodPos = null;
-      activeFoodElapsed = 0;
-      activeFoodBites = 0;
+      foods.forEach(food => {
+        worldGroup.remove(food.mesh);
+        disposeObjectTree(food.mesh);
+      });
+      foods.length = 0;
       isPlaced = false;
       isFeedMode = false;
       document.getElementById('pet-count').innerText = '0';
       document.getElementById('control-panel').style.display = 'none';
       document.getElementById('btn-feed-mode').classList.remove('active');
-      document.getElementById('btn-feed-mode').innerText = 'エサを置く';
+      updateFoodButton();
+      document.getElementById('btn-select-pet').classList.remove('active');
+      document.getElementById('btn-select-pet').innerText = 'ぷにを選ぶ';
+      document.getElementById('btn-evolve-selected').disabled = true;
       closeAllMenus();
     }
 
