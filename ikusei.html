@@ -233,7 +233,17 @@
     let reticle;
     let isPlaced = false;
     const handObstacles = [];
-    let depthViews = [];
+    let handOcclusionGroup = null;
+    let handJointSpheres = [];
+    let handBoneCylinders = [];
+    const handOcclusionMaterial = new THREE.MeshBasicMaterial({
+      colorWrite: false,
+      depthWrite: true,
+      depthTest: true,
+      side: THREE.DoubleSide
+    });
+    const handJointGeometry = new THREE.SphereGeometry(1, 12, 8);
+    const handBoneGeometry = new THREE.CylinderGeometry(1, 1, 1, 12);
 
     const HAND_BONES = [
       ['wrist', 'thumb-metacarpal'], ['thumb-metacarpal', 'thumb-phalanx-proximal'],
@@ -250,6 +260,14 @@
       ['pinky-phalanx-intermediate', 'pinky-phalanx-distal'], ['pinky-phalanx-distal', 'pinky-tip'],
       ['index-metacarpal', 'middle-metacarpal'], ['middle-metacarpal', 'ring-metacarpal'],
       ['ring-metacarpal', 'pinky-metacarpal']
+    ];
+
+    const HAND_JOINT_NAMES = [
+      'wrist', 'thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip',
+      'index-metacarpal', 'index-phalanx-proximal', 'index-phalanx-intermediate', 'index-phalanx-distal', 'index-tip',
+      'middle-metacarpal', 'middle-phalanx-proximal', 'middle-phalanx-intermediate', 'middle-phalanx-distal', 'middle-tip',
+      'ring-metacarpal', 'ring-phalanx-proximal', 'ring-phalanx-intermediate', 'ring-phalanx-distal', 'ring-tip',
+      'pinky-metacarpal', 'pinky-phalanx-proximal', 'pinky-phalanx-intermediate', 'pinky-phalanx-distal', 'pinky-tip'
     ];
 
     // ゲーム内階層
@@ -311,6 +329,8 @@
         this.targetFoodId = null;
         this.lastPetTime = 0;
         this.handBlockedUntil = 0;
+        this.touchPulse = 0;
+        this.wasHandTouching = false;
 
         this.pickNewTarget();
         worldGroup.add(this.root);
@@ -326,6 +346,12 @@
 
       update(delta) {
         this.breatheCycle += delta * 2.5;
+        this.touchPulse = THREE.MathUtils.damp(this.touchPulse, 0, 12, delta);
+        this.visual.scale.set(
+          1 + this.touchPulse * 0.14,
+          1 - this.touchPulse * 0.22,
+          1 + this.touchPulse * 0.14
+        );
         if (performance.now() < this.handBlockedUntil) {
           this.isEating = false;
           this.visual.position.y = 0;
@@ -401,13 +427,15 @@
         }, 120);
       }
 
-      pet() {
+      pet(inputSource = null) {
         const now = performance.now();
         if (now - this.lastPetTime < 600) return;
         this.lastPetTime = now;
 
+        this.touchPulse = 1;
         this.bounce();
         setTimeout(() => this.bounce(), 150);
+        pulseHaptics(inputSource);
         spawnHeart(this.root.position);
         updateStatus(`「${STAGES[this.stageIndex].name}」をなでなで！喜んでいます`);
       }
@@ -504,6 +532,7 @@
 
     function init() {
       scene = new THREE.Scene();
+      setupHandOcclusion();
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 2.5);
@@ -523,12 +552,7 @@
       const overlay = document.getElementById('overlay');
       const arButton = ARButton.createButton(renderer, {
         requiredFeatures: ['hit-test'],
-        optionalFeatures: ['dom-overlay', 'depth-sensing', 'hand-tracking'],
-        depthSensing: {
-          usagePreference: ['cpu-optimized'],
-          dataFormatPreference: ['luminance-alpha', 'float32'],
-          matchDepthView: true
-        },
+        optionalFeatures: ['dom-overlay', 'hand-tracking'],
         domOverlay: { root: overlay }
       });
       document.body.appendChild(arButton);
@@ -557,7 +581,7 @@
       renderer.setAnimationLoop(render);
 
       renderer.xr.addEventListener('sessionstart', () => {
-        updateStatus("机をカメラに映してください（遮蔽・手よけは端末対応時に有効）");
+        updateStatus("机を映してください。対応端末では手でぷにに触れて遊べます");
       });
       renderer.xr.addEventListener('sessionend', () => {
         hitTestSource?.cancel();
@@ -565,12 +589,42 @@
         hitTestSourceRequested = false;
         xrRefSpace = null;
         handObstacles.length = 0;
-        depthViews = [];
+        hideHandOcclusion();
         reticle.visible = false;
         resetGame();
         updateStatus("ARを終了しました。もう一度開始できます");
       });
       checkWebXRSupport();
+    }
+
+    function setupHandOcclusion() {
+      handOcclusionGroup = new THREE.Group();
+      handOcclusionGroup.name = 'hand-depth-occluders';
+      scene.add(handOcclusionGroup);
+
+      for (let index = 0; index < HAND_JOINT_NAMES.length * 2; index++) {
+        const sphere = new THREE.Mesh(handJointGeometry, handOcclusionMaterial);
+        sphere.name = `hand-joint-occluder-${index}`;
+        sphere.renderOrder = -1;
+        sphere.matrixAutoUpdate = false;
+        sphere.visible = false;
+        handOcclusionGroup.add(sphere);
+        handJointSpheres.push(sphere);
+      }
+
+      for (let index = 0; index < HAND_BONES.length * 2; index++) {
+        const cylinder = new THREE.Mesh(handBoneGeometry, handOcclusionMaterial);
+        cylinder.name = `hand-bone-occluder-${index}`;
+        cylinder.renderOrder = -1;
+        cylinder.visible = false;
+        handOcclusionGroup.add(cylinder);
+        handBoneCylinders.push(cylinder);
+      }
+    }
+
+    function hideHandOcclusion() {
+      handJointSpheres.forEach(mesh => { mesh.visible = false; });
+      handBoneCylinders.forEach(mesh => { mesh.visible = false; });
     }
 
     async function checkWebXRSupport() {
@@ -646,7 +700,7 @@
             hitObj = hitObj.parent;
           }
           if (hitObj.userData.petInstance) {
-            handlePetTap(hitObj.userData.petInstance);
+            handlePetTap(hitObj.userData.petInstance, event.inputSource);
             return;
           }
         }
@@ -660,18 +714,18 @@
             hitObj = hitObj.parent;
           }
           if (hitObj.userData.petInstance) {
-            handlePetTap(hitObj.userData.petInstance);
+            handlePetTap(hitObj.userData.petInstance, event.inputSource);
           }
         }
       }
     }
 
-    function handlePetTap(pet) {
+    function handlePetTap(pet, inputSource = null) {
       if (isSelectingPet) {
         selectPet(pet);
         return;
       }
-      pet.pet();
+      pet.pet(inputSource);
     }
 
     function selectPet(pet) {
@@ -779,128 +833,97 @@
 
     function updateHandObstacles(frame, session) {
       handObstacles.length = 0;
-      if (typeof frame.getJointPose !== 'function' || !xrRefSpace) return;
+      hideHandOcclusion();
+      if (typeof frame.getJointPose !== 'function' || !xrRefSpace || !handOcclusionGroup) return;
 
+      const scaleMatrix = new THREE.Matrix4();
+      const yAxis = new THREE.Vector3(0, 1, 0);
+      const boneDirection = new THREE.Vector3();
+      const boneMidpoint = new THREE.Vector3();
+      let handIndex = 0;
       for (const inputSource of session.inputSources) {
         if (!inputSource.hand) continue;
+        if (handIndex >= 2) break;
         const joints = new Map();
-        for (const [startName, endName] of HAND_BONES) {
-          for (const name of [startName, endName]) {
-            if (joints.has(name)) continue;
-            const jointSpace = inputSource.hand.get(name);
-            if (!jointSpace) continue;
-            const pose = frame.getJointPose(jointSpace, xrRefSpace);
-            if (!pose) continue;
-            joints.set(name, {
-              position: new THREE.Vector3(
-                pose.transform.position.x,
-                pose.transform.position.y,
-                pose.transform.position.z
-              ),
-              radius: Number.isFinite(pose.radius) ? pose.radius : 0.01
-            });
-          }
+        for (let jointIndex = 0; jointIndex < HAND_JOINT_NAMES.length; jointIndex++) {
+          const name = HAND_JOINT_NAMES[jointIndex];
+          const jointSpace = inputSource.hand.get(name);
+          const pose = jointSpace ? frame.getJointPose(jointSpace, xrRefSpace) : null;
+          const sphere = handJointSpheres[handIndex * HAND_JOINT_NAMES.length + jointIndex];
+          if (!pose) continue;
+
+          const position = new THREE.Vector3(
+            pose.transform.position.x,
+            pose.transform.position.y,
+            pose.transform.position.z
+          );
+          const radius = (Number.isFinite(pose.radius) && pose.radius > 0 ? pose.radius : 0.01) * 1.15;
+          joints.set(name, { position, radius });
+
+          sphere.matrix.fromArray(pose.transform.matrix);
+          scaleMatrix.makeScale(radius, radius, radius);
+          sphere.matrix.multiply(scaleMatrix);
+          sphere.matrixWorldNeedsUpdate = true;
+          sphere.visible = true;
+          handObstacles.push({ start: position, end: position, radius });
         }
 
-        for (const [startName, endName] of HAND_BONES) {
+        for (let boneIndex = 0; boneIndex < HAND_BONES.length; boneIndex++) {
+          const [startName, endName] = HAND_BONES[boneIndex];
           const start = joints.get(startName);
           const end = joints.get(endName);
           if (!start || !end) continue;
+          boneDirection.subVectors(end.position, start.position);
+          const length = boneDirection.length();
+          if (length < 0.002) continue;
+
+          const cylinder = handBoneCylinders[handIndex * HAND_BONES.length + boneIndex];
+          boneMidpoint.addVectors(start.position, end.position).multiplyScalar(0.5);
+          cylinder.position.copy(boneMidpoint);
+          cylinder.quaternion.setFromUnitVectors(yAxis, boneDirection.normalize());
+          const radius = Math.max(0.006, (start.radius + end.radius) * 0.5 * 1.15);
+          cylinder.scale.set(radius, length, radius);
+          cylinder.visible = true;
+
           handObstacles.push({
             start: start.position,
             end: end.position,
-            radius: Math.max(0.008, Math.min(0.018, (start.radius + end.radius) * 0.5))
+            radius
           });
         }
+        handIndex++;
       }
     }
 
-    function updateDepthViews(frame, session) {
-      depthViews = [];
-      if (!xrRefSpace || typeof frame.getDepthInformation !== 'function') return;
-      try {
-        if (session.depthUsage !== 'cpu-optimized') return;
-      } catch (error) {
-        // Optional depth sensing was not negotiated for this session.
-        return;
-      }
-
-      let viewerPose;
-      try {
-        viewerPose = frame.getViewerPose(xrRefSpace);
-      } catch (error) {
-        return;
-      }
-      if (!viewerPose) return;
-
-      for (const view of viewerPose.views) {
-        try {
-          const information = frame.getDepthInformation(view);
-          if (!information || typeof information.getDepthInMeters !== 'function') continue;
-          depthViews.push({
-            information,
-            viewMatrix: new THREE.Matrix4().fromArray(view.transform.inverse.matrix),
-            cameraWorldMatrix: new THREE.Matrix4().fromArray(view.transform.matrix),
-            projectionMatrix: new THREE.Matrix4().fromArray(view.projectionMatrix)
-          });
-        } catch (error) {
-          // 深度センサーが利用できないフレームは遮蔽なしとして扱う。
-        }
+    function updateHandPetTouches() {
+      for (const pet of pets) {
+        const bodyPosition = worldGroup.localToWorld(
+          pet.root.position.clone().add(new THREE.Vector3(0, 0.03 + pet.visual.position.y, 0))
+        );
+        const touchRadius = 0.041;
+        const touching = handObstacles.some(obstacle =>
+          pointToSegmentDistanceSquared(bodyPosition, obstacle.start, obstacle.end) <=
+          (touchRadius + obstacle.radius) ** 2
+        );
+        if (touching && !pet.wasHandTouching) pet.pet();
+        pet.wasHandTouching = touching;
       }
     }
 
-    function depthOcclusionAmount(worldPosition) {
-      let bestOcclusion = null;
-      for (const depthView of depthViews) {
-        const viewPosition = worldPosition.clone().applyMatrix4(depthView.viewMatrix);
-        if (viewPosition.z >= 0) continue;
+    function pulseHaptics(inputSource) {
+      const gamepad = inputSource?.gamepad;
+      if (!gamepad) return;
 
-        const elements = depthView.cameraWorldMatrix.elements;
-        const right = new THREE.Vector3(elements[0], elements[1], elements[2]);
-        const up = new THREE.Vector3(elements[4], elements[5], elements[6]);
-        const samples = [
-          worldPosition,
-          worldPosition.clone().addScaledVector(right, 0.025),
-          worldPosition.clone().addScaledVector(right, -0.025),
-          worldPosition.clone().addScaledVector(up, 0.025),
-          worldPosition.clone().addScaledVector(up, -0.025)
-        ];
-        let validSamples = 0;
-        let occludedSamples = 0;
-        let viewOcclusion = 0;
-
-        for (const sample of samples) {
-          const sampleViewPosition = sample.clone().applyMatrix4(depthView.viewMatrix);
-          const ndcPosition = sampleViewPosition.clone().applyMatrix4(depthView.projectionMatrix);
-          if (ndcPosition.x < -1 || ndcPosition.x > 1 || ndcPosition.y < -1 || ndcPosition.y > 1 ||
-              ndcPosition.z < -1 || ndcPosition.z > 1) continue;
-
-          const u = (ndcPosition.x + 1) * 0.5;
-          const v = (1 - ndcPosition.y) * 0.5;
-          let realDepth;
-          try {
-            // getDepthInMeters maps normalized view coordinates into depth-buffer coordinates.
-            realDepth = depthView.information.getDepthInMeters(u, v);
-          } catch (error) {
-            continue;
-          }
-          if (!Number.isFinite(realDepth) || realDepth <= 0) continue;
-
-          validSamples++;
-          const penetration = -sampleViewPosition.z - realDepth - 0.025;
-          if (penetration > 0) {
-            occludedSamples++;
-            viewOcclusion = Math.max(viewOcclusion, penetration);
-          }
-        }
-
-        if (validSamples >= 3 && occludedSamples / validSamples >= 0.6) {
-          bestOcclusion = Math.max(bestOcclusion ?? 0, viewOcclusion);
-        } else if (bestOcclusion === null && validSamples > 0) {
-          bestOcclusion = 0;
-        }
+      const actuator = gamepad.hapticActuators?.[0] ?? gamepad.vibrationActuator;
+      if (actuator?.pulse) {
+        actuator.pulse(0.35, 45)?.catch?.(() => {});
+      } else if (actuator?.playEffect) {
+        actuator.playEffect('dual-rumble', {
+          duration: 45,
+          strongMagnitude: 0.3,
+          weakMagnitude: 0.18
+        })?.catch?.(() => {});
       }
-      return bestOcclusion;
     }
 
     function pointToSegmentDistanceSquared(point, start, end) {
@@ -915,7 +938,6 @@
     function isMovementBlocked(start, end) {
       const distance = start.distanceTo(end);
       const steps = Math.max(1, Math.ceil(distance / 0.01));
-      const startOcclusion = depthOcclusionAmount(start);
       const startHandDistances = handObstacles.map(obstacle =>
         pointToSegmentDistanceSquared(start, obstacle.start, obstacle.end)
       );
@@ -923,11 +945,6 @@
 
       for (let step = 1; step <= steps; step++) {
         const point = start.clone().lerp(end, step / steps);
-        const occlusion = depthOcclusionAmount(point);
-        if (occlusion !== null && occlusion > 0 &&
-            (startOcclusion === null || startOcclusion <= 0 || occlusion > startOcclusion + 0.015)) {
-          return true;
-        }
         for (let index = 0; index < handObstacles.length; index++) {
           const obstacle = handObstacles[index];
           const distanceSquared = pointToSegmentDistanceSquared(point, obstacle.start, obstacle.end);
@@ -1176,8 +1193,6 @@
 
         if (session && xrRefSpace) {
           updateHandObstacles(frame, session);
-          updateDepthViews(frame, session);
-
           if (hitTestSourceRequested === false) {
             hitTestSourceRequested = true;
             session.requestReferenceSpace('viewer')
@@ -1209,26 +1224,19 @@
           }
         } else {
           handObstacles.length = 0;
-          depthViews = [];
           reticle.visible = false;
+          hideHandOcclusion();
         }
       } else {
         handObstacles.length = 0;
-        depthViews = [];
         reticle.visible = false;
+        hideHandOcclusion();
       }
 
       pets.forEach(pet => pet.update(delta));
       resolvePetCollisions();
+      updateHandPetTouches();
       processEating(delta);
-
-      for (const pet of pets) {
-        const bodyPosition = worldGroup.localToWorld(
-          pet.root.position.clone().add(new THREE.Vector3(0, 0.03 + pet.visual.position.y, 0))
-        );
-        const occlusion = depthOcclusionAmount(bodyPosition);
-        pet.root.visible = occlusion === null || occlusion <= 0;
-      }
 
       renderer.render(scene, camera);
     }
