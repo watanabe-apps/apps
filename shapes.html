@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>図形あそび (Shapes)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background-color: #f1f5f9;
+            background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            touch-action: none; /* スクロールや拡大縮小を無効化 */
+        }
+
+        /* --- 上の枠：ツールバー (SelectShapeView) --- */
+        /* 図形がこの枠より前面に来るよう、z-indexは控えめに設定 */
+        .toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 96px;
+            z-index: 10; /* 図形(z-index: 100以上)より背面 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            pointer-events: auto;
+        }
+
+        .shape-palette {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* パレットの図形ボタンスロット */
+        .palette-item {
+            width: 72px;
+            height: 72px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            touch-action: none; /* ドラッグ操作を直接拾う */
+            transition: transform 0.1s ease, border-color 0.15s ease, background-color 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .palette-item:active {
+            transform: scale(0.94);
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .palette-item svg {
+            width: 50px;
+            height: 50px;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* ゴミ箱エリア */
+        .trash-btn {
+            width: 68px;
+            height: 68px;
+            background: #ffffff;
+            border: 2px solid #fecaca;
+            color: #ef4444;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+        }
+
+        .trash-btn:active {
+            transform: scale(0.92);
+            background: #fee2e2;
+        }
+
+        /* 図形がゴミ箱の上にホバーされたとき */
+        .trash-btn.drag-hover {
+            transform: scale(1.18);
+            background: #fee2e2;
+            border-color: #dc2626;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+        }
+
+        .trash-btn svg {
+            width: 32px;
+            height: 32px;
+            pointer-events: none;
+            transition: transform 0.2s ease;
+        }
+
+        .trash-btn.drag-hover svg {
+            transform: rotate(-15deg) scale(1.1);
+        }
+
+        /* --- キャンバス領域 (ShapesView) --- */
+        /* 画面全体に広がり、図形はツールバーの前面(z-index: 100以上)に配置される */
+        .canvas-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none; /* 下の領域へクリックを透過しつつ図形のみ受け取る */
+        }
+
+        /* ガイド用テキスト */
+        .hint-text {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e2e8f0;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+            pointer-events: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+            z-index: 5;
+        }
+
+        /* --- 図形要素 (ShapeView) --- */
+        .shape-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            touch-action: none;
+            pointer-events: auto; /* 図形自体はポインタを受け取る */
+            will-change: transform;
+            z-index: 100; /* ツールバー(z-index: 10)より常に前面！ */
+        }
+
+        /* ドラッグ中の状態：指に即時追従 */
+        .shape-item.is-dragging {
+            cursor: grabbing;
+            transition: none !important;
+            opacity: 0.92;
+        }
+
+        /* タップ時の45度回転アニメーション */
+        .shape-item.is-rotating {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+
+        .shape-body {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .shape-body svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 上の枠：ツールバー (SelectShapeView) -->
+    <header class="toolbar" id="toolbar">
+        <div class="shape-palette">
+            <!-- 1. ○（円） -->
+            <div class="palette-item" data-shape="circle" title="円（ドラッグして配置）">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="50" fill="#EF4444"/>
+                </svg>
+            </div>
+
+            <!-- 2. □（四角 / 正方形・角丸なし） -->
+            <div class="palette-item" data-shape="square" title="正方形（ドラッグして配置）">
+                <svg viewBox="0 0 100 100">
+                    <rect x="0" y="0" width="100" height="100" fill="#3B82F6"/>
+                </svg>
+            </div>
+
+            <!-- 3. 直角三角形（正方形を半分に対角線で切った形） -->
+            <div class="palette-item" data-shape="rightTriangle" title="直角三角形（ドラッグして配置）">
+                <svg viewBox="0 0 100 100">
+                    <polygon points="0,0 100,100 0,100" fill="#10B981"/>
+                </svg>
+            </div>
+
+            <!-- 4. 二等辺三角形（底辺が正方形と同じで面積が半分の形） -->
+            <div class="palette-item" data-shape="isoscelesTriangle" title="二等辺三角形（ドラッグして配置）">
+                <svg viewBox="0 0 100 100">
+                    <polygon points="50,0 100,100 0,100" fill="#F59E0B"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ゴミ箱ボタン -->
+        <button class="trash-btn" id="btn-trash" title="ゴミ箱（タップで全消去 / ここにドラッグでポイ）">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        </button>
+    </header>
+
+    <!-- ガイド表示 -->
+    <div class="hint-text">
+        <span>上の図形をドラッグして取り出す</span> • <span>タップで45°回転</span> • <span>ドラッグで移動・ゴミ箱へ</span>
+    </div>
+
+    <!-- メインキャンバス領域 (ShapesView) -->
+    <main class="canvas-area" id="canvas-area"></main>
+
+    <script>
+        // Web Audio API による効果音（外部音声ファイル不要）
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            playPop() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(360, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+                } catch (_) {}
+            },
+            playRotate() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(540, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+                } catch (_) {}
+            },
+            playTrash() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(380, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.14);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.14);
+                } catch (_) {}
+            }
+        };
+
+        const canvasArea = document.getElementById('canvas-area');
+        const trashBtn = document.getElementById('btn-trash');
+
+        // 図形全体のベースz-index（ツールバーのz-index:10より常に前面）
+        let highestZIndex = 100;
+        const SHAPE_SIZE = 150; // 図形の基準サイズ (150px)
+
+        // 図形SVG定義（枠線・模様・角丸一切なしのプレーン仕様）
+        const SHAPE_SVGS = {
+            // ○（円）
+            circle: `
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="50" fill="#EF4444"/>
+                </svg>
+            `,
+            // □（正方形：角丸なし）
+            square: `
+                <svg viewBox="0 0 100 100">
+                    <rect x="0" y="0" width="100" height="100" fill="#3B82F6"/>
+                </svg>
+            `,
+            // 直角三角形（正方形を半分に対角線で割った形）
+            rightTriangle: `
+                <svg viewBox="0 0 100 100">
+                    <polygon points="0,0 100,100 0,100" fill="#10B981"/>
+                </svg>
+            `,
+            // 二等辺三角形（底辺が正方形と同じで面積が半分の形）
+            isoscelesTriangle: `
+                <svg viewBox="0 0 100 100">
+                    <polygon points="50,0 100,100 0,100" fill="#F59E0B"/>
+                </svg>
+            `
+        };
+
+        // 位置と回転のtransform反映
+        function applyTransform(el, x, y, rotation, isRotatingAnimation = false) {
+            el.dataset.x = x;
+            el.dataset.y = y;
+            el.dataset.rotation = rotation;
+
+            if (isRotatingAnimation) {
+                el.classList.add('is-rotating');
+            } else {
+                el.classList.remove('is-rotating');
+            }
+            el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rotation}deg)`;
+        }
+
+        // 新しい図形要素を生成してキャンバスに追加
+        function createShapeElement(type, x, y, rotation = 0) {
+            const shapeEl = document.createElement('div');
+            shapeEl.className = 'shape-item';
+
+            highestZIndex++;
+            shapeEl.style.zIndex = highestZIndex;
+
+            shapeEl.innerHTML = `
+                <div class="shape-body">
+                    ${SHAPE_SVGS[type] || SHAPE_SVGS.circle}
+                </div>
+            `;
+
+            canvasArea.appendChild(shapeEl);
+            applyTransform(shapeEl, x, y, rotation, false);
+            return shapeEl;
+        }
+
+        // ----------------------------------------------------
+        // 1. パレットからドラッグして自然に取り出す処理
+        // ----------------------------------------------------
+        document.querySelectorAll('.palette-item').forEach(paletteItem => {
+            const shapeType = paletteItem.dataset.shape;
+
+            paletteItem.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return; // 左クリック・タッチのみ
+
+                // パレット側でポインタをキャプチャし、ドラッグを維持
+                paletteItem.setPointerCapture(e.pointerId);
+
+                // 指の真下に図形の中心が来るように配置
+                const startX = e.clientX - SHAPE_SIZE / 2;
+                const startY = e.clientY - SHAPE_SIZE / 2;
+
+                const newShape = createShapeElement(shapeType, startX, startY, 0);
+                newShape.classList.add('is-dragging');
+
+                let curX = startX;
+                let curY = startY;
+
+                const onPointerMove = (moveEvt) => {
+                    curX = moveEvt.clientX - SHAPE_SIZE / 2;
+                    curY = moveEvt.clientY - SHAPE_SIZE / 2;
+                    applyTransform(newShape, curX, curY, 0, false);
+
+                    // ゴミ箱エリアとの当たり判定
+                    checkTrashTarget(moveEvt.clientX, moveEvt.clientY);
+                };
+
+                const onPointerEnd = (endEvt) => {
+                    try {
+                        paletteItem.releasePointerCapture(endEvt.pointerId);
+                    } catch (_) {}
+
+                    paletteItem.removeEventListener('pointermove', onPointerMove);
+                    paletteItem.removeEventListener('pointerup', onPointerEnd);
+                    paletteItem.removeEventListener('pointercancel', onPointerEnd);
+
+                    newShape.classList.remove('is-dragging');
+                    setTrashHoverState(false);
+
+                    // ゴミ箱の上で離したら削除
+                    if (isPointerOverTrash(endEvt.clientX, endEvt.clientY)) {
+                        AudioFX.playTrash();
+                        removeShape(newShape);
+                        return;
+                    }
+
+                    // キャンバスへの配置音
+                    AudioFX.playPop();
+
+                    // 配置完了後、移動＆回転のイベントをこの図形に付与
+                    setupExistingShapeInteractions(newShape);
+                };
+
+                paletteItem.addEventListener('pointermove', onPointerMove);
+                paletteItem.addEventListener('pointerup', onPointerEnd);
+                paletteItem.addEventListener('pointercancel', onPointerEnd);
+            });
+        });
+
+        // ----------------------------------------------------
+        // 2. 配置済み図形の操作（ドラッグで移動 / タップで45°回転）
+        // ----------------------------------------------------
+        function setupExistingShapeInteractions(el) {
+            let isPointerDown = false;
+            let hasMoved = false;
+            let startPointerX = 0, startPointerY = 0;
+            let startShapeX = 0, startShapeY = 0;
+
+            const DRAG_THRESHOLD = 5; // 5px未満なら「タップ」、以上なら「ドラッグ」
+
+            el.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return;
+
+                isPointerDown = true;
+                hasMoved = false;
+                startPointerX = e.clientX;
+                startPointerY = e.clientY;
+                startShapeX = parseFloat(el.dataset.x) || 0;
+                startShapeY = parseFloat(el.dataset.y) || 0;
+
+                // 触れた図形を常に最前面へ！
+                highestZIndex++;
+                el.style.zIndex = highestZIndex;
+
+                el.setPointerCapture(e.pointerId);
+                el.classList.add('is-dragging');
+            });
+
+            el.addEventListener('pointermove', (e) => {
+                if (!isPointerDown) return;
+
+                const dx = e.clientX - startPointerX;
+                const dy = e.clientY - startPointerY;
+
+                if (!hasMoved && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+                    hasMoved = true;
+                }
+
+                if (hasMoved) {
+                    const nextX = startShapeX + dx;
+                    const nextY = startShapeY + dy;
+                    const currentRot = parseInt(el.dataset.rotation, 10) || 0;
+                    applyTransform(el, nextX, nextY, currentRot, false);
+
+                    checkTrashTarget(e.clientX, e.clientY);
+                }
+            });
+
+            const onPointerEnd = (e) => {
+                if (!isPointerDown) return;
+                isPointerDown = false;
+                el.classList.remove('is-dragging');
+
+                try {
+                    el.releasePointerCapture(e.pointerId);
+                } catch (_) {}
+
+                // ゴミ箱にドロップされたか
+                if (hasMoved && isPointerOverTrash(e.clientX, e.clientY)) {
+                    AudioFX.playTrash();
+                    removeShape(el);
+                    setTrashHoverState(false);
+                    return;
+                }
+                setTrashHoverState(false);
+
+                // 5px未満の移動であれば【タップ】と判定 ➔ 45度回転！
+                if (!hasMoved) {
+                    const currentRot = parseInt(el.dataset.rotation, 10) || 0;
+                    const nextRot = (currentRot + 45) % 360;
+                    const curX = parseFloat(el.dataset.x) || 0;
+                    const curY = parseFloat(el.dataset.y) || 0;
+                    applyTransform(el, curX, curY, nextRot, true);
+                    AudioFX.playRotate();
+                }
+            };
+
+            el.addEventListener('pointerup', onPointerEnd);
+            el.addEventListener('pointercancel', onPointerEnd);
+        }
+
+        // 図形の削除アニメーション
+        function removeShape(el) {
+            el.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+            el.style.transform += ' scale(0)';
+            el.style.opacity = '0';
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 180);
+        }
+
+        // ゴミ箱の当たり判定
+        function isPointerOverTrash(clientX, clientY) {
+            const rect = trashBtn.getBoundingClientRect();
+            return (
+                clientX >= rect.left - 12 &&
+                clientX <= rect.right + 12 &&
+                clientY >= rect.top - 12 &&
+                clientY <= rect.bottom + 12
+            );
+        }
+
+        function checkTrashTarget(clientX, clientY) {
+            setTrashHoverState(isPointerOverTrash(clientX, clientY));
+        }
+
+        function setTrashHoverState(active) {
+            if (active) {
+                trashBtn.classList.add('drag-hover');
+            } else {
+                trashBtn.classList.remove('drag-hover');
+            }
+        }
+
+        // ゴミ箱クリック：全消去
+        trashBtn.addEventListener('click', () => {
+            const shapes = canvasArea.querySelectorAll('.shape-item');
+            if (shapes.length === 0) return;
+            if (confirm('すべての図形を消しますか？')) {
+                AudioFX.playTrash();
+                shapes.forEach(shape => removeShape(shape));
+            }
+        });
+    </script>
+</body>
+</html>
