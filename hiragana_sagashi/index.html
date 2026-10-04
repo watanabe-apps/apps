@@ -2,430 +2,2364 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ひらがなさがし</title>
-    <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="img.png">
+    <link rel="icon" href="img.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ios-blue: #007AFF;
-            --ios-bg: #f2f2f7;
-            --ios-text: #000;
-            --selected-bg: #007AFF;
-            --selected-text: #ffffff;
+            --primary: #007aff;
+            --primary-active: #0056b3;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #1c1c1e;
+            --sub-text: #8e8e93;
+            --border-color: #e5e5ea;
+            --correct-color: #ff3b30;
+            --wrong-color: #5856d6;
+            --drag-red: #e11d48;
+            --font-family: 'Klee One', 'UD Digi Kyokasho N-R', 'Hiragino Sans', sans-serif;
         }
 
-        body, html {
+        * {
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        html, body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
-            font-family: 'Klee One', serif;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-            background-color: #fff;
+            overscroll-behavior: none;
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
+            color: var(--text-color);
         }
 
-        /* --- ホーム画面 --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.25s ease;
+        }
+
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ==========================================================================
+           1. ホーム画面
+           ========================================================================== */
         #home-screen {
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            gap: 2rem;
+            z-index: 50;
+        }
+
+        .app-title-area {
+            text-align: center;
+        }
+
+        .app-title {
+            font-size: clamp(2.4rem, 6vw, 3.4rem);
+            font-weight: 600;
+            color: #111;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: 0.08em;
+        }
+
+        .app-subtitle {
+            font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+            color: var(--sub-text);
+            margin: 0;
+        }
+
+        .home-btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .btn-start {
+            font-size: clamp(1.8rem, 4vw, 2.3rem);
+            padding: 0.9rem 4.5rem;
+            border: none;
+            border-radius: 20px;
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: var(--font-family);
+            box-shadow: 0 6px 18px rgba(0, 122, 255, 0.28);
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .btn-start:active {
+            transform: scale(0.96);
+            opacity: 0.85;
+        }
+
+        .btn-settings-trigger {
+            font-size: 1.15rem;
+            padding: 0.75rem 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: #ffffff;
+            color: #3a3a3c;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: var(--font-family);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            transition: opacity 0.15s ease;
+        }
+
+        .btn-settings-trigger:active {
+            background-color: #f2f2f7;
+        }
+
+        .sub-hint {
+            font-size: 0.8rem;
+            color: var(--sub-text);
+            font-weight: normal;
+        }
+
+        /* ==========================================================================
+           2. プレイ画面（枠なし・上部広大化・ノイズレス）
+           ========================================================================== */
+        #play-screen {
+            background-color: #ffffff;
+            z-index: 10;
+        }
+
+        /* 枠なし戻るボタン（左上固定） */
+        .btn-back-minimal {
+            position: absolute;
+            top: 10px;
+            left: 14px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.15s ease, transform 0.1s ease;
+            line-height: 1;
+        }
+
+        .btn-back-minimal:active {
+            opacity: 0.5;
+            transform: scale(0.92);
+        }
+
+        /* 正解数・不正解数（右上固定・小さくグレー表示） */
+        .score-badge-fixed {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            user-select: none;
+            pointer-events: none;
+            z-index: 200;
+            letter-spacing: 0.06em;
+            line-height: 1;
+        }
+
+        .game-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 上部エリア（候補文字群：画面の大半を占める） */
+        #upper-stage {
+            flex: 1;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .candidate-node {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #1a202c;
+            border-radius: 12px;
+            transition: transform 0.15s ease;
+            box-sizing: border-box;
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .candidate-node:active {
+            transform: scale(0.92);
+        }
+
+        .candidate-node.with-border {
+            background-color: #f8fafc;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* 50音配置時のブラックアウト（不活性文字） */
+        .candidate-node.blackout {
+            background-color: #0f172a !important;
+            color: #334155 !important;
+            opacity: 0.12 !important;
+            border: none !important;
+            box-shadow: none !important;
+            cursor: default !important;
+            pointer-events: none !important;
+        }
+
+        /* 下部エリア（探す文字のみ：コンパクト化し枠線・背景完全撤廃） */
+        #lower-stage {
+            height: clamp(90px, 17vh, 130px);
+            position: relative;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            z-index: 100;
+        }
+
+        /* 配置用基準スロット（透明・枠なし） */
+        #drag-source-slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: transparent;
+            border: none;
+        }
+
+        /* ドラッグする文字（不透明度90%、常に最前面 z-index: 1000） */
+        #draggable-char-node {
+            position: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: grab;
+            touch-action: none;
+            z-index: 1000;
+            opacity: 0.9; /* うっすら下の文字が見えるように不透明度90% */
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        /* 枠なし時は赤文字 */
+        #draggable-char-node.no-border {
+            color: var(--drag-red);
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        /* 枠あり時 */
+        #draggable-char-node.with-border {
+            color: #0f172a;
+            background-color: #ffffff;
+            border: 3px solid var(--primary);
+            box-shadow: 0 4px 14px rgba(0, 122, 255, 0.2);
+        }
+
+        #draggable-char-node:active,
+        #draggable-char-node.dragging {
+            cursor: grabbing;
+            transform: scale(1.06);
+            z-index: 1001;
+        }
+
+        #draggable-char-node.with-border.dragging {
+            box-shadow: 0 10px 24px rgba(0, 122, 255, 0.35);
+        }
+
+        /* 判定エフェクト（マル・バツ） */
+        .feedback-overlay {
+            position: absolute;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .feedback-maru {
+            font-size: clamp(60px, 14vw, 110px);
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(255, 59, 48, 0.3));
+        }
+
+        .feedback-batsu {
+            font-size: clamp(50px, 12vw, 90px);
+            line-height: 1;
+            filter: drop-shadow(0 4px 8px rgba(88, 86, 214, 0.3));
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.2); opacity: 0; }
+            70% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+
+        /* 全問クリアオーバーレイ */
+        #clear-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: var(--ios-bg);
+            background-color: rgba(255, 255, 255, 0.92);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.4s ease, visibility 0.4s;
+            z-index: 3000;
+            gap: 1.5rem;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        #home-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
+        #clear-overlay.hidden {
+            display: none;
         }
 
-        .btn-container {
+        .clear-icon {
+            font-size: clamp(80px, 20vw, 140px);
+            line-height: 1;
+            filter: drop-shadow(0 6px 16px rgba(255, 149, 0, 0.4));
+        }
+
+        /* ==========================================================================
+           3. 全画面設定画面 ＆ サンプルプレビュー（2ペイン）
+           ========================================================================== */
+        #settings-screen {
+            background-color: #f8fafc;
+            z-index: 2000;
+        }
+
+        .settings-header-bar {
+            height: 60px;
+            padding: 0 24px;
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .settings-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .settings-header-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .btn-history-trigger {
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.15s ease;
+        }
+
+        .btn-history-trigger:active {
+            background-color: #e2e8f0;
+            transform: scale(0.96);
+        }
+
+        .btn-settings-done {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 9px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font-family);
+            box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+            transition: all 0.15s ease;
+        }
+
+        .btn-settings-done:active {
+            background-color: var(--primary-active);
+            transform: scale(0.96);
+        }
+
+        .settings-body-split {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* 左側ペイン */
+        .settings-left-pane {
+            flex: 1.2;
+            overflow-y: auto;
+            padding: 24px 28px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 22px;
+            border-right: 1px solid var(--border-color);
+            background-color: #ffffff;
+        }
+
+        /* 右側ペイン */
+        .settings-right-pane {
+            flex: 1;
+            background-color: #f1f5f9;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-        }
-
-        .ios-btn {
-            width: 220px;
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            font-size: 22px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            transition: transform 0.1s ease;
-        }
-
-        .ios-btn:active { transform: scale(0.95); }
-
-        #start-btn { background-color: var(--ios-blue); color: white; }
-        #settings-btn-home { background-color: #e5e5ea; color: #333; font-size: 18px; width: 180px; padding: 12px; }
-        .hint-text { font-size: 12px; color: #8e8e93; margin-top: 8px; }
-
-        /* --- ゲーム画面 --- */
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background-color: white;
+            justify-content: center;
+            gap: 20px;
             overflow: hidden;
         }
 
-        #target-box {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 160px;
-            height: 160px;
-            background-color: #eee;
-            border: 6px solid black;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 100px;
-            color: black;
-            z-index: 10;
+        @media (max-width: 860px) {
+            .settings-body-split {
+                flex-direction: column;
+            }
+            .settings-left-pane {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .settings-right-pane {
+                display: none;
+            }
         }
 
-        .char-node {
-            position: absolute;
+        .setting-group {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.2s;
-            z-index: 5;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        /* --- モーダル (設定シート) --- */
-        #setting-sheet {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            padding: 25px;
-            border: 3px solid black;
-            border-radius: 25px;
-            z-index: 200;
-            display: none;
             flex-direction: column;
-            gap: 15px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
-            overflow-y: auto;
-        }
-
-        #setting-sheet.active { display: flex; }
-
-        .setting-item { display: flex; flex-direction: column; gap: 5px; }
-        .slider-row { flex-direction: row; align-items: center; justify-content: space-between; }
-        
-        /* 文字選択リストのビジュアル改善 */
-        #char-selection-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
             gap: 8px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 10px;
-            max-height: 180px;
-            overflow-y: auto;
-            margin-top: 5px;
         }
-        .char-checkbox {
+
+        .group-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ios-setting-card {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .setting-row.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .ios-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .ios-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-switch {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e2e8f0;
+            transition: .25s;
+            border-radius: 34px;
+        }
+
+        .slider-switch:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .25s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider-switch {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider-switch:before {
+            transform: translateX(22px);
+        }
+
+        .segmented-control {
+            display: flex;
+            background-color: #edf2f7;
+            padding: 3px;
+            border-radius: 10px;
+            gap: 2px;
+            width: 100%;
+        }
+
+        .segmented-btn {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.15s ease;
+        }
+
+        .segmented-btn.active {
+            background-color: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.98rem;
+        }
+
+        .slider-val-disp {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.15rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 24px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* ひらがな表コンテナ */
+        .char-ctrl-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .btn-mini-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-mini {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background-color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            color: #333;
+        }
+
+        .btn-mini:active {
+            background-color: #e5e5ea;
+        }
+
+        .gojuon-scroll-box {
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .table-sub-title {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        /* 50音表（右から左へ並ぶFlex Row-Reverse） */
+        .gojuon-board {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .gojuon-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            max-width: 42px;
+            align-items: center;
+        }
+
+        .col-header-btn {
+            width: 100%;
+            padding: 5px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #f1f5f9;
+            color: #475569;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            border: 1px solid #ddd;
+            font-family: var(--font-family);
+            transition: all 0.12s ease;
+        }
+
+        .col-header-btn.all-active {
+            background-color: #e5f1ff;
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .col-header-btn:active {
+            transform: scale(0.92);
+        }
+
+        .char-tile {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 7px;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #94a3b8;
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s ease;
+        }
+
+        .char-tile.selected {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 122, 255, 0.25);
+        }
+
+        .char-tile:active {
+            transform: scale(0.92);
+        }
+
+        .char-tile-empty {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* 下段：濁音・半濁音（右） ＋ 拗音（左） */
+        .bottom-kana-wrapper {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .youon-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .youon-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 42px;
+        }
+
+        /* サンプルビューカード */
+        .preview-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .preview-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .preview-frame {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background-color: #ffffff;
+            border-radius: 18px;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .preview-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 32px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .preview-stage-upper {
+            flex: 1;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .preview-stage-lower {
+            height: 25%;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .btn-preview-play {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 14px;
+            border: none;
+            background-color: var(--primary);
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
+            font-family: var(--font-family);
+            transition: all 0.15s ease;
+        }
+
+        .btn-preview-play:active {
+            transform: scale(0.97);
+            background-color: var(--primary-active);
+        }
+
+        /* ==========================================================================
+           4. プレイ履歴モーダル
+           ========================================================================== */
+        .history-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2500;
+            padding: 16px;
+            transition: opacity 0.2s ease;
+        }
+
+        .history-modal-overlay.hidden {
+            display: none;
+        }
+
+        .history-card-dialog {
+            background: #ffffff;
+            width: 100%;
+            max-width: 520px;
+            max-height: 85vh;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+        }
+
+        .history-dialog-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+        }
+
+        .history-dialog-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .btn-history-close {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .btn-history-close:active {
+            background-color: #e2e8f0;
+        }
+
+        .history-stats-bar {
+            padding: 10px 18px;
+            background: #f1f5f9;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-dialog-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .history-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+
+        .history-score-tag {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .history-score-correct { color: #059669; }
+        .history-score-wrong { color: #e11d48; margin-left: 6px; }
+
+        .history-meta-text {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .history-mistakes-text {
+            font-size: 0.82rem;
+            color: #e11d48;
+            background: #fff1f2;
+            padding: 4px 8px;
+            border-radius: 6px;
+            line-height: 1.4;
+        }
+
+        .history-dialog-footer {
+            padding: 12px 18px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            background: #f8fafc;
+        }
+
+        .btn-clear-history {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #64748b;
             border-radius: 8px;
-            aspect-ratio: 1/1;
+            padding: 6px 14px;
+            font-size: 0.85rem;
             cursor: pointer;
-            background: #fff;
-            transition: all 0.2s;
+            font-family: var(--font-family);
+            transition: all 0.15s ease;
         }
 
-        /* 選択された時の色 */
-        .char-checkbox.selected {
-            background-color: var(--selected-bg);
-            color: var(--selected-text);
-            border-color: var(--selected-bg);
-        }
-
-        #close-btn {
-            margin-top: 10px;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            background: #eee;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .action-btn {
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            background: var(--ios-blue);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
+        .btn-clear-history:active {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fca5a5;
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-<!-- ホーム画面 -->
-<div id="home-screen">
-    <div class="btn-container">
-        <button id="start-btn" class="ios-btn">スタート</button>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <button id="settings-btn-home" class="ios-btn">設定</button>
-            <span class="hint-text">※トリプルタップ</span>
+    <!-- ==========================================================================
+         1. ホーム画面
+         ========================================================================== -->
+    <div id="home-screen" class="screen">
+        <div class="app-title-area">
+            <h1 class="app-title">ひらがなさがし</h1>
+            <p class="app-subtitle">おなじ ひらがな を みつけて かさねよう</p>
+        </div>
+
+        <div class="home-btn-group">
+            <button id="btn-home-start" class="btn-start">スタート</button>
+            <button id="btn-home-settings" class="btn-settings-trigger">
+                ⚙️ 設定 <span class="sub-hint">※トリプルタップ</span>
+            </button>
         </div>
     </div>
-</div>
 
-<!-- ゲーム画面 -->
-<div id="game-container">
-    <div id="target-box"></div>
-    <div id="character-layer"></div>
-</div>
+    <!-- ==========================================================================
+         2. プレイ画面（枠なし・上部広大化・ノイズレス）
+         ========================================================================== -->
+    <div id="play-screen" class="screen hidden">
+        <!-- 戻るボタン（枠なしアイコン・左上固定） -->
+        <button id="btn-play-back" class="btn-back-minimal">◀</button>
 
-<!-- 設定シート -->
-<div id="setting-sheet">
-    <div class="setting-item slider-row">
-        <label>文字の数</label>
-        <input type="range" id="num-slider" min="1" max="50" value="10">
-        <span id="slider-val">10</span>
+        <!-- 正解数・不正解数（右上固定・小さくグレー表示） -->
+        <div class="score-badge-fixed" id="score-fixed-disp">○: 0  ×: 0</div>
+
+        <main class="game-main">
+            <!-- 上部：候補文字ステージ（画面の大半を占める） -->
+            <section id="upper-stage">
+                <div id="candidate-layer"></div>
+            </section>
+
+            <!-- 下部：探す文字ステージ（枠なし・コンパクト） -->
+            <section id="lower-stage">
+                <div id="drag-source-slot"></div>
+            </section>
+        </main>
+
+        <!-- ドラッグ文字要素（常に最前面・不透明度90%） -->
+        <div id="draggable-char-node"></div>
     </div>
 
-    <div class="setting-item">
-        <label>使用する文字を選択</label>
-        <div id="char-selection-list"></div>
+    <!-- 全問クリア画面 -->
+    <div id="clear-overlay" class="hidden">
+        <div class="clear-icon">💮</div>
     </div>
 
-    <div class="setting-item slider-row">
-        <label>ホームに戻るを許可</label>
-        <input type="checkbox" id="allow-home-toggle" checked>
+    <!-- ==========================================================================
+         3. 全画面設定画面 ＆ サンプルプレビュー
+         ========================================================================== -->
+    <div id="settings-screen" class="screen hidden">
+        <header class="settings-header-bar">
+            <div class="settings-header-left">
+                <h2 class="settings-header-title">設定</h2>
+                <button type="button" id="btn-open-history" class="btn-history-trigger">📜 履歴</button>
+            </div>
+            <button id="btn-settings-done" class="btn-settings-done">完了</button>
+        </header>
+
+        <div class="settings-body-split">
+            <!-- 左ペイン：設定フォーム -->
+            <div class="settings-left-pane">
+                <div class="setting-group">
+                    <span class="group-label">問題・表示設定</span>
+                    <div class="ios-setting-card">
+                        <!-- 全◯問 -->
+                        <div class="setting-row">
+                            <div class="slider-container">
+                                <div class="slider-header">
+                                    <span>問題数</span>
+                                    <span id="slider-rounds-disp" class="slider-val-disp">5問</span>
+                                </div>
+                                <input type="range" id="setting-rounds-slider" min="1" max="20" value="5">
+                            </div>
+                        </div>
+
+                        <!-- 文字の枠線 -->
+                        <div class="setting-row">
+                            <span>文字に枠をつける</span>
+                            <label class="ios-switch">
+                                <input type="checkbox" id="setting-border-toggle">
+                                <span class="slider-switch"></span>
+                            </label>
+                        </div>
+
+                        <!-- 戻るボタンの表示 -->
+                        <div class="setting-row">
+                            <span>戻るボタンを表示</span>
+                            <label class="ios-switch">
+                                <input type="checkbox" id="setting-backbtn-toggle" checked>
+                                <span class="slider-switch"></span>
+                            </label>
+                        </div>
+
+                        <!-- 文字の並べ方 -->
+                        <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                            <span>文字の並べ方</span>
+                            <div class="segmented-control" id="placement-segments">
+                                <button type="button" class="segmented-btn active" data-val="clean">きれいに並べる</button>
+                                <button type="button" class="segmented-btn" data-val="random">ランダム配置</button>
+                                <button type="button" class="segmented-btn" data-val="gojuon">50音配置</button>
+                            </div>
+                        </div>
+
+                        <!-- 表示する文字数（文字の並べ方の下に配置・50音配置時はグレーアウト） -->
+                        <div class="setting-row" id="row-candidate-count">
+                            <div class="slider-container">
+                                <div class="slider-header">
+                                    <span>表示する文字数</span>
+                                    <span id="slider-count-disp" class="slider-val-disp">3</span>
+                                </div>
+                                <input type="range" id="setting-count-slider" min="2" max="50" value="3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 使用するひらがな -->
+                <div class="setting-group">
+                    <div class="char-ctrl-bar">
+                        <span class="group-label">使用するひらがな</span>
+                        <div class="btn-mini-group">
+                            <button type="button" id="btn-select-all-chars" class="btn-mini">全選択</button>
+                            <button type="button" id="btn-deselect-all-chars" class="btn-mini">全解除</button>
+                        </div>
+                    </div>
+
+                    <div class="gojuon-scroll-box">
+                        <!-- 1. 清音（あ〜ん：わ行はわ/を、次はん） -->
+                        <div>
+                            <div class="table-sub-title">清音</div>
+                            <div class="gojuon-board" id="seion-board"></div>
+                        </div>
+
+                        <!-- 2. 下段：濁音・半濁音（右） ＆ 拗音（左） -->
+                        <div>
+                            <div class="table-sub-title">濁音・半濁音 ＆ 拗音</div>
+                            <div class="bottom-kana-wrapper">
+                                <!-- 濁音・半濁音（右） -->
+                                <div class="gojuon-board" id="dakuon-board"></div>
+
+                                <!-- 拗音（左） -->
+                                <div class="youon-block">
+                                    <button type="button" class="col-header-btn" id="btn-youon-all">拗音</button>
+                                    <div class="youon-grid" id="youon-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右ペイン：リアルタイムサンプルビュー -->
+            <div class="settings-right-pane">
+                <div class="preview-wrapper">
+                    <span class="preview-title">プレビュー（サンプル）</span>
+                    <div class="preview-frame">
+                        <div class="preview-header">
+                            <span id="preview-back-icon">◀</span>
+                            <span style="color: #94a3b8;" id="preview-score-disp">○: 0  ×: 0</span>
+                        </div>
+                        <div class="preview-stage-upper" id="preview-upper-stage"></div>
+                        <div class="preview-stage-lower" id="preview-lower-stage">
+                            <div id="preview-target-char">あ</div>
+                        </div>
+                    </div>
+                    <button id="btn-settings-play" class="btn-preview-play">この設定でスタート ▶</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <button id="return-home-btn" class="action-btn">ホームへ戻る</button>
-    <button id="close-btn">閉じる</button>
-</div>
+    <!-- ==========================================================================
+         4. プレイ履歴モーダル
+         ========================================================================== -->
+    <div id="history-modal" class="history-modal-overlay hidden">
+        <div class="history-card-dialog">
+            <div class="history-dialog-header">
+                <h3 class="history-dialog-title">📜 プレイ履歴</h3>
+                <button type="button" id="btn-close-history" class="btn-history-close">✕</button>
+            </div>
+            <div class="history-stats-bar" id="history-stats-bar">
+                <span>累計プレイ: 0回</span>
+                <span>正解率: 0%</span>
+            </div>
+            <div class="history-dialog-list" id="history-items-list"></div>
+            <div class="history-dialog-footer">
+                <button type="button" id="btn-clear-history" class="btn-clear-history">履歴を消去</button>
+            </div>
+        </div>
+    </div>
 
-<script>
-    const allImages = ["あ", "い", "う", "え", "お", "か", "き", "く", "け", "こ", "さ", "し", "す", "せ", "そ", "た", "ち", "つ", "て", "と", "な", "に", "ぬ", "ね", "の", "は", "ひ", "ふ", "へ", "ほ", "ま", "み", "む", "め", "も", "や", "ゆ", "よ", "ら", "り", "る", "れ", "ろ", "わ", "を", "ゃ", "ゅ", "ょ", "っ", "ん", "が", "ぎ", "ぐ", "げ", "ご", "ざ", "じ", "ず", "ぜ", "ぞ", "だ", "ぢ", "づ", "で", "ど", "ば", "び", "ぶ", "べ", "ぼ", "ぱ", "ぴ", "ぷ", "ぺ", "ぽ"];
-    
-    let selectedChars = [...allImages];
-    let numOfImages = 10;
-    let targetChar = "";
-    
-    const homeScreen = document.getElementById('home-screen');
-    const container = document.getElementById('game-container');
-    const charLayer = document.getElementById('character-layer');
-    const targetBox = document.getElementById('target-box');
-    const slider = document.getElementById('num-slider');
-    const sliderVal = document.getElementById('slider-val');
-    const settingSheet = document.getElementById('setting-sheet');
-    const startBtn = document.getElementById('start-btn');
-    const settingsBtnHome = document.getElementById('settings-btn-home');
-    const charListContainer = document.getElementById('char-selection-list');
-    const allowHomeToggle = document.getElementById('allow-home-toggle');
-    const returnHomeBtn = document.getElementById('return-home-btn');
-    const closeBtn = document.getElementById('close-btn');
+    <!-- ==========================================================================
+         JavaScript ロジック
+         ========================================================================== -->
+    <script>
+        // --- 50音表データ定義（わ行はわ/を、次はん） ---
+        const SEION_COLS = [
+            { name: 'あ行', chars: ['あ', 'い', 'う', 'え', 'お'] },
+            { name: 'か行', chars: ['か', 'き', 'く', 'け', 'こ'] },
+            { name: 'さ行', chars: ['さ', 'し', 'す', 'せ', 'そ'] },
+            { name: 'た行', chars: ['た', 'ち', 'つ', 'て', 'と'] },
+            { name: 'な行', chars: ['な', 'に', 'ぬ', 'ね', 'の'] },
+            { name: 'は行', chars: ['は', 'ひ', 'ふ', 'へ', 'ほ'] },
+            { name: 'ま行', chars: ['ま', 'み', 'む', 'め', 'も'] },
+            { name: 'や行', chars: ['や', null, 'ゆ', null, 'よ'] },
+            { name: 'ら行', chars: ['ら', 'り', 'る', 'れ', 'ろ'] },
+            { name: 'わ行', chars: ['わ', null, null, null, 'を'] },
+            { name: 'ん',   chars: ['ん', null, null, null, null] }
+        ];
 
-    const synth = window.speechSynthesis;
+        const DAKUON_COLS = [
+            { name: 'が行', chars: ['が', 'ぎ', 'ぐ', 'げ', 'ご'] },
+            { name: 'ざ行', chars: ['ざ', 'じ', 'ず', 'ぜ', 'ぞ'] },
+            { name: 'だ行', chars: ['だ', 'ぢ', 'づ', 'で', 'ど'] },
+            { name: 'ば行', chars: ['ば', 'び', 'ぶ', 'べ', 'ぼ'] },
+            { name: 'ぱ行', chars: ['ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'] }
+        ];
 
-    // --- 音声 & 効果音 ---
-    function speak(text) {
-        if (synth.speaking) synth.cancel();
-        const uttr = new SpeechSynthesisUtterance(text);
-        uttr.lang = 'ja-JP';
-        uttr.rate = 1.2;
-        synth.speak(uttr);
-    }
+        const YOUON_CHARS = ['っ', 'ゃ', 'ゅ', 'ょ'];
 
-    function playSuccessSound() {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(880.00, audioCtx.currentTime + 0.2);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.3);
-    }
+        const SEION_CHARS = SEION_COLS.flatMap(c => c.chars.filter(x => x !== null));
 
-    // --- 初期設定: 文字リストの生成 ---
-    function initCharSelection() {
-        charListContainer.innerHTML = "";
-        allImages.forEach(char => {
-            const label = document.createElement('label');
-            label.className = 'char-checkbox';
-            if (selectedChars.includes(char)) {
-                label.classList.add('selected');
-            }
-            
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.style.display = 'none';
-            cb.checked = selectedChars.includes(char);
-            
-            cb.onchange = (e) => {
-                if (e.target.checked) {
-                    if (!selectedChars.includes(char)) selectedChars.push(char);
-                    label.classList.add('selected');
-                } else {
-                    selectedChars = selectedChars.filter(c => c !== char);
-                    label.classList.remove('selected');
+        const ALL_CHARS = [
+            ...SEION_CHARS,
+            ...DAKUON_COLS.flatMap(c => c.chars.filter(x => x !== null)),
+            ...YOUON_CHARS
+        ];
+
+        // --- 設定デフォルト値 ---
+        const DEFAULT_SETTINGS = {
+            hasBorder: false,             // 枠をつけるか（初期：オフ）
+            showBackButton: true,         // 戻るボタンを表示するか（初期：オン）
+            placementMode: 'clean',       // 'clean', 'random', 'gojuon'
+            candidateCount: 3,            // 上部の文字数（2〜50、初期：3）
+            totalRounds: 5,               // 全◯問（1〜20、初期：5）
+            selectedChars: [...SEION_CHARS] // 初期は清音のみオン
+        };
+
+        let appSettings = loadSettings();
+
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('hiragana_sagashi_settings');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    return {
+                        hasBorder: typeof parsed.hasBorder === 'boolean' ? parsed.hasBorder : DEFAULT_SETTINGS.hasBorder,
+                        showBackButton: typeof parsed.showBackButton === 'boolean' ? parsed.showBackButton : DEFAULT_SETTINGS.showBackButton,
+                        placementMode: parsed.placementMode || DEFAULT_SETTINGS.placementMode,
+                        candidateCount: typeof parsed.candidateCount === 'number' ? Math.min(Math.max(parsed.candidateCount, 2), 50) : DEFAULT_SETTINGS.candidateCount,
+                        totalRounds: typeof parsed.totalRounds === 'number' ? parsed.totalRounds : DEFAULT_SETTINGS.totalRounds,
+                        selectedChars: Array.isArray(parsed.selectedChars) && parsed.selectedChars.length > 0 ? parsed.selectedChars : [...DEFAULT_SETTINGS.selectedChars]
+                    };
                 }
-            };
-            
-            label.appendChild(cb);
-            const textNode = document.createTextNode(char);
-            label.appendChild(textNode);
-            charListContainer.appendChild(label);
-        });
-    }
-
-    // --- トリプルタップ判定 ---
-    let tapCount = 0;
-    let tapTimer;
-    settingsBtnHome.addEventListener('pointerdown', (e) => {
-        tapCount++;
-        clearTimeout(tapTimer);
-        tapTimer = setTimeout(() => { tapCount = 0; }, 400);
-        if (tapCount === 3) {
-            tapCount = 0;
-            settingSheet.classList.add('active');
+            } catch (e) {
+                console.warn('設定読み込みエラー:', e);
+            }
+            return { ...DEFAULT_SETTINGS, selectedChars: [...DEFAULT_SETTINGS.selectedChars] };
         }
-    });
 
-    // --- ゲームロジック ---
-    function initGame() {
-        if (selectedChars.length === 0) {
-            alert("文字を少なくとも1つ選択してください");
-            return;
-        }
-        homeScreen.classList.add('hidden');
-        charLayer.innerHTML = "";
-        let shuffled = [...selectedChars].sort(() => 0.5 - Math.random());
-        targetChar = shuffled[0];
-        targetBox.innerText = targetChar;
-        speak(targetChar);
-        spawnCharacters(shuffled);
-    }
-
-    function spawnCharacters(shuffledList) {
-        charLayer.innerHTML = "";
-        const num = Math.min(numOfImages, shuffledList.length);
-        const containerW = container.clientWidth;
-        const containerH = container.clientHeight;
-        const margin = 40;
-
-        let cols = Math.ceil(Math.sqrt(num * 1.5)); 
-        let rows = Math.ceil(num / cols);
-        const cellW = (containerW - margin * 2) / cols;
-        const cellH = (containerH - margin * 2) / rows;
-        const fontSize = Math.min(cellW, cellH) * 0.7;
-
-        let availableCells = [];
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                availableCells.push({r, c});
+        function saveSettings() {
+            try {
+                localStorage.setItem('hiragana_sagashi_settings', JSON.stringify(appSettings));
+            } catch (e) {
+                console.warn('設定保存エラー:', e);
             }
         }
-        availableCells.sort(() => Math.random() - 0.5);
 
-        const tRect = targetBox.getBoundingClientRect();
-        let placedCount = 0;
+        // --- 音声 & 効果音コントローラー ---
+        const AudioController = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            playCorrect() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(659.25, now);
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
 
-        for (let i = 0; i < availableCells.length; i++) {
-            if (placedCount >= num) break;
-            const {r, c} = availableCells[i];
-            let x = margin + c * cellW + (cellW - fontSize) / 2;
-            let y = margin + r * cellH + (cellH - fontSize) / 2;
-            x += (Math.random() - 0.5) * (cellW * 0.4);
-            y += (Math.random() - 0.5) * (cellH * 0.4);
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(880.00, now + 0.18);
+                gain2.gain.setValueAtTime(0.35, now + 0.18);
+                gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                osc2.connect(gain2);
+                gain2.connect(this.ctx.destination);
+                osc2.start(now + 0.18);
+                osc2.stop(now + 0.7);
+            },
+            playWrong() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(146.83, now);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            },
+            playFanfare() {
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.35, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.6);
+                });
+            }
+        };
 
-            const collision = !(x + fontSize < tRect.left || x > tRect.right || y + fontSize < tRect.top || y > tRect.bottom);
-            if (collision) continue;
-
-            const char = shuffledList[placedCount];
-            const node = document.createElement('div');
-            node.className = 'char-node';
-            node.innerText = char;
-            node.style.fontSize = fontSize + 'px';
-            node.style.left = x + 'px';
-            node.style.top = y + 'px';
-            node.dataset.char = char;
-            
-            node.onclick = () => handleTap(node);
-            charLayer.appendChild(node);
-            placedCount++;
+        const synth = window.speechSynthesis;
+        function speakChar(char) {
+            if (!char) return;
+            try {
+                if (synth.speaking) synth.cancel();
+                const uttr = new SpeechSynthesisUtterance(char);
+                uttr.lang = 'ja-JP';
+                uttr.rate = 1.0;
+                synth.speak(uttr);
+            } catch (e) {
+                console.warn('音声発声エラー:', e);
+            }
         }
-    }
 
-    function handleTap(node) {
-        const clickedChar = node.dataset.char;
-        speak(clickedChar);
+        // --- DOM要素 ---
+        const homeScreen = document.getElementById('home-screen');
+        const playScreen = document.getElementById('play-screen');
+        const clearOverlay = document.getElementById('clear-overlay');
+        const btnHomeStart = document.getElementById('btn-home-start');
+        const btnHomeSettings = document.getElementById('btn-home-settings');
+        const btnPlayBack = document.getElementById('btn-play-back');
+        const scoreFixedDisp = document.getElementById('score-fixed-disp');
+        const upperStage = document.getElementById('upper-stage');
+        const candidateLayer = document.getElementById('candidate-layer');
+        const lowerStage = document.getElementById('lower-stage');
+        const dragSourceSlot = document.getElementById('drag-source-slot');
+        const draggableNode = document.getElementById('draggable-char-node');
 
-        if (clickedChar === targetChar) {
-            node.style.color = "red";
-            node.style.transform = "scale(2)";
-            playSuccessSound();
-            setTimeout(() => { initGame(); }, 600);
-        } else {
-            node.style.opacity = "0";
-            setTimeout(() => { node.remove(); }, 200);
+        // 全画面設定画面
+        const settingsScreen = document.getElementById('settings-screen');
+        const btnSettingsDone = document.getElementById('btn-settings-done');
+        const btnSettingsPlay = document.getElementById('btn-settings-play');
+        const btnOpenHistory = document.getElementById('btn-open-history');
+        const settingRoundsSlider = document.getElementById('setting-rounds-slider');
+        const sliderRoundsDisp = document.getElementById('slider-rounds-disp');
+        const settingCountSlider = document.getElementById('setting-count-slider');
+        const sliderCountDisp = document.getElementById('slider-count-disp');
+        const settingBorderToggle = document.getElementById('setting-border-toggle');
+        const settingBackbtnToggle = document.getElementById('setting-backbtn-toggle');
+        const placementSegments = document.getElementById('placement-segments');
+        const rowCandidateCount = document.getElementById('row-candidate-count');
+        const btnSelectAllChars = document.getElementById('btn-select-all-chars');
+        const btnDeselectAllChars = document.getElementById('btn-deselect-all-chars');
+        const seionBoard = document.getElementById('seion-board');
+        const dakuonBoard = document.getElementById('dakuon-board');
+        const youonContainer = document.getElementById('youon-container');
+        const btnYouonAll = document.getElementById('btn-youon-all');
+
+        // 履歴モーダル
+        const historyModal = document.getElementById('history-modal');
+        const btnCloseHistory = document.getElementById('btn-close-history');
+        const btnClearHistory = document.getElementById('btn-clear-history');
+        const historyStatsBar = document.getElementById('history-stats-bar');
+        const historyItemsList = document.getElementById('history-items-list');
+
+        // サンプルプレビュー要素
+        const previewUpperStage = document.getElementById('preview-upper-stage');
+        const previewTargetChar = document.getElementById('preview-target-char');
+        const previewBackIcon = document.getElementById('preview-back-icon');
+        const previewScoreDisp = document.getElementById('preview-score-disp');
+
+        // --- ゲーム状態管理 ---
+        let correctCount = 0;
+        let wrongCount = 0;
+        let currentTargetChar = '';
+        let currentCandidateChars = [];
+        let isProcessingDrop = false;
+        let currentSessionMistakes = []; // セッション中の間違い記録
+
+        let currentNodeSize = 90;
+        let currentFontSize = 60;
+
+        let isDragging = false;
+        let dragPointerId = null;
+        let dragStartPointerX = 0;
+        let dragStartPointerY = 0;
+        let currentElemX = 0;
+        let currentElemY = 0;
+
+        // ==========================================================================
+        // 画面遷移 & トリプルタップガード
+        // ==========================================================================
+        function startGame() {
+            AudioController.init();
+            homeScreen.classList.add('hidden');
+            settingsScreen.classList.add('hidden');
+            playScreen.classList.remove('hidden');
+            clearOverlay.classList.add('hidden');
+
+            btnPlayBack.style.display = appSettings.showBackButton ? 'flex' : 'none';
+
+            correctCount = 0;
+            wrongCount = 0;
+            currentSessionMistakes = [];
+            updateScoreDisplay();
+
+            startRound();
         }
-    }
 
-    // --- イベントリスナー ---
-    startBtn.onclick = () => initGame();
-    closeBtn.onclick = () => settingSheet.classList.remove('active');
-    
-    returnHomeBtn.onclick = () => {
-        if (allowHomeToggle.checked) {
+        function updateScoreDisplay() {
+            scoreFixedDisp.innerText = `○: ${correctCount}  ×: ${wrongCount}`;
+        }
+
+        btnHomeStart.onclick = startGame;
+        btnSettingsPlay.onclick = () => {
+            if (appSettings.selectedChars.length === 0) {
+                alert('文字を1つ以上選択してください。');
+                return;
+            }
+            saveSettings();
+            startGame();
+        };
+
+        btnPlayBack.onclick = () => {
+            if (synth.speaking) synth.cancel();
+            // 中断時も解いた分があれば履歴に記録
+            if (correctCount > 0 || wrongCount > 0) {
+                recordGameHistory();
+            }
+            playScreen.classList.add('hidden');
+            clearOverlay.classList.add('hidden');
             homeScreen.classList.remove('hidden');
-            settingSheet.classList.remove('active');
-        } else {
-            settingSheet.classList.remove('active');
+        };
+
+        // トリプルタップ設定ガード
+        let settingTapCount = 0;
+        let settingTapTimer = null;
+        btnHomeSettings.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            settingTapCount++;
+            clearTimeout(settingTapTimer);
+            settingTapTimer = setTimeout(() => { settingTapCount = 0; }, 400);
+
+            if (settingTapCount >= 3) {
+                settingTapCount = 0;
+                openSettingsScreen();
+            }
+        });
+
+        // ==========================================================================
+        // ゲームロジック：ラウンド生成
+        // ==========================================================================
+        function startRound() {
+            isProcessingDrop = false;
+            candidateLayer.innerHTML = '';
+            updateScoreDisplay();
+
+            const available = appSettings.selectedChars.length > 0 
+                ? appSettings.selectedChars 
+                : ['あ', 'い', 'う'];
+
+            currentTargetChar = available[Math.floor(Math.random() * available.length)];
+
+            if (appSettings.placementMode === 'gojuon') {
+                // 50音配置：使用するひらがなに応じて表示（選択されたすべての文字を表示）
+                currentCandidateChars = [...available];
+            } else {
+                // きれいに並べる / ランダム：指定された文字数で抽出
+                const count = Math.min(appSettings.candidateCount, available.length);
+                const otherPool = available.filter(c => c !== currentTargetChar).sort(() => Math.random() - 0.5);
+                const dummyChars = otherPool.slice(0, count - 1);
+                currentCandidateChars = [currentTargetChar, ...dummyChars];
+                currentCandidateChars.sort(() => Math.random() - 0.5);
+            }
+
+            renderCandidates();
+            setupDraggableSource();
+
+            // 問題開始時に自動で発音
+            speakChar(currentTargetChar);
         }
-    };
 
-    slider.oninput = (e) => {
-        numOfImages = parseInt(e.target.value);
-        sliderVal.innerText = numOfImages;
-        if (!homeScreen.classList.contains('hidden')) initGame(); 
-    };
+        // 候補文字の描画
+        function renderCandidates() {
+            candidateLayer.innerHTML = '';
+            const stageW = upperStage.clientWidth;
+            const stageH = upperStage.clientHeight;
+            const count = currentCandidateChars.length;
+            const hasBorder = appSettings.hasBorder;
 
-    window.onload = () => {
-        initCharSelection();
-    };
-</script>
+            const topMargin = 38;
+            const availH = stageH - topMargin - 8;
 
+            if (appSettings.placementMode === 'gojuon') {
+                // 【50音配置】：清音（11列）＋ 選択されている濁音列（左側に追加）
+                const activeDakuonCols = DAKUON_COLS.filter(col => 
+                    col.chars.some(c => c !== null && appSettings.selectedChars.includes(c))
+                );
+
+                const totalColsList = [...SEION_COLS, ...activeDakuonCols];
+                const cols = totalColsList.length;
+                const rows = 5;
+
+                const marginX = 8;
+                const nodeW = Math.floor((stageW - marginX * 2) / cols);
+                const nodeH = Math.floor(availH / rows);
+                currentNodeSize = Math.min(nodeW, nodeH, 84);
+                currentNodeSize = Math.max(currentNodeSize, 28);
+                currentFontSize = Math.floor(currentNodeSize * 0.72);
+
+                const totalW = cols * currentNodeSize;
+                const totalH = rows * currentNodeSize;
+                const startX = Math.max(marginX, (stageW - totalW) / 2);
+                const startY = topMargin + Math.max(4, (availH - totalH) / 2);
+
+                totalColsList.forEach((colData, colIdx) => {
+                    const c = cols - 1 - colIdx;
+                    colData.chars.forEach((char, r) => {
+                        if (char === null) return;
+
+                        const posX = startX + c * currentNodeSize;
+                        const posY = startY + r * currentNodeSize;
+
+                        const isUsed = currentCandidateChars.includes(char);
+                        createCandidateNode(char, posX, posY, currentNodeSize, currentFontSize, hasBorder, !isUsed);
+                    });
+                });
+
+            } else if (appSettings.placementMode === 'clean') {
+                // 【きれいに並べる】：中央揃え均等グリッド
+                const aspect = stageW / availH;
+                let cols = Math.ceil(Math.sqrt(count * aspect));
+                if (cols > count) cols = count;
+                cols = Math.max(cols, 2);
+                let rows = Math.ceil(count / cols);
+
+                const maxW = (stageW - 16) / cols;
+                const maxH = availH / rows;
+                currentNodeSize = Math.floor(Math.min(maxW, maxH, 130));
+                currentNodeSize = Math.max(currentNodeSize, 32);
+                currentFontSize = Math.floor(currentNodeSize * (hasBorder ? 0.62 : 0.78));
+
+                const gapX = Math.min(16, Math.floor((stageW - currentNodeSize * cols) / (cols + 1)));
+                const gapY = Math.min(16, Math.floor((availH - currentNodeSize * rows) / (rows + 1)));
+                const totalW = cols * currentNodeSize + (cols - 1) * gapX;
+                const totalH = rows * currentNodeSize + (rows - 1) * gapY;
+                const startX = Math.max(8, (stageW - totalW) / 2);
+                const startY = topMargin + Math.max(4, (availH - totalH) / 2);
+
+                currentCandidateChars.forEach((char, idx) => {
+                    const c = idx % cols;
+                    const r = Math.floor(idx / cols);
+                    const posX = startX + c * (currentNodeSize + gapX);
+                    const posY = startY + r * (currentNodeSize + gapY);
+                    createCandidateNode(char, posX, posY, currentNodeSize, currentFontSize, hasBorder, false);
+                });
+
+            } else if (appSettings.placementMode === 'random') {
+                // 【ランダム配置】：余白を狭めて画面いっぱいに自然に散布
+                const pad = 6;
+                const usableW = stageW - pad * 2;
+                const usableH = availH - pad;
+
+                const aspect = usableW / usableH;
+                let cols = Math.ceil(Math.sqrt(count * aspect));
+                cols = Math.max(cols, 2);
+                let rows = Math.ceil(count / cols);
+
+                const cellW = usableW / cols;
+                const cellH = usableH / rows;
+                currentNodeSize = Math.floor(Math.min(cellW * 0.92, cellH * 0.92, 120));
+                currentNodeSize = Math.max(currentNodeSize, 30);
+                currentFontSize = Math.floor(currentNodeSize * (hasBorder ? 0.62 : 0.78));
+
+                const cells = [];
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        cells.push({ r, c });
+                    }
+                }
+                cells.sort(() => Math.random() - 0.5);
+
+                for (let i = 0; i < count; i++) {
+                    const char = currentCandidateChars[i];
+                    const cell = cells[i];
+
+                    const maxSpanX = Math.max(0, cellW - currentNodeSize);
+                    const maxSpanY = Math.max(0, cellH - currentNodeSize);
+                    const jx = (Math.random() - 0.5) * maxSpanX * 0.95;
+                    const jy = (Math.random() - 0.5) * maxSpanY * 0.95;
+
+                    const posX = pad + cell.c * cellW + (cellW - currentNodeSize) / 2 + jx;
+                    const posY = topMargin + pad + cell.r * cellH + (cellH - currentNodeSize) / 2 + jy;
+
+                    createCandidateNode(char, posX, posY, currentNodeSize, currentFontSize, hasBorder, false);
+                }
+            }
+        }
+
+        function createCandidateNode(char, x, y, size, fontSize, hasBorder, isBlackout) {
+            const node = document.createElement('div');
+            node.className = `candidate-node ${hasBorder ? 'with-border' : ''} ${isBlackout ? 'blackout' : ''}`;
+            node.innerText = char;
+            node.style.width = `${size}px`;
+            node.style.height = `${size}px`;
+            node.style.fontSize = `${fontSize}px`;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.dataset.char = char;
+
+            if (!isBlackout) {
+                node.onclick = (e) => {
+                    e.stopPropagation();
+                    speakChar(char);
+                };
+            }
+
+            candidateLayer.appendChild(node);
+        }
+
+        // 下部ドラッグ文字のセットアップ（枠線なし台座）
+        function setupDraggableSource() {
+            const hasBorder = appSettings.hasBorder;
+            const sourceSize = Math.max(currentNodeSize, 56);
+            const sourceFontSize = Math.floor(sourceSize * (hasBorder ? 0.62 : 0.78));
+
+            dragSourceSlot.style.width = `${sourceSize}px`;
+            dragSourceSlot.style.height = `${sourceSize}px`;
+
+            draggableNode.innerText = currentTargetChar;
+            draggableNode.dataset.char = currentTargetChar;
+            draggableNode.style.width = `${sourceSize}px`;
+            draggableNode.style.height = `${sourceSize}px`;
+            draggableNode.style.fontSize = `${sourceFontSize}px`;
+
+            if (hasBorder) {
+                draggableNode.classList.add('with-border');
+                draggableNode.classList.remove('no-border');
+            } else {
+                draggableNode.classList.add('no-border');
+                draggableNode.classList.remove('with-border');
+            }
+
+            const updatedSlotRect = dragSourceSlot.getBoundingClientRect();
+            currentElemX = updatedSlotRect.left;
+            currentElemY = updatedSlotRect.top;
+
+            draggableNode.style.left = `${currentElemX}px`;
+            draggableNode.style.top = `${currentElemY}px`;
+            draggableNode.style.transform = 'none';
+            draggableNode.style.transition = 'none';
+            draggableNode.style.display = 'flex';
+        }
+
+        // ==========================================================================
+        // ドラッグ＆ドロップ インタラクション（間違い時もフィット）
+        // ==========================================================================
+        draggableNode.addEventListener('pointerdown', onPointerDown);
+
+        function onPointerDown(e) {
+            if (isProcessingDrop) return;
+            e.preventDefault();
+
+            isDragging = true;
+            dragPointerId = e.pointerId;
+            draggableNode.setPointerCapture(e.pointerId);
+
+            dragStartPointerX = e.clientX;
+            dragStartPointerY = e.clientY;
+
+            draggableNode.classList.add('dragging');
+            draggableNode.style.transition = 'none';
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointercancel', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging || e.pointerId !== dragPointerId) return;
+            e.preventDefault();
+
+            const deltaX = e.clientX - dragStartPointerX;
+            const deltaY = e.clientY - dragStartPointerY;
+
+            const nextX = currentElemX + deltaX;
+            const nextY = currentElemY + deltaY;
+
+            draggableNode.style.left = `${nextX}px`;
+            draggableNode.style.top = `${nextY}px`;
+        }
+
+        function onPointerUp(e) {
+            if (!isDragging || e.pointerId !== dragPointerId) return;
+            e.preventDefault();
+
+            isDragging = false;
+            try {
+                draggableNode.releasePointerCapture(dragPointerId);
+            } catch (err) {}
+
+            draggableNode.classList.remove('dragging');
+
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerUp);
+
+            const deltaX = e.clientX - dragStartPointerX;
+            const deltaY = e.clientY - dragStartPointerY;
+
+            // 移動量がほとんどない場合（静止タップ）は文字を発音
+            if (Math.hypot(deltaX, deltaY) < 6) {
+                speakChar(currentTargetChar);
+                return;
+            }
+
+            currentElemX = currentElemX + deltaX;
+            currentElemY = currentElemY + deltaY;
+
+            draggableNode.style.left = `${currentElemX}px`;
+            draggableNode.style.top = `${currentElemY}px`;
+
+            checkDropCollision();
+        }
+
+        // ドロップ衝突判定
+        function checkDropCollision() {
+            const dragRect = draggableNode.getBoundingClientRect();
+            const dragCenterX = dragRect.left + dragRect.width / 2;
+            const dragCenterY = dragRect.top + dragRect.height / 2;
+
+            const candidates = Array.from(candidateLayer.querySelectorAll('.candidate-node:not(.blackout)'));
+            let hitNode = null;
+            let minDistance = Infinity;
+
+            for (const cand of candidates) {
+                const cRect = cand.getBoundingClientRect();
+                const cCenterX = cRect.left + cRect.width / 2;
+                const cCenterY = cRect.top + cRect.height / 2;
+
+                const inX = dragCenterX >= cRect.left && dragCenterX <= cRect.right;
+                const inY = dragCenterY >= cRect.top && dragCenterY <= cRect.bottom;
+                const dist = Math.hypot(dragCenterX - cCenterX, dragCenterY - cCenterY);
+
+                if (inX && inY && dist <= (cRect.width * 0.55)) {
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        hitNode = cand;
+                    }
+                }
+            }
+
+            if (!hitNode) {
+                // 何もない場所：そのまま動かさない・留まる
+                return;
+            }
+
+            const droppedChar = hitNode.dataset.char;
+
+            if (droppedChar === currentTargetChar) {
+                // 正解：吸着＆丸
+                handleCorrectDrop(hitNode);
+            } else {
+                // 間違い：間違えた文字にフィット＆バツ＆その場に留まる
+                handleWrongDrop(hitNode);
+            }
+        }
+
+        function handleCorrectDrop(targetCandidateNode) {
+            isProcessingDrop = true;
+            AudioController.playCorrect();
+
+            const targetRect = targetCandidateNode.getBoundingClientRect();
+            currentElemX = targetRect.left;
+            currentElemY = targetRect.top;
+
+            draggableNode.style.transition = 'all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2)';
+            draggableNode.style.width = `${targetRect.width}px`;
+            draggableNode.style.height = `${targetRect.height}px`;
+            draggableNode.style.left = `${currentElemX}px`;
+            draggableNode.style.top = `${currentElemY}px`;
+            draggableNode.style.transform = 'scale(1.04)';
+
+            const maruSize = Math.max(targetRect.width * 1.2, 60);
+            const maruOverlay = document.createElement('div');
+            maruOverlay.className = 'feedback-overlay feedback-maru';
+            maruOverlay.innerText = '⭕️';
+            maruOverlay.style.left = `${targetRect.left + (targetRect.width - maruSize) / 2}px`;
+            maruOverlay.style.top = `${targetRect.top + (targetRect.height - maruSize) / 2}px`;
+            maruOverlay.style.width = `${maruSize}px`;
+            maruOverlay.style.height = `${maruSize}px`;
+            document.body.appendChild(maruOverlay);
+
+            correctCount++;
+            updateScoreDisplay();
+
+            setTimeout(() => {
+                maruOverlay.style.animation = 'fadeOut 0.2s forwards';
+                setTimeout(() => {
+                    maruOverlay.remove();
+                    if (correctCount >= appSettings.totalRounds) {
+                        handleAllClear();
+                    } else {
+                        startRound();
+                    }
+                }, 200);
+            }, 900);
+        }
+
+        // 間違い時もその文字にフィット
+        function handleWrongDrop(targetCandidateNode) {
+            AudioController.playWrong();
+
+            const targetRect = targetCandidateNode.getBoundingClientRect();
+            currentElemX = targetRect.left;
+            currentElemY = targetRect.top;
+
+            // 間違えた文字の位置にピッタリフィット
+            draggableNode.style.transition = 'all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2)';
+            draggableNode.style.width = `${targetRect.width}px`;
+            draggableNode.style.height = `${targetRect.height}px`;
+            draggableNode.style.left = `${currentElemX}px`;
+            draggableNode.style.top = `${currentElemY}px`;
+            draggableNode.style.transform = 'scale(1.04)';
+
+            const batsuSize = Math.max(targetRect.width * 1.1, 50);
+            const batsuOverlay = document.createElement('div');
+            batsuOverlay.className = 'feedback-overlay feedback-batsu';
+            batsuOverlay.innerText = '❌';
+            batsuOverlay.style.left = `${targetRect.left + (targetRect.width - batsuSize) / 2}px`;
+            batsuOverlay.style.top = `${targetRect.top + (targetRect.height - batsuSize) / 2}px`;
+            batsuOverlay.style.width = `${batsuSize}px`;
+            batsuOverlay.style.height = `${batsuSize}px`;
+            document.body.appendChild(batsuOverlay);
+
+            wrongCount++;
+            updateScoreDisplay();
+
+            // 間違い履歴に記録
+            currentSessionMistakes.push({
+                target: currentTargetChar,
+                chosen: targetCandidateNode.dataset.char
+            });
+
+            setTimeout(() => {
+                batsuOverlay.style.animation = 'fadeOut 0.2s forwards';
+                setTimeout(() => { batsuOverlay.remove(); }, 200);
+            }, 550);
+        }
+
+        function handleAllClear() {
+            AudioController.playFanfare();
+            clearOverlay.classList.remove('hidden');
+
+            // 履歴に記録
+            recordGameHistory();
+
+            setTimeout(() => {
+                clearOverlay.classList.add('hidden');
+                playScreen.classList.add('hidden');
+                homeScreen.classList.remove('hidden');
+            }, 2000);
+        }
+
+        // ==========================================================================
+        // 履歴機能ロジック
+        // ==========================================================================
+        function formatCurrentDateTime() {
+            const now = new Date();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            return `${m}/${d} ${h}:${min}`;
+        }
+
+        function recordGameHistory() {
+            const historyItem = {
+                id: Date.now(),
+                date: formatCurrentDateTime(),
+                correctCount: correctCount,
+                wrongCount: wrongCount,
+                totalRounds: appSettings.totalRounds,
+                mode: appSettings.placementMode === 'gojuon' ? '50音配置' : (appSettings.placementMode === 'clean' ? 'きれいに並べる' : 'ランダム配置'),
+                candidateCount: appSettings.placementMode === 'gojuon' ? '50音' : `${appSettings.candidateCount}文字`,
+                mistakes: [...currentSessionMistakes]
+            };
+
+            let historyList = [];
+            try {
+                const saved = localStorage.getItem('hiragana_sagashi_history');
+                if (saved) historyList = JSON.parse(saved);
+            } catch (e) {
+                historyList = [];
+            }
+
+            historyList.unshift(historyItem);
+            if (historyList.length > 50) historyList = historyList.slice(0, 50);
+
+            try {
+                localStorage.setItem('hiragana_sagashi_history', JSON.stringify(historyList));
+            } catch (e) {}
+
+            currentSessionMistakes = [];
+        }
+
+        function openHistoryModal() {
+            renderHistoryList();
+            historyModal.classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            historyModal.classList.add('hidden');
+        }
+
+        btnOpenHistory.onclick = openHistoryModal;
+        btnCloseHistory.onclick = closeHistoryModal;
+
+        btnClearHistory.onclick = () => {
+            if (confirm('すべてのプレイ履歴を消去しますか？')) {
+                localStorage.removeItem('hiragana_sagashi_history');
+                renderHistoryList();
+            }
+        };
+
+        function renderHistoryList() {
+            historyItemsList.innerHTML = '';
+            let historyList = [];
+            try {
+                const saved = localStorage.getItem('hiragana_sagashi_history');
+                if (saved) historyList = JSON.parse(saved);
+            } catch (e) {
+                historyList = [];
+            }
+
+            if (historyList.length === 0) {
+                historyStatsBar.innerHTML = '<span>累計プレイ: 0回</span><span>正解率: —</span>';
+                historyItemsList.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.9rem; color:#8e8e93;">まだプレイ履歴がありません。</div>';
+                return;
+            }
+
+            // 統計計算
+            const totalPlays = historyList.length;
+            const totalCorrect = historyList.reduce((sum, h) => sum + (h.correctCount || 0), 0);
+            const totalWrong = historyList.reduce((sum, h) => sum + (h.wrongCount || 0), 0);
+            const totalAttempts = totalCorrect + totalWrong;
+            const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+
+            historyStatsBar.innerHTML = `<span>累計プレイ: ${totalPlays}回</span><span>総正解率: ${accuracy}%</span>`;
+
+            historyList.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'history-item-card';
+
+                let mistakeHtml = '';
+                if (item.mistakes && item.mistakes.length > 0) {
+                    const mistakeStrs = item.mistakes.map(m => `「${m.target}」➔「${m.chosen}」`).join(', ');
+                    mistakeHtml = `<div class="history-mistakes-text">間違えた文字: ${mistakeStrs}</div>`;
+                } else {
+                    mistakeHtml = `<div style="font-size:0.8rem; color:#059669; font-weight:600;">パーフェクト！</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="history-item-top">
+                        <span>${item.date}</span>
+                        <div class="history-score-tag">
+                            <span class="history-score-correct">○: ${item.correctCount}</span>
+                            <span class="history-score-wrong">×: ${item.wrongCount}</span>
+                        </div>
+                    </div>
+                    <div class="history-meta-text">${item.mode}（${item.candidateCount}） / 全${item.totalRounds}問</div>
+                    ${mistakeHtml}
+                `;
+
+                historyItemsList.appendChild(card);
+            });
+        }
+
+        // ==========================================================================
+        // 全画面設定画面 & サンプルプレビュー連動
+        // ==========================================================================
+        function openSettingsScreen() {
+            settingRoundsSlider.value = appSettings.totalRounds;
+            sliderRoundsDisp.innerText = `${appSettings.totalRounds}問`;
+
+            settingCountSlider.value = appSettings.candidateCount;
+            sliderCountDisp.innerText = appSettings.candidateCount;
+
+            settingBorderToggle.checked = appSettings.hasBorder;
+            settingBackbtnToggle.checked = appSettings.showBackButton;
+
+            placementSegments.querySelectorAll('.segmented-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.val === appSettings.placementMode);
+            });
+
+            updatePlacementModeUI();
+            buildGojuonTables();
+            updateSamplePreview();
+
+            homeScreen.classList.add('hidden');
+            settingsScreen.classList.remove('hidden');
+        }
+
+        function updatePlacementModeUI() {
+            const isGojuon = appSettings.placementMode === 'gojuon';
+            if (isGojuon) {
+                rowCandidateCount.classList.add('disabled');
+                settingCountSlider.disabled = true;
+                sliderCountDisp.innerText = '—';
+            } else {
+                rowCandidateCount.classList.remove('disabled');
+                settingCountSlider.disabled = false;
+                sliderCountDisp.innerText = appSettings.candidateCount;
+            }
+        }
+
+        function closeSettingsScreen() {
+            if (appSettings.selectedChars.length === 0) {
+                alert('文字を1つ以上選択してください。');
+                return;
+            }
+            saveSettings();
+            settingsScreen.classList.add('hidden');
+            homeScreen.classList.remove('hidden');
+        }
+
+        btnSettingsDone.onclick = closeSettingsScreen;
+
+        // 問題数
+        settingRoundsSlider.oninput = (e) => {
+            appSettings.totalRounds = parseInt(e.target.value, 10);
+            sliderRoundsDisp.innerText = `${appSettings.totalRounds}問`;
+        };
+
+        // 文字数
+        settingCountSlider.oninput = (e) => {
+            appSettings.candidateCount = parseInt(e.target.value, 10);
+            sliderCountDisp.innerText = appSettings.candidateCount;
+            updateSamplePreview();
+        };
+
+        // 枠線
+        settingBorderToggle.onchange = (e) => {
+            appSettings.hasBorder = e.target.checked;
+            updateSamplePreview();
+        };
+
+        // 戻るボタン
+        settingBackbtnToggle.onchange = (e) => {
+            appSettings.showBackButton = e.target.checked;
+            previewBackIcon.style.display = appSettings.showBackButton ? 'inline' : 'none';
+        };
+
+        // 並べ方
+        placementSegments.querySelectorAll('.segmented-btn').forEach(btn => {
+            btn.onclick = () => {
+                placementSegments.querySelectorAll('.segmented-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                appSettings.placementMode = btn.dataset.val;
+                updatePlacementModeUI();
+                updateSamplePreview();
+            };
+        });
+
+        // 全選択・全解除
+        btnSelectAllChars.onclick = () => {
+            appSettings.selectedChars = [...ALL_CHARS];
+            updateGojuonUI();
+            updateSamplePreview();
+        };
+
+        btnDeselectAllChars.onclick = () => {
+            appSettings.selectedChars = [];
+            updateGojuonUI();
+            updateSamplePreview();
+        };
+
+        // 50音表構築
+        function buildGojuonTables() {
+            seionBoard.innerHTML = '';
+            SEION_COLS.forEach(colData => {
+                seionBoard.appendChild(createColElement(colData));
+            });
+
+            dakuonBoard.innerHTML = '';
+            DAKUON_COLS.forEach(colData => {
+                dakuonBoard.appendChild(createColElement(colData));
+            });
+
+            youonContainer.innerHTML = '';
+            YOUON_CHARS.forEach(char => {
+                const tile = document.createElement('div');
+                tile.className = 'char-tile';
+                tile.innerText = char;
+                tile.dataset.char = char;
+                tile.onclick = () => {
+                    toggleSingleChar(char);
+                    updateSamplePreview();
+                };
+                youonContainer.appendChild(tile);
+            });
+
+            btnYouonAll.onclick = () => {
+                const allSelected = YOUON_CHARS.every(c => appSettings.selectedChars.includes(c));
+                if (allSelected) {
+                    appSettings.selectedChars = appSettings.selectedChars.filter(c => !YOUON_CHARS.includes(c));
+                } else {
+                    YOUON_CHARS.forEach(c => {
+                        if (!appSettings.selectedChars.includes(c)) appSettings.selectedChars.push(c);
+                    });
+                }
+                updateGojuonUI();
+                updateSamplePreview();
+            };
+
+            updateGojuonUI();
+        }
+
+        function createColElement(colData) {
+            const col = document.createElement('div');
+            col.className = 'gojuon-col';
+
+            const headerBtn = document.createElement('button');
+            headerBtn.type = 'button';
+            headerBtn.className = 'col-header-btn';
+            headerBtn.innerText = colData.name;
+
+            const validChars = colData.chars.filter(c => c !== null);
+            headerBtn.onclick = () => {
+                const allSelected = validChars.every(c => appSettings.selectedChars.includes(c));
+                if (allSelected) {
+                    appSettings.selectedChars = appSettings.selectedChars.filter(c => !validChars.includes(c));
+                } else {
+                    validChars.forEach(c => {
+                        if (!appSettings.selectedChars.includes(c)) appSettings.selectedChars.push(c);
+                    });
+                }
+                updateGojuonUI();
+                updateSamplePreview();
+            };
+            col.appendChild(headerBtn);
+
+            colData.chars.forEach(char => {
+                if (char === null) {
+                    const empty = document.createElement('div');
+                    empty.className = 'char-tile-empty';
+                    col.appendChild(empty);
+                } else {
+                    const tile = document.createElement('div');
+                    tile.className = 'char-tile';
+                    tile.innerText = char;
+                    tile.dataset.char = char;
+                    tile.onclick = () => {
+                        toggleSingleChar(char);
+                        updateSamplePreview();
+                    };
+                    col.appendChild(tile);
+                }
+            });
+
+            return col;
+        }
+
+        function toggleSingleChar(char) {
+            if (appSettings.selectedChars.includes(char)) {
+                appSettings.selectedChars = appSettings.selectedChars.filter(c => c !== char);
+            } else {
+                appSettings.selectedChars.push(char);
+            }
+            updateGojuonUI();
+        }
+
+        function updateGojuonUI() {
+            document.querySelectorAll('.char-tile').forEach(tile => {
+                const c = tile.dataset.char;
+                tile.classList.toggle('selected', appSettings.selectedChars.includes(c));
+            });
+
+            seionBoard.querySelectorAll('.gojuon-col').forEach((colElem, idx) => {
+                const colData = SEION_COLS[idx];
+                const validChars = colData.chars.filter(c => c !== null);
+                const allSel = validChars.length > 0 && validChars.every(c => appSettings.selectedChars.includes(c));
+                colElem.querySelector('.col-header-btn').classList.toggle('all-active', allSel);
+            });
+
+            dakuonBoard.querySelectorAll('.gojuon-col').forEach((colElem, idx) => {
+                const colData = DAKUON_COLS[idx];
+                const validChars = colData.chars.filter(c => c !== null);
+                const allSel = validChars.length > 0 && validChars.every(c => appSettings.selectedChars.includes(c));
+                colElem.querySelector('.col-header-btn').classList.toggle('all-active', allSel);
+            });
+
+            const allYouonSel = YOUON_CHARS.every(c => appSettings.selectedChars.includes(c));
+            btnYouonAll.classList.toggle('all-active', allYouonSel);
+        }
+
+        // サンプルプレビュー描画
+        function updateSamplePreview() {
+            previewUpperStage.innerHTML = '';
+            previewBackIcon.style.display = appSettings.showBackButton ? 'inline' : 'none';
+
+            const pW = previewUpperStage.clientWidth || 360;
+            const pH = previewUpperStage.clientHeight || 180;
+            const count = Math.min(appSettings.candidateCount, 50);
+            const hasBorder = appSettings.hasBorder;
+
+            if (hasBorder) {
+                previewTargetChar.style.color = '#0f172a';
+                previewTargetChar.style.border = '2px solid var(--primary)';
+                previewTargetChar.style.backgroundColor = '#ffffff';
+                previewTargetChar.style.borderRadius = '12px';
+                previewTargetChar.style.padding = '4px 14px';
+                previewTargetChar.style.fontSize = '26px';
+            } else {
+                previewTargetChar.style.color = 'var(--drag-red)';
+                previewTargetChar.style.border = 'none';
+                previewTargetChar.style.backgroundColor = 'transparent';
+                previewTargetChar.style.borderRadius = '0';
+                previewTargetChar.style.padding = '0';
+                previewTargetChar.style.fontSize = '30px';
+            }
+
+            const sampleChars = ['あ', 'い', 'う', 'え', 'お', 'か', 'き', 'く', 'け', 'こ', 'さ', 'し', 'す', 'せ', 'そ', 'た', 'ち', 'つ', 'て', 'と', 'な', 'に', 'ぬ', 'ね', 'の', 'は', 'ひ', 'ふ', 'へ', 'ほ', 'ま', 'み', 'む', 'め', 'も', 'や', 'ゆ', 'よ', 'ら', 'り', 'る', 'れ', 'ろ', 'わ', 'を', 'ん', 'が', 'ぎ', 'ぐ', 'げ'];
+
+            if (appSettings.placementMode === 'gojuon') {
+                const activeDakuonCols = DAKUON_COLS.filter(col => 
+                    col.chars.some(c => c !== null && appSettings.selectedChars.includes(c))
+                );
+                const totalColsList = [...SEION_COLS, ...activeDakuonCols];
+                const cols = totalColsList.length;
+                const rows = 5;
+
+                const size = Math.floor(Math.min((pW - 12) / cols, (pH - 24) / rows));
+                const startX = (pW - cols * size) / 2;
+                const startY = 24 + (pH - 24 - rows * size) / 2;
+
+                totalColsList.forEach((colData, colIdx) => {
+                    const c = cols - 1 - colIdx;
+                    colData.chars.forEach((char, r) => {
+                        if (!char) return;
+                        const isUsed = appSettings.selectedChars.includes(char);
+                        const node = document.createElement('div');
+                        node.style.position = 'absolute';
+                        node.style.left = `${startX + c * size}px`;
+                        node.style.top = `${startY + r * size}px`;
+                        node.style.width = `${size}px`;
+                        node.style.height = `${size}px`;
+                        node.style.display = 'flex';
+                        node.style.alignItems = 'center';
+                        node.style.justifyContent = 'center';
+                        node.style.fontSize = `${Math.floor(size * 0.7)}px`;
+                        node.style.fontWeight = '600';
+                        node.innerText = char;
+
+                        if (isUsed) {
+                            node.style.color = '#1a202c';
+                            if (hasBorder) {
+                                node.style.border = '1px solid #cbd5e1';
+                                node.style.borderRadius = '4px';
+                                node.style.backgroundColor = '#f8fafc';
+                            }
+                        } else {
+                            node.style.color = '#334155';
+                            node.style.backgroundColor = '#0f172a';
+                            node.style.opacity = '0.12';
+                        }
+                        previewUpperStage.appendChild(node);
+                    });
+                });
+
+            } else {
+                const cols = Math.ceil(Math.sqrt(count * (pW / (pH - 24))));
+                const rows = Math.ceil(count / cols);
+                const size = Math.floor(Math.min((pW - 10) / cols, (pH - 28) / rows));
+
+                for (let i = 0; i < count; i++) {
+                    const char = sampleChars[i % sampleChars.length];
+                    const node = document.createElement('div');
+                    node.style.position = 'absolute';
+                    node.style.width = `${size}px`;
+                    node.style.height = `${size}px`;
+                    node.style.display = 'flex';
+                    node.style.alignItems = 'center';
+                    node.style.justifyContent = 'center';
+                    node.style.fontSize = `${Math.floor(size * 0.7)}px`;
+                    node.style.fontWeight = '600';
+                    node.style.color = '#1a202c';
+                    node.innerText = char;
+
+                    if (hasBorder) {
+                        node.style.border = '1px solid #cbd5e1';
+                        node.style.borderRadius = '5px';
+                        node.style.backgroundColor = '#f8fafc';
+                    }
+
+                    if (appSettings.placementMode === 'clean') {
+                        const c = i % cols;
+                        const r = Math.floor(i / cols);
+                        node.style.left = `${5 + c * size}px`;
+                        node.style.top = `${24 + r * size}px`;
+                    } else {
+                        const c = i % cols;
+                        const r = Math.floor(i / cols);
+                        const jx = (Math.random() - 0.5) * (size * 0.4);
+                        const jy = (Math.random() - 0.5) * (size * 0.4);
+                        node.style.left = `${Math.max(2, 5 + c * size + jx)}px`;
+                        node.style.top = `${Math.max(24, 24 + r * size + jy)}px`;
+                    }
+                    previewUpperStage.appendChild(node);
+                }
+            }
+        }
+
+        // リサイズ対応
+        window.addEventListener('resize', () => {
+            if (!playScreen.classList.contains('hidden')) {
+                renderCandidates();
+                setupDraggableSource();
+            } else if (!settingsScreen.classList.contains('hidden')) {
+                updateSamplePreview();
+            }
+        });
+    </script>
 </body>
 </html>

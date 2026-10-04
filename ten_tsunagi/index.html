@@ -410,7 +410,7 @@
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 setVh();
-                if (currentScreen === 'play') drawAll();
+                if (currentScreen === 'play') resizeCanvas();
             }, 100);
         });
         setVh();
@@ -527,6 +527,7 @@
 
         const closeSettings = () => {
             settings.diagonal = document.getElementById('set-diagonal').checked;
+            settings.lines = Math.min(settings.lines, getMaxLines(settings.cols, settings.rows, settings.diagonal));
             settings.leftHanded = document.getElementById('set-lefthanded').checked;
             settings.backBtn = document.getElementById('set-backbtn').checked;
             settings.whenWrong = parseInt(document.getElementById('set-whenwrong').value);
@@ -535,6 +536,21 @@
             showScreen('home');
         };
 
+        const getMaxLines = (cols, rows, diagonal) => {
+            const straightLines = (cols - 1) * rows + (rows - 1) * cols;
+            const diagonalLines = diagonal ? 2 * (cols - 1) * (rows - 1) : 0;
+            return straightLines + diagonalLines;
+        };
+
+        const updateLineLimit = () => {
+            const diagonal = document.getElementById('set-diagonal').checked;
+            const maxLines = getMaxLines(settings.cols, settings.rows, diagonal);
+            settings.lines = Math.max(1, Math.min(maxLines, settings.lines));
+            document.getElementById('set-lines').innerText = settings.lines;
+        };
+
+        document.getElementById('set-diagonal').addEventListener('change', updateLineLimit);
+
         const changeSetting = (key, delta) => {
             if (key === 'cols') settings.cols = Math.max(1, Math.min(10, settings.cols + delta));
             if (key === 'rows') settings.rows = Math.max(1, Math.min(10, settings.rows + delta));
@@ -542,9 +558,8 @@
 
             if (key === 'questions') settings.questions = Math.max(1, Math.min(50, settings.questions + delta));
 
-            const maxLines = settings.diagonal
-                ? ((settings.cols - 1) * (settings.rows - 1) * 4 + settings.cols + settings.rows - 2)
-                : ((settings.cols - 1) * (settings.rows - 1) * 2 + settings.cols + settings.rows - 2);
+            const diagonal = document.getElementById('set-diagonal').checked;
+            const maxLines = getMaxLines(settings.cols, settings.rows, diagonal);
 
             if (key === 'lines') settings.lines = Math.max(1, Math.min(maxLines, settings.lines + delta));
             if (settings.lines > maxLines) settings.lines = Math.max(1, maxLines);
@@ -582,14 +597,17 @@
             gameState.dots = [];
             const padding = size * 0.15;
             const usableSize = size - padding * 2;
-            const stepX = settings.cols > 1 ? usableSize / (settings.cols - 1) : 0;
-            const stepY = settings.rows > 1 ? usableSize / (settings.rows - 1) : 0;
+            const step = usableSize / Math.max(settings.cols - 1, settings.rows - 1);
+            const gridWidth = step * (settings.cols - 1);
+            const gridHeight = step * (settings.rows - 1);
+            const startX = (size - gridWidth) / 2;
+            const startY = (size - gridHeight) / 2;
 
             for (let r = 0; r < settings.rows; r++) {
                 for (let c = 0; c < settings.cols; c++) {
                     gameState.dots.push({
-                        x: padding + c * stepX,
-                        y: padding + r * stepY,
+                        x: startX + c * step,
+                        y: startY + r * step,
                         id: r * settings.cols + c
                     });
                 }
@@ -638,8 +656,8 @@
 
         const drawGrid = (ctx, activeId = -1) => {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            // 点をさらに10%大きくする (元の0.05から0.055へ)
-            const dotRadius = Math.max(13.2, ctx.canvas.width * 0.055);
+            const spacing = ctx.canvas.width * 0.7 / Math.max(settings.cols - 1, settings.rows - 1);
+            const dotRadius = Math.min(Math.max(13.2, ctx.canvas.width * 0.055), spacing * 0.4);
 
             gameState.dots.forEach(dot => {
                 ctx.beginPath();
@@ -668,7 +686,9 @@
             drawLineList(sampleCtx, gameState.sampleLines, '#333', lw);
 
             drawGrid(drawCtx, gameState.activeDot);
-            const normalLines = gameState.userLines.filter(l => !gameState.wrongLines.includes(l));
+            const normalLines = settings.whenWrong === 1
+                ? gameState.userLines.filter(l => !gameState.wrongLines.includes(l))
+                : gameState.userLines;
             drawLineList(drawCtx, normalLines, '#333', lw);
 
             if (settings.whenWrong === 1) {
@@ -697,8 +717,8 @@
         };
 
         const getNearestDot = (pos) => {
-            // 判定範囲を点そのものの大きさと一致させる
-            const threshold = Math.max(13.2, drawingCanvas.width * 0.055);
+            const spacing = drawingCanvas.width * 0.7 / Math.max(settings.cols - 1, settings.rows - 1);
+            const threshold = Math.min(Math.max(13.2, drawingCanvas.width * 0.055), spacing * 0.4);
             for (let dot of gameState.dots) {
                 if (Math.hypot(dot.x - pos.x, dot.y - pos.y) <= threshold) return dot.id;
             }
@@ -736,6 +756,7 @@
                 gameState.userLines = gameState.userLines.filter(l => l !== lineToRemove);
                 gameState.wrongLines = gameState.wrongLines.filter(l => l !== lineToRemove);
                 drawAll();
+                if (settings.autoCheck > 0) checkAutoClear();
                 return true;
             }
             return false;
