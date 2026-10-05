@@ -2454,6 +2454,14 @@
       updateHomeGalleryButton();
       updateBackButtonVisibility();
       window.addEventListener('resize', handleWindowResize);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('screen') === 'play') {
+        startPlaySession();
+      } else if (urlParams.get('screen') === 'gallery') {
+        renderGalleryView();
+        showScreen('view-gallery');
+      }
     });
 
     async function loadMasterData() {
