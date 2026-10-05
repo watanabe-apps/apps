@@ -1,0 +1,4145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ひらがな図鑑</title>
+  <link rel="apple-touch-icon" href="img.png">
+  <link rel="icon" href="img.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #007aff;
+      --primary-active: #0056b3;
+      --accent: #10b981;
+      --accent-active: #059669;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #cbd5e1;
+      --border-dark: #334155;
+      --text-color: #1e293b;
+      --sub-text: #64748b;
+      --guide-color: rgba(100, 116, 139, 0.38);
+      --guide-dash: #cbd5e1;
+      --gold: #f59e0b;
+      --book-paper: #fdfbf7;
+      --book-desk: #f1ede4;
+      --font-family: 'Klee One', 'UD デジタル 教科書体 N-R', 'UD Digi Kyokasho N-R', 'Hiragino Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    /* =========================================
+       画面共通（Screen）
+       ========================================= */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    /* 戻るボタン（左上固定） */
+    .btn-back-minimal {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      color: var(--sub-text);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 7px 14px;
+      border-radius: 12px;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: transform 0.1s ease, background 0.15s ease;
+      font-family: var(--font-family);
+    }
+
+    .btn-back-minimal:active {
+      transform: scale(0.94);
+      background-color: #f1f5f9;
+    }
+
+    /* =========================================
+       1. ホーム画面 (#view-home)
+       ========================================= */
+    #view-home {
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
+      padding: 24px;
+      gap: 2.4rem;
+    }
+
+    .home-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 480px;
+      width: 100%;
+      gap: 2.4rem;
+    }
+
+    .app-title-area {
+      text-align: center;
+    }
+
+    .app-title {
+      font-size: clamp(2.8rem, 7.5vw, 4rem);
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: 0.08em;
+      line-height: 1.2;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .home-btn-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .btn-start {
+      width: 100%;
+      font-size: clamp(1.8rem, 4.5vw, 2.2rem);
+      padding: 0.9rem 0;
+      border: none;
+      border-radius: 22px;
+      background-color: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-family);
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.32);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-start:active {
+      transform: scale(0.96);
+      opacity: 0.9;
+    }
+
+    .btn-home-gallery {
+      width: 100%;
+      font-size: 1.25rem;
+      padding: 0.85rem 0;
+      border: 2px solid #10b981;
+      border-radius: 16px;
+      background-color: #ecfdf5;
+      color: #065f46;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-family);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15);
+      transition: all 0.15s ease;
+    }
+
+    .btn-home-gallery:active:not(.disabled) {
+      transform: scale(0.96);
+      background-color: #d1fae5;
+    }
+
+    .btn-home-gallery.disabled {
+      border-color: #cbd5e1;
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      box-shadow: none;
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-settings-trigger {
+      width: 100%;
+      font-size: 1.05rem;
+      padding: 0.75rem 0;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      background-color: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      font-weight: 500;
+      font-family: var(--font-family);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.15s ease;
+    }
+
+    .btn-settings-trigger:active {
+      background-color: #f1f5f9;
+      transform: scale(0.97);
+    }
+
+    .sub-hint {
+      font-size: 0.8rem;
+      color: var(--sub-text);
+      font-weight: normal;
+    }
+
+    /* =========================================
+       2. 設定画面 (#view-settings)
+       ========================================= */
+    #view-settings {
+      background-color: #f8fafc;
+      z-index: 50;
+    }
+
+    .settings-header-bar {
+      height: 60px;
+      padding: 0 24px;
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .settings-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settings-header-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .btn-settings-done {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 9px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-family);
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.25);
+      transition: all 0.15s ease;
+    }
+
+    .btn-settings-done:active {
+      background-color: var(--primary-active);
+      transform: scale(0.96);
+    }
+
+    /* 設定タブバー */
+    .settings-tabs-nav {
+      display: flex;
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 20px;
+      gap: 8px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--sub-text);
+      cursor: pointer;
+      font-family: var(--font-family);
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .settings-body-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .group-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--sub-text);
+      letter-spacing: 0.04em;
+    }
+
+    .ios-setting-card {
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 1rem;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-row-desc {
+      font-size: 0.8rem;
+      color: var(--sub-text);
+      margin-top: 2px;
+    }
+
+    /* iOS風スイッチ */
+    .ios-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .ios-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-switch {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #e2e8f0;
+      transition: .25s;
+      border-radius: 34px;
+    }
+
+    .slider-switch:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider-switch {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider-switch:before {
+      transform: translateX(22px);
+    }
+
+    /* セグメントコントロール */
+    .segmented-control {
+      display: flex;
+      background-color: #edf2f7;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 3px;
+      width: 100%;
+    }
+
+    .segmented-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #4a5568;
+      cursor: pointer;
+      font-family: var(--font-family);
+      transition: all 0.15s ease;
+    }
+
+    .segmented-btn.active {
+      background-color: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+
+    /* サンプルプレビューカード */
+    .sample-preview-card {
+      background-color: #f1f5f9;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      border: 1px dashed var(--border-color);
+    }
+
+    .sample-preview-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--sub-text);
+    }
+
+    .sample-illust-frame {
+      font-size: 54px;
+      line-height: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+    }
+
+    .sample-preview-boxes {
+      display: flex;
+      gap: 0;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .sample-col-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sample-copy-above {
+      width: 110px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 30px;
+      font-weight: 600;
+      color: #1e293b;
+      background-color: #f8fafc;
+      border: 3px solid var(--border-dark);
+      border-bottom: none;
+    }
+
+    .sample-col-unit:not(:first-child) .sample-copy-above {
+      border-left: none;
+    }
+
+    .sample-box-unit {
+      width: 110px;
+      height: 110px;
+      border: 3px solid var(--border-dark);
+      background-color: #ffffff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sample-col-unit:not(:first-child) .sample-box-unit {
+      border-left: none;
+    }
+
+    .sample-cross-guide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(to right, transparent calc(50% - 1px), var(--guide-dash) calc(50% - 1px), var(--guide-dash) calc(50% + 1px), transparent calc(50% + 1px)),
+        linear-gradient(to bottom, transparent calc(50% - 1px), var(--guide-dash) calc(50% - 1px), var(--guide-dash) calc(50% + 1px), transparent calc(50% + 1px));
+    }
+
+    .sample-target-char {
+      font-size: 78px;
+      color: var(--guide-color);
+      line-height: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 設定画面：単語管理タブ内のカテゴリータブ */
+    .word-mgmt-cat-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .word-mgmt-cat-btn {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background-color: #ffffff;
+      color: var(--sub-text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-family);
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .word-mgmt-cat-btn.active {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .word-mgmt-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .btn-secondary {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: var(--font-family);
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:active {
+      background-color: #f1f5f9;
+      transform: scale(0.97);
+    }
+
+    /* 単語リスト行 */
+    .word-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .word-manage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      transition: background 0.15s ease;
+    }
+
+    .word-manage-row:hover {
+      background-color: #f8fafc;
+    }
+
+    .word-info-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .word-check-input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .word-illust-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .word-illust-thumb img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .word-name-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: 0.05em;
+    }
+
+    .word-btns-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon-sm {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .btn-icon-sm:active {
+      background-color: #e2e8f0;
+    }
+
+    .btn-add-word-trigger {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #93c5fd;
+      border-radius: 12px;
+      background-color: #eff6ff;
+      color: var(--primary);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-family);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      margin-top: 6px;
+    }
+
+    .btn-add-word-trigger:active {
+      background-color: #dbeafe;
+      transform: scale(0.98);
+    }
+
+    /* 編集・追加モーダル */
+    .dialog-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      padding: 16px;
+    }
+
+    .dialog-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dialog-card {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+    }
+
+    .dialog-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-item label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--sub-text);
+    }
+
+    .form-item input {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: var(--font-family);
+      outline: none;
+    }
+
+    .form-item input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+    }
+
+    .record-box-guide {
+      margin-top: 6px;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      min-height: 46px;
+      transition: all 0.2s ease;
+    }
+
+    .record-box-guide.counting {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+
+    .record-box-guide.recording-active {
+      background: #fff1f2;
+      border-color: #fda4af;
+    }
+
+    .record-status-text {
+      font-size: 0.92rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e11d48;
+      box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5);
+      animation: pulseRecord 1.2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulseRecord {
+      0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7);
+      }
+      70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 8px rgba(225, 29, 72, 0);
+      }
+      100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
+      }
+    }
+
+    .countdown-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      font-weight: 800;
+      animation: popCount 0.4s ease-out;
+      flex-shrink: 0;
+    }
+
+    @keyframes popCount {
+      0% { transform: scale(0.4); opacity: 0; }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .btn-recording-pulse {
+      background: #fff1f2 !important;
+      color: #e11d48 !important;
+      border-color: #e11d48 !important;
+      font-weight: 700 !important;
+      animation: pulseBtn 1.2s infinite alternate;
+    }
+
+    @keyframes pulseBtn {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
+    }
+
+    .dialog-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    /* =========================================
+       3. プレイ画面 (#view-play)
+       ========================================= */
+    #view-play {
+      background-color: #ffffff;
+      justify-content: space-between;
+      align-items: center;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+      position: relative;
+    }
+
+    .play-header-info {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(20px, env(safe-area-inset-right));
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--sub-text);
+      z-index: 100;
+      background: #f1f5f9;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+
+    /* イラスト表示部（画面上部） */
+    .play-stage-top {
+      width: 100%;
+      flex: 1;
+      max-height: 28vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .play-illust-box {
+      width: clamp(110px, 18vh, 160px);
+      height: clamp(110px, 18vh, 160px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: clamp(75px, 13vh, 115px);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.06));
+    }
+
+    .play-illust-box:active {
+      transform: scale(0.92);
+    }
+
+    .play-illust-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* マス目中央エリア（文字数に応じて動的サイジング） */
+    .play-stage-center {
+      width: 100%;
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* マス目をくっつけるフレックス行 */
+    .canvas-boxes-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 0;
+      margin: 0 auto;
+    }
+
+    /* 1文字ごとのブロック（写し書き見本＋マス目） */
+    .char-column-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* 写し書き用の見本文字（マス目の真上：上枠としてドッキング） */
+    .copy-model-char {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      color: #1e293b;
+      background-color: #f8fafc;
+      border: 3px solid var(--border-dark);
+      border-bottom: none;
+      box-sizing: border-box;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .char-column-unit:not(:first-child) .copy-model-char {
+      border-left: none;
+    }
+
+    /* マス目枠：rectangle (角丸なし)、ボーダー太さ3px */
+    .grid-box-cell {
+      border: 3px solid var(--border-dark);
+      border-radius: 0;
+      background-color: #ffffff;
+      position: relative;
+      touch-action: none;
+      box-sizing: border-box;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      overflow: hidden;
+    }
+
+    .char-column-unit:not(:first-child) .grid-box-cell {
+      border-left: none;
+    }
+
+    /* アクティブ枠ハイライト */
+    .grid-box-cell.active-writing {
+      border-color: var(--primary);
+    }
+
+    .grid-box-cell.highlight-speaking {
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.6) !important;
+      transform: scale(1.02);
+      z-index: 5;
+    }
+
+    /* 十字リーダー線（十字点線） */
+    .cross-dashed-guide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      background-image: 
+        linear-gradient(to right, transparent calc(50% - 1px), #cbd5e1 calc(50% - 1px), #cbd5e1 calc(50% + 1px), transparent calc(50% + 1px)),
+        linear-gradient(to bottom, transparent calc(50% - 1px), #cbd5e1 calc(50% - 1px), #cbd5e1 calc(50% + 1px), transparent calc(50% + 1px));
+    }
+
+    /* なぞり書き用うす文字 */
+    .trace-model-char {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--guide-color);
+      line-height: 1;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* 手書き描画用キャンバス */
+    .drawing-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      touch-action: none;
+    }
+
+    /* 下部ツールバー（鉛筆と消しゴムのみ） */
+    .play-stage-bottom {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      height: 80px;
+    }
+
+    .tool-btn-group {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .btn-tool-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      border: 2px solid var(--border-color);
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 26px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.12s ease;
+      color: var(--text-color);
+    }
+
+    .icon-eraser-svg {
+      width: 32px;
+      height: 32px;
+      display: block;
+      pointer-events: none;
+    }
+
+    .btn-tool-icon:active {
+      transform: scale(0.92);
+      background-color: #f1f5f9;
+    }
+
+    .btn-tool-icon.selected {
+      border-color: var(--primary);
+      background-color: #eff6ff;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+    }
+
+    /* 完了チェックボタン */
+    .btn-complete-circle {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      border: none;
+      background-color: #cbd5e1;
+      color: white;
+      font-size: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: not-allowed;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-complete-circle.ready {
+      background-color: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+      animation: pulseBtn 1.8s infinite;
+    }
+
+    .btn-complete-circle.ready:active {
+      transform: scale(0.92);
+      background-color: var(--accent-active);
+    }
+
+    @keyframes pulseBtn {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    /* =========================================
+       4. 図鑑ビュー (#view-gallery)
+       ========================================= */
+    #view-gallery {
+      background-color: var(--book-desk);
+      z-index: 20;
+    }
+
+    .gallery-top-bar {
+      height: 60px;
+      padding: 0 24px;
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .gallery-bar-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gallery-actions-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* 本のインデックスタブ */
+    .zukan-tabs-wrapper {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 20px 0;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .zukan-tab-btn {
+      padding: 10px 18px;
+      border-radius: 12px 12px 0 0;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      background-color: #f1f5f9;
+      color: var(--sub-text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-family);
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .zukan-tab-btn.active {
+      background-color: var(--book-paper);
+      color: #0f172a;
+      border-color: #d1c7b8;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.04);
+      transform: translateY(1px);
+      z-index: 2;
+    }
+
+    /* 図鑑の誌面（ビューポート） */
+    .zukan-book-viewport {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .zukan-book-page {
+      width: 100%;
+      max-width: 900px;
+      background-color: var(--book-paper);
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), inset 0 0 60px rgba(0, 0, 0, 0.015);
+      border: 1px solid #d1c7b8;
+      padding: 32px 36px;
+      min-height: 80vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .zukan-page-header {
+      border-bottom: 2px solid #334155;
+      padding-bottom: 10px;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .zukan-page-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #1e293b;
+      letter-spacing: 0.06em;
+    }
+
+    .zukan-page-count {
+      font-size: 0.95rem;
+      color: var(--sub-text);
+      font-weight: 600;
+    }
+
+    /* 図鑑エントリの誌面レイアウト */
+    .zukan-entries-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      column-gap: 36px;
+      row-gap: 40px;
+      align-items: start;
+    }
+
+    .zukan-specimen-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 14px;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .zukan-specimen-item:hover {
+      background-color: rgba(0, 0, 0, 0.025);
+      transform: translateY(-2px);
+    }
+
+    .zukan-specimen-item:active {
+      transform: scale(0.98);
+    }
+
+    .zukan-specimen-art {
+      width: 120px;
+      height: 120px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 78px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.08));
+    }
+
+    .zukan-specimen-art img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .zukan-specimen-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+    }
+
+    .zukan-specimen-boxes {
+      display: flex;
+      gap: 0;
+      border: 2.5px solid var(--border-dark);
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .zukan-letter-cell {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .zukan-letter-cell:not(:first-child) {
+      border-left: 2.5px solid var(--border-dark);
+    }
+
+    .zukan-letter-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .zukan-empty-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--sub-text);
+      flex: 1;
+    }
+
+    .zukan-empty-icon {
+      font-size: 60px;
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+
+    .zukan-empty-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .btn-zukan-play-cat {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-family);
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+      margin-top: 16px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-zukan-play-cat:active {
+      transform: scale(0.96);
+      background-color: var(--primary-active);
+    }
+
+    .btn-edit-trigger {
+      width: 36px;
+      height: 36px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      opacity: 0.35;
+      transition: all 0.2s;
+    }
+
+    .btn-edit-trigger.active-mode {
+      opacity: 1;
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .edit-mode .zukan-specimen-item {
+      border: 2px dashed #ef4444;
+      background-color: #fef2f2;
+    }
+
+    /* =========================================
+       5. 図鑑詳細モーダル (#modal-detail)
+       ========================================= */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-dialog {
+      background: #ffffff;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      transform: scale(0.94);
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+
+    .modal-backdrop.open .modal-dialog {
+      transform: scale(1);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-illust-large {
+      width: 130px;
+      height: 130px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 90px;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+
+    .modal-illust-large:active {
+      transform: scale(0.92);
+    }
+
+    .modal-illust-large img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .modal-word-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .modal-letters-row {
+      display: flex;
+      gap: 0;
+      border: 3px solid var(--border-dark);
+      background: #ffffff;
+      margin: 8px 0;
+    }
+
+    .modal-letter-cell {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .modal-letter-cell:not(:first-child) {
+      border-left: 3px solid var(--border-dark);
+    }
+
+    .modal-letter-cell:active {
+      background-color: #f8fafc;
+    }
+
+    .modal-letter-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .modal-actions-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .btn-modal-action {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-family);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-replay {
+      background: #eff6ff;
+      color: var(--primary);
+      border: 1px solid #bfdbfe;
+    }
+
+    .btn-replay:active {
+      background: #dbeafe;
+    }
+
+    .btn-rewrite {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-rewrite:active {
+      background: var(--primary-active);
+    }
+
+    /* 紙吹雪エフェクト */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 14px;
+      pointer-events: none;
+      z-index: 1000;
+      animation: fallDown 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes fallDown {
+      0% {
+        transform: translate3d(var(--x-start), -20px, 0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(var(--x-end), 105vh, 0) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* =========================================
+       6. 印刷・PDF出力スタイル (@media print)
+       ========================================= */
+    @media print {
+      body, html {
+        background: #ffffff !important;
+        position: static !important;
+        overflow: visible !important;
+        width: 100% !important;
+        height: auto !important;
+      }
+      .screen:not(#view-gallery) {
+        display: none !important;
+      }
+      #view-gallery {
+        position: static !important;
+        opacity: 1 !important;
+        background: #ffffff !important;
+        display: block !important;
+      }
+      .gallery-top-bar, .zukan-tabs-wrapper {
+        display: none !important;
+      }
+      .zukan-book-viewport {
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+      }
+      .zukan-book-page {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 20px 0 !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+      }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- =========================================
+       1. ホーム画面 (#view-home)
+       ========================================= -->
+  <div id="view-home" class="screen active">
+    <div class="home-card-wrapper">
+      <div class="app-title-area">
+        <h1 class="app-title">ひらがな図鑑</h1>
+      </div>
+
+      <div class="home-btn-group">
+        <button id="btn-home-start" class="btn-start">
+          <span>✏️</span>
+          <span>スタート</span>
+        </button>
+
+        <button id="btn-home-gallery" class="btn-home-gallery disabled">
+          <span>📖</span>
+          <span>ずかんをみる</span>
+        </button>
+
+        <button id="btn-home-settings" class="btn-settings-trigger">
+          <span>⚙️</span>
+          <span>設定</span>
+          <span class="sub-hint">※トリプルタップ</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       2. 設定画面 (#view-settings)
+       ========================================= -->
+  <div id="view-settings" class="screen">
+    <div class="settings-header-bar">
+      <div class="settings-header-left">
+        <span style="font-size: 22px;">⚙️</span>
+        <h2 class="settings-header-title">設定</h2>
+      </div>
+      <button class="btn-settings-done" id="btn-close-settings">完了</button>
+    </div>
+
+    <!-- 設定タブ切り替え -->
+    <div class="settings-tabs-nav">
+      <button class="tab-btn active" data-tab="tab-play">✏️ プレイ設定</button>
+      <button class="tab-btn" data-tab="tab-words">📚 単語管理</button>
+      <button class="tab-btn" data-tab="tab-data">💾 データ管理</button>
+    </div>
+
+    <div class="settings-body-scroll">
+      <!-- タブ1: プレイ設定 -->
+      <div id="tab-play" class="tab-content active">
+        <div class="settings-group">
+          <label class="group-label">書字モード</label>
+          <div class="segmented-control" id="mode-segmented">
+            <button class="segmented-btn active" data-mode="trace">なぞり書き</button>
+            <button class="segmented-btn" data-mode="copy">写し書き</button>
+            <button class="segmented-btn" data-mode="none">見本なし</button>
+          </div>
+        </div>
+
+        <!-- プレビュー枠（イラスト付き） -->
+        <div class="sample-preview-card">
+          <span class="sample-preview-label">▼ プレイ画面のプレビュー</span>
+          <div class="sample-illust-frame" id="sample-illust-frame">🍎</div>
+          <div class="sample-preview-boxes" id="sample-boxes-container">
+            <!-- 動的生成 -->
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="group-label">表示・ガイド</label>
+          <div class="ios-setting-card">
+            <div class="setting-row">
+              <div>
+                <div>戻るボタンを表示する</div>
+                <div class="setting-row-desc">プレイ画面左上の戻るボタンを表示します（誤操作防止時はオフ）</div>
+              </div>
+              <label class="ios-switch">
+                <input type="checkbox" id="cfg-show-back-btn" checked>
+                <span class="slider-switch"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div>十字リーダー線（十字点線ガイド）</div>
+                <div class="setting-row-desc">マス目の中心線を表示してバランスを取りやすくします</div>
+              </div>
+              <label class="ios-switch">
+                <input type="checkbox" id="cfg-cross-guide" checked>
+                <span class="slider-switch"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div>出題順序をランダムにする</div>
+                <div class="setting-row-desc">選択された単語をランダムな順序で出題します</div>
+              </div>
+              <label class="ios-switch">
+                <input type="checkbox" id="cfg-random-order">
+                <span class="slider-switch"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div>図鑑・筆跡を保存する</div>
+                <div class="setting-row-desc">書いた文字を図鑑に記録します（初期値: オフ）</div>
+              </div>
+              <label class="ios-switch">
+                <input type="checkbox" id="cfg-persist-gallery">
+                <span class="slider-switch"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- タブ2: 単語管理（カテゴリータブ＋単語リスト＋編集・追加） -->
+      <div id="tab-words" class="tab-content">
+        <!-- カテゴリータブバー -->
+        <div class="word-mgmt-cat-nav" id="mgmt-category-tabs">
+          <!-- 動的生成 -->
+        </div>
+
+        <div class="word-mgmt-action-bar" style="flex-wrap: wrap; gap: 8px;">
+          <div style="font-weight: 600; font-size: 1.05rem;" id="mgmt-current-cat-title">くだもの</div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <button class="btn-secondary" id="btn-mgmt-only-this-cat" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 600; background: #eff6ff; color: var(--primary); border-color: var(--primary);">このカテゴリーのみ選択</button>
+            <button class="btn-secondary" id="btn-mgmt-select-all" style="padding: 5px 10px; font-size: 0.85rem;">このカテゴリ全選択</button>
+            <button class="btn-secondary" id="btn-mgmt-deselect-all" style="padding: 5px 10px; font-size: 0.85rem;">このカテゴリ全解除</button>
+            <button class="btn-secondary" id="btn-mgmt-all-words-select" style="padding: 5px 10px; font-size: 0.85rem;">全単語を選択</button>
+          </div>
+        </div>
+
+        <!-- 単語一覧リスト -->
+        <div class="word-list-container" id="mgmt-words-list">
+          <!-- 動的生成 -->
+        </div>
+
+        <!-- 単語追加ボタン -->
+        <button class="btn-add-word-trigger" id="btn-trigger-add-word">
+          <span>＋</span>
+          <span id="label-add-word-btn">このカテゴリーに単語を追加</span>
+        </button>
+      </div>
+
+      <!-- タブ3: データ管理 -->
+      <div id="tab-data" class="tab-content">
+        <div class="ios-setting-card">
+          <div class="setting-row">
+            <div>
+              <div>単語・図鑑データのエクスポート</div>
+              <div class="setting-row-desc">登録した単語や図鑑の記録をJSONファイルとして保存します</div>
+            </div>
+            <button class="btn-secondary" id="btn-export-json">書き出す</button>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div>単語・図鑑データのインポート</div>
+              <div class="setting-row-desc">保存したJSONファイルを読み込みます</div>
+            </div>
+            <div>
+              <button class="btn-secondary" id="btn-import-json-trigger">読み込む</button>
+              <input type="file" id="import-json-file" accept=".json" style="display: none;">
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div style="color: #e11d48;">図鑑の記録を初期化</div>
+              <div class="setting-row-desc">書いた文字の記録を初期化します（単語リストは残ります）</div>
+            </div>
+            <button class="btn-secondary" id="btn-reset-gallery" style="color: #e11d48; border-color: #fecaca;">初期化</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 単語 編集/追加 モーダルダイアログ -->
+  <div class="dialog-backdrop" id="modal-word-edit">
+    <div class="dialog-card">
+      <h3 id="word-dialog-title">単語の編集</h3>
+      <div class="form-item">
+        <label>カテゴリー</label>
+        <input type="text" id="dialog-cat-input" readonly style="background-color: #f1f5f9; color: #64748b;">
+      </div>
+      <div class="form-item">
+        <label>単語名（ひらがな）</label>
+        <input type="text" id="dialog-name-input" placeholder="例: すいか">
+      </div>
+      <div class="form-item">
+        <label>絵文字 または 画像ファイル</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="dialog-emoji-input" placeholder="絵文字（例: 🍉）" style="width: 120px;">
+          <input type="file" id="dialog-file-input" accept="image/*" style="flex: 1;">
+        </div>
+      </div>
+      <div class="form-item">
+        <label>音声録音（任意・未録音時は自動音声読み上げ）</label>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-secondary" id="btn-dialog-record">🎙️ 録音開始</button>
+          <button class="btn-secondary" id="btn-dialog-play-audio" style="display: none;">🔊 試聴</button>
+          <button class="btn-secondary" id="btn-dialog-delete-audio" style="display: none; color: #e11d48; border-color: #fecaca;">🗑️ 録音削除</button>
+        </div>
+        <div id="dialog-record-box" class="record-box-guide">
+          <div id="dialog-record-status" class="record-status-text">未録音（自動音声で読み上げます）</div>
+        </div>
+      </div>
+      <div class="dialog-btn-row">
+        <button class="btn-secondary" id="btn-dialog-cancel">キャンセル</button>
+        <button class="btn-secondary" id="btn-dialog-save" style="background-color: var(--primary); color: white; border: none;">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       3. プレイ画面 (#view-play)
+       ========================================= -->
+  <div id="view-play" class="screen">
+    <!-- 戻るボタン -->
+    <button class="btn-back-minimal" id="btn-play-back">
+      <span>◀</span>
+      <span>もどる</span>
+    </button>
+
+    <!-- 出題進行状況 -->
+    <div class="play-header-info" id="play-progress-badge">1 / 1</div>
+
+    <!-- 上部：イラスト表示エリア（テキストなし） -->
+    <div class="play-stage-top">
+      <div class="play-illust-box" id="play-illust-elem"></div>
+    </div>
+
+    <!-- 中央：マス目エリア（rectangle枠、くっつける、基本300px） -->
+    <div class="play-stage-center">
+      <div class="canvas-boxes-row" id="play-boxes-container">
+        <!-- 動的生成 -->
+      </div>
+    </div>
+
+    <!-- 下部：操作ツールバー（鉛筆と消しゴムのみ） -->
+    <div class="play-stage-bottom">
+      <div class="tool-btn-group">
+        <button class="btn-tool-icon selected" id="tool-pen" title="えんぴつ">
+          ✏️
+        </button>
+        <button class="btn-tool-icon" id="tool-eraser" title="けしごむ">
+          <svg class="icon-eraser-svg" viewBox="0 0 36 36" aria-label="けしごむ">
+            <g transform="rotate(-30 18 18)">
+              <!-- 消しゴム本体（白ゴム） -->
+              <rect x="9" y="5" width="18" height="26" rx="3.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+              <rect x="9" y="5" width="18" height="12" rx="3.5" fill="#ffffff"/>
+              <!-- ゴムのハイライト -->
+              <path d="M12 7 L12 14" stroke="#e2e8f0" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- カバー下地（ブルー） -->
+              <path d="M9 15 L27 15 L27 28 C27 29.5 25.5 31 24 31 L12 31 C10.5 31 9 29.5 9 28 Z" fill="#0284c7"/>
+              <!-- カバー白帯 -->
+              <rect x="9" y="19" width="18" height="4.5" fill="#ffffff"/>
+              <!-- カバー黒帯 -->
+              <rect x="9" y="23.5" width="18" height="3" fill="#1e293b"/>
+              <!-- スリーブU字カット -->
+              <path d="M15 15 C15 17 21 17 21 15" fill="#f8fafc"/>
+              <!-- カバー外枠 -->
+              <path d="M9 15 L9 28 C9 29.5 10.5 31 12 31 L24 31 C25.5 31 27 29.5 27 28 L27 15 Z" fill="none" stroke="#0369a1" stroke-width="1.2"/>
+            </g>
+          </svg>
+        </button>
+      </div>
+
+      <button class="btn-complete-circle" id="btn-play-complete" title="できた！">
+        ✓
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================
+       4. 図鑑ビュー (#view-gallery)
+       ========================================= -->
+  <div id="view-gallery" class="screen">
+    <div class="gallery-top-bar">
+      <button class="btn-back-minimal" id="btn-gallery-back" style="position: static;">
+        <span>🏠</span>
+        <span>ホーム</span>
+      </button>
+
+      <div class="gallery-bar-title">
+        <span>📖</span>
+        <span>ひらがな図鑑</span>
+      </div>
+
+      <div class="gallery-actions-right">
+        <button class="btn-secondary" id="btn-zukan-export-png" style="padding: 6px 12px; font-size: 0.85rem;" title="画像として保存">📷 画像保存</button>
+        <button class="btn-secondary" id="btn-zukan-export-pdf" style="padding: 6px 12px; font-size: 0.85rem;" title="PDFとして保存・印刷">📄 PDF/印刷</button>
+        <button class="btn-edit-trigger" id="btn-gallery-edit" title="編集">⚙️</button>
+      </div>
+    </div>
+
+    <!-- 本のインデックスタブ（単語があるカテゴリーのみ表示） -->
+    <div class="zukan-tabs-wrapper" id="zukan-category-tabs">
+      <!-- 動的生成 -->
+    </div>
+
+    <!-- 図鑑の誌面（見開き・ページ） -->
+    <div class="zukan-book-viewport">
+      <div class="zukan-book-page" id="zukan-page-paper">
+        <div class="zukan-page-header">
+          <h2 class="zukan-page-title" id="zukan-page-title">くだものの ページ</h2>
+          <span class="zukan-page-count" id="zukan-page-count">0 ことば</span>
+        </div>
+
+        <div class="zukan-entries-container" id="zukan-entries-container">
+          <!-- 動的生成 -->
+        </div>
+
+        <div class="zukan-empty-page" id="zukan-empty-placeholder" style="display: none;">
+          <div class="zukan-empty-icon">📖</div>
+          <div class="zukan-empty-title">まだ このページの ことばを 書いていません</div>
+          <p>えんぴつで 書いて 図鑑を つくろう！</p>
+          <button class="btn-zukan-play-cat" id="btn-zukan-play-category">✏️ このページの言葉を書く</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       5. 図鑑詳細モーダル (#modal-detail)
+       ========================================= -->
+  <div class="modal-backdrop" id="modal-detail">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" id="btn-modal-close">✕</button>
+
+      <div class="modal-illust-large" id="modal-illust"></div>
+      <div class="modal-word-title" id="modal-title"></div>
+
+      <div class="modal-letters-row" id="modal-letters"></div>
+
+      <div class="modal-actions-row">
+        <button class="btn-modal-action btn-replay" id="btn-modal-replay">
+          <span>▶️</span>
+          <span>筆跡リプレイ</span>
+        </button>
+        <button class="btn-modal-action btn-rewrite" id="btn-modal-rewrite">
+          <span>✏️</span>
+          <span>もういちど書く</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       大根の高品質SVGイラスト（じゃがいもと誤認されない純白大根）
+       ======================================================== */
+    const DAIKON_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 35 C42 12, 28 10, 24 16 C20 22, 38 34, 46 36" fill="%2322c55e"/><path d="M50 35 C48 8, 56 8, 56 16 C56 24, 52 33, 50 36" fill="%2316a34a"/><path d="M50 35 C58 12, 72 10, 76 16 C80 22, 62 34, 54 36" fill="%2322c55e"/><path d="M38 36 C38 32, 62 32, 62 36 C66 52, 62 72, 53 92 C51 95, 49 95, 47 92 C38 72, 34 52, 38 36 Z" fill="%23ffffff" stroke="%2394a3b8" stroke-width="2.5"/><line x1="44" y1="52" x2="52" y2="52" stroke="%23cbd5e1" stroke-width="2"/><line x1="48" y1="66" x2="56" y2="66" stroke="%23cbd5e1" stroke-width="2"/><line x1="46" y1="80" x2="53" y2="80" stroke="%23cbd5e1" stroke-width="2"/></svg>`;
+
+    /* ========================================================
+       プリセット単語マスタ（大幅拡充・親しみやすい単語50選）
+       ======================================================== */
+    const PRESET_WORDS = [
+      // くだもの (8)
+      { id: 'w_apple', category: 'くだもの', name: 'りんご', emoji: '🍎', image: null, audio: null },
+      { id: 'w_banana', category: 'くだもの', name: 'ばなな', emoji: '🍌', image: null, audio: null },
+      { id: 'w_grape', category: 'くだもの', name: 'ぶどう', emoji: '🍇', image: null, audio: null },
+      { id: 'w_strawberry', category: 'くだもの', name: 'いちご', emoji: '🍓', image: null, audio: null },
+      { id: 'w_mikan', category: 'くだもの', name: 'みかん', emoji: '🍊', image: null, audio: null },
+      { id: 'w_peach', category: 'くだもの', name: 'もも', emoji: '🍑', image: null, audio: null },
+      { id: 'w_watermelon', category: 'くだもの', name: 'すいか', emoji: '🍉', image: null, audio: null },
+      { id: 'w_melon', category: 'くだもの', name: 'めろん', emoji: '🍈', image: null, audio: null },
+
+      // やさい (8)
+      { id: 'w_carrot', category: 'やさい', name: 'にんじん', emoji: '🥕', image: null, audio: null },
+      { id: 'w_tomato', category: 'やさい', name: 'とまと', emoji: '🍅', image: null, audio: null },
+      { id: 'w_corn', category: 'やさい', name: 'とうもろこし', emoji: '🌽', image: null, audio: null },
+      { id: 'w_cucumber', category: 'やさい', name: 'きゅうり', emoji: '🥒', image: null, audio: null },
+      { id: 'w_pepper', category: 'やさい', name: 'ぴーまん', emoji: '🫑', image: null, audio: null },
+      { id: 'w_daikon', category: 'やさい', name: 'だいこん', emoji: '🥬', image: DAIKON_SVG, audio: null },
+      { id: 'w_eggplant', category: 'やさい', name: 'なす', emoji: '🍆', image: null, audio: null },
+      { id: 'w_onion', category: 'やさい', name: 'たまねぎ', emoji: '🧅', image: null, audio: null },
+
+      // どうぶつ (10)
+      { id: 'w_dog', category: 'どうぶつ', name: 'いぬ', emoji: '🐶', image: null, audio: null },
+      { id: 'w_cat', category: 'どうぶつ', name: 'ねこ', emoji: '🐱', image: null, audio: null },
+      { id: 'w_lion', category: 'どうぶつ', name: 'らいおん', emoji: '🦁', image: null, audio: null },
+      { id: 'w_elephant', category: 'どうぶつ', name: 'ぞう', emoji: '🐘', image: null, audio: null },
+      { id: 'w_giraffe', category: 'どうぶつ', name: 'きりん', emoji: '🦒', image: null, audio: null },
+      { id: 'w_rabbit', category: 'どうぶつ', name: 'うさぎ', emoji: '🐰', image: null, audio: null },
+      { id: 'w_bear', category: 'どうぶつ', name: 'くま', emoji: '🐻', image: null, audio: null },
+      { id: 'w_panda', category: 'どうぶつ', name: 'ぱんだ', emoji: '🐼', image: null, audio: null },
+      { id: 'w_monkey', category: 'どうぶつ', name: 'さる', emoji: '🐵', image: null, audio: null },
+      { id: 'w_tiger', category: 'どうぶつ', name: 'とら', emoji: '🐯', image: null, audio: null },
+
+      // のりもの (8)
+      { id: 'w_car', category: 'のりもの', name: 'くるま', emoji: '🚗', image: null, audio: null },
+      { id: 'w_plane', category: 'のりもの', name: 'ひこうき', emoji: '✈️', image: null, audio: null },
+      { id: 'w_train', category: 'のりもの', name: 'でんしゃ', emoji: '🚃', image: null, audio: null },
+      { id: 'w_ship', category: 'のりもの', name: 'ふね', emoji: '🚢', image: null, audio: null },
+      { id: 'w_bus', category: 'のりもの', name: 'ばす', emoji: '🚌', image: null, audio: null },
+      { id: 'w_bullet', category: 'のりもの', name: 'しんかんせん', emoji: '🚅', image: null, audio: null },
+      { id: 'w_police', category: 'のりもの', name: 'ぱとかー', emoji: '🚓', image: null, audio: null },
+      { id: 'w_fire', category: 'のりもの', name: 'しょうぼうしゃ', emoji: '🚒', image: null, audio: null },
+
+      // たべもの (8)
+      { id: 'w_onigiri', category: 'たべもの', name: 'おにぎり', emoji: '🍙', image: null, audio: null },
+      { id: 'w_ramen', category: 'たべもの', name: 'らーめん', emoji: '🍜', image: null, audio: null },
+      { id: 'w_bread', category: 'たべもの', name: 'ぱん', emoji: '🍞', image: null, audio: null },
+      { id: 'w_sushi', category: 'たべもの', name: 'すし', emoji: '🍣', image: null, audio: null },
+      { id: 'w_pudding', category: 'たべもの', name: 'ぷりん', emoji: '🍮', image: null, audio: null },
+      { id: 'w_icecream', category: 'たべもの', name: 'あいす', emoji: '🍦', image: null, audio: null },
+      { id: 'w_cake', category: 'たべもの', name: 'けーき', emoji: '🍰', image: null, audio: null },
+      { id: 'w_curry', category: 'たべもの', name: 'かれー', emoji: '🍛', image: null, audio: null },
+
+      // みぢかなもの (8)
+      { id: 'w_hat', category: 'みぢかなもの', name: 'ぼうし', emoji: '🧢', image: null, audio: null },
+      { id: 'w_shoes', category: 'みぢかなもの', name: 'くつ', emoji: '👟', image: null, audio: null },
+      { id: 'w_umbrella', category: 'みぢかなもの', name: 'かさ', emoji: '☂️', image: null, audio: null },
+      { id: 'w_clock', category: 'みぢかなもの', name: 'とけい', emoji: '⏰', image: null, audio: null },
+      { id: 'w_flower', category: 'みぢかなもの', name: 'はな', emoji: '🌸', image: null, audio: null },
+      { id: 'w_star', category: 'みぢかなもの', name: 'ほし', emoji: '⭐', image: null, audio: null },
+      { id: 'w_sun', category: 'みぢかなもの', name: 'たいよう', emoji: '☀️', image: null, audio: null },
+      { id: 'w_moon', category: 'みぢかなもの', name: 'つき', emoji: '🌙', image: null, audio: null }
+    ];
+
+    /* ========================================================
+       効果音シンセサイザー (Web Audio API)
+       ======================================================== */
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.ctx = new AudioContextClass();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type = 'sine', duration = 0.12, volume = 0.15) {
+        if (!this.ctx) this.init();
+        if (!this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      playPop() {
+        // ボタン操作音は鳴らさない
+      }
+
+      playSuccess() {
+        if (!this.ctx) this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playTone(freq, 'sine', 0.22, 0.2);
+          }, idx * 90);
+        });
+      }
+
+      playClearFanfare() {
+        if (!this.ctx) this.init();
+        if (!this.ctx) return;
+        const melody = [
+          { f: 523.25, d: 0.12, wait: 0 },
+          { f: 659.25, d: 0.12, wait: 120 },
+          { f: 783.99, d: 0.14, wait: 240 },
+          { f: 1046.50, d: 0.35, wait: 400 }
+        ];
+        melody.forEach(m => {
+          setTimeout(() => {
+            this.playTone(m.f, 'triangle', m.d, 0.25);
+          }, m.wait);
+        });
+      }
+    }
+
+    const soundFX = new SoundFX();
+
+    /* ========================================================
+       IndexedDB ストレージ
+       ======================================================== */
+    class StorageDB {
+      constructor() {
+        this.dbName = 'HiraganaZukanDB';
+        this.version = 1;
+        this.db = null;
+      }
+
+      async init() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(this.dbName, this.version);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('words')) {
+              db.createObjectStore('words', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('gallery')) {
+              db.createObjectStore('gallery', { keyPath: 'wordId' });
+            }
+          };
+          req.onsuccess = (e) => {
+            this.db = e.target.result;
+            resolve();
+          };
+          req.onerror = (e) => reject(e);
+        });
+      }
+
+      async getAllWords() {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('words', 'readonly');
+          const store = tx.objectStore('words');
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      }
+
+      async saveWord(word) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('words', 'readwrite');
+          const store = tx.objectStore('words');
+          store.put(word);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      async deleteWord(wordId) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('words', 'readwrite');
+          const store = tx.objectStore('words');
+          store.delete(wordId);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      async getAllGallery() {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('gallery', 'readonly');
+          const store = tx.objectStore('gallery');
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => resolve([]);
+        });
+      }
+
+      async saveGalleryItem(item) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('gallery', 'readwrite');
+          const store = tx.objectStore('gallery');
+          store.put(item);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      async deleteGalleryItem(wordId) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('gallery', 'readwrite');
+          const store = tx.objectStore('gallery');
+          store.delete(wordId);
+          tx.oncomplete = () => resolve();
+        });
+      }
+
+      async clearGallery() {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction('gallery', 'readwrite');
+          const store = tx.objectStore('gallery');
+          store.clear();
+          tx.oncomplete = () => resolve();
+        });
+      }
+    }
+
+    /* ========================================================
+       アプリケーション状態管理
+       ======================================================== */
+    const SETTINGS_KEY = 'hiragana_zukan_settings_v1';
+
+    const appState = {
+      db: new StorageDB(),
+      writeMode: 'trace', // 'trace' | 'copy' | 'none'
+      showCrossGuide: true,
+      showBackButton: true, // 戻るボタンの表示・非表示設定
+      randomOrder: false,
+      persistGallery: false, // 図形・筆跡の保存初期値: オフ
+      currentTool: 'pen', // 'pen' | 'eraser'
+      words: [],
+      selectedWordIds: new Set(),
+      playQueue: [],
+      currentWordIndex: 0,
+      activeSlotIndex: 0,
+      currentBoxSize: 300,
+      currentLetterSlots: [],
+      completedGallery: new Map(),
+      activeZukanCategory: 'くだもの',
+      activeMgmtCategory: 'くだもの',
+      isEditModeActive: false
+    };
+
+    /* 設定の永続化 */
+    function saveSettingsToStorage() {
+      const data = {
+        writeMode: appState.writeMode,
+        showCrossGuide: appState.showCrossGuide,
+        showBackButton: appState.showBackButton,
+        randomOrder: appState.randomOrder,
+        persistGallery: appState.persistGallery
+      };
+      try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Failed to save settings', e);
+      }
+    }
+
+    function loadSettingsFromStorage() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.writeMode) appState.writeMode = data.writeMode;
+        if (typeof data.showCrossGuide === 'boolean') appState.showCrossGuide = data.showCrossGuide;
+        if (typeof data.showBackButton === 'boolean') appState.showBackButton = data.showBackButton;
+        if (typeof data.randomOrder === 'boolean') appState.randomOrder = data.randomOrder;
+        if (typeof data.persistGallery === 'boolean') appState.persistGallery = data.persistGallery;
+      } catch (e) {
+        console.warn('Failed to load settings', e);
+      }
+    }
+
+    /* カテゴリーの標準表示順序 */
+    const CATEGORY_ORDER = [
+      'くだもの',
+      'やさい',
+      'どうぶつ',
+      'のりもの',
+      'たべもの',
+      'みぢかなもの'
+    ];
+
+    /* 確実で偏りのないシャッフル（Fisher-Yates法） */
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    /* カテゴリーごとの順序ソート（カテゴリー順 -> プリセット順 / 五十音順） */
+    function sortWordsByCategory(wordList) {
+      return [...wordList].sort((a, b) => {
+        const catA = a.category || '';
+        const catB = b.category || '';
+        const idxA = CATEGORY_ORDER.indexOf(catA);
+        const idxB = CATEGORY_ORDER.indexOf(catB);
+        const orderA = idxA === -1 ? 999 : idxA;
+        const orderB = idxB === -1 ? 999 : idxB;
+
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        if (catA !== catB) {
+          return catA.localeCompare(catB, 'ja');
+        }
+        // 同じカテゴリー内の並び順：プリセット単語の定義順を優先
+        const presetIdxA = PRESET_WORDS.findIndex(w => w.id === a.id);
+        const presetIdxB = PRESET_WORDS.findIndex(w => w.id === b.id);
+        if (presetIdxA !== -1 && presetIdxB !== -1) {
+          return presetIdxA - presetIdxB;
+        }
+        if (presetIdxA !== -1) return -1;
+        if (presetIdxB !== -1) return 1;
+
+        return (a.name || '').localeCompare(b.name || '', 'ja');
+      });
+    }
+
+    /* ========================================================
+       音声読み上げ・再生ユーティリティ（強化版）
+       ======================================================== */
+    let cachedJapaneseVoice = null;
+    let isSpeechEngineWarmed = false;
+    const activeUtterances = new Set(); // GCによる音声中断・ドロップを完全に防止
+
+    function updateJapaneseVoice() {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        const voices = window.speechSynthesis.getVoices();
+        cachedJapaneseVoice = voices.find(v => v.lang === 'ja-JP' || v.lang === 'ja_JP' || (v.lang && v.lang.startsWith('ja'))) || null;
+      } catch (e) {}
+    }
+
+    if ('speechSynthesis' in window) {
+      updateJapaneseVoice();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateJapaneseVoice;
+      }
+    }
+
+    function warmUpSpeechEngine() {
+      if (isSpeechEngineWarmed || !('speechSynthesis' in window)) return;
+      isSpeechEngineWarmed = true;
+      try {
+        updateJapaneseVoice();
+        const dummy = new SpeechSynthesisUtterance('');
+        dummy.volume = 0;
+        window.speechSynthesis.speak(dummy);
+      } catch (e) {}
+    }
+
+    function speakText(text, rate = 1.0, shouldCancel = false) {
+      return new Promise((resolve) => {
+        if (!('speechSynthesis' in window) || !text) {
+          resolve();
+          return;
+        }
+
+        // 強制割り込み時のみcancel()を実行（シーケンス再生時はcancel()による自爆防止）
+        if (shouldCancel) {
+          try {
+            window.speechSynthesis.cancel();
+          } catch (e) {}
+        }
+
+        const uttr = new SpeechSynthesisUtterance(text);
+        uttr.lang = 'ja-JP';
+        uttr.rate = rate;
+        if (!cachedJapaneseVoice) updateJapaneseVoice();
+        if (cachedJapaneseVoice) {
+          uttr.voice = cachedJapaneseVoice;
+        }
+
+        let isDone = false;
+        const finish = () => {
+          if (!isDone) {
+            isDone = true;
+            activeUtterances.delete(uttr);
+            clearTimeout(safetyTimer);
+            resolve();
+          }
+        };
+
+        // GC参照保持
+        activeUtterances.add(uttr);
+
+        uttr.onend = () => finish();
+        uttr.onerror = (e) => {
+          console.warn('Speech error', e);
+          finish();
+        };
+
+        // タイムアウト安全網
+        const safetyTimer = setTimeout(() => {
+          finish();
+        }, Math.max(1600, text.length * 600 + 1000));
+
+        try {
+          window.speechSynthesis.speak(uttr);
+        } catch (e) {
+          console.warn('Speech speak exception', e);
+          finish();
+        }
+      });
+    }
+
+    function playAudioBlob(blob) {
+      return new Promise((resolve) => {
+        if (!blob) {
+          resolve(false);
+          return;
+        }
+        try {
+          const audio = new Audio();
+          audio.src = typeof blob === 'string' ? blob : URL.createObjectURL(blob);
+          audio.onended = () => resolve(true);
+          audio.onerror = (e) => {
+            console.warn('Audio playback error', e);
+            resolve(false);
+          };
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.warn('Audio play failed', err);
+              resolve(false);
+            });
+          }
+        } catch (e) {
+          console.warn('Audio play exception', e);
+          resolve(false);
+        }
+      });
+    }
+
+    /* ========================================================
+       初期化
+       ======================================================== */
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadSettingsFromStorage();
+      await appState.db.init();
+      await loadMasterData();
+      initHomeUI();
+      initSettingsUI();
+      initPlayUI();
+      initGalleryUI();
+      initDetailModal();
+      updateSampleView();
+      updateHomeGalleryButton();
+      updateBackButtonVisibility();
+      window.addEventListener('resize', handleWindowResize);
+    });
+
+    async function loadMasterData() {
+      const stored = await appState.db.getAllWords();
+      const existingIds = new Set(stored.map(w => w.id));
+      for (const pw of PRESET_WORDS) {
+        if (!existingIds.has(pw.id)) {
+          await appState.db.saveWord(pw);
+        }
+      }
+      const allWords = await appState.db.getAllWords();
+      appState.words = sortWordsByCategory(allWords);
+
+      // だいこんの絵文字・画像を確実に修正
+      const daikonWord = appState.words.find(w => w.id === 'w_daikon' || w.name === 'だいこん');
+      if (daikonWord) {
+        daikonWord.emoji = '🥬';
+        daikonWord.image = DAIKON_SVG;
+        await appState.db.saveWord(daikonWord);
+      }
+
+      // デフォルトですべて出題選択
+      appState.words.forEach(w => appState.selectedWordIds.add(w.id));
+
+      // 図鑑データの復元
+      const savedGallery = await appState.db.getAllGallery();
+      if (savedGallery.length > 0) {
+        savedGallery.forEach(item => {
+          appState.completedGallery.set(item.wordId, item);
+        });
+      }
+
+      const allCats = getCategories();
+      if (allCats.length > 0) {
+        appState.activeZukanCategory = allCats[0];
+        appState.activeMgmtCategory = allCats[0];
+      }
+    }
+
+    function getCategories() {
+      const cats = [];
+      CATEGORY_ORDER.forEach(c => {
+        if (appState.words.some(w => w.category === c)) {
+          cats.push(c);
+        }
+      });
+      appState.words.forEach(w => {
+        if (w.category && !cats.includes(w.category)) {
+          cats.push(w.category);
+        }
+      });
+      return cats;
+    }
+
+    /* 図鑑に書かれた単語があるカテゴリーのみを抽出（CATEGORY_ORDER順） */
+    function getWrittenCategories() {
+      const cats = [];
+      const writtenCatsSet = new Set();
+      appState.completedGallery.forEach(item => {
+        if (item.word && item.word.category) {
+          writtenCatsSet.add(item.word.category);
+        }
+      });
+      CATEGORY_ORDER.forEach(c => {
+        if (writtenCatsSet.has(c)) {
+          cats.push(c);
+        }
+      });
+      writtenCatsSet.forEach(c => {
+        if (!cats.includes(c)) {
+          cats.push(c);
+        }
+      });
+      return cats;
+    }
+
+    /* =========================================
+       1. ホーム画面の実装
+       ========================================= */
+    function initHomeUI() {
+      document.getElementById('btn-home-start').addEventListener('click', () => {
+        warmUpSpeechEngine();
+        startPlaySession();
+      });
+
+      document.getElementById('btn-home-gallery').addEventListener('click', () => {
+        if (appState.completedGallery.size === 0) return;
+        renderGalleryView();
+        showScreen('view-gallery');
+      });
+
+      // 設定ボタン（トリプルタップで設定オープン、文言変化なし）
+      let tapCount = 0;
+      let tapTimer = null;
+      const settingsTrigger = document.getElementById('btn-home-settings');
+
+      settingsTrigger.addEventListener('click', () => {
+        tapCount++;
+        if (tapCount === 1) {
+          tapTimer = setTimeout(() => {
+            tapCount = 0;
+          }, 800);
+        } else if (tapCount >= 3) {
+          clearTimeout(tapTimer);
+          tapCount = 0;
+          showScreen('view-settings');
+        }
+      });
+    }
+
+    function updateHomeGalleryButton() {
+      const btn = document.getElementById('btn-home-gallery');
+      if (appState.completedGallery.size > 0) {
+        btn.classList.remove('disabled');
+      } else {
+        btn.classList.add('disabled');
+      }
+    }
+
+    function updateBackButtonVisibility() {
+      const btn = document.getElementById('btn-play-back');
+      if (btn) {
+        btn.style.display = appState.showBackButton ? 'flex' : 'none';
+      }
+    }
+
+    /* =========================================
+       2. 設定画面の実装
+       ========================================= */
+    function initSettingsUI() {
+      document.getElementById('btn-close-settings').addEventListener('click', () => {
+        updateHomeGalleryButton();
+        updateBackButtonVisibility();
+        showScreen('view-home');
+      });
+
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.tab;
+          document.querySelectorAll('.tab-content').forEach(tc => {
+            tc.classList.remove('active');
+          });
+          document.getElementById(target).classList.add('active');
+          if (target === 'tab-words') {
+            renderManagementCategoryTabs();
+            renderManagementWordsList();
+          }
+        });
+      });
+
+      const segBtns = document.querySelectorAll('#mode-segmented .segmented-btn');
+      segBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === appState.writeMode);
+        btn.addEventListener('click', () => {
+          segBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          appState.writeMode = btn.dataset.mode;
+          saveSettingsToStorage();
+          updateSampleView();
+        });
+      });
+
+      // 戻るボタンの表示・非表示トグル
+      const backBtnToggle = document.getElementById('cfg-show-back-btn');
+      backBtnToggle.checked = appState.showBackButton;
+      backBtnToggle.addEventListener('change', (e) => {
+        appState.showBackButton = e.target.checked;
+        saveSettingsToStorage();
+        updateBackButtonVisibility();
+      });
+
+      // 十字リーダー線トグル
+      const crossToggle = document.getElementById('cfg-cross-guide');
+      crossToggle.checked = appState.showCrossGuide;
+      crossToggle.addEventListener('change', (e) => {
+        appState.showCrossGuide = e.target.checked;
+        saveSettingsToStorage();
+        updateSampleView();
+      });
+
+      // ランダム順トグル
+      const randomToggle = document.getElementById('cfg-random-order');
+      randomToggle.checked = appState.randomOrder;
+      randomToggle.addEventListener('change', (e) => {
+        appState.randomOrder = e.target.checked;
+        saveSettingsToStorage();
+      });
+
+      // 図鑑永続保存トグル（初期値: false）
+      const persistToggle = document.getElementById('cfg-persist-gallery');
+      persistToggle.checked = appState.persistGallery;
+      persistToggle.addEventListener('change', (e) => {
+        appState.persistGallery = e.target.checked;
+        saveSettingsToStorage();
+        if (!appState.persistGallery) {
+          appState.db.clearGallery();
+        }
+      });
+
+      initWordManagementUI();
+      initDataManagement();
+    }
+
+    function updateSampleView() {
+      const container = document.getElementById('sample-boxes-container');
+      container.innerHTML = '';
+
+      const sampleChars = ['あ', 'い'];
+      sampleChars.forEach((ch) => {
+        const col = document.createElement('div');
+        col.className = 'sample-col-unit';
+
+        if (appState.writeMode === 'copy') {
+          const above = document.createElement('div');
+          above.className = 'sample-copy-above';
+          above.textContent = ch;
+          col.appendChild(above);
+        }
+
+        const box = document.createElement('div');
+        box.className = 'sample-box-unit';
+
+        if (appState.showCrossGuide) {
+          const cross = document.createElement('div');
+          cross.className = 'sample-cross-guide';
+          box.appendChild(cross);
+        }
+
+        if (appState.writeMode === 'trace') {
+          const target = document.createElement('div');
+          target.className = 'sample-target-char';
+          target.textContent = ch;
+          box.appendChild(target);
+        }
+
+        col.appendChild(box);
+        container.appendChild(col);
+      });
+    }
+
+    /* 単語管理の実装 */
+    function initWordManagementUI() {
+      renderManagementCategoryTabs();
+      renderManagementWordsList();
+
+      // このカテゴリーのみ選択（他の全選択を解除し、現在のカテゴリーのみ全選択）
+      const btnOnlyThis = document.getElementById('btn-mgmt-only-this-cat');
+      if (btnOnlyThis) {
+        btnOnlyThis.addEventListener('click', () => {
+          appState.selectedWordIds.clear();
+          const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+          currentCatWords.forEach(w => appState.selectedWordIds.add(w.id));
+          renderManagementCategoryTabs();
+          renderManagementWordsList();
+        });
+      }
+
+      // このカテゴリ全選択（現在カテゴリーの全単語を追加）
+      document.getElementById('btn-mgmt-select-all').addEventListener('click', () => {
+        const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+        currentCatWords.forEach(w => appState.selectedWordIds.add(w.id));
+        renderManagementCategoryTabs();
+        renderManagementWordsList();
+      });
+
+      // このカテゴリ全解除（現在カテゴリーの全単語を解除）
+      document.getElementById('btn-mgmt-deselect-all').addEventListener('click', () => {
+        const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+        currentCatWords.forEach(w => appState.selectedWordIds.delete(w.id));
+        renderManagementCategoryTabs();
+        renderManagementWordsList();
+      });
+
+      // 全単語を選択（登録されているすべての単語を選択）
+      const btnAllWords = document.getElementById('btn-mgmt-all-words-select');
+      if (btnAllWords) {
+        btnAllWords.addEventListener('click', () => {
+          appState.words.forEach(w => appState.selectedWordIds.add(w.id));
+          renderManagementCategoryTabs();
+          renderManagementWordsList();
+        });
+      }
+
+      document.getElementById('btn-trigger-add-word').addEventListener('click', () => {
+        openWordEditModal(null, appState.activeMgmtCategory);
+      });
+
+      initWordDialog();
+    }
+
+    function renderManagementCategoryTabs() {
+      const nav = document.getElementById('mgmt-category-tabs');
+      nav.innerHTML = '';
+      const cats = getCategories();
+
+      cats.forEach(c => {
+        const catWords = appState.words.filter(w => w.category === c);
+        const selectedCount = catWords.filter(w => appState.selectedWordIds.has(w.id)).length;
+
+        const btn = document.createElement('button');
+        btn.className = 'word-mgmt-cat-btn' + (appState.activeMgmtCategory === c ? ' active' : '');
+        
+        const labelText = document.createTextNode(c);
+        btn.appendChild(labelText);
+
+        const countBadge = document.createElement('span');
+        countBadge.style.fontSize = '0.78rem';
+        countBadge.style.marginLeft = '4px';
+        countBadge.style.opacity = selectedCount > 0 ? '0.9' : '0.45';
+        countBadge.style.fontWeight = 'normal';
+        countBadge.textContent = `(${selectedCount}/${catWords.length})`;
+        btn.appendChild(countBadge);
+
+        btn.addEventListener('click', () => {
+          appState.activeMgmtCategory = c;
+          renderManagementCategoryTabs();
+          renderManagementWordsList();
+        });
+        nav.appendChild(btn);
+      });
+
+      const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+      const currentSelectedCount = currentCatWords.filter(w => appState.selectedWordIds.has(w.id)).length;
+      document.getElementById('mgmt-current-cat-title').textContent = `${appState.activeMgmtCategory} (${currentSelectedCount}/${currentCatWords.length} 選択中)`;
+      document.getElementById('label-add-word-btn').textContent = `【${appState.activeMgmtCategory}】に単語を追加`;
+    }
+
+    function renderManagementWordsList() {
+      const container = document.getElementById('mgmt-words-list');
+      container.innerHTML = '';
+
+      const currentWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+
+      currentWords.forEach(word => {
+        const row = document.createElement('div');
+        row.className = 'word-manage-row';
+
+        const left = document.createElement('div');
+        left.className = 'word-info-left';
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'word-check-input';
+        chk.checked = appState.selectedWordIds.has(word.id);
+        chk.addEventListener('change', (e) => {
+          if (e.target.checked) appState.selectedWordIds.add(word.id);
+          else appState.selectedWordIds.delete(word.id);
+          renderManagementCategoryTabs();
+        });
+
+        const thumb = document.createElement('div');
+        thumb.className = 'word-illust-thumb';
+        if (word.image) {
+          const img = document.createElement('img');
+          img.src = word.image;
+          thumb.appendChild(img);
+        } else {
+          thumb.textContent = word.emoji || '🖼️';
+        }
+
+        const name = document.createElement('span');
+        name.className = 'word-name-text';
+        name.textContent = word.name;
+
+        left.appendChild(chk);
+        left.appendChild(thumb);
+        left.appendChild(name);
+
+        const right = document.createElement('div');
+        right.className = 'word-btns-right';
+
+        const btnAudio = document.createElement('button');
+        btnAudio.className = 'btn-icon-sm';
+        btnAudio.textContent = '🔊';
+        btnAudio.title = '試聴';
+        btnAudio.addEventListener('click', async () => {
+          let played = false;
+          if (word.audio) played = await playAudioBlob(word.audio);
+          if (!played) speakText(word.name, 1.0, true);
+        });
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn-icon-sm';
+        btnEdit.textContent = '✏️';
+        btnEdit.title = '編集';
+        btnEdit.addEventListener('click', () => {
+          openWordEditModal(word, word.category);
+        });
+
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn-icon-sm';
+        btnDelete.textContent = '🗑️';
+        btnDelete.title = '削除';
+        btnDelete.addEventListener('click', async () => {
+          if (confirm(`「${word.name}」を削除しますか？`)) {
+            await appState.db.deleteWord(word.id);
+            appState.words = appState.words.filter(w => w.id !== word.id);
+            appState.selectedWordIds.delete(word.id);
+            renderManagementWordsList();
+          }
+        });
+
+        right.appendChild(btnAudio);
+        right.appendChild(btnEdit);
+        right.appendChild(btnDelete);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        container.appendChild(row);
+      });
+    }
+
+    /* 単語追加・編集モーダル（録音カウントダウン＆無音・頭切れ対策） */
+    let editingWordTarget = null;
+    let dialogRecordedAudio = null;
+    let dialogMediaRecorder = null;
+    let dialogMediaStream = null;
+    let dialogRecordedChunks = [];
+    let dialogCountdownTimer = null;
+    let dialogRecordingTimer = null;
+    let dialogRecordingSeconds = 0;
+    let isCountingDown = false;
+
+    function resetDialogRecordingState() {
+      if (dialogCountdownTimer) {
+        clearInterval(dialogCountdownTimer);
+        dialogCountdownTimer = null;
+      }
+      if (dialogRecordingTimer) {
+        clearInterval(dialogRecordingTimer);
+        dialogRecordingTimer = null;
+      }
+      isCountingDown = false;
+      if (dialogMediaRecorder && dialogMediaRecorder.state === 'recording') {
+        try { dialogMediaRecorder.stop(); } catch (e) {}
+      }
+      if (dialogMediaStream) {
+        try { dialogMediaStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        dialogMediaStream = null;
+      }
+      const recordBox = document.getElementById('dialog-record-box');
+      if (recordBox) {
+        recordBox.classList.remove('counting', 'recording-active');
+      }
+      const btnRecord = document.getElementById('btn-dialog-record');
+      if (btnRecord) {
+        btnRecord.classList.remove('btn-recording-pulse');
+        btnRecord.disabled = false;
+        btnRecord.textContent = dialogRecordedAudio ? '🎙️ 再録音' : '🎙️ 録音開始';
+      }
+    }
+
+    function initWordDialog() {
+      const modal = document.getElementById('modal-word-edit');
+      const btnCancel = document.getElementById('btn-dialog-cancel');
+      const btnSave = document.getElementById('btn-dialog-save');
+      const btnRecord = document.getElementById('btn-dialog-record');
+      const btnPlayAudio = document.getElementById('btn-dialog-play-audio');
+      const btnDeleteAudio = document.getElementById('btn-dialog-delete-audio');
+      const recordStatus = document.getElementById('dialog-record-status');
+      const recordBox = document.getElementById('dialog-record-box');
+
+      btnCancel.addEventListener('click', () => {
+        resetDialogRecordingState();
+        modal.classList.remove('open');
+      });
+
+      // 録音開始・カウントダウン・停止
+      btnRecord.addEventListener('click', async () => {
+        // 1. カウントダウン中の場合はキャンセル
+        if (isCountingDown) {
+          resetDialogRecordingState();
+          recordStatus.textContent = dialogRecordedAudio ? '録音済み ✅' : '未録音（自動音声で読み上げます）';
+          return;
+        }
+
+        // 2. 録音中の場合は停止
+        if (dialogMediaRecorder && dialogMediaRecorder.state === 'recording') {
+          dialogMediaRecorder.stop();
+          return;
+        }
+
+        // 3. 録音開始（事前マイク取得 ➔ カウントダウン 3・2・1 ➔ 録音開始）
+        btnRecord.disabled = true;
+        recordStatus.innerHTML = '<span style="color: #64748b;">マイクを準備しています...</span>';
+
+        try {
+          dialogMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (err) {
+          console.error('Recording error:', err);
+          alert('マイクの使用が許可されていません');
+          btnRecord.disabled = false;
+          recordStatus.textContent = dialogRecordedAudio ? '録音済み ✅' : '未録音（自動音声で読み上げます）';
+          return;
+        }
+
+        btnRecord.disabled = false;
+
+        let mimeType = '';
+        if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function') {
+          if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            mimeType = 'audio/mp4';
+          } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            mimeType = 'audio/webm;codecs=opus';
+          } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            mimeType = 'audio/webm';
+          }
+        }
+        const options = mimeType ? { mimeType } : {};
+        dialogMediaRecorder = new MediaRecorder(dialogMediaStream, options);
+        dialogRecordedChunks = [];
+
+        dialogMediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            dialogRecordedChunks.push(e.data);
+          }
+        };
+
+        dialogMediaRecorder.onstop = () => {
+          if (dialogRecordingTimer) {
+            clearInterval(dialogRecordingTimer);
+            dialogRecordingTimer = null;
+          }
+          if (recordBox) recordBox.classList.remove('recording-active');
+          btnRecord.classList.remove('btn-recording-pulse');
+          btnRecord.textContent = '🎙️ 再録音';
+
+          const usedType = dialogMediaRecorder.mimeType || mimeType || 'audio/mp4';
+          const blob = new Blob(dialogRecordedChunks, { type: usedType });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            dialogRecordedAudio = reader.result;
+            recordStatus.innerHTML = '<span style="color: #16a34a; font-weight: 600;">録音完了 ✅</span> <span style="font-size:0.82rem; color:#64748b;">（試聴で確認できます）</span>';
+            btnPlayAudio.style.display = 'inline-flex';
+            btnDeleteAudio.style.display = 'inline-flex';
+          };
+          reader.readAsDataURL(blob);
+
+          if (dialogMediaStream) {
+            dialogMediaStream.getTracks().forEach(t => t.stop());
+            dialogMediaStream = null;
+          }
+        };
+
+        // カウントダウン開始（3秒）
+        isCountingDown = true;
+        let count = 3;
+        recordBox.classList.add('counting');
+        btnRecord.textContent = '❌ 中止';
+        recordStatus.innerHTML = `<span class="countdown-number">${count}</span> <strong style="color:var(--primary);">声を出す準備をしてください...</strong>`;
+
+        dialogCountdownTimer = setInterval(() => {
+          count--;
+          if (count > 0) {
+            recordStatus.innerHTML = `<span class="countdown-number">${count}</span> <strong style="color:var(--primary);">声を出す準備をしてください...</strong>`;
+          } else {
+            clearInterval(dialogCountdownTimer);
+            dialogCountdownTimer = null;
+            isCountingDown = false;
+
+            // ★ 録音スタート！
+            recordBox.classList.remove('counting');
+            recordBox.classList.add('recording-active');
+            btnRecord.classList.add('btn-recording-pulse');
+            btnRecord.textContent = '⏹️ 録音を完了';
+
+            dialogRecordingSeconds = 0;
+            recordStatus.innerHTML = `<span class="pulse-dot"></span> <strong style="color:#e11d48; margin-right:4px;">どうぞ！お話しください</strong> <span style="font-size:0.85rem; color:#64748b;">(0秒 / 最大5秒)</span>`;
+
+            dialogMediaRecorder.start(100);
+
+            dialogRecordingTimer = setInterval(() => {
+              dialogRecordingSeconds++;
+              recordStatus.innerHTML = `<span class="pulse-dot"></span> <strong style="color:#e11d48; margin-right:4px;">どうぞ！お話しください</strong> <span style="font-size:0.85rem; color:#64748b;">(${dialogRecordingSeconds}秒 / 最大5秒)</span>`;
+              if (dialogRecordingSeconds >= 5) {
+                if (dialogMediaRecorder && dialogMediaRecorder.state === 'recording') {
+                  dialogMediaRecorder.stop();
+                }
+              }
+            }, 1000);
+          }
+        }, 1000);
+      });
+
+      // 録音試聴
+      btnPlayAudio.addEventListener('click', () => {
+        if (dialogRecordedAudio) playAudioBlob(dialogRecordedAudio);
+      });
+
+      // 録音削除
+      btnDeleteAudio.addEventListener('click', () => {
+        resetDialogRecordingState();
+        dialogRecordedAudio = null;
+        recordStatus.textContent = '未録音（自動音声で読み上げます）';
+        btnPlayAudio.style.display = 'none';
+        btnDeleteAudio.style.display = 'none';
+        btnRecord.textContent = '🎙️ 録音開始';
+      });
+
+      // 保存
+      btnSave.addEventListener('click', async () => {
+        resetDialogRecordingState();
+        const cat = document.getElementById('dialog-cat-input').value;
+        const name = document.getElementById('dialog-name-input').value.trim();
+        const emoji = document.getElementById('dialog-emoji-input').value.trim();
+        const fileInput = document.getElementById('dialog-file-input');
+
+        if (!name) {
+          alert('単語名（ひらがな）を入力してください');
+          return;
+        }
+
+        let imageData = editingWordTarget ? editingWordTarget.image : null;
+        if (fileInput.files.length > 0) {
+          imageData = await fileToBase64(fileInput.files[0]);
+        }
+
+        if (editingWordTarget) {
+          editingWordTarget.name = name;
+          editingWordTarget.emoji = emoji || (imageData ? '' : editingWordTarget.emoji || '📝');
+          if (imageData) editingWordTarget.image = imageData;
+          editingWordTarget.audio = dialogRecordedAudio; // nullの場合は削除反映
+
+          await appState.db.saveWord(editingWordTarget);
+          appState.words = sortWordsByCategory(appState.words);
+        } else {
+          const newWord = {
+            id: 'word_' + Date.now(),
+            category: cat,
+            name: name,
+            emoji: emoji || (imageData ? '' : '📝'),
+            image: imageData,
+            audio: dialogRecordedAudio
+          };
+          await appState.db.saveWord(newWord);
+          appState.words.push(newWord);
+          appState.words = sortWordsByCategory(appState.words);
+          appState.selectedWordIds.add(newWord.id);
+        }
+
+        soundFX.playSuccess();
+        modal.classList.remove('open');
+        renderManagementCategoryTabs();
+        renderManagementWordsList();
+      });
+    }
+
+    function openWordEditModal(word, category) {
+      resetDialogRecordingState();
+      editingWordTarget = word;
+      dialogRecordedAudio = word ? word.audio : null;
+
+      const modal = document.getElementById('modal-word-edit');
+      document.getElementById('word-dialog-title').textContent = word ? '単語の編集' : `【${category}】に単語を追加`;
+      document.getElementById('dialog-cat-input').value = category;
+      document.getElementById('dialog-name-input').value = word ? word.name : '';
+      document.getElementById('dialog-emoji-input').value = word ? word.emoji || '' : '';
+      document.getElementById('dialog-file-input').value = '';
+
+      const btnRecord = document.getElementById('btn-dialog-record');
+      const btnPlayAudio = document.getElementById('btn-dialog-play-audio');
+      const btnDeleteAudio = document.getElementById('btn-dialog-delete-audio');
+      const recordStatus = document.getElementById('dialog-record-status');
+
+      btnRecord.textContent = dialogRecordedAudio ? '🎙️ 再録音' : '🎙️ 録音開始';
+      if (dialogRecordedAudio) {
+        recordStatus.innerHTML = '<span style="color: #16a34a; font-weight: 600;">録音済み ✅</span> <span style="font-size:0.82rem; color:#64748b;">（試聴で確認できます）</span>';
+        btnPlayAudio.style.display = 'inline-flex';
+        btnDeleteAudio.style.display = 'inline-flex';
+      } else {
+        recordStatus.textContent = '未録音（自動音声で読み上げます）';
+        btnPlayAudio.style.display = 'none';
+        btnDeleteAudio.style.display = 'none';
+      }
+
+      modal.classList.add('open');
+    }
+
+    function initDataManagement() {
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const payload = {
+          words: appState.words,
+          gallery: Array.from(appState.completedGallery.values())
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hiragana_zukan_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      const importInput = document.getElementById('import-json-file');
+      document.getElementById('btn-import-json-trigger').addEventListener('click', () => importInput.click());
+      importInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (Array.isArray(data.words)) {
+              for (const w of data.words) {
+                await appState.db.saveWord(w);
+              }
+              appState.words = await appState.db.getAllWords();
+              renderManagementCategoryTabs();
+              renderManagementWordsList();
+            }
+            if (Array.isArray(data.gallery)) {
+              for (const g of data.gallery) {
+                await appState.db.saveGalleryItem(g);
+                appState.completedGallery.set(g.wordId, g);
+              }
+            }
+            updateHomeGalleryButton();
+            soundFX.playSuccess();
+            alert('データを正常に読み込みました！');
+          } catch (err) {
+            alert('ファイルの読み込みに失敗しました');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('btn-reset-gallery').addEventListener('click', async () => {
+        if (confirm('図鑑の記録をすべて初期化しますか？')) {
+          await appState.db.clearGallery();
+          appState.completedGallery.clear();
+          updateHomeGalleryButton();
+          alert('図鑑の記録を初期化しました');
+        }
+      });
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.readAsDataURL(file);
+      });
+    }
+
+    /* =========================================
+       3. プレイ画面の実装
+       ========================================= */
+    function initPlayUI() {
+      document.getElementById('btn-play-back').addEventListener('click', () => {
+        updateHomeGalleryButton();
+        showScreen('view-home');
+      });
+
+      const btnPen = document.getElementById('tool-pen');
+      const btnEraser = document.getElementById('tool-eraser');
+      const btnComplete = document.getElementById('btn-play-complete');
+
+      btnPen.addEventListener('click', () => {
+        appState.currentTool = 'pen';
+        btnPen.classList.add('selected');
+        btnEraser.classList.remove('selected');
+      });
+
+      btnEraser.addEventListener('click', () => {
+        appState.currentTool = 'eraser';
+        btnEraser.classList.add('selected');
+        btnPen.classList.remove('selected');
+      });
+
+      btnComplete.addEventListener('click', () => {
+        if (!btnComplete.classList.contains('ready')) return;
+        runCompletionSequence();
+      });
+    }
+
+    function startPlaySession(targetWords = null, startIndex = 0) {
+      let list = targetWords ? [...targetWords] : appState.words.filter(w => appState.selectedWordIds.has(w.id));
+      if (list.length === 0) {
+        alert('単語を1つ以上選択してください');
+        return;
+      }
+
+      if (appState.randomOrder) {
+        list = shuffleArray(list);
+      } else {
+        list = sortWordsByCategory(list);
+      }
+      appState.playQueue = list;
+
+      appState.currentWordIndex = startIndex;
+      appState.currentTool = 'pen';
+      document.getElementById('tool-pen').classList.add('selected');
+      document.getElementById('tool-eraser').classList.remove('selected');
+
+      updateBackButtonVisibility();
+      showScreen('view-play');
+      loadWordForPlay(appState.playQueue[appState.currentWordIndex]);
+    }
+
+    function calculateBoxSize(charCount) {
+      const BASE_SIZE = 300;
+      const availWidth = window.innerWidth - 36;
+      const availHeight = Math.floor(window.innerHeight * 0.44);
+
+      const maxByWidth = Math.floor((availWidth - 10) / Math.max(1, charCount));
+      const maxByHeight = availHeight;
+
+      let size = Math.min(BASE_SIZE, maxByWidth, maxByHeight);
+      size = Math.max(80, size);
+      return size;
+    }
+
+    function handleWindowResize() {
+      const playScreen = document.getElementById('view-play');
+      if (playScreen.classList.contains('active') && appState.playQueue.length > 0) {
+        const word = appState.playQueue[appState.currentWordIndex];
+        if (word) {
+          loadWordForPlay(word, true);
+        }
+      }
+    }
+
+    function loadWordForPlay(word, isResizing = false) {
+      document.getElementById('play-progress-badge').textContent = 
+        `${appState.currentWordIndex + 1} / ${appState.playQueue.length}`;
+
+      const illustArea = document.getElementById('play-illust-elem');
+      illustArea.innerHTML = '';
+      if (word.image) {
+        const img = document.createElement('img');
+        img.src = word.image;
+        illustArea.appendChild(img);
+      } else {
+        illustArea.textContent = word.emoji || '🖼️';
+      }
+
+      illustArea.onclick = async () => {
+        warmUpSpeechEngine();
+        let played = false;
+        if (word.audio) played = await playAudioBlob(word.audio);
+        if (!played) speakText(word.name, 1.0, true);
+      };
+
+      const chars = word.name.split('');
+      const charCount = chars.length;
+      const boxSize = calculateBoxSize(charCount);
+      appState.currentBoxSize = boxSize;
+
+      const container = document.getElementById('play-boxes-container');
+      container.innerHTML = '';
+
+      if (appState.currentLetterSlots && appState.currentLetterSlots.length > 0) {
+        appState.currentLetterSlots.forEach(s => {
+          if (s.cleanup) s.cleanup();
+        });
+      }
+
+      const oldSlots = isResizing ? [...appState.currentLetterSlots] : [];
+      appState.currentLetterSlots = [];
+      appState.activeSlotIndex = 0;
+
+      chars.forEach((ch, idx) => {
+        const col = document.createElement('div');
+        col.className = 'char-column-unit';
+
+        if (appState.writeMode === 'copy') {
+          const copyLabel = document.createElement('div');
+          copyLabel.className = 'copy-model-char';
+          copyLabel.textContent = ch;
+          copyLabel.style.width = `${boxSize}px`;
+          copyLabel.style.height = `${Math.floor(boxSize * 0.38)}px`;
+          copyLabel.style.fontSize = `${Math.floor(boxSize * 0.28)}px`;
+          col.appendChild(copyLabel);
+        }
+
+        const cell = document.createElement('div');
+        cell.className = 'grid-box-cell';
+        cell.style.width = `${boxSize}px`;
+        cell.style.height = `${boxSize}px`;
+
+        if (appState.showCrossGuide) {
+          const cross = document.createElement('div');
+          cross.className = 'cross-dashed-guide';
+          cell.appendChild(cross);
+        }
+
+        if (appState.writeMode === 'trace') {
+          const traceGuide = document.createElement('div');
+          traceGuide.className = 'trace-model-char';
+          traceGuide.textContent = ch;
+          traceGuide.style.fontSize = `${Math.floor(boxSize * 0.72)}px`;
+          cell.appendChild(traceGuide);
+        }
+
+        const canvas = document.createElement('canvas');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = boxSize * dpr;
+        canvas.height = boxSize * dpr;
+        canvas.style.width = `${boxSize}px`;
+        canvas.style.height = `${boxSize}px`;
+        canvas.className = 'drawing-canvas';
+        cell.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        col.appendChild(cell);
+        container.appendChild(col);
+
+        const slot = {
+          char: ch,
+          canvas: canvas,
+          ctx: ctx,
+          container: cell,
+          dpr: dpr,
+          boxSize: boxSize,
+          strokes: (oldSlots[idx] && oldSlots[idx].strokes) ? oldSlots[idx].strokes : []
+        };
+
+        appState.currentLetterSlots.push(slot);
+        setupCanvasInteraction(slot, idx);
+
+        if (slot.strokes.length > 0) {
+          redrawSlot(slot);
+        }
+      });
+
+      checkCompletionState();
+    }
+
+    function setupCanvasInteraction(slot, slotIdx) {
+      let isDrawing = false;
+      let currentStroke = [];
+
+      const getCoord = (e) => {
+        const rect = slot.canvas.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0].clientY);
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      };
+
+      const startDrawing = (e) => {
+        e.preventDefault();
+        try {
+          if (e.target && e.target.setPointerCapture) {
+            e.target.setPointerCapture(e.pointerId);
+          }
+        } catch (err) {}
+
+        appState.activeSlotIndex = slotIdx;
+        appState.currentLetterSlots.forEach((s, i) => {
+          s.container.classList.toggle('active-writing', i === slotIdx);
+        });
+
+        isDrawing = true;
+        currentStroke = [];
+        const pt = getCoord(e);
+        currentStroke.push(pt);
+
+        const isEraser = appState.currentTool === 'eraser';
+        if (isEraser) {
+          slot.ctx.globalCompositeOperation = 'destination-out';
+          const eraserWidth = Math.max(20, Math.floor(slot.boxSize * 0.16));
+          slot.ctx.lineWidth = eraserWidth;
+          slot.ctx.beginPath();
+          slot.ctx.arc(pt.x, pt.y, eraserWidth / 2, 0, Math.PI * 2);
+          slot.ctx.fill();
+        } else {
+          slot.ctx.globalCompositeOperation = 'source-over';
+          const penWidth = Math.max(8, Math.floor(slot.boxSize * 0.075));
+          slot.ctx.lineWidth = penWidth;
+          slot.ctx.strokeStyle = '#0f172a';
+          slot.ctx.fillStyle = '#0f172a';
+
+          slot.ctx.beginPath();
+          slot.ctx.arc(pt.x, pt.y, penWidth / 2, 0, Math.PI * 2);
+          slot.ctx.fill();
+        }
+
+        slot.ctx.beginPath();
+        slot.ctx.moveTo(pt.x, pt.y);
+      };
+
+      const moveDrawing = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pt = getCoord(e);
+        currentStroke.push(pt);
+
+        slot.ctx.lineTo(pt.x, pt.y);
+        slot.ctx.stroke();
+      };
+
+      const commitCurrentStroke = () => {
+        if (currentStroke.length > 0) {
+          const isEraser = appState.currentTool === 'eraser';
+          slot.strokes.push({
+            tool: isEraser ? 'eraser' : 'pen',
+            width: isEraser
+              ? Math.max(20, Math.floor(slot.boxSize * 0.16))
+              : Math.max(8, Math.floor(slot.boxSize * 0.075)),
+            points: [...currentStroke]
+          });
+          currentStroke = [];
+        }
+      };
+
+      const stopDrawing = (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        try {
+          if (e && e.target && e.target.releasePointerCapture && e.pointerId !== undefined) {
+            e.target.releasePointerCapture(e.pointerId);
+          }
+        } catch (err) {}
+
+        commitCurrentStroke();
+        checkCompletionState();
+      };
+
+      slot.forceCommitCurrentStroke = () => {
+        if (isDrawing) {
+          isDrawing = false;
+          commitCurrentStroke();
+          checkCompletionState();
+        }
+      };
+
+      slot.canvas.addEventListener('pointerdown', startDrawing);
+      slot.canvas.addEventListener('pointermove', moveDrawing);
+      slot.canvas.addEventListener('pointerup', stopDrawing);
+      slot.canvas.addEventListener('pointercancel', stopDrawing);
+
+      const onWindowPointerUp = (e) => {
+        if (isDrawing) stopDrawing(e);
+      };
+      window.addEventListener('pointerup', onWindowPointerUp);
+      window.addEventListener('pointercancel', onWindowPointerUp);
+
+      slot.cleanup = () => {
+        window.removeEventListener('pointerup', onWindowPointerUp);
+        window.removeEventListener('pointercancel', onWindowPointerUp);
+      };
+    }
+
+    function redrawSlot(slot) {
+      slot.ctx.clearRect(0, 0, slot.boxSize, slot.boxSize);
+
+      slot.strokes.forEach(strokeItem => {
+        const isObject = strokeItem && !Array.isArray(strokeItem) && strokeItem.points;
+        const tool = isObject ? strokeItem.tool : 'pen';
+        const pts = isObject ? strokeItem.points : strokeItem;
+        const width = isObject ? strokeItem.width : Math.max(8, Math.floor(slot.boxSize * 0.075));
+
+        if (!pts || pts.length === 0) return;
+
+        if (tool === 'eraser') {
+          slot.ctx.globalCompositeOperation = 'destination-out';
+          slot.ctx.lineWidth = width;
+        } else {
+          slot.ctx.globalCompositeOperation = 'source-over';
+          slot.ctx.lineWidth = width;
+          slot.ctx.strokeStyle = '#0f172a';
+          slot.ctx.fillStyle = '#0f172a';
+        }
+
+        if (pts.length === 1) {
+          slot.ctx.beginPath();
+          slot.ctx.arc(pts[0].x, pts[0].y, width / 2, 0, Math.PI * 2);
+          slot.ctx.fill();
+        } else {
+          slot.ctx.beginPath();
+          slot.ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) {
+            slot.ctx.lineTo(pts[i].x, pts[i].y);
+          }
+          slot.ctx.stroke();
+        }
+      });
+      slot.ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function slotHasInk(slot) {
+      try {
+        const imgData = slot.ctx.getImageData(0, 0, slot.canvas.width, slot.canvas.height);
+        const data = imgData.data;
+        let count = 0;
+        for (let i = 3; i < data.length; i += 24) {
+          if (data[i] > 30) {
+            count++;
+            if (count > 10) return true;
+          }
+        }
+        return false;
+      } catch (e) {
+        return slot.strokes.length > 0;
+      }
+    }
+
+    function checkCompletionState() {
+      const allFilled = appState.currentLetterSlots.every(s => slotHasInk(s));
+      const btn = document.getElementById('btn-play-complete');
+      if (allFilled) {
+        btn.classList.add('ready');
+      } else {
+        btn.classList.remove('ready');
+      }
+    }
+
+    async function runCompletionSequence() {
+      const completeBtn = document.getElementById('btn-play-complete');
+      completeBtn.classList.remove('ready');
+
+      // 描画中のストローク（最後の画など）を確実に確定
+      appState.currentLetterSlots.forEach(s => {
+        if (s.forceCommitCurrentStroke) s.forceCommitCurrentStroke();
+      });
+
+      warmUpSpeechEngine();
+
+      for (let i = 0; i < appState.currentLetterSlots.length; i++) {
+        const slot = appState.currentLetterSlots[i];
+        slot.container.classList.add('highlight-speaking');
+        await speakText(slot.char, 1.1, false);
+        slot.container.classList.remove('highlight-speaking');
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      // 文字読み上げと単語読み上げの間に子どもが聴き取りやすい間（250ms）を置く
+      await new Promise(r => setTimeout(r, 250));
+
+      appState.currentLetterSlots.forEach(s => s.container.classList.add('highlight-speaking'));
+      const currentWord = appState.playQueue[appState.currentWordIndex];
+
+      let playedAudio = false;
+      if (currentWord.audio) {
+        playedAudio = await playAudioBlob(currentWord.audio);
+      }
+      // 録音データがない、または再生失敗・無音の場合は必ず合成音声で単語を読み上げる
+      if (!playedAudio) {
+        await speakText(currentWord.name, 1.0, false);
+      }
+      appState.currentLetterSlots.forEach(s => s.container.classList.remove('highlight-speaking'));
+
+      // り、ん、ご、りんご の後に正解音を鳴らす
+      soundFX.playSuccess();
+      await new Promise(r => setTimeout(r, 450));
+
+      const lettersRecord = appState.currentLetterSlots.map(s => ({
+        char: s.char,
+        strokes: s.strokes,
+        dataUrl: s.canvas.toDataURL(),
+        boxSize: s.boxSize
+      }));
+
+      const galleryItem = {
+        wordId: currentWord.id,
+        word: currentWord,
+        letters: lettersRecord,
+        updatedAt: Date.now()
+      };
+      appState.completedGallery.set(currentWord.id, galleryItem);
+
+      if (appState.persistGallery) {
+        await appState.db.saveGalleryItem(galleryItem);
+      }
+      updateHomeGalleryButton();
+
+      appState.currentWordIndex++;
+      if (appState.currentWordIndex < appState.playQueue.length) {
+        loadWordForPlay(appState.playQueue[appState.currentWordIndex]);
+      } else {
+        launchConfetti();
+        soundFX.playClearFanfare();
+        setTimeout(() => {
+          appState.activeZukanCategory = currentWord.category;
+          renderGalleryView();
+          showScreen('view-gallery');
+        }, 800);
+      }
+    }
+
+    function launchConfetti() {
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+      for (let i = 0; i < 40; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        const startX = Math.random() * window.innerWidth;
+        const endX = startX + (Math.random() * 200 - 100);
+        piece.style.setProperty('--x-start', `${startX}px`);
+        piece.style.setProperty('--x-end', `${endX}px`);
+        piece.style.animationDelay = `${Math.random() * 0.4}s`;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 2600);
+      }
+    }
+
+    /* =========================================
+       4. 図鑑ビューの実装
+       ========================================= */
+    function initGalleryUI() {
+      document.getElementById('btn-gallery-back').addEventListener('click', () => {
+        updateHomeGalleryButton();
+        showScreen('view-home');
+      });
+
+      // PDF出力 / 印刷
+      document.getElementById('btn-zukan-export-pdf').addEventListener('click', () => {
+        window.print();
+      });
+
+      // 画像（PNG）保存
+      document.getElementById('btn-zukan-export-png').addEventListener('click', () => {
+        exportZukanPageAsImage();
+      });
+
+      let tapCount = 0;
+      let tapTimer = null;
+      const editBtn = document.getElementById('btn-gallery-edit');
+
+      editBtn.addEventListener('click', () => {
+        tapCount++;
+        if (tapCount === 1) {
+          tapTimer = setTimeout(() => {
+            tapCount = 0;
+          }, 600);
+        } else if (tapCount >= 3) {
+          clearTimeout(tapTimer);
+          tapCount = 0;
+          toggleEditMode();
+        }
+      });
+
+      document.getElementById('btn-zukan-play-category').addEventListener('click', () => {
+        const catWords = appState.words.filter(w => w.category === appState.activeZukanCategory);
+        if (catWords.length > 0) {
+          startPlaySession(catWords, 0);
+        }
+      });
+    }
+
+    function toggleEditMode() {
+      appState.isEditModeActive = !appState.isEditModeActive;
+      const galleryScreen = document.getElementById('view-gallery');
+      const editBtn = document.getElementById('btn-gallery-edit');
+      if (appState.isEditModeActive) {
+        galleryScreen.classList.add('edit-mode');
+        editBtn.classList.add('active-mode');
+      } else {
+        galleryScreen.classList.remove('edit-mode');
+        editBtn.classList.remove('active-mode');
+      }
+    }
+
+    function renderGalleryView() {
+      renderGalleryCategoryTabs();
+      renderGalleryPage();
+    }
+
+    /* 単語が存在するカテゴリーのみをインデックスタブに表示 */
+    function renderGalleryCategoryTabs() {
+      const tabsBar = document.getElementById('zukan-category-tabs');
+      tabsBar.innerHTML = '';
+      const writtenCats = getWrittenCategories();
+
+      if (writtenCats.length === 0) {
+        tabsBar.style.display = 'none';
+        return;
+      }
+      tabsBar.style.display = 'flex';
+
+      if (!writtenCats.includes(appState.activeZukanCategory)) {
+        appState.activeZukanCategory = writtenCats[0];
+      }
+
+      writtenCats.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'zukan-tab-btn' + (appState.activeZukanCategory === c ? ' active' : '');
+        btn.textContent = `${c}`;
+        btn.addEventListener('click', () => {
+          appState.activeZukanCategory = c;
+          renderGalleryCategoryTabs();
+          renderGalleryPage();
+        });
+        tabsBar.appendChild(btn);
+      });
+    }
+
+    function renderGalleryPage() {
+      const titleElem = document.getElementById('zukan-page-title');
+      const countElem = document.getElementById('zukan-page-count');
+      const container = document.getElementById('zukan-entries-container');
+      const placeholder = document.getElementById('zukan-empty-placeholder');
+
+      const currentCat = appState.activeZukanCategory;
+      titleElem.textContent = `${currentCat} の ページ`;
+
+      container.innerHTML = '';
+
+      const writtenItems = [];
+      appState.completedGallery.forEach(item => {
+        if (item.word.category === currentCat) {
+          writtenItems.push(item);
+        }
+      });
+
+      countElem.textContent = `${writtenItems.length} ことば`;
+
+      if (writtenItems.length === 0) {
+        container.style.display = 'none';
+        placeholder.style.display = 'flex';
+        return;
+      }
+
+      container.style.display = 'grid';
+      placeholder.style.display = 'none';
+
+      writtenItems.forEach(item => {
+        const specimen = document.createElement('div');
+        specimen.className = 'zukan-specimen-item';
+
+        const art = document.createElement('div');
+        art.className = 'zukan-specimen-art';
+        if (item.word.image) {
+          const img = document.createElement('img');
+          img.src = item.word.image;
+          art.appendChild(img);
+        } else {
+          art.textContent = item.word.emoji || '🖼️';
+        }
+
+        art.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          warmUpSpeechEngine();
+          let played = false;
+          if (item.word.audio) played = await playAudioBlob(item.word.audio);
+          if (!played) speakText(item.word.name, 1.0, true);
+        });
+
+        const name = document.createElement('div');
+        name.className = 'zukan-specimen-name';
+        name.textContent = item.word.name;
+
+        const boxes = document.createElement('div');
+        boxes.className = 'zukan-specimen-boxes';
+
+        item.letters.forEach(letter => {
+          const cell = document.createElement('div');
+          cell.className = 'zukan-letter-cell';
+          const img = document.createElement('img');
+          img.src = letter.dataUrl;
+          cell.appendChild(img);
+          boxes.appendChild(cell);
+        });
+
+        specimen.appendChild(art);
+        specimen.appendChild(name);
+        specimen.appendChild(boxes);
+
+        specimen.addEventListener('click', () => {
+          if (appState.isEditModeActive) {
+            if (confirm(`「${item.word.name}」を書き直しますか？`)) {
+              toggleEditMode();
+              startPlaySession([item.word], 0);
+            }
+          } else {
+            openDetailModal(item);
+          }
+        });
+
+        container.appendChild(specimen);
+      });
+    }
+
+    /* 図鑑ページを画像（PNG）として高精細エクスポート */
+    async function exportZukanPageAsImage() {
+      const currentCat = appState.activeZukanCategory;
+      const writtenItems = [];
+      appState.completedGallery.forEach(item => {
+        if (item.word.category === currentCat) writtenItems.push(item);
+      });
+
+      if (writtenItems.length === 0) {
+        alert('このページにはまだ単語がありません');
+        return;
+      }
+
+      // レンダリング用オフスクリーンCanvas作成
+      const canvas = document.createElement('canvas');
+      const width = 1200;
+      const cols = 3;
+      const rows = Math.ceil(writtenItems.length / cols);
+      const rowHeight = 310;
+      const headerHeight = 150;
+      const height = headerHeight + rows * rowHeight + 60;
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      const fontBase = "'Klee One', 'UD デジタル 教科書体 N-R', 'Hiragino Sans', sans-serif";
+
+      // 背景（図鑑の紙色）
+      ctx.fillStyle = '#fdfbf7';
+      ctx.fillRect(0, 0, width, height);
+
+      // 上部ヘッダー（画面の誌面と100%一致）
+      ctx.fillStyle = '#1e293b';
+      ctx.font = `bold 42px ${fontBase}`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${currentCat} の ページ`, 60, 65);
+
+      // カウントバッジ
+      const countText = `${writtenItems.length} ことば`;
+      ctx.font = `bold 22px ${fontBase}`;
+      const countMetrics = ctx.measureText(countText);
+      const badgePaddingX = 16;
+      const badgePaddingY = 7;
+      const badgeW = countMetrics.width + badgePaddingX * 2;
+      const badgeH = 34;
+      const badgeX = width - 60 - badgeW;
+      const badgeY = 65 - badgeH / 2;
+
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 17) : ctx.rect(badgeX, badgeY, badgeW, badgeH);
+      ctx.fill();
+
+      ctx.fillStyle = '#64748b';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(countText, badgeX + badgeW / 2, 65);
+
+      // 区切り線（画面通りの破線）
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(60, 110);
+      ctx.lineTo(width - 60, 110);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const colWidth = (width - 120) / cols;
+
+      // アイテムを順次描画
+      for (let i = 0; i < writtenItems.length; i++) {
+        const item = writtenItems[i];
+        const c = i % cols;
+        const r = Math.floor(i / cols);
+
+        const xCenter = 60 + c * colWidth + colWidth / 2;
+        const yTop = headerHeight + r * rowHeight + 10;
+
+        // イラスト描画
+        if (item.word.image) {
+          try {
+            const img = await loadImageAsync(item.word.image);
+            ctx.drawImage(img, xCenter - 55, yTop, 110, 110);
+          } catch (e) {
+            ctx.font = '72px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(item.word.emoji || '🖼️', xCenter, yTop + 85);
+          }
+        } else {
+          ctx.font = '72px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText(item.word.emoji || '🖼️', xCenter, yTop + 85);
+        }
+
+        // 単語名（画面通りのスタイル）
+        ctx.fillStyle = '#334155';
+        ctx.font = `600 28px ${fontBase}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(item.word.name, xCenter, yTop + 155);
+
+        // 手書き文字マス目描画（画面通りの枠結合 rectangle）
+        const charCount = item.letters.length;
+        const cellSize = 56;
+        const totalBoxWidth = charCount * cellSize;
+        const boxLeft = xCenter - totalBoxWidth / 2;
+        const boxTop = yTop + 175;
+
+        // マス目全体の白い背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(boxLeft, boxTop, totalBoxWidth, cellSize);
+
+        // 外枠（境界線結合）
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(boxLeft, boxTop, totalBoxWidth, cellSize);
+
+        // マス目間の区切り線
+        for (let j = 1; j < charCount; j++) {
+          const divX = boxLeft + j * cellSize;
+          ctx.beginPath();
+          ctx.moveTo(divX, boxTop);
+          ctx.lineTo(divX, boxTop + cellSize);
+          ctx.stroke();
+        }
+
+        // 各マスの手書き画像描画
+        for (let j = 0; j < charCount; j++) {
+          const cellLeft = boxLeft + j * cellSize;
+          if (item.letters[j] && item.letters[j].dataUrl) {
+            try {
+              const letterImg = await loadImageAsync(item.letters[j].dataUrl);
+              ctx.drawImage(letterImg, cellLeft, boxTop, cellSize, cellSize);
+            } catch (e) {}
+          }
+        }
+      }
+
+      // ダウンロードリンク発火
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `hiragana_zukan_${currentCat}.png`;
+      a.click();
+    }
+
+    function loadImageAsync(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = (e) => reject(e);
+        img.src = src;
+      });
+    }
+
+    /* =========================================
+       5. 図鑑詳細モーダルの実装（筆跡リプレイ付き）
+       ========================================= */
+    function initDetailModal() {
+      const modal = document.getElementById('modal-detail');
+      document.getElementById('btn-modal-close').addEventListener('click', () => {
+        modal.classList.remove('open');
+      });
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('open');
+        }
+      });
+    }
+
+    function openDetailModal(item) {
+      const modal = document.getElementById('modal-detail');
+      const illustArea = document.getElementById('modal-illust');
+      illustArea.innerHTML = '';
+      if (item.word.image) {
+        const img = document.createElement('img');
+        img.src = item.word.image;
+        illustArea.appendChild(img);
+      } else {
+        illustArea.textContent = item.word.emoji || '🖼️';
+      }
+
+      illustArea.onclick = async () => {
+        warmUpSpeechEngine();
+        let played = false;
+        if (item.word.audio) played = await playAudioBlob(item.word.audio);
+        if (!played) speakText(item.word.name, 1.0, true);
+      };
+
+      document.getElementById('modal-title').textContent = item.word.name;
+
+      const lettersContainer = document.getElementById('modal-letters');
+      lettersContainer.innerHTML = '';
+      item.letters.forEach(letter => {
+        const cell = document.createElement('div');
+        cell.className = 'modal-letter-cell';
+        const img = document.createElement('img');
+        img.src = letter.dataUrl;
+        cell.appendChild(img);
+
+        cell.addEventListener('click', async () => {
+          warmUpSpeechEngine();
+          await speakText(letter.char, 1.2, true);
+        });
+
+        lettersContainer.appendChild(cell);
+      });
+
+      document.getElementById('btn-modal-replay').onclick = () => {
+        replayStrokesAnimation(item);
+      };
+
+      document.getElementById('btn-modal-rewrite').onclick = () => {
+        modal.classList.remove('open');
+        startPlaySession([item.word], 0);
+      };
+
+      modal.classList.add('open');
+    }
+
+    async function replayStrokesAnimation(item) {
+      const lettersContainer = document.getElementById('modal-letters');
+      lettersContainer.innerHTML = '';
+
+      const canvases = [];
+      item.letters.forEach(letter => {
+        const cell = document.createElement('div');
+        cell.className = 'modal-letter-cell';
+        const canvas = document.createElement('canvas');
+        canvas.width = 160;
+        canvas.height = 160;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        cell.appendChild(canvas);
+        lettersContainer.appendChild(cell);
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(2, 2);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        canvases.push({ canvas, ctx, strokes: letter.strokes || [], origSize: letter.boxSize || 300 });
+      });
+
+      for (const itemSlot of canvases) {
+        const origSize = itemSlot.origSize || 300;
+        const scale = 80 / origSize;
+
+        for (const strokeItem of itemSlot.strokes) {
+          const isObject = strokeItem && !Array.isArray(strokeItem) && strokeItem.points;
+          const tool = isObject ? strokeItem.tool : 'pen';
+          const pts = isObject ? strokeItem.points : strokeItem;
+          const baseWidth = isObject ? strokeItem.width : Math.max(8, Math.floor(origSize * 0.075));
+          const strokeWidth = Math.max(tool === 'eraser' ? 6 : 3, Math.floor(baseWidth * scale));
+
+          if (!pts || pts.length === 0) continue;
+
+          if (tool === 'eraser') {
+            itemSlot.ctx.globalCompositeOperation = 'destination-out';
+            itemSlot.ctx.lineWidth = strokeWidth;
+          } else {
+            itemSlot.ctx.globalCompositeOperation = 'source-over';
+            itemSlot.ctx.lineWidth = strokeWidth;
+            itemSlot.ctx.strokeStyle = '#0f172a';
+            itemSlot.ctx.fillStyle = '#0f172a';
+          }
+
+          if (pts.length === 1) {
+            itemSlot.ctx.beginPath();
+            itemSlot.ctx.arc(pts[0].x * scale, pts[0].y * scale, strokeWidth / 2, 0, Math.PI * 2);
+            itemSlot.ctx.fill();
+            await new Promise(r => setTimeout(r, 40));
+          } else {
+            itemSlot.ctx.beginPath();
+            itemSlot.ctx.moveTo(pts[0].x * scale, pts[0].y * scale);
+            for (let i = 1; i < pts.length; i++) {
+              itemSlot.ctx.lineTo(pts[i].x * scale, pts[i].y * scale);
+              itemSlot.ctx.stroke();
+              await new Promise(r => setTimeout(r, 16));
+            }
+          }
+        }
+        itemSlot.ctx.globalCompositeOperation = 'source-over';
+      }
+    }
+
+    /* ========================================================
+       画面切り替え共通関数
+       ======================================================== */
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>
