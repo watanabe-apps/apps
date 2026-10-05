@@ -2439,9 +2439,40 @@
     }
 
     /* ========================================================
+       ダブルタップ・ピンチズーム拡大防止
+       ======================================================== */
+    function preventDoubleTapZoom() {
+      let lastTouchEndTime = 0;
+      document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        const isInput = ['INPUT', 'TEXTAREA'].includes(e.target.tagName);
+        const isSettingsBtn = e.target.closest('#btn-home-settings');
+        if (now - lastTouchEndTime <= 350) {
+          if (!isInput && !isSettingsBtn) {
+            e.preventDefault();
+          }
+        }
+        lastTouchEndTime = now;
+      }, { passive: false });
+
+      // iOS Safari等のピンチズーム防止
+      document.addEventListener('gesturestart', (e) => e.preventDefault());
+      document.addEventListener('gesturechange', (e) => e.preventDefault());
+      document.addEventListener('gestureend', (e) => e.preventDefault());
+
+      // ダブルクリック防止
+      document.addEventListener('dblclick', (e) => {
+        if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
+
+    /* ========================================================
        初期化
        ======================================================== */
     window.addEventListener('DOMContentLoaded', async () => {
+      preventDoubleTapZoom();
       loadSettingsFromStorage();
       await appState.db.init();
       await loadMasterData();
@@ -2556,9 +2587,15 @@
       // 設定ボタン（トリプルタップで設定オープン、文言変化なし）
       let tapCount = 0;
       let tapTimer = null;
+      let lastTapTime = 0;
       const settingsTrigger = document.getElementById('btn-home-settings');
 
-      settingsTrigger.addEventListener('click', () => {
+      function triggerSettingsTap(e) {
+        if (e && e.cancelable) e.preventDefault();
+        const now = Date.now();
+        if (now - lastTapTime < 80) return;
+        lastTapTime = now;
+
         tapCount++;
         if (tapCount === 1) {
           tapTimer = setTimeout(() => {
@@ -2569,7 +2606,9 @@
           tapCount = 0;
           showScreen('view-settings');
         }
-      });
+      }
+
+      settingsTrigger.addEventListener('pointerdown', triggerSettingsTap);
     }
 
     function updateHomeGalleryButton() {
