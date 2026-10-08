@@ -47,6 +47,8 @@
   let laserLine, pointerDot;
 
   let uiMesh, uiCanvas, uiCtx, uiTexture;
+  let isUIMinimized = false;
+  let isDraggingUI = false;
 
   let isPlaced = false;
   let isRunning = false;
@@ -324,6 +326,8 @@
 
     controller = renderer.xr.getController(0);
     controller.addEventListener('selectstart', onSelectStart);
+    controller.addEventListener('selectend', onSelectEnd);
+    controller.addEventListener('squeezestart', onSqueezeStart); // グリップボタンでUI呼び出し
     scene.add(controller);
 
     const laserGeo = new THREE.BufferGeometry().setFromPoints([
@@ -359,96 +363,131 @@
   }
 
   const uiHitBoxes = [
-    { id: 'btn_start', x: 40, y: 30, w: 220, h: 65 },
-    { id: 'btn_repose', x: 280, y: 30, w: 200, h: 65 },
-    { id: 'btn_mode', x: 40, y: 120, w: 440, h: 60 },
-    { id: 'btn_diff', x: 40, y: 200, w: 440, h: 60 },
-    { id: 'width_minus', x: 260, y: 280, w: 65, h: 60 },
-    { id: 'width_plus', x: 415, y: 280, w: 65, h: 60 },
-    { id: 'btn_highlight', x: 40, y: 360, w: 440, h: 60 },
-    { id: 'dim_minus', x: 740, y: 120, w: 65, h: 60 },
-    { id: 'dim_plus', x: 910, y: 120, w: 65, h: 60 },
-    { id: 'btn_bring_ui', x: 540, y: 360, w: 440, h: 60 }
+    { id: 'btn_start', x: 40, y: 25, w: 200, h: 55 },
+    { id: 'btn_repose', x: 260, y: 25, w: 180, h: 55 },
+    { id: 'btn_hide', x: 800, y: 25, w: 180, h: 55 },
+    { id: 'btn_mode', x: 40, y: 110, w: 440, h: 55 },
+    { id: 'btn_diff', x: 40, y: 180, w: 440, h: 55 },
+    { id: 'width_minus', x: 260, y: 250, w: 65, h: 55 },
+    { id: 'width_plus', x: 415, y: 250, w: 65, h: 55 },
+    { id: 'btn_highlight', x: 40, y: 320, w: 440, h: 55 },
+    { id: 'dim_minus', x: 740, y: 110, w: 65, h: 55 },
+    { id: 'dim_plus', x: 910, y: 110, w: 65, h: 55 },
+    { id: 'btn_bring_ui', x: 540, y: 320, w: 440, h: 55 }
   ];
 
   function renderCanvasUI() {
     const ctx = uiCtx;
     ctx.clearRect(0, 0, 1024, 512);
 
-    ctx.fillStyle = 'rgba(15, 20, 25, 0.92)';
-    ctx.strokeStyle = '#00e676';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.roundRect(10, 10, 1004, 492, 24);
-    ctx.fill();
-    ctx.stroke();
+    if (isUIMinimized) {
+      // 最小化時のコンパクト表示
+      ctx.fillStyle = 'rgba(15, 20, 25, 0.95)';
+      ctx.strokeStyle = '#00e676';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.roundRect(40, 120, 944, 272, 36);
+      ctx.fill();
+      ctx.stroke();
 
-    ctx.fillStyle = isRunning ? '#ff5252' : '#00e676';
-    ctx.beginPath();
-    ctx.roundRect(40, 30, 220, 65, 12);
-    ctx.fill();
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 30px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(isRunning ? '■ 停止' : '▶ スタート', 150, 73);
+      ctx.fillStyle = '#00e676';
+      ctx.font = 'bold 54px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚙ 設定UIを表示', 512, 275);
+    } else {
+      // 通常展開時のフル表示
+      ctx.fillStyle = 'rgba(15, 20, 25, 0.94)';
+      ctx.strokeStyle = '#00e676';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(10, 10, 1004, 492, 24);
+      ctx.fill();
+      ctx.stroke();
 
-    ctx.fillStyle = '#37474f';
-    ctx.beginPath();
-    ctx.roundRect(280, 30, 200, 65, 12);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('位置再設定', 380, 72);
+      // ヘッダー部ドラッグ案内
+      ctx.fillStyle = '#546e7a';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('≡ 余白をトリガーで掴んでドラッグ移動', 550, 60);
 
-    drawButton(ctx, 40, 120, 440, 60, `モード: ${currentMode === 'signal' ? '信号あり' : '信号なし'}`);
-    const diffText = difficulty === 'easy' ? '難易度: かんたん (8.5s)' : difficulty === 'normal' ? '難易度: ふつう (5.5s)' : '難易度: むずかしい (3.5s)';
-    drawButton(ctx, 40, 200, 440, 60, diffText);
+      // 上部メインボタン
+      ctx.fillStyle = isRunning ? '#ff5252' : '#00e676';
+      ctx.beginPath();
+      ctx.roundRect(40, 25, 200, 55, 10);
+      ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText(isRunning ? '■ 停止' : '▶ スタート', 140, 63);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`横断幅: ${roadDepth.toFixed(1)}m`, 40, 320);
-    drawButton(ctx, 260, 280, 65, 60, '－');
-    drawButton(ctx, 415, 280, 65, 60, '＋');
+      ctx.fillStyle = '#37474f';
+      ctx.beginPath();
+      ctx.roundRect(260, 25, 180, 55, 10);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('位置再設定', 350, 61);
 
-    drawButton(ctx, 40, 360, 440, 60, `灯器拡大: ${isSignalHighlighted ? 'ON' : 'OFF'}`);
+      // 非表示（最小化）ボタン
+      ctx.fillStyle = '#b71c1c';
+      ctx.beginPath();
+      ctx.roundRect(800, 25, 180, 55, 10);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('✕ 非表示', 890, 61);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`背景の暗さ: ${backgroundDim}%`, 540, 160);
-    drawButton(ctx, 740, 120, 65, 60, '－');
-    drawButton(ctx, 910, 120, 65, 60, '＋');
+      // 各種設定ボタン
+      drawButton(ctx, 40, 110, 440, 55, `モード: ${currentMode === 'signal' ? '信号あり' : '信号なし'}`);
+      const diffText = difficulty === 'easy' ? '難易度: かんたん (8.5s)' : difficulty === 'normal' ? '難易度: ふつう (5.5s)' : '難易度: むずかしい (3.5s)';
+      drawButton(ctx, 40, 180, 440, 55, diffText);
 
-    ctx.fillStyle = '#1e282d';
-    ctx.beginPath();
-    ctx.roundRect(540, 200, 440, 120, 14);
-    ctx.fill();
-    ctx.fillStyle = '#90a4ae';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('首振り安全確認', 760, 235);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`横断幅: ${roadDepth.toFixed(1)}m`, 40, 287);
+      drawButton(ctx, 260, 250, 65, 55, '－');
+      drawButton(ctx, 415, 250, 65, 55, '＋');
 
-    ctx.fillStyle = checkedLeft ? '#2e7d32' : '#455a64';
-    ctx.beginPath();
-    ctx.roundRect(570, 255, 170, 45, 8);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.fillText(checkedLeft ? '左確認済' : '左未確認', 655, 285);
+      drawButton(ctx, 40, 320, 440, 55, `灯器拡大: ${isSignalHighlighted ? 'ON' : 'OFF'}`);
 
-    ctx.fillStyle = checkedRight ? '#2e7d32' : '#455a64';
-    ctx.beginPath();
-    ctx.roundRect(780, 255, 170, 45, 8);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.fillText(checkedRight ? '右確認済' : '右未確認', 865, 285);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`背景の暗さ: ${backgroundDim}%`, 540, 147);
+      drawButton(ctx, 740, 110, 65, 55, '－');
+      drawButton(ctx, 910, 110, 65, 55, '＋');
 
-    drawButton(ctx, 540, 360, 440, 60, 'UIを目の前に呼ぶ');
+      // 首振りステータス
+      ctx.fillStyle = '#1e282d';
+      ctx.beginPath();
+      ctx.roundRect(540, 180, 440, 115, 12);
+      ctx.fill();
+      ctx.fillStyle = '#90a4ae';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('首振り安全確認', 760, 212);
 
-    ctx.fillStyle = '#78909c';
-    ctx.font = '18px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(isPlaced ? '道路設置済 (床を歩いて横断)' : 'トリガーまたはボタンで道路を足元に設置', 512, 475);
+      ctx.fillStyle = checkedLeft ? '#2e7d32' : '#455a64';
+      ctx.beginPath();
+      ctx.roundRect(570, 230, 170, 45, 8);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillText(checkedLeft ? '左確認済' : '左未確認', 655, 260);
+
+      ctx.fillStyle = checkedRight ? '#2e7d32' : '#455a64';
+      ctx.beginPath();
+      ctx.roundRect(780, 230, 170, 45, 8);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillText(checkedRight ? '右確認済' : '右未確認', 865, 260);
+
+      drawButton(ctx, 540, 320, 440, 55, 'UIを目の前に呼ぶ');
+
+      ctx.fillStyle = '#78909c';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(isPlaced ? '道路設置済 (床を歩いて横断) / グリップボタンでUI呼び出し' : 'トリガーで道路設置 / グリップボタンでUI呼び出し', 512, 470);
+    }
 
     uiTexture.needsUpdate = true;
   }
@@ -463,9 +502,21 @@
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
+    ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(text, x + w / 2, y + h / 2 + 8);
+    ctx.fillText(text, x + w / 2, y + h / 2 + 7);
+  }
+
+  function toggleUIMinimize() {
+    isUIMinimized = !isUIMinimized;
+    if (isUIMinimized) {
+      uiMesh.geometry.dispose();
+      uiMesh.geometry = new THREE.PlaneGeometry(0.35, 0.12);
+    } else {
+      uiMesh.geometry.dispose();
+      uiMesh.geometry = new THREE.PlaneGeometry(1.2, 0.6);
+    }
+    renderCanvasUI();
   }
 
   function bringUIToFront() {
@@ -475,18 +526,28 @@
     camDir.y = 0;
     camDir.normalize();
 
+    const dist = isUIMinimized ? 0.9 : 1.2;
     uiMesh.position.set(
-      camPos.x + camDir.x * 1.2,
+      camPos.x + camDir.x * dist,
       camPos.y - 0.1,
-      camPos.z + camDir.z * 1.2
+      camPos.z + camDir.z * dist
     );
     uiMesh.lookAt(camPos.x, camPos.y - 0.1, camPos.z);
   }
 
+  function onSqueezeStart() {
+    // グリップボタンを握るとUIを正面に呼び出し（最小化中なら展開）
+    initAudio();
+    if (isUIMinimized) {
+      toggleUIMinimize();
+    }
+    bringUIToFront();
+  }
+
   function onSelectStart() {
     initAudio();
-
     if (!controller) return;
+
     const tempMatrix = new THREE.Matrix4();
     tempMatrix.identity().extractRotation(controller.matrixWorld);
 
@@ -496,20 +557,41 @@
     const intersects = raycaster.intersectObject(uiMesh);
 
     if (intersects.length > 0) {
+      if (isUIMinimized) {
+        // 最小化時はクリックで展開
+        toggleUIMinimize();
+        return;
+      }
+
       const uv = intersects[0].uv;
       const cx = uv.x * 1024;
       const cy = (1 - uv.y) * 512;
 
+      let clickedButton = false;
       for (const btn of uiHitBoxes) {
         if (cx >= btn.x && cx <= btn.x + btn.w && cy >= btn.y && cy <= btn.y + btn.h) {
           handleUIButton(btn.id);
+          clickedButton = true;
           break;
         }
+      }
+
+      // ボタン以外のパネル余白をクリックした場合はドラッグ開始
+      if (!clickedButton) {
+        isDraggingUI = true;
+        controller.attach(uiMesh);
       }
     } else {
       if (!isPlaced && reticle.visible) {
         anchorRoadToReticle();
       }
+    }
+  }
+
+  function onSelectEnd() {
+    if (isDraggingUI) {
+      isDraggingUI = false;
+      scene.attach(uiMesh);
     }
   }
 
@@ -522,6 +604,9 @@
         break;
       case 'btn_repose':
         anchorRoadToUserFeet();
+        break;
+      case 'btn_hide':
+        toggleUIMinimize();
         break;
       case 'btn_mode':
         currentMode = (currentMode === 'signal') ? 'no-signal' : 'signal';
@@ -1216,7 +1301,6 @@
         const halfDepth = roadDepth * 0.5;
         const goalThresholdZ = (currentSide === 'near') ? -(halfDepth - 0.25) : (halfDepth - 0.25);
 
-        // 歩道へ戻った場合は横断状態を安全にリセット
         if (currentSide === 'near' && localPlayerPos.z >= halfDepth) {
           isCrossing = false;
           isOffCrosswalkWarned = false;
@@ -1225,7 +1309,7 @@
           isOffCrosswalkWarned = false;
         }
 
-        // 1. 到達判定（対岸到達時は即座に横断完了とし、方向を反転して終了）
+        // 1. 到達判定
         let reached = false;
         if (isCrossing && !isCooldown) {
           if (currentSide === 'near' && localPlayerPos.z <= goalThresholdZ) {
