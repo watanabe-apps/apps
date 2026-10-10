@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Weight Perception</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 画面のスクロールやバウンス、長押し選択を完全に無効化 */
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0f172a; /* 深みのあるスレートネイビー */
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="relative w-screen h-screen bg-slate-900">
+
+  <!-- 描画用フルスクリーンキャンバス -->
+  <canvas id="stage"></canvas>
+
+  <!-- 言葉を一切使わない幾何学アイコンによるシーン切り替えタブ -->
+  <div class="absolute top-6 left-1/2 -translate-x-1/2 flex items-center p-1.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 backdrop-blur-md shadow-xl gap-2 z-10">
+    <!-- シーン1: 3つの円アイコン -->
+    <button id="tabScene1" class="px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 bg-blue-600/30 text-blue-300 border border-blue-500/40" aria-label="Scene 1">
+      <span class="w-2.5 h-2.5 rounded-full bg-current"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-current"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-current"></span>
+    </button>
+    <!-- シーン2: 1つの円アイコン -->
+    <button id="tabScene2" class="px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center text-slate-400 hover:text-slate-200 border border-transparent" aria-label="Scene 2">
+      <span class="w-3.5 h-3.5 rounded-full bg-current"></span>
+    </button>
+  </div>
+
+  <script>
+    // Web Audio APIによる自律型サウンドフィードバック（外部音源なし）
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // 触れた瞬間の極めて控えめなソフトクリック音
+    function playTouchSound() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const now = audioCtx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.05);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } catch (e) {}
+    }
+
+    // 着地（落下完了時）のトンッという低周波音
+    function playLandSound() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const now = audioCtx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(95, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } catch (e) {}
+    }
+
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    let width = 0;
+    let height = 0;
+    let floorY = 0;
+    let circleRadius = 55;
+
+    let currentScene = 1; // 1: 3つの円, 2: 1つの円（毎回ランダム）
+    const weightRatios = [4.0, 1.0, 0.25]; // 4倍（超軽快）, 1倍（基準）, 1/4倍（超重厚）
+
+    // シーン1: 3つの円（固定の重さ対比: 4倍, 1倍, 1/4倍）
+    const scene1Circles = [
+      { id: 0, x: 0, y: 0, targetX: 0, floorY: 0, vy: 0, ratio: 4.0, isDragging: false, pointerId: null, dragStartY: 0, circleStartY: 0, playedLandSound: true },
+      { id: 1, x: 0, y: 0, targetX: 0, floorY: 0, vy: 0, ratio: 1.0, isDragging: false, pointerId: null, dragStartY: 0, circleStartY: 0, playedLandSound: true },
+      { id: 2, x: 0, y: 0, targetX: 0, floorY: 0, vy: 0, ratio: 0.25, isDragging: false, pointerId: null, dragStartY: 0, circleStartY: 0, playedLandSound: true }
+    ];
+
+    // シーン2: 1つの円（触るたびに重さが完全ランダム決定）
+    const scene2Circles = [
+      { id: 10, x: 0, y: 0, targetX: 0, floorY: 0, vy: 0, ratio: 1.0, isDragging: false, pointerId: null, dragStartY: 0, circleStartY: 0, playedLandSound: true }
+    ];
+
+    function getActiveCircles() {
+      return currentScene === 1 ? scene1Circles : scene2Circles;
+    }
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+
+      circleRadius = Math.min(width * 0.09, height * 0.09, 60);
+      floorY = height * 0.82;
+
+      // シーン1の配置（3つ均等）
+      scene1Circles[0].targetX = width * 0.22;
+      scene1Circles[1].targetX = width * 0.50;
+      scene1Circles[2].targetX = width * 0.78;
+      scene1Circles.forEach(c => {
+        c.x = c.targetX;
+        c.floorY = floorY;
+        if (!c.isDragging && c.y > floorY) c.y = floorY;
+      });
+
+      // シーン2の配置（中央1つ）
+      scene2Circles[0].targetX = width * 0.50;
+      scene2Circles[0].x = scene2Circles[0].targetX;
+      scene2Circles[0].floorY = floorY;
+      if (!scene2Circles[0].isDragging && scene2Circles[0].y > floorY) {
+        scene2Circles[0].y = floorY;
+      }
+    }
+
+    function handlePointerDown(e) {
+      initAudio();
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const activeCircles = getActiveCircles();
+
+      for (let i = 0; i < activeCircles.length; i++) {
+        const c = activeCircles[i];
+        if (c.isDragging) continue;
+
+        const dist = Math.hypot(px - c.x, py - c.y);
+        if (dist <= circleRadius * 1.4) {
+          // シーン2の場合、触った瞬間に重さ（比率）をランダム抽選（同じ値が続いてもOK）
+          if (currentScene === 2) {
+            const randomIndex = Math.floor(Math.random() * weightRatios.length);
+            c.ratio = weightRatios[randomIndex];
+          }
+
+          c.isDragging = true;
+          c.pointerId = e.pointerId;
+          c.dragStartY = py;
+          c.circleStartY = c.y;
+          c.vy = 0;
+          c.playedLandSound = false;
+          playTouchSound();
+          break;
+        }
+      }
+    }
+
+    function handlePointerMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      const py = e.clientY - rect.top;
+      const activeCircles = getActiveCircles();
+
+      for (let i = 0; i < activeCircles.length; i++) {
+        const c = activeCircles[i];
+        if (c.isDragging && c.pointerId === e.pointerId) {
+          const deltaY = py - c.dragStartY;
+          if (deltaY < 0) {
+            // 上方向：画面天井の制限を撤廃し、画面外（上空）へ突き抜けて上がれるように計算
+            c.y = c.circleStartY + deltaY * c.ratio;
+          } else {
+            // 下方向：床より下にはめり込まないよう制限
+            c.y = Math.min(c.floorY, c.circleStartY + deltaY);
+          }
+        }
+      }
+    }
+
+    function handlePointerUp(e) {
+      const activeCircles = getActiveCircles();
+      for (let i = 0; i < activeCircles.length; i++) {
+        const c = activeCircles[i];
+        if (c.isDragging && c.pointerId === e.pointerId) {
+          c.isDragging = false;
+          c.pointerId = null;
+          c.vy = 0;
+        }
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown, { passive: false });
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp, { passive: false });
+    window.addEventListener('pointercancel', handlePointerUp, { passive: false });
+
+    const tabScene1 = document.getElementById('tabScene1');
+    const tabScene2 = document.getElementById('tabScene2');
+
+    function switchScene(sceneNum) {
+      if (currentScene === sceneNum) return;
+      currentScene = sceneNum;
+      initAudio();
+      playTouchSound();
+
+      // 切り替え時に全ボールを床にリセット
+      [...scene1Circles, ...scene2Circles].forEach(c => {
+        c.isDragging = false;
+        c.pointerId = null;
+        c.y = floorY;
+        c.vy = 0;
+      });
+
+      // タブボタンスタイルのトグル切り替え
+      if (currentScene === 1) {
+        tabScene1.className = 'px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 bg-blue-600/30 text-blue-300 border border-blue-500/40';
+        tabScene2.className = 'px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center text-slate-400 hover:text-slate-200 border border-transparent';
+      } else {
+        tabScene1.className = 'px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-1.5 text-slate-400 hover:text-slate-200 border border-transparent';
+        tabScene2.className = 'px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center bg-blue-600/30 text-blue-300 border border-blue-500/40';
+      }
+    }
+
+    tabScene1.addEventListener('click', (e) => {
+      e.stopPropagation();
+      switchScene(1);
+    });
+
+    tabScene2.addEventListener('click', (e) => {
+      e.stopPropagation();
+      switchScene(2);
+    });
+
+    const gravity = 1.35;
+    const bounceDamping = 0.38;
+
+    function updatePhysics() {
+      const activeCircles = getActiveCircles();
+      for (let i = 0; i < activeCircles.length; i++) {
+        const c = activeCircles[i];
+
+        if (!c.isDragging) {
+          if (c.y < c.floorY) {
+            c.vy += gravity;
+            c.y += c.vy;
+
+            if (c.y >= c.floorY) {
+              c.y = c.floorY;
+              if (!c.playedLandSound && Math.abs(c.vy) > 2) {
+                playLandSound();
+                c.playedLandSound = true;
+              }
+              c.vy = -c.vy * bounceDamping;
+              if (Math.abs(c.vy) < 1.0) {
+                c.vy = 0;
+              }
+            }
+          } else {
+            c.y = c.floorY;
+            c.vy = 0;
+          }
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+
+      // 床のライン
+      ctx.save();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(width * 0.12, floorY + circleRadius);
+      ctx.lineTo(width * 0.88, floorY + circleRadius);
+      ctx.stroke();
+      ctx.restore();
+
+      const activeCircles = getActiveCircles();
+
+      // 各円の描画
+      activeCircles.forEach(c => {
+        const groundContactY = floorY + circleRadius;
+        const currentBottomY = c.y + circleRadius;
+        const elevation = Math.max(0, groundContactY - currentBottomY);
+
+        // 1. 床に落ちる影（上空高く突き抜けた際も自然に極小化）
+        ctx.save();
+        const shadowScale = Math.max(0.12, 1 - (elevation / (height * 0.9)));
+        const shadowAlpha = Math.max(0.04, 0.45 * (1 - (elevation / (height * 0.7))));
+        ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          c.x,
+          groundContactY,
+          circleRadius * 0.95 * shadowScale,
+          circleRadius * 0.22 * shadowScale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.restore();
+
+        // 2. 円本体
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, circleRadius, 0, Math.PI * 2);
+
+        const grad = ctx.createRadialGradient(
+          c.x - circleRadius * 0.35,
+          c.y - circleRadius * 0.38,
+          circleRadius * 0.1,
+          c.x,
+          c.y,
+          circleRadius
+        );
+        grad.addColorStop(0, '#60a5fa');
+        grad.addColorStop(0.65, '#2563eb');
+        grad.addColorStop(1, '#1e3a8a');
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(37, 99, 235, 0.35)';
+        ctx.shadowBlur = c.isDragging ? 26 : 14;
+        ctx.shadowOffsetY = c.isDragging ? 8 : 4;
+        ctx.fill();
+
+        if (c.isDragging) {
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+    }
+
+    // アニメーションループ
+    function loop() {
+      updatePhysics();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // 初期化と起動
+    window.addEventListener('resize', resize);
+    window.onload = function () {
+      resize();
+      scene1Circles.forEach(c => { c.y = c.floorY; });
+      scene2Circles.forEach(c => { c.y = c.floorY; });
+      requestAnimationFrame(loop);
+    };
+  </script>
+</body>
+</html>
