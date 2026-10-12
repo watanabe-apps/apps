@@ -28,6 +28,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         body, html {
@@ -974,6 +975,40 @@
         window.addEventListener('pointerdown', unlockAudio, { passive: true });
         window.addEventListener('touchstart', unlockAudio, { passive: true });
         window.addEventListener('click', unlockAudio, { passive: true });
+
+        // ダブルタップ拡大・ピンチズームの完全禁止
+        let lastTouchEndTime = 0;
+        document.addEventListener('touchend', function (e) {
+            const now = Date.now();
+            if (now - lastTouchEndTime <= 320) {
+                e.preventDefault();
+                const clickable = e.target.closest('button, .option-card, .grid-card, .tab-btn');
+                if (clickable) {
+                    clickable.click();
+                }
+            }
+            lastTouchEndTime = now;
+        }, { passive: false });
+
+        document.addEventListener('touchstart', function (e) {
+            if (e.touches && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('dblclick', function (e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
 
         function playSound(type) {
             initAudio();
