@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>どうぶつえんの まなーくいず</title>
+    <style>
+        :root {
+            --bg-color: #fdfbf7;
+            --primary: #059669;
+            --primary-light: #d1fae5;
+            --accent: #f59e0b;
+            --accent-light: #fef3c7;
+            --bus-color: #2563eb;
+            --bus-light: #dbeafe;
+            --return-color: #7c3aed;
+            --return-light: #ede9fe;
+            --text-main: #1f2937;
+            --text-sub: #4b5563;
+            --card-border: #e5e7eb;
+            --font-family: "UD Digi Kyokasho N-R", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            touch-action: manipulation;
+        }
+
+        /* 画面コンテナ */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            flex-direction: column;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        /* ----------------------------
+           1. ホーム画面
+        ---------------------------- */
+        #home-screen {
+            background: linear-gradient(180deg, #ecfdf5 0%, #fefce8 60%, #fff7ed 100%);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px 20px 40px;
+            align-items: center;
+        }
+
+        .home-header {
+            text-align: center;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .home-badge {
+            display: inline-block;
+            background: #10b981;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 999px;
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .app-title {
+            font-size: clamp(24px, 5.5vw, 36px);
+            font-weight: 900;
+            color: #065f46;
+            text-shadow: 1px 1px 0 #fff;
+            line-height: 1.3;
+        }
+
+        .home-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #ffffff;
+            border: 2px solid #a7f3d0;
+            border-radius: 18px;
+            padding: 12px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            max-width: 600px;
+            width: 100%;
+        }
+        .banner-icon {
+            font-size: 32px;
+        }
+        .banner-text {
+            font-size: clamp(14px, 3.2vw, 17px);
+            font-weight: bold;
+            color: #047857;
+        }
+
+        /* スタートボタン */
+        .start-btn-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-big-start {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 16px 24px;
+            font-size: clamp(18px, 4.5vw, 24px);
+            font-weight: 900;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(234, 88, 12, 0.35), inset 0 2px 0 rgba(255,255,255,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-big-start:active {
+            transform: scale(0.97);
+            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+        }
+
+        .btn-reset-history {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+            border-radius: 14px;
+            padding: 9px 16px;
+            font-size: 13.5px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .btn-reset-history:hover {
+            border-color: #fca5a5;
+            color: #dc2626;
+            background: #fef2f2;
+        }
+        .btn-reset-history:active {
+            transform: scale(0.97);
+        }
+
+        /* セクション見出し & タブ */
+        .section-title-wrap {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .section-title {
+            font-size: 19px;
+            font-weight: 900;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* カテゴリフィルタータブ */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(255,255,255,0.8);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .tab-btn {
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: all 0.15s;
+        }
+        .tab-btn.active {
+            background: #059669;
+            color: white;
+            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+        }
+
+        /* 問題グリッド */
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 24px;
+        }
+
+        .grid-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid #e5e7eb;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .grid-card:hover {
+            border-color: #10b981;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.15);
+        }
+        .grid-card:active {
+            transform: scale(0.97);
+        }
+
+        .grid-num-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 18px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .grid-card.cat-bus .grid-num-badge {
+            background: var(--bus-light);
+            color: var(--bus-color);
+        }
+        .grid-card.cat-zoo .grid-num-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .grid-card.cat-return .grid-num-badge {
+            background: var(--return-light);
+            color: var(--return-color);
+        }
+
+        .grid-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .grid-category-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        .grid-q-text {
+            font-size: 14px;
+            font-weight: 800;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .grid-cleared-mark {
+            display: none;
+            width: 28px;
+            height: 28px;
+            background: #fef08a;
+            border: 2px solid #eab308;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .grid-card.cleared .grid-cleared-mark {
+            display: flex;
+        }
+
+        /* ----------------------------
+           2. クイズ画面
+        ---------------------------- */
+        #quiz-screen {
+            background: #fdfbf7;
+            justify-content: space-between;
+        }
+
+        /* 上部ツールバー */
+        .quiz-toolbar {
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 8px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.1s;
+        }
+        .nav-btn:active {
+            transform: scale(0.95);
+            background: #e5e7eb;
+        }
+        .nav-btn.home-btn {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+        .nav-btn:disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .progress-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .progress-badge {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .progress-count {
+            font-size: 15px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        /* クイズメインエリア */
+        .quiz-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8px 16px 12px;
+            overflow: hidden;
+            width: 100%;
+            height: calc(100% - 64px);
+            box-sizing: border-box;
+        }
+
+        /* 問題文 */
+        .question-header {
+            text-align: center;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+        .question-text {
+            font-size: clamp(20px, 4vw, 30px);
+            font-weight: 900;
+            color: #111827;
+            letter-spacing: 0.03em;
+            line-height: 1.3;
+            background: #ffffff;
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 18px;
+            border: 3px solid #fef08a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        /* 選択肢エリア：画面幅・高さをフル活用 */
+        .options-container {
+            flex: 1;
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            max-width: 1400px;
+            justify-content: center;
+            align-items: stretch;
+            min-height: 0;
+            box-sizing: border-box;
+        }
+
+        /* 選択肢カード：画面幅に合わせて限界まで拡大 */
+        .option-card {
+            flex: 1;
+            min-width: 0;
+            background: #ffffff;
+            border: 3px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 10px 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+            position: relative;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .option-card:hover {
+            border-color: #38bdf8;
+            box-shadow: 0 10px 26px rgba(56, 189, 248, 0.25);
+        }
+        .option-card:active {
+            transform: scale(0.97);
+        }
+
+        /* イラスト表示枠：カード内の高さを最大限占有 */
+        .option-svg-wrap {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 16px;
+            display: block;
+        }
+
+        .card-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        .option-label {
+            flex-shrink: 0;
+            font-size: clamp(14px, 2.4vw, 20px);
+            font-weight: 900;
+            color: #1f2937;
+            text-align: center;
+            line-height: 1.3;
+            background: #f8fafc;
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        /* スマホ等の狭い縦画面でのみ縦並びに切り替え */
+        @media (max-width: 580px) and (orientation: portrait) {
+            .options-container {
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            .option-card {
+                min-height: 180px;
+            }
+        }
+
+        /* ----------------------------
+           正解・不正解のビジュアルスタンプ & アニメーション
+        ---------------------------- */
+        .option-stamp-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            z-index: 10;
+        }
+
+        .stamp-icon {
+            display: none;
+            width: clamp(96px, 20vw, 150px);
+            height: clamp(96px, 20vw, 150px);
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.3));
+        }
+
+        .svg-stamp {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 正解時：カード全体が緑に光り、特大の⭕️がポンッと跳ねて出現！ */
+        .option-card.card-correct {
+            border-color: #10b981 !important;
+            background-color: #ecfdf5 !important;
+            box-shadow: 0 0 0 5px #a7f3d0, 0 12px 32px rgba(16, 185, 129, 0.45) !important;
+            transform: scale(1.03) !important;
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .option-card.card-correct .stamp-correct {
+            display: block;
+            animation: stampBounce 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.3) forwards;
+        }
+
+        /* 正解確定時：他のカードを薄暗くする */
+        .option-card.card-dimmed {
+            opacity: 0.35;
+            pointer-events: none;
+            transform: scale(0.97);
+            filter: grayscale(0.3);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        /* 不正解時：カードが赤く激しく揺れ、特大の❌がズドンと表示！ */
+        .option-card.card-wrong {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            animation: shakeCard 0.45s ease-in-out;
+        }
+
+        .option-card.card-wrong .stamp-wrong {
+            display: block;
+            animation: stampPopWrong 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 不正解の選択後：薄暗くなって選択不可（でも❌マークは残る） */
+        .option-card.card-disabled {
+            opacity: 0.45;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+
+        @keyframes stampBounce {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            65% { transform: scale(1.28) rotate(6deg); opacity: 1; }
+            85% { transform: scale(0.94) rotate(-2deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes stampPopWrong {
+            0% { transform: scale(0.2); opacity: 0; }
+            60% { transform: scale(1.22); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shakeCard {
+            0%, 100% { transform: translateX(0); }
+            15%, 45%, 75% { transform: translateX(-10px); }
+            30%, 60%, 90% { transform: translateX(10px); }
+        }
+
+        /* ----------------------------
+           3. 正解時のイラスト強調 ＆ 解説バー（イラストを隠さない）
+        ---------------------------- */
+        /* 正解時の選択肢エリア：正解画像を主役として特大拡大！ */
+        .options-container.has-correct-focus .option-card:not(.card-correct) {
+            opacity: 0.18 !important;
+            filter: grayscale(0.7) !important;
+            transform: scale(0.92) !important;
+            pointer-events: none !important;
+            box-shadow: none !important;
+            transition: opacity 0.35s, transform 0.35s, filter 0.35s;
+        }
+
+        .options-container.has-correct-focus .option-card.card-correct {
+            flex: 1.45 !important;
+            border-color: #10b981 !important;
+            border-width: 4.5px !important;
+            background-color: #f0fdf4 !important;
+            box-shadow: 0 0 0 6px #a7f3d0, 0 16px 40px rgba(16, 185, 129, 0.45) !important;
+            transform: scale(1.03) !important;
+            z-index: 20 !important;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .options-container.has-correct-focus .option-card.card-correct .option-label {
+            background: #d1fae5;
+            color: #065f46;
+            font-size: clamp(16px, 2.5vw, 22px);
+            font-weight: 900;
+        }
+
+        /* 正解解説バー（イラストの下にスッキリ表示、イラストを覆い隠さない） */
+        .correct-panel {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            background: #ffffff;
+            border: 3.5px solid #10b981;
+            border-radius: 20px;
+            padding: 8px 18px;
+            margin-top: 8px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.22);
+            animation: slideUpPanel 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            flex-shrink: 0;
+            box-sizing: border-box;
+            z-index: 50;
+        }
+
+        .correct-panel.active {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        @keyframes slideUpPanel {
+            0% { transform: translateY(25px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .correct-panel-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .correct-badge {
+            background: #10b981;
+            color: #ffffff;
+            font-size: clamp(15px, 2.2vw, 19px);
+            font-weight: 900;
+            padding: 6px 14px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+            flex-shrink: 0;
+        }
+
+        .correct-desc {
+            font-size: clamp(16px, 2.4vw, 22px);
+            font-weight: 900;
+            color: #065f46;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .btn-panel-next {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 24px;
+            font-family: var(--font-family);
+            font-size: clamp(16px, 2.2vw, 20px);
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: transform 0.1s;
+        }
+        .btn-panel-next:active {
+            transform: scale(0.96);
+        }
+
+        @media (max-width: 600px) {
+            .correct-panel.active {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 10px 14px;
+                gap: 10px;
+            }
+            .correct-panel-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .btn-panel-next {
+                justify-content: center;
+                padding: 10px;
+            }
+        }
+
+        /* おしい！のときのトーストメッセージ（画面中央上部に大きく表示） */
+        .toast-msg {
+            position: fixed;
+            top: 75px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.7);
+            opacity: 0;
+            background: #ffffff;
+            color: #dc2626;
+            border: 3.5px solid #ef4444;
+            font-size: clamp(16px, 2.8vw, 22px);
+            font-weight: 900;
+            padding: 12px 28px;
+            border-radius: 999px;
+            box-shadow: 0 12px 32px rgba(220, 38, 38, 0.25);
+            z-index: 95;
+            pointer-events: none;
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s;
+            white-space: nowrap;
+        }
+        .toast-msg.show {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+
+        /* ----------------------------
+           4. 全問クリア画面
+        ---------------------------- */
+        #complete-screen {
+            background: linear-gradient(180deg, #fefce8 0%, #fef3c7 50%, #fef08a 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+        }
+        .complete-card {
+            background: #ffffff;
+            border: 4px solid #f59e0b;
+            border-radius: 32px;
+            padding: 36px 28px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 16px 36px rgba(245, 158, 11, 0.25);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .trophy-icon {
+            font-size: 80px;
+            line-height: 1;
+            animation: bounce 1.2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .complete-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: #b45309;
+        }
+        .complete-msg {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        .complete-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* 紙吹雪Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 200;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- 1. ホーム画面 -->
+    <div id="home-screen" class="screen active">
+        <div class="home-header">
+            <span class="home-badge">こうがいがくしゅう じぜんがくしゅう</span>
+            <h1 class="app-title">どうぶつえんの<br>まなー くいず</h1>
+        </div>
+
+        <div class="home-banner">
+            <span class="banner-icon">🦁🚌</span>
+            <span class="banner-text">ばすや どうぶつえんでの ルールを たのしく まなぼう！</span>
+        </div>
+
+        <div class="start-btn-container">
+            <button class="btn-big-start" id="btn-start-first">
+                <span>▶ 1もんめから はじめる</span>
+            </button>
+            <button class="btn-reset-history" id="btn-reset-history">
+                <span>🔄 かいとう きろくを リセット</span>
+            </button>
+        </div>
+
+        <!-- もんだいを えらぶ -->
+        <div class="section-title-wrap">
+            <div class="section-title">
+                <span>📋</span>
+                <span>すきな もんだいを えらぶ</span>
+            </div>
+            <div class="category-tabs">
+                <button class="tab-btn active" data-cat="all">ぜんぶ</button>
+                <button class="tab-btn" data-cat="bus_go">🚌 いき</button>
+                <button class="tab-btn" data-cat="zoo">🦁 どうぶつえん</button>
+                <button class="tab-btn" data-cat="return">🎒 かえり</button>
+            </div>
+        </div>
+
+        <div class="question-grid" id="question-grid">
+            <!-- JSでカードを描画 -->
+        </div>
+    </div>
+
+    <!-- 2. クイズ画面 -->
+    <div id="quiz-screen" class="screen">
+        <!-- ツールバー -->
+        <div class="quiz-toolbar">
+            <button class="nav-btn home-btn" id="btn-quiz-home">
+                <span>🏠</span>
+                <span>ホーム</span>
+            </button>
+            
+            <button class="nav-btn" id="btn-quiz-prev">
+                <span>◀</span>
+                <span>まえへ</span>
+            </button>
+
+            <div class="progress-info">
+                <span class="progress-badge" id="quiz-category-badge">🚌 いきの ばす</span>
+                <span class="progress-count" id="quiz-progress-text">もんだい 1 / 19</span>
+            </div>
+
+            <button class="nav-btn" id="btn-quiz-next">
+                <span>つぎへ</span>
+                <span>▶</span>
+            </button>
+        </div>
+
+        <!-- 問題・選択肢 -->
+        <div class="quiz-content">
+            <div class="question-header">
+                <h2 class="question-text" id="question-title">ばすに のったら？</h2>
+            </div>
+
+            <!-- イラスト選択肢コンテナ -->
+            <div class="options-container" id="options-container">
+                <!-- JSでカードを描画 -->
+            </div>
+
+            <!-- 3. 正解時の解説パネル（イラストを隠さず、見ながら解説できる） -->
+            <div class="correct-panel" id="correct-panel">
+                <div class="correct-panel-info">
+                    <span class="correct-badge">⭕️ だいせいかい！</span>
+                    <div class="correct-desc" id="correct-desc">シートベルトを カチッと しめようね！</div>
+                </div>
+                <button class="btn-panel-next" id="btn-modal-next">
+                    <span id="btn-modal-next-text">つぎへ</span>
+                    <span>▶</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 全問クリア画面 -->
+    <div id="complete-screen" class="screen">
+        <div class="complete-card">
+            <div class="trophy-icon">🏆✨</div>
+            <h2 class="complete-title">ぜんぶ クリア！</h2>
+            <p class="complete-msg">
+                どうぶつえんの ルールを<br>
+                ぜんぶ マスターしたよ！<br>
+                あんぜんに たのしく いってらっしゃい！
+            </p>
+            <div class="complete-btns">
+                <button class="btn-big-start" id="btn-replay-all">
+                    <span>🔁 もういちど ちょうせんする</span>
+                </button>
+                <button class="nav-btn home-btn" id="btn-complete-home" style="justify-content: center; padding: 14px; font-size: 16px;">
+                    <span>🏠 ホームへ もどる</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- おしい！トースト -->
+    <div class="toast-msg" id="toast-msg">❌ おしい！ もういちど えらんでみよう！</div>
+
+    <script>
+        const QUESTIONS = [{"id": 1, "category": "bus_go", "category_name": "いきの ばす", "category_icon": "🚌", "question": "ばすに のったら？", "speech": "ばすに のったら どうする？", "options": [{"label": "シートベルトを しめる", "correct": true, "svg_key": "q1_seatbelt", "image": "images/q1_seatbelt.png", "speech": "シートベルトを しめる", "explanation": "シートベルトを カチッと しめようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <defs>\n            <linearGradient id=\"bg-q1a\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n              <stop offset=\"0%\" stop-color=\"#eff6ff\"/>\n              <stop offset=\"100%\" stop-color=\"#dbeafe\"/>\n            </linearGradient>\n          </defs>\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"url(#bg-q1a)\"/>\n          <!-- バスシート -->\n          <rect x=\"50\" y=\"30\" width=\"100\" height=\"110\" rx=\"16\" fill=\"#3b82f6\"/>\n          <rect x=\"65\" y=\"15\" width=\"70\" height=\"25\" rx=\"8\" fill=\"#1d4ed8\"/>\n          <!-- 子ども -->\n          <circle cx=\"100\" cy=\"55\" r=\"22\" fill=\"#ffd7b5\"/>\n          <path d=\"M78 52 C78 35 122 35 122 52 C115 45 85 45 78 52 Z\" fill=\"#4a3525\"/>\n          <!-- 顔パーツ -->\n          <circle cx=\"92\" cy=\"54\" r=\"3\" fill=\"#333\"/>\n          <circle cx=\"108\" cy=\"54\" r=\"3\" fill=\"#333\"/>\n          <path d=\"M94 63 Q100 70 106 63\" stroke=\"#e11d48\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"86\" cy=\"58\" rx=\"4\" ry=\"2.5\" fill=\"#fca5a5\"/>\n          <ellipse cx=\"114\" cy=\"58\" rx=\"4\" ry=\"2.5\" fill=\"#fca5a5\"/>\n          <!-- 体 -->\n          <path d=\"M78 80 C78 75 122 75 122 80 L125 125 L75 125 Z\" fill=\"#10b981\"/>\n          <!-- シートベルト (オレンジ斜めがけ) -->\n          <line x1=\"60\" y1=\"45\" x2=\"135\" y2=\"125\" stroke=\"#ea580c\" stroke-width=\"12\" stroke-linecap=\"round\"/>\n          <!-- カチッ バックル -->\n          <rect x=\"115\" y=\"105\" width=\"22\" height=\"16\" rx=\"4\" fill=\"#64748b\" transform=\"rotate(-30 126 113)\"/>\n          <rect x=\"120\" y=\"108\" width=\"8\" height=\"10\" rx=\"2\" fill=\"#f97316\" transform=\"rotate(-30 124 113)\"/>\n          <!-- キラキラ -->\n          <path d=\"M142 92 L146 100 L154 104 L146 108 L142 116 L138 108 L130 104 L138 100 Z\" fill=\"#eab308\"/>\n          <circle cx=\"152\" cy=\"85\" r=\"3\" fill=\"#eab308\"/>\n        </svg>"}, {"label": "ざせきに たつ", "correct": false, "svg_key": "q1_stand", "image": "images/q1_stand.png", "speech": "ざせきに たつ", "explanation": "ざせきに たつと、ゆれて あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- バスシート -->\n          <rect x=\"50\" y=\"45\" width=\"100\" height=\"100\" rx=\"16\" fill=\"#3b82f6\"/>\n          <!-- 立っている子ども (座席の上) -->\n          <rect x=\"80\" y=\"115\" width=\"16\" height=\"18\" rx=\"4\" fill=\"#dc2626\"/>\n          <rect x=\"104\" y=\"115\" width=\"16\" height=\"18\" rx=\"4\" fill=\"#dc2626\"/>\n          <!-- 体 -->\n          <rect x=\"82\" y=\"65\" width=\"36\" height=\"45\" rx=\"8\" fill=\"#f59e0b\"/>\n          <!-- 頭 (高め) -->\n          <circle cx=\"100\" cy=\"42\" r=\"20\" fill=\"#ffd7b5\"/>\n          <path d=\"M80 40 C80 25 120 25 120 40 Z\" fill=\"#4a3525\"/>\n          <!-- 表情 (ふらふら・あせ) -->\n          <circle cx=\"94\" cy=\"42\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"106\" cy=\"42\" r=\"2.5\" fill=\"#333\"/>\n          <ellipse cx=\"100\" cy=\"51\" rx=\"4\" ry=\"5\" fill=\"#e11d48\"/>\n          <!-- 汗 -->\n          <path d=\"M118 35 Q122 38 120 42 Q117 40 118 35\" fill=\"#38bdf8\"/>\n          <!-- ゆらゆら線 -->\n          <path d=\"M65 35 Q60 45 65 55\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M135 35 Q140 45 135 55\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/>\n          <!-- 注意マーク -->\n          <polygon points=\"30,30 45,60 15,60\" fill=\"#ef4444\"/>\n          <text x=\"30\" y=\"55\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"18\" fill=\"#fff\" text-anchor=\"middle\">!</text>\n        </svg>"}, {"label": "つうろを はしる", "correct": false, "svg_key": "q1_run", "image": "images/q1_run.png", "speech": "つうろを はしる", "explanation": "つうろを はしると、ころんで けがをしちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 通路の床と座席の端 -->\n          <rect x=\"10\" y=\"40\" width=\"35\" height=\"100\" rx=\"8\" fill=\"#93c5fd\"/>\n          <rect x=\"155\" y=\"40\" width=\"35\" height=\"100\" rx=\"8\" fill=\"#93c5fd\"/>\n          <line x1=\"10\" y1=\"135\" x2=\"190\" y2=\"135\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- 走る子ども -->\n          <g transform=\"translate(10, 5)\">\n            <circle cx=\"90\" cy=\"50\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M72 48 C72 32 108 32 108 48 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"86\" cy=\"50\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"96\" cy=\"50\" r=\"2.5\" fill=\"#333\"/>\n            <ellipse cx=\"91\" cy=\"58\" rx=\"3\" ry=\"3\" fill=\"#e11d48\"/>\n            <!-- 胴体 傾き -->\n            <path d=\"M80 68 L105 78 L95 105 L70 95 Z\" fill=\"#ec4899\"/>\n            <!-- 手足走りポーズ -->\n            <line x1=\"88\" y1=\"75\" x2=\"118\" y2=\"65\" stroke=\"#ffd7b5\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"78\" y1=\"80\" x2=\"58\" y2=\"92\" stroke=\"#ffd7b5\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"85\" y1=\"102\" x2=\"115\" y2=\"125\" stroke=\"#3b82f6\" stroke-width=\"8\" stroke-linecap=\"round\"/>\n            <line x1=\"75\" y1=\"95\" x2=\"50\" y2=\"120\" stroke=\"#3b82f6\" stroke-width=\"8\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- スピード線 -->\n          <line x1=\"30\" y1=\"70\" x2=\"50\" y2=\"70\" stroke=\"#f87171\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <line x1=\"25\" y1=\"90\" x2=\"55\" y2=\"90\" stroke=\"#f87171\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <line x1=\"35\" y1=\"110\" x2=\"55\" y2=\"110\" stroke=\"#f87171\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n        </svg>"}]}, {"id": 2, "category": "bus_go", "category_name": "いきの ばす", "category_icon": "🚌", "question": "ばすが うごいて いる ときは？", "speech": "ばすが うごいて いる ときは どうする？", "options": [{"label": "いすに すわる", "correct": true, "svg_key": "q2_sit", "image": "images/q2_sit.png", "speech": "いすに すわる", "explanation": "しっかり いすに すわって まえを みようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- バスシート -->\n          <rect x=\"55\" y=\"35\" width=\"90\" height=\"105\" rx=\"14\" fill=\"#3b82f6\"/>\n          <!-- すわっている子 -->\n          <circle cx=\"100\" cy=\"55\" r=\"20\" fill=\"#ffd7b5\"/>\n          <path d=\"M80 52 C80 36 120 36 120 52 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"93\" cy=\"54\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"107\" cy=\"54\" r=\"2.5\" fill=\"#333\"/>\n          <path d=\"M95 62 Q100 68 105 62\" stroke=\"#e11d48\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <rect x=\"80\" y=\"75\" width=\"40\" height=\"42\" rx=\"8\" fill=\"#10b981\"/>\n          <!-- 手はひざの上 -->\n          <ellipse cx=\"88\" cy=\"110\" rx=\"7\" ry=\"5\" fill=\"#ffd7b5\"/>\n          <ellipse cx=\"112\" cy=\"110\" rx=\"7\" ry=\"5\" fill=\"#ffd7b5\"/>\n          <!-- 安全マーク -->\n          <circle cx=\"160\" cy=\"35\" r=\"16\" fill=\"#22c55e\"/>\n          <path d=\"M152 35 L158 41 L168 29\" stroke=\"#fff\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "つうろを あるく", "correct": false, "svg_key": "q2_walk", "image": "images/q2_walk.png", "speech": "つうろを あるく", "explanation": "ばすが うごいているときに あるくと あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <line x1=\"20\" y1=\"135\" x2=\"180\" y2=\"135\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- ふらふら歩く -->\n          <g transform=\"translate(15, 0)\">\n            <circle cx=\"85\" cy=\"50\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M67 48 C67 32 103 32 103 48 Z\" fill=\"#4a3525\"/>\n            <!-- 困り顔 -->\n            <path d=\"M78 48 L84 51\" stroke=\"#333\" stroke-width=\"2\"/>\n            <path d=\"M94 51 L100 48\" stroke=\"#333\" stroke-width=\"2\"/>\n            <circle cx=\"81\" cy=\"53\" r=\"2\" fill=\"#333\"/>\n            <circle cx=\"95\" cy=\"53\" r=\"2\" fill=\"#333\"/>\n            <ellipse cx=\"88\" cy=\"60\" rx=\"4\" ry=\"3\" fill=\"#e11d48\"/>\n            <rect x=\"70\" y=\"70\" width=\"30\" height=\"38\" rx=\"6\" fill=\"#f97316\"/>\n            <!-- ふらふら手足 -->\n            <line x1=\"70\" y1=\"75\" x2=\"50\" y2=\"65\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"100\" y1=\"75\" x2=\"120\" y2=\"85\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"78\" y1=\"108\" x2=\"68\" y2=\"132\" stroke=\"#64748b\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"92\" y1=\"108\" x2=\"105\" y2=\"132\" stroke=\"#64748b\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 揺れる矢印 -->\n          <path d=\"M40 70 Q55 50 70 70\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M125 70 Q140 90 155 70\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "いすの うえで ジャンプ", "correct": false, "svg_key": "q2_jump", "image": "images/q2_jump.png", "speech": "いすの うえで ジャンプ", "explanation": "いすの うえで ジャンプすると、おちて あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- バスシート -->\n          <rect x=\"55\" y=\"75\" width=\"90\" height=\"70\" rx=\"12\" fill=\"#3b82f6\"/>\n          <!-- 飛び跳ねる子 -->\n          <g transform=\"translate(0, -15)\">\n            <circle cx=\"100\" cy=\"45\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M82 43 C82 28 118 28 118 43 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"94\" cy=\"45\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"106\" cy=\"45\" r=\"2.5\" fill=\"#333\"/>\n            <ellipse cx=\"100\" cy=\"54\" rx=\"4\" ry=\"4\" fill=\"#e11d48\"/>\n            <rect x=\"85\" y=\"65\" width=\"30\" height=\"30\" rx=\"6\" fill=\"#a855f7\"/>\n            <!-- バンザイ -->\n            <line x1=\"85\" y1=\"70\" x2=\"65\" y2=\"50\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"115\" y1=\"70\" x2=\"135\" y2=\"50\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <!-- 足曲げ -->\n            <line x1=\"90\" y1=\"95\" x2=\"80\" y2=\"108\" stroke=\"#3b82f6\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"110\" y1=\"95\" x2=\"120\" y2=\"108\" stroke=\"#3b82f6\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- バウンド線 -->\n          <path d=\"M80 115 Q100 100 120 115\" stroke=\"#ef4444\" stroke-width=\"3.5\" fill=\"none\"/>\n          <path d=\"M75 122 Q100 108 125 122\" stroke=\"#ef4444\" stroke-width=\"2\" fill=\"none\"/>\n        </svg>"}]}, {"id": 3, "category": "bus_go", "category_name": "いきの ばす", "category_icon": "🚌", "question": "きぶんが わるく なったら？", "speech": "きぶんが わるく なったら どうする？", "options": [{"label": "せんせいに いう", "correct": true, "svg_key": "q3_tell", "image": "images/q3_tell.png", "speech": "せんせいに いう", "explanation": "がまんしないで、すぐに せんせいに おしえてね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#eff6ff\"/>\n          <!-- 手を挙げる子ども -->\n          <circle cx=\"85\" cy=\"65\" r=\"20\" fill=\"#ffd7b5\"/>\n          <path d=\"M65 62 C65 46 105 46 105 62 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"78\" cy=\"64\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"92\" cy=\"64\" r=\"2.5\" fill=\"#333\"/>\n          <path d=\"M80 73 Q85 78 90 73\" stroke=\"#e11d48\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/>\n          <rect x=\"68\" y=\"86\" width=\"34\" height=\"42\" rx=\"8\" fill=\"#06b6d4\"/>\n          <!-- 右手を高く上げる -->\n          <line x1=\"102\" y1=\"90\" x2=\"125\" y2=\"40\" stroke=\"#ffd7b5\" stroke-width=\"8\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"127\" cy=\"36\" rx=\"6\" ry=\"7\" fill=\"#ffd7b5\"/>\n          <!-- ふきだし「せんせい」 -->\n          <rect x=\"110\" y=\"65\" width=\"75\" height=\"35\" rx=\"10\" fill=\"#ffffff\" stroke=\"#0284c7\" stroke-width=\"2\"/>\n          <polygon points=\"110,85 102,88 112,92\" fill=\"#0284c7\"/>\n          <text x=\"147\" y=\"88\" font-family=\"'UD Digi Kyokasho N-R', 'Hiragino Maru Gothic ProN', sans-serif\" font-weight=\"bold\" font-size=\"13\" fill=\"#0369a1\" text-anchor=\"middle\">せんせい！</text>\n        </svg>"}, {"label": "がまんする", "correct": false, "svg_key": "q3_bear", "image": "images/q3_bear.png", "speech": "がまんする", "explanation": "がまんすると もっと つらく なっちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 我慢して青ざめている子 -->\n          <circle cx=\"100\" cy=\"60\" r=\"22\" fill=\"#bfdbfe\"/>\n          <path d=\"M78 58 C78 40 122 40 122 58 Z\" fill=\"#4a3525\"/>\n          <!-- 我慢の眉と目 -->\n          <path d=\"M88 56 L94 60\" stroke=\"#1e3a8a\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n          <path d=\"M112 56 L106 60\" stroke=\"#1e3a8a\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n          <line x1=\"91\" y1=\"63\" x2=\"95\" y2=\"63\" stroke=\"#1e3a8a\" stroke-width=\"3\"/>\n          <line x1=\"105\" y1=\"63\" x2=\"109\" y2=\"63\" stroke=\"#1e3a8a\" stroke-width=\"3\"/>\n          <!-- 口を一文字に -->\n          <line x1=\"93\" y1=\"73\" x2=\"107\" y2=\"73\" stroke=\"#1e3a8a\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n          <!-- 汗・青ざめライン -->\n          <line x1=\"88\" y1=\"68\" x2=\"88\" y2=\"74\" stroke=\"#60a5fa\" stroke-width=\"1.5\"/>\n          <line x1=\"92\" y1=\"68\" x2=\"92\" y2=\"74\" stroke=\"#60a5fa\" stroke-width=\"1.5\"/>\n          <line x1=\"108\" y1=\"68\" x2=\"108\" y2=\"74\" stroke=\"#60a5fa\" stroke-width=\"1.5\"/>\n          <line x1=\"112\" y1=\"68\" x2=\"112\" y2=\"74\" stroke=\"#60a5fa\" stroke-width=\"1.5\"/>\n          <!-- 体：お腹をおさえる -->\n          <rect x=\"80\" y=\"84\" width=\"40\" height=\"42\" rx=\"8\" fill=\"#94a3b8\"/>\n          <ellipse cx=\"90\" cy=\"105\" rx=\"8\" ry=\"6\" fill=\"#bfdbfe\"/>\n          <ellipse cx=\"110\" cy=\"105\" rx=\"8\" ry=\"6\" fill=\"#bfdbfe\"/>\n          <!-- がまんモヤモヤ -->\n          <text x=\"100\" y=\"145\" font-family=\"'UD Digi Kyokasho N-R', 'Hiragino Maru Gothic ProN', sans-serif\" font-weight=\"bold\" font-size=\"12\" fill=\"#ef4444\" text-anchor=\"middle\">がまん...</text>\n        </svg>"}, {"label": "ゆかに ねころぶ", "correct": false, "svg_key": "q3_floor", "image": "images/q3_floor.png", "speech": "ゆかに ねころぶ", "explanation": "ばすの ゆかに ねころぶと あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <line x1=\"15\" y1=\"125\" x2=\"185\" y2=\"125\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- 床に寝転がる子 -->\n          <g transform=\"translate(10, 10)\">\n            <!-- 頭 -->\n            <circle cx=\"55\" cy=\"110\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M40 102 C40 88 70 88 70 102 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"50\" cy=\"108\" r=\"2\" fill=\"#333\"/>\n            <circle cx=\"60\" cy=\"108\" r=\"2\" fill=\"#333\"/>\n            <!-- 胴体横たわり -->\n            <rect x=\"70\" y=\"100\" width=\"55\" height=\"20\" rx=\"6\" fill=\"#3b82f6\"/>\n            <!-- 足 -->\n            <rect x=\"125\" y=\"102\" width=\"40\" height=\"16\" rx=\"5\" fill=\"#64748b\"/>\n            <!-- 手だらり -->\n            <line x1=\"85\" y1=\"112\" x2=\"80\" y2=\"125\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- バツ印 -->\n          <circle cx=\"160\" cy=\"40\" r=\"16\" fill=\"#ef4444\"/>\n          <line x1=\"150\" y1=\"30\" x2=\"170\" y2=\"50\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <line x1=\"170\" y1=\"30\" x2=\"150\" y2=\"50\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n        </svg>"}]}, {"id": 4, "category": "bus_go", "category_name": "いきの ばす", "category_icon": "🚌", "question": "まどから てや かおを だして いい？", "speech": "まどから てや かおを だして いい？", "options": [{"label": "ださない", "correct": true, "svg_key": "q4_safe", "image": "images/q4_safe.png", "speech": "ださない", "explanation": "くるまや でんちゅうに ぶつかるから、ださないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- バスの窓 -->\n          <rect x=\"35\" y=\"25\" width=\"85\" height=\"85\" rx=\"8\" fill=\"#bae6fd\" stroke=\"#64748b\" stroke-width=\"4\"/>\n          <!-- 窓の内側ですわっている子 -->\n          <circle cx=\"75\" cy=\"70\" r=\"18\" fill=\"#ffd7b5\"/>\n          <path d=\"M57 68 C57 52 93 52 93 68 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"70\" cy=\"69\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"82\" cy=\"69\" r=\"2.5\" fill=\"#333\"/>\n          <path d=\"M72 77 Q76 81 80 77\" stroke=\"#e11d48\" stroke-width=\"2\" fill=\"none\"/>\n          <rect x=\"60\" y=\"90\" width=\"30\" height=\"30\" rx=\"6\" fill=\"#10b981\"/>\n          <!-- 窓の外の景色（木） -->\n          <circle cx=\"100\" cy=\"45\" r=\"10\" fill=\"#86efac\" opacity=\"0.7\"/>\n          <!-- 丸印 -->\n          <circle cx=\"160\" cy=\"40\" r=\"16\" fill=\"#22c55e\"/>\n          <path d=\"M152 40 L158 46 L168 34\" stroke=\"#fff\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "てや かおを だす", "correct": false, "svg_key": "q4_danger", "image": "images/q4_danger.png", "speech": "てや かおを だす", "explanation": "そとに てや かおを だすと、大けがをして あぶないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- バスの窓 -->\n          <rect x=\"30\" y=\"30\" width=\"85\" height=\"85\" rx=\"8\" fill=\"#bae6fd\" stroke=\"#64748b\" stroke-width=\"4\"/>\n          <!-- 窓から手と顔を出す -->\n          <circle cx=\"120\" cy=\"55\" r=\"18\" fill=\"#ffd7b5\"/>\n          <path d=\"M102 52 C102 36 138 36 138 52 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"124\" cy=\"54\" r=\"2.5\" fill=\"#333\"/>\n          <!-- 突き出した腕 -->\n          <line x1=\"85\" y1=\"80\" x2=\"145\" y2=\"70\" stroke=\"#ffd7b5\" stroke-width=\"8\" stroke-linecap=\"round\"/>\n          <ellipse cx=\"148\" cy=\"68\" rx=\"6\" ry=\"6\" fill=\"#ffd7b5\"/>\n          <!-- 接近するトラックの影/危険マーク -->\n          <polygon points=\"165,25 185,60 145,60\" fill=\"#ef4444\"/>\n          <text x=\"165\" y=\"54\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"20\" fill=\"#fff\" text-anchor=\"middle\">!</text>\n        </svg>"}]}, {"id": 5, "category": "bus_go", "category_name": "いきの ばす", "category_icon": "🚌", "question": "ばすの なかでの こえは？", "speech": "ばすの なかでの こえの おおきさは？", "options": [{"label": "おとなりと はなす こえ", "correct": true, "svg_key": "q5_quiet", "image": "images/q5_quiet.png", "speech": "おとなりと はなす こえ", "explanation": "おとなりのおともだちに きこえる ちいさいこえで おはなししようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#eff6ff\"/>\n          <!-- 口に指をあてる（しーっ） -->\n          <circle cx=\"85\" cy=\"60\" r=\"22\" fill=\"#ffd7b5\"/>\n          <path d=\"M63 58 C63 40 107 40 107 58 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"78\" cy=\"58\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"92\" cy=\"58\" r=\"2.5\" fill=\"#333\"/>\n          <ellipse cx=\"85\" cy=\"68\" rx=\"2\" ry=\"2\" fill=\"#e11d48\"/>\n          <rect x=\"68\" y=\"85\" width=\"34\" height=\"40\" rx=\"6\" fill=\"#3b82f6\"/>\n          <!-- 人差し指 -->\n          <line x1=\"85\" y1=\"90\" x2=\"85\" y2=\"67\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          <!-- 小さな音符・ひそひそふきだし -->\n          <path d=\"M125 50 Q145 40 155 55 Q165 70 145 75 L135 85 L138 74 Z\" fill=\"#fff\" stroke=\"#93c5fd\" stroke-width=\"2\"/>\n          <circle cx=\"138\" cy=\"58\" r=\"2\" fill=\"#60a5fa\"/>\n          <circle cx=\"145\" cy=\"58\" r=\"2\" fill=\"#60a5fa\"/>\n          <circle cx=\"152\" cy=\"58\" r=\"2\" fill=\"#60a5fa\"/>\n        </svg>"}, {"label": "メガホンで さけぶ", "correct": false, "svg_key": "q5_loud", "speech": "メガホンで さけぶ", "explanation": "おおきな こえを だすと、うんてんしゅさんや みんなが びっくりするよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- メガホンで叫ぶ子 -->\n          <circle cx=\"65\" cy=\"65\" r=\"18\" fill=\"#ffd7b5\"/>\n          <path d=\"M47 62 C47 46 83 46 83 62 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"68\" cy=\"64\" r=\"2.5\" fill=\"#333\"/>\n          <ellipse cx=\"73\" cy=\"72\" rx=\"5\" ry=\"4\" fill=\"#e11d48\"/>\n          <rect x=\"50\" y=\"85\" width=\"30\" height=\"40\" rx=\"6\" fill=\"#f97316\"/>\n          <!-- メガホン -->\n          <polygon points=\"75,70 120,45 120,95\" fill=\"#ef4444\"/>\n          <ellipse cx=\"120\" cy=\"70\" rx=\"4\" ry=\"25\" fill=\"#dc2626\"/>\n          <rect x=\"80\" y=\"73\" width=\"10\" height=\"18\" rx=\"2\" fill=\"#7f1d1d\"/>\n          <!-- 大音量の波 -->\n          <path d=\"M135 55 Q145 70 135 85\" stroke=\"#ef4444\" stroke-width=\"4\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M150 45 Q165 70 150 95\" stroke=\"#ef4444\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\"/>\n          <path d=\"M165 35 Q185 70 165 105\" stroke=\"#ef4444\" stroke-width=\"6\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "おおごえで うたう", "correct": false, "svg_key": "q5_sing", "image": "images/q5_sing.png", "speech": "おおごえで うたう", "explanation": "おおごえで さけんだり うたったりすると めいわくになるよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 立って大声で歌う -->\n          <circle cx=\"80\" cy=\"50\" r=\"18\" fill=\"#ffd7b5\"/>\n          <path d=\"M62 48 C62 32 98 32 98 48 Z\" fill=\"#4a3525\"/>\n          <circle cx=\"75\" cy=\"48\" r=\"2.5\" fill=\"#333\"/>\n          <circle cx=\"85\" cy=\"48\" r=\"2.5\" fill=\"#333\"/>\n          <ellipse cx=\"80\" cy=\"58\" rx=\"6\" ry=\"7\" fill=\"#e11d48\"/>\n          <rect x=\"65\" y=\"70\" width=\"30\" height=\"42\" rx=\"6\" fill=\"#8b5cf6\"/>\n          <!-- マイク -->\n          <line x1=\"88\" y1=\"75\" x2=\"105\" y2=\"60\" stroke=\"#64748b\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          <circle cx=\"108\" cy=\"57\" r=\"6\" fill=\"#334155\"/>\n          <!-- 大きなギザギザ音符 -->\n          <text x=\"145\" y=\"65\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"28\" fill=\"#ef4444\">♫</text>\n          <text x=\"165\" y=\"95\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"34\" fill=\"#ef4444\">♬</text>\n        </svg>"}]}, {"id": 6, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "どうぶつえんを あるく ときは？", "speech": "どうぶつえんを あるく ときは どうする？", "options": [{"label": "ならんで あるく", "correct": true, "svg_key": "q7_line", "speech": "ならんで あるく", "explanation": "おともだちと ならんで、いっしょに あるこうね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 2人並んで歩く -->\n          <g transform=\"translate(40, 20)\">\n            <circle cx=\"30\" cy=\"35\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M14 33 C14 20 46 20 46 33 Z\" fill=\"#4a3525\"/>\n            <rect x=\"18\" y=\"52\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#3b82f6\"/>\n            <line x1=\"24\" y1=\"86\" x2=\"20\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"36\" y1=\"86\" x2=\"40\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <!-- 帽子（黄色） -->\n            <ellipse cx=\"30\" cy=\"20\" rx=\"18\" ry=\"5\" fill=\"#eab308\"/>\n            <path d=\"M18 20 C18 8 42 8 42 20 Z\" fill=\"#eab308\"/>\n          </g>\n          <g transform=\"translate(95, 20)\">\n            <circle cx=\"30\" cy=\"35\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M14 33 C14 20 46 20 46 33 Z\" fill=\"#ec4899\"/>\n            <rect x=\"18\" y=\"52\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#10b981\"/>\n            <line x1=\"24\" y1=\"86\" x2=\"20\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"36\" y1=\"86\" x2=\"40\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <!-- 帽子（黄色） -->\n            <ellipse cx=\"30\" cy=\"20\" rx=\"18\" ry=\"5\" fill=\"#eab308\"/>\n            <path d=\"M18 20 C18 8 42 8 42 20 Z\" fill=\"#eab308\"/>\n          </g>\n          <!-- 手をつなぐ/並ぶ -->\n          <line x1=\"72\" y1=\"75\" x2=\"112\" y2=\"75\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "ひとりで はしる", "correct": false, "svg_key": "q7_run_away", "speech": "ひとりで はしる", "explanation": "ひとりで はしると、まいごに なっちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 列の2人（遠く） -->\n          <g transform=\"translate(20, 40) scale(0.6)\">\n            <circle cx=\"20\" cy=\"30\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"45\" width=\"20\" height=\"30\" fill=\"#3b82f6\"/>\n            <circle cx=\"45\" cy=\"30\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"35\" y=\"45\" width=\"20\" height=\"30\" fill=\"#10b981\"/>\n          </g>\n          <!-- 1人ダッシュで離れる -->\n          <g transform=\"translate(85, 20)\">\n            <circle cx=\"50\" cy=\"35\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M34 32 C34 18 66 18 66 32 Z\" fill=\"#4a3525\"/>\n            <rect x=\"36\" y=\"52\" width=\"26\" height=\"30\" rx=\"5\" fill=\"#f97316\"/>\n            <!-- 猛ダッシュ -->\n            <line x1=\"40\" y1=\"82\" x2=\"20\" y2=\"105\" stroke=\"#3b82f6\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"58\" y1=\"82\" x2=\"80\" y2=\"100\" stroke=\"#3b82f6\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"38\" y1=\"60\" x2=\"15\" y2=\"75\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n            <line x1=\"60\" y1=\"60\" x2=\"80\" y2=\"50\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 砂煙 -->\n          <circle cx=\"95\" cy=\"115\" r=\"6\" fill=\"#e2e8f0\"/>\n          <circle cx=\"85\" cy=\"120\" r=\"8\" fill=\"#cbd5e1\"/>\n          <circle cx=\"75\" cy=\"125\" r=\"5\" fill=\"#e2e8f0\"/>\n        </svg>"}, {"label": "つうろに すわりこむ", "correct": false, "svg_key": "q7_sit_down", "speech": "つうろに すわりこむ", "explanation": "みちの まんなかに すわりこむと、ほかのひとが とおれないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <line x1=\"20\" y1=\"125\" x2=\"180\" y2=\"125\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- 道の真ん中に座り込む -->\n          <g transform=\"translate(70, 40)\">\n            <circle cx=\"30\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M14 28 C14 15 46 15 46 28 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"25\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"35\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <path d=\"M26 38 Q30 42 34 38\" stroke=\"#e11d48\" stroke-width=\"2\" fill=\"none\"/>\n            <!-- ぺたんこ座り -->\n            <rect x=\"18\" y=\"47\" width=\"24\" height=\"26\" rx=\"5\" fill=\"#a855f7\"/>\n            <line x1=\"18\" y1=\"73\" x2=\"0\" y2=\"82\" stroke=\"#64748b\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"42\" y1=\"73\" x2=\"60\" y2=\"82\" stroke=\"#64748b\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n          </g>\n        </svg>"}]}, {"id": 7, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "どうぶつえんで はしって いい？", "speech": "どうぶつえんで はしって いい？", "options": [{"label": "あるく", "correct": true, "svg_key": "q8_walk", "image": "images/q8_walk.png", "speech": "あるく", "explanation": "ひとや どうぶつが びっくりしないよう、ゆっくり あるこうね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <line x1=\"20\" y1=\"130\" x2=\"180\" y2=\"130\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- あるく -->\n          <g transform=\"translate(65, 15)\">\n            <circle cx=\"35\" cy=\"35\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M17 32 C17 18 53 18 53 32 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"30\" cy=\"34\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"42\" cy=\"34\" r=\"2.5\" fill=\"#333\"/>\n            <path d=\"M32 42 Q36 46 40 42\" stroke=\"#e11d48\" stroke-width=\"2\" fill=\"none\"/>\n            <rect x=\"22\" y=\"55\" width=\"26\" height=\"34\" rx=\"5\" fill=\"#10b981\"/>\n            <!-- てくてく足 -->\n            <line x1=\"28\" y1=\"89\" x2=\"18\" y2=\"114\" stroke=\"#475569\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"38\" y1=\"89\" x2=\"48\" y2=\"114\" stroke=\"#475569\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"23\" y1=\"65\" x2=\"12\" y2=\"80\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n            <line x1=\"47\" y1=\"65\" x2=\"58\" y2=\"78\" stroke=\"#ffd7b5\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 足跡スタンプ -->\n          <ellipse cx=\"140\" cy=\"115\" rx=\"6\" ry=\"4\" fill=\"#86efac\"/>\n          <ellipse cx=\"155\" cy=\"105\" rx=\"6\" ry=\"4\" fill=\"#86efac\"/>\n          <!-- 丸印 -->\n          <circle cx=\"160\" cy=\"35\" r=\"16\" fill=\"#22c55e\"/>\n          <path d=\"M152 35 L158 41 L168 29\" stroke=\"#fff\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "はしる", "correct": false, "svg_key": "q8_run", "image": "images/q8_run.png", "speech": "はしる", "explanation": "はしると、ほかの おきゃくさんと ぶつかって あぶないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <line x1=\"20\" y1=\"130\" x2=\"180\" y2=\"130\" stroke=\"#cbd5e1\" stroke-width=\"6\"/>\n          <!-- はしる（前傾） -->\n          <g transform=\"translate(60, 15)\">\n            <circle cx=\"45\" cy=\"35\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M27 32 C27 18 63 18 63 32 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"42\" cy=\"34\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"52\" cy=\"34\" r=\"2.5\" fill=\"#333\"/>\n            <ellipse cx=\"48\" cy=\"42\" rx=\"4\" ry=\"4\" fill=\"#e11d48\"/>\n            <rect x=\"25\" y=\"55\" width=\"28\" height=\"30\" rx=\"5\" fill=\"#ef4444\"/>\n            <!-- 全力足 -->\n            <line x1=\"30\" y1=\"85\" x2=\"10\" y2=\"105\" stroke=\"#1d4ed8\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"45\" y1=\"85\" x2=\"75\" y2=\"110\" stroke=\"#1d4ed8\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <line x1=\"25\" y1=\"65\" x2=\"5\" y2=\"80\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"50\" y1=\"65\" x2=\"70\" y2=\"55\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- バツ印 -->\n          <circle cx=\"160\" cy=\"35\" r=\"16\" fill=\"#ef4444\"/>\n          <line x1=\"150\" y1=\"25\" x2=\"170\" y2=\"45\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <line x1=\"170\" y1=\"25\" x2=\"150\" y2=\"45\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n        </svg>"}]}, {"id": 8, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "まいごに なったら？", "speech": "まいごに なったら どうする？", "options": [{"label": "そのばで まつ", "correct": true, "svg_key": "q9_wait", "speech": "そのばで まつ", "explanation": "うごかないで そのばで まつか、どうぶつえんの ひとに おしえようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#eff6ff\"/>\n          <!-- その場で止まって待つ（または係の人に言う） -->\n          <g transform=\"translate(30, 20)\">\n            <circle cx=\"30\" cy=\"35\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M14 33 C14 20 46 20 46 33 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"26\" cy=\"34\" r=\"2\" fill=\"#333\"/>\n            <circle cx=\"34\" cy=\"34\" r=\"2\" fill=\"#333\"/>\n            <rect x=\"18\" y=\"52\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#f59e0b\"/>\n            <!-- しっかり立ち止まる足 -->\n            <line x1=\"24\" y1=\"86\" x2=\"24\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"36\" y1=\"86\" x2=\"36\" y2=\"110\" stroke=\"#475569\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 動物園の係員さん（緑の帽子とベスト） -->\n          <g transform=\"translate(110, 15)\">\n            <circle cx=\"35\" cy=\"40\" r=\"18\" fill=\"#ffd7b5\"/>\n            <ellipse cx=\"35\" cy=\"24\" rx=\"20\" ry=\"6\" fill=\"#15803d\"/>\n            <path d=\"M22 24 C22 12 48 12 48 24 Z\" fill=\"#15803d\"/>\n            <rect x=\"22\" y=\"60\" width=\"26\" height=\"38\" rx=\"5\" fill=\"#16a34a\"/>\n            <!-- 名札 -->\n            <rect x=\"26\" y=\"66\" width=\"8\" height=\"6\" fill=\"#fff\"/>\n          </g>\n          <!-- お話ししているマーク -->\n          <circle cx=\"95\" cy=\"55\" r=\"4\" fill=\"#38bdf8\"/>\n          <circle cx=\"102\" cy=\"50\" r=\"3\" fill=\"#38bdf8\"/>\n        </svg>"}, {"label": "ひとりで はしりまわる", "correct": false, "svg_key": "q9_run_cry", "speech": "ひとりで はしりまわる", "explanation": "はしりまわると、せんせいが みつけられなくなっちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 泣きながら走り回る -->\n          <g transform=\"translate(70, 20)\">\n            <circle cx=\"35\" cy=\"35\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M17 32 C17 18 53 18 53 32 Z\" fill=\"#4a3525\"/>\n            <!-- 涙ぴえん -->\n            <path d=\"M26 34 L32 37\" stroke=\"#333\" stroke-width=\"2\"/>\n            <path d=\"M44 37 L38 34\" stroke=\"#333\" stroke-width=\"2\"/>\n            <ellipse cx=\"35\" cy=\"44\" rx=\"5\" ry=\"6\" fill=\"#e11d48\"/>\n            <circle cx=\"22\" cy=\"40\" r=\"3\" fill=\"#38bdf8\"/>\n            <circle cx=\"48\" cy=\"40\" r=\"3\" fill=\"#38bdf8\"/>\n            <rect x=\"22\" y=\"55\" width=\"26\" height=\"30\" rx=\"5\" fill=\"#ec4899\"/>\n            <line x1=\"26\" y1=\"85\" x2=\"10\" y2=\"108\" stroke=\"#3b82f6\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"38\" y1=\"85\" x2=\"58\" y2=\"105\" stroke=\"#3b82f6\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- ぐるぐる矢印 -->\n          <path d=\"M40 70 Q25 100 55 110 Q85 110 70 80\" stroke=\"#ef4444\" stroke-width=\"3\" stroke-dasharray=\"4\" fill=\"none\"/>\n        </svg>"}, {"label": "ひとりで かえろうとする", "correct": false, "svg_key": "q9_go_home", "speech": "ひとりで かえろうとする", "explanation": "ひとりで そとに でたら、とても あぶないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 出口へ一人で行く -->\n          <rect x=\"130\" y=\"30\" width=\"50\" height=\"70\" rx=\"4\" fill=\"#e2e8f0\" stroke=\"#64748b\" stroke-width=\"3\"/>\n          <text x=\"155\" y=\"55\" font-size=\"12\" font-weight=\"bold\" fill=\"#15803d\" text-anchor=\"middle\">でぐち</text>\n          <!-- とぼとぼ歩く後ろ姿 -->\n          <g transform=\"translate(40, 35)\">\n            <circle cx=\"30\" cy=\"30\" r=\"16\" fill=\"#4a3525\"/>\n            <rect x=\"18\" y=\"47\" width=\"24\" height=\"30\" rx=\"5\" fill=\"#64748b\"/>\n            <!-- リュック -->\n            <rect x=\"22\" y=\"50\" width=\"16\" height=\"18\" rx=\"4\" fill=\"#f59e0b\"/>\n            <line x1=\"24\" y1=\"77\" x2=\"20\" y2=\"98\" stroke=\"#334155\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n            <line x1=\"36\" y1=\"77\" x2=\"40\" y2=\"98\" stroke=\"#334155\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- バツ印 -->\n          <circle cx=\"165\" cy=\"120\" r=\"14\" fill=\"#ef4444\"/>\n          <line x1=\"156\" y1=\"111\" x2=\"174\" y2=\"129\" stroke=\"#fff\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>\n          <line x1=\"174\" y1=\"111\" x2=\"156\" y2=\"129\" stroke=\"#fff\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>\n        </svg>"}]}, {"id": 9, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "みちを あるく ときは？", "speech": "みちを あるく ときは どうする？", "options": [{"label": "はじっこを あるく", "correct": true, "svg_key": "q10_edge", "speech": "はじっこを あるく", "explanation": "みちの はじっこを あるいて、まんなかを あけようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 幅広い道と端っこを歩く子 -->\n          <rect x=\"20\" y=\"30\" width=\"160\" height=\"100\" rx=\"6\" fill=\"#e2e8f0\"/>\n          <!-- 端のライン（みどり） -->\n          <rect x=\"20\" y=\"30\" width=\"40\" height=\"100\" fill=\"#bbf7d0\"/>\n          <!-- 端を歩く子 -->\n          <g transform=\"translate(25, 30)\">\n            <circle cx=\"15\" cy=\"25\" r=\"12\" fill=\"#ffd7b5\"/>\n            <path d=\"M5 23 C5 12 25 12 25 23 Z\" fill=\"#4a3525\"/>\n            <rect x=\"7\" y=\"38\" width=\"16\" height=\"24\" rx=\"4\" fill=\"#3b82f6\"/>\n            <line x1=\"11\" y1=\"62\" x2=\"8\" y2=\"80\" stroke=\"#334155\" stroke-width=\"5\"/>\n            <line x1=\"19\" y1=\"62\" x2=\"22\" y2=\"80\" stroke=\"#334155\" stroke-width=\"5\"/>\n          </g>\n          <!-- 道の真ん中を通れる矢印（スッキリ） -->\n          <line x1=\"110\" y1=\"45\" x2=\"110\" y2=\"115\" stroke=\"#22c55e\" stroke-width=\"5\" stroke-linecap=\"round\"/>\n          <polygon points=\"102,55 110,40 118,55\" fill=\"#22c55e\"/>\n        </svg>"}, {"label": "まんなかに ひろがる", "correct": false, "svg_key": "q10_spread", "speech": "まんなかに ひろがる", "explanation": "よこに ひろがると、ほかの おきゃくさんが とおれないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <rect x=\"20\" y=\"30\" width=\"160\" height=\"100\" rx=\"6\" fill=\"#e2e8f0\"/>\n          <!-- 3人が横いっぱいに広がる -->\n          <g transform=\"translate(30, 45)\">\n            <circle cx=\"15\" cy=\"18\" r=\"10\" fill=\"#ffd7b5\"/>\n            <rect x=\"8\" y=\"29\" width=\"14\" height=\"20\" fill=\"#3b82f6\"/>\n          </g>\n          <g transform=\"translate(85, 45)\">\n            <circle cx=\"15\" cy=\"18\" r=\"10\" fill=\"#ffd7b5\"/>\n            <rect x=\"8\" y=\"29\" width=\"14\" height=\"20\" fill=\"#ec4899\"/>\n          </g>\n          <g transform=\"translate(140, 45)\">\n            <circle cx=\"15\" cy=\"18\" r=\"10\" fill=\"#ffd7b5\"/>\n            <rect x=\"8\" y=\"29\" width=\"14\" height=\"20\" fill=\"#eab308\"/>\n          </g>\n          <!-- 通れないバツ -->\n          <line x1=\"70\" y1=\"65\" x2=\"130\" y2=\"65\" stroke=\"#ef4444\" stroke-width=\"4\"/>\n          <polygon points=\"30,105 170,105 100,105\" stroke=\"#ef4444\" stroke-width=\"4\"/>\n          <text x=\"100\" y=\"120\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">とおれない！</text>\n        </svg>"}, {"label": "おともだちを おす", "correct": false, "svg_key": "q10_push", "speech": "おともだちを おす", "explanation": "おともだちを おしたら、ころんで けがをしちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 前の子を押す -->\n          <g transform=\"translate(100, 30)\">\n            <circle cx=\"25\" cy=\"30\" r=\"15\" fill=\"#ffd7b5\"/>\n            <rect x=\"15\" y=\"46\" width=\"20\" height=\"30\" fill=\"#3b82f6\"/>\n            <!-- 前によろめく -->\n            <path d=\"M20 76 L32 98\" stroke=\"#334155\" stroke-width=\"6\"/>\n          </g>\n          <g transform=\"translate(45, 30)\">\n            <circle cx=\"25\" cy=\"30\" r=\"15\" fill=\"#ffd7b5\"/>\n            <rect x=\"15\" y=\"46\" width=\"20\" height=\"30\" fill=\"#ef4444\"/>\n            <!-- 押す手 -->\n            <line x1=\"28\" y1=\"55\" x2=\"60\" y2=\"55\" stroke=\"#ffd7b5\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n          </g>\n          <polygon points=\"85,45 95,55 85,65\" fill=\"#ef4444\"/>\n        </svg>"}]}, {"id": 10, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "ひとが たくさん いる ときは？", "speech": "ひとが たくさん いる ときは どうする？", "options": [{"label": "じゅんばんを まつ", "correct": true, "svg_key": "q11_wait_line", "speech": "じゅんばんを まつ", "explanation": "ならんで じゅんばんを まとうね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 展示窓（先頭） -->\n          <rect x=\"20\" y=\"30\" width=\"30\" height=\"80\" rx=\"4\" fill=\"#93c5fd\" stroke=\"#3b82f6\" stroke-width=\"2\"/>\n          <!-- 順番に並ぶ子どもたち -->\n          <g transform=\"translate(60, 40)\">\n            <circle cx=\"15\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"33\" width=\"16\" height=\"24\" fill=\"#10b981\"/>\n          </g>\n          <g transform=\"translate(100, 40)\">\n            <circle cx=\"15\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"33\" width=\"16\" height=\"24\" fill=\"#3b82f6\"/>\n          </g>\n          <g transform=\"translate(140, 40)\">\n            <circle cx=\"15\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"33\" width=\"16\" height=\"24\" fill=\"#f59e0b\"/>\n          </g>\n          <!-- じゅんばん矢印 -->\n          <path d=\"M140 105 L70 105\" stroke=\"#22c55e\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n          <polygon points=\"75,98 65,105 75,112\" fill=\"#22c55e\"/>\n        </svg>"}, {"label": "わりこむ", "correct": false, "svg_key": "q11_cut_in", "speech": "わりこむ", "explanation": "わりこみは めいわくになるよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <g transform=\"translate(45, 45)\">\n            <circle cx=\"15\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"33\" width=\"16\" height=\"24\" fill=\"#10b981\"/>\n          </g>\n          <g transform=\"translate(130, 45)\">\n            <circle cx=\"15\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"33\" width=\"16\" height=\"24\" fill=\"#3b82f6\"/>\n          </g>\n          <!-- 間にぐいっと割り込む -->\n          <g transform=\"translate(85, 25)\">\n            <circle cx=\"15\" cy=\"20\" r=\"13\" fill=\"#ffd7b5\"/>\n            <rect x=\"7\" y=\"34\" width=\"16\" height=\"24\" fill=\"#ef4444\"/>\n            <path d=\"M15 80 L15 62\" stroke=\"#ef4444\" stroke-width=\"4\"/>\n            <polygon points=\"10,65 15,55 20,65\" fill=\"#ef4444\"/>\n          </g>\n          <text x=\"100\" y=\"125\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">わりこみ！</text>\n        </svg>"}, {"label": "まえの ひとを おす", "correct": false, "svg_key": "q11_shove", "speech": "まえの ひとを おす", "explanation": "まえの ひとを おしたら あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 前の人を押す -->\n          <g transform=\"translate(60, 40)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"28\" fill=\"#64748b\"/>\n          </g>\n          <g transform=\"translate(110, 40)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"28\" fill=\"#ef4444\"/>\n            <!-- ぐいぐい両手 -->\n            <line x1=\"12\" y1=\"48\" x2=\"-10\" y2=\"48\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <text x=\"100\" y=\"125\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">おしちゃだめ！</text>\n        </svg>"}]}, {"id": 11, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "おりや さくは？", "speech": "おりや さくは どうする？", "options": [{"label": "はなれて みる", "correct": true, "svg_key": "q12_away", "speech": "はなれて みる", "explanation": "さくから はなれて、あんぜんに みようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 柵（おり） -->\n          <line x1=\"20\" y1=\"40\" x2=\"20\" y2=\"120\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"45\" y1=\"40\" x2=\"45\" y2=\"120\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"70\" y1=\"40\" x2=\"70\" y2=\"120\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"10\" y1=\"60\" x2=\"80\" y2=\"60\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <line x1=\"10\" y1=\"100\" x2=\"80\" y2=\"100\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <!-- きいろい線（ストップ線） -->\n          <line x1=\"105\" y1=\"30\" x2=\"105\" y2=\"130\" stroke=\"#eab308\" stroke-width=\"6\" stroke-dasharray=\"8\"/>\n          <!-- 離れて立っている子 -->\n          <g transform=\"translate(130, 30)\">\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M9 28 C9 15 41 15 41 28 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"20\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"30\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <rect x=\"13\" y=\"47\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#10b981\"/>\n            <line x1=\"19\" y1=\"81\" x2=\"19\" y2=\"105\" stroke=\"#334155\" stroke-width=\"6\"/>\n            <line x1=\"31\" y1=\"81\" x2=\"31\" y2=\"105\" stroke=\"#334155\" stroke-width=\"6\"/>\n          </g>\n        </svg>"}, {"label": "さくに のぼる", "correct": false, "svg_key": "q12_climb", "speech": "さくに のぼる", "explanation": "さくに のぼると、おちたり どうぶつに おそわれて あぶないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 柵によじ登る -->\n          <line x1=\"40\" y1=\"20\" x2=\"40\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"80\" y1=\"20\" x2=\"80\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"120\" y1=\"20\" x2=\"120\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"20\" y1=\"60\" x2=\"140\" y2=\"60\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <line x1=\"20\" y1=\"100\" x2=\"140\" y2=\"100\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <!-- よじ登る子 -->\n          <g transform=\"translate(70, 20)\">\n            <circle cx=\"25\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"15\" y=\"40\" width=\"20\" height=\"28\" fill=\"#f97316\"/>\n            <!-- 手足が柵をつかむ -->\n            <line x1=\"15\" y1=\"45\" x2=\"-10\" y2=\"40\" stroke=\"#ffd7b5\" stroke-width=\"6\"/>\n            <line x1=\"35\" y1=\"45\" x2=\"50\" y2=\"40\" stroke=\"#ffd7b5\" stroke-width=\"6\"/>\n            <line x1=\"20\" y1=\"68\" x2=\"10\" y2=\"80\" stroke=\"#3b82f6\" stroke-width=\"6\"/>\n            <line x1=\"30\" y1=\"68\" x2=\"50\" y2=\"80\" stroke=\"#3b82f6\" stroke-width=\"6\"/>\n          </g>\n        </svg>"}, {"label": "てを なかに いれる", "correct": false, "svg_key": "q12_reach_in", "speech": "てを なかに いれる", "explanation": "てを いれると、どうぶつに かまれちゃうよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 柵の網目から手を突っ込む -->\n          <line x1=\"80\" y1=\"20\" x2=\"80\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"110\" y1=\"20\" x2=\"110\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"6\"/>\n          <line x1=\"60\" y1=\"60\" x2=\"130\" y2=\"60\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <line x1=\"60\" y1=\"100\" x2=\"130\" y2=\"100\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <!-- 手を伸ばす子 -->\n          <g transform=\"translate(125, 40)\">\n            <circle cx=\"25\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"15\" y=\"40\" width=\"20\" height=\"30\" fill=\"#3b82f6\"/>\n            <!-- 柵の中に伸びる腕 -->\n            <line x1=\"15\" y1=\"50\" x2=\"-65\" y2=\"50\" stroke=\"#ffd7b5\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 檻の奥からキバのマーク -->\n          <polygon points=\"35,40 50,50 35,60\" fill=\"#dc2626\"/>\n          <polygon points=\"35,60 50,70 35,80\" fill=\"#dc2626\"/>\n        </svg>"}]}, {"id": 12, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "ガラスは？", "speech": "ガラスは どうする？", "options": [{"label": "しずかに みる", "correct": true, "svg_key": "q13_watch", "speech": "しずかに みる", "explanation": "しずかに やさしく みつめようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- ガラス面 -->\n          <rect x=\"70\" y=\"20\" width=\"10\" height=\"120\" rx=\"2\" fill=\"#93c5fd\" opacity=\"0.8\"/>\n          <!-- ガラスの向こうのペンギン -->\n          <g transform=\"translate(15, 50)\">\n            <ellipse cx=\"25\" cy=\"40\" rx=\"15\" ry=\"22\" fill=\"#1e293b\"/>\n            <ellipse cx=\"25\" cy=\"42\" rx=\"10\" ry=\"16\" fill=\"#ffffff\"/>\n            <polygon points=\"25,30 35,35 25,40\" fill=\"#f59e0b\"/>\n            <circle cx=\"22\" cy=\"28\" r=\"2.5\" fill=\"#fff\"/>\n            <circle cx=\"23\" cy=\"28\" r=\"1.5\" fill=\"#000\"/>\n          </g>\n          <!-- しずかに見る子 -->\n          <g transform=\"translate(110, 35)\">\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M9 28 C9 15 41 15 41 28 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"18\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <circle cx=\"28\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <rect x=\"13\" y=\"47\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#06b6d4\"/>\n          </g>\n        </svg>"}, {"label": "ドンドン たたく", "correct": false, "svg_key": "q13_bang", "speech": "ドンドン たたく", "explanation": "ガラスを たたくと、どうぶつが こわがっちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <rect x=\"70\" y=\"20\" width=\"10\" height=\"120\" rx=\"2\" fill=\"#93c5fd\" opacity=\"0.8\"/>\n          <!-- ドンドン叩く子 -->\n          <g transform=\"translate(90, 35)\">\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <rect x=\"13\" y=\"47\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#ef4444\"/>\n            <!-- 両手をガラスにバンバン -->\n            <line x1=\"15\" y1=\"52\" x2=\"-18\" y2=\"45\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n            <line x1=\"15\" y1=\"58\" x2=\"-18\" y2=\"65\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 衝撃波ドンドン -->\n          <circle cx=\"70\" cy=\"80\" r=\"16\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\"/>\n          <circle cx=\"70\" cy=\"100\" r=\"14\" stroke=\"#ef4444\" stroke-width=\"3\" fill=\"none\"/>\n          <text x=\"40\" y=\"60\" font-size=\"14\" font-weight=\"bold\" fill=\"#ef4444\">バン!</text>\n        </svg>"}, {"label": "かおを くっつける", "correct": false, "svg_key": "q13_face", "speech": "かおを くっつける", "explanation": "ガラスに かおを くっつけると、よごれたり ぶつかって あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <rect x=\"95\" y=\"20\" width=\"10\" height=\"120\" rx=\"2\" fill=\"#93c5fd\" opacity=\"0.8\"/>\n          <!-- 顔をペタッとくっつける -->\n          <g transform=\"translate(95, 40)\">\n            <!-- 潰れた鼻と顔 -->\n            <ellipse cx=\"20\" cy=\"35\" rx=\"22\" ry=\"20\" fill=\"#ffd7b5\"/>\n            <ellipse cx=\"0\" cy=\"35\" rx=\"5\" ry=\"8\" fill=\"#fca5a5\"/>\n            <rect x=\"15\" y=\"56\" width=\"22\" height=\"30\" fill=\"#f59e0b\"/>\n          </g>\n          <text x=\"100\" y=\"135\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">ペタッは だめ！</text>\n        </svg>"}]}, {"id": 13, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "じぶんの おやつは？", "speech": "じぶんの おやつは どうする？", "options": [{"label": "あげない", "correct": true, "svg_key": "q14_keep", "speech": "あげない", "explanation": "どうぶつが おなかを こわすから、ぜったいに あげないよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- リュックにしまっておく -->\n          <g transform=\"translate(45, 25)\">\n            <circle cx=\"25\" cy=\"25\" r=\"15\" fill=\"#ffd7b5\"/>\n            <path d=\"M10 23 C10 12 40 12 40 23 Z\" fill=\"#4a3525\"/>\n            <rect x=\"13\" y=\"41\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#3b82f6\"/>\n            <!-- 背中のリュック（チャック閉まり） -->\n            <rect x=\"33\" y=\"43\" width=\"22\" height=\"28\" rx=\"6\" fill=\"#f59e0b\"/>\n            <line x1=\"37\" y1=\"57\" x2=\"51\" y2=\"57\" stroke=\"#78350f\" stroke-width=\"2\"/>\n          </g>\n          <!-- どうぶつ（サル）とお菓子あげないマーク -->\n          <g transform=\"translate(130, 45)\">\n            <circle cx=\"20\" cy=\"20\" r=\"16\" fill=\"#b45309\"/>\n            <circle cx=\"20\" cy=\"22\" r=\"11\" fill=\"#fed7aa\"/>\n          </g>\n          <!-- あげない（バツマーク） -->\n          <circle cx=\"120\" cy=\"110\" r=\"16\" fill=\"#ef4444\"/>\n          <line x1=\"110\" y1=\"100\" x2=\"130\" y2=\"120\" stroke=\"#fff\" stroke-width=\"4\"/>\n          <line x1=\"130\" y1=\"100\" x2=\"110\" y2=\"120\" stroke=\"#fff\" stroke-width=\"4\"/>\n        </svg>"}, {"label": "おりになげいれる", "correct": false, "svg_key": "q14_throw_snack", "speech": "おりになげいれる", "explanation": "おやつを なげいれたら、どうぶつが びょうきになっちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 檻の中へスナックを放り投げる -->\n          <line x1=\"80\" y1=\"20\" x2=\"80\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <line x1=\"105\" y1=\"20\" x2=\"105\" y2=\"140\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <g transform=\"translate(125, 40)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"30\" fill=\"#3b82f6\"/>\n            <line x1=\"12\" y1=\"48\" x2=\"-25\" y2=\"35\" stroke=\"#ffd7b5\" stroke-width=\"6\"/>\n          </g>\n          <!-- 飛んでいくお菓子 -->\n          <circle cx=\"50\" cy=\"65\" r=\"7\" fill=\"#f59e0b\"/>\n          <path d=\"M100 45 Q70 35 50 65\" stroke=\"#ef4444\" stroke-width=\"3\" stroke-dasharray=\"4\" fill=\"none\"/>\n        </svg>"}, {"label": "てで さしだす", "correct": false, "svg_key": "q14_hand_feed", "speech": "てで さしだす", "explanation": "てで あげようとすると、てを かまれちゃうよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 手でお菓子を差し出す（噛まれそうで危ない！） -->\n          <g transform=\"translate(110, 40)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"30\" fill=\"#ec4899\"/>\n            <line x1=\"12\" y1=\"48\" x2=\"-55\" y2=\"52\" stroke=\"#ffd7b5\" stroke-width=\"7\" stroke-linecap=\"round\"/>\n            <circle cx=\"55\" cy=\"92\" r=\"6\" fill=\"#f59e0b\"/>\n          </g>\n          <!-- 動物のキバが迫る -->\n          <g transform=\"translate(20, 60)\">\n            <polygon points=\"10,20 35,35 10,50\" fill=\"#b45309\"/>\n            <polygon points=\"25,25 35,30 25,35\" fill=\"#fff\"/>\n          </g>\n        </svg>"}]}, {"id": 14, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "ねている どうぶつは？", "speech": "ねている どうぶつは どうする？", "options": [{"label": "しずかに みる", "correct": true, "svg_key": "q15_quiet", "speech": "しずかに みる", "explanation": "ねている どうぶつは、しずかに みまもろうね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- スヤスヤ寝ているライオン -->\n          <g transform=\"translate(30, 45)\">\n            <!-- たてがみ -->\n            <circle cx=\"45\" cy=\"40\" r=\"30\" fill=\"#b45309\"/>\n            <circle cx=\"45\" cy=\"40\" r=\"22\" fill=\"#f59e0b\"/>\n            <!-- 閉じた目 -->\n            <path d=\"M35 40 Q40 45 45 40\" stroke=\"#78350f\" stroke-width=\"2.5\" fill=\"none\"/>\n            <path d=\"M47 40 Q52 45 57 40\" stroke=\"#78350f\" stroke-width=\"2.5\" fill=\"none\"/>\n            <polygon points=\"43,45 49,45 46,48\" fill=\"#78350f\"/>\n          </g>\n          <!-- Zzz -->\n          <text x=\"90\" y=\"45\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"16\" fill=\"#3b82f6\">z</text>\n          <text x=\"100\" y=\"35\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"22\" fill=\"#3b82f6\">Z</text>\n          <!-- しずかに見る子 -->\n          <g transform=\"translate(130, 35)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <path d=\"M6 23 C6 12 34 12 34 23 Z\" fill=\"#4a3525\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"30\" fill=\"#10b981\"/>\n          </g>\n        </svg>"}, {"label": "おおごえで さけぶ", "correct": false, "svg_key": "q15_shout", "speech": "おおごえで さけぶ", "explanation": "おおきな こえで おこすと、どうぶつが ストレスに なるよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 寝ている動物に大声で叫ぶ -->\n          <g transform=\"translate(20, 50)\">\n            <circle cx=\"35\" cy=\"35\" r=\"22\" fill=\"#b45309\"/>\n            <circle cx=\"35\" cy=\"35\" r=\"16\" fill=\"#f59e0b\"/>\n          </g>\n          <g transform=\"translate(115, 30)\">\n            <circle cx=\"25\" cy=\"25\" r=\"16\" fill=\"#ffd7b5\"/>\n            <ellipse cx=\"25\" cy=\"35\" rx=\"6\" ry=\"6\" fill=\"#e11d48\"/>\n            <rect x=\"13\" y=\"43\" width=\"24\" height=\"34\" fill=\"#ef4444\"/>\n            <!-- メガホン・叫び波 -->\n            <polygon points=\"10,32 -15,15 -15,50\" fill=\"#dc2626\"/>\n          </g>\n          <text x=\"75\" y=\"40\" font-size=\"14\" font-weight=\"bold\" fill=\"#ef4444\">おきろー!</text>\n        </svg>"}, {"label": "ものを なげる", "correct": false, "svg_key": "q15_throw_stone", "speech": "ものを なげる", "explanation": "ものを なげるのは、ぜったいに だめだよ！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 小石を投げる -->\n          <g transform=\"translate(25, 60)\">\n            <circle cx=\"30\" cy=\"30\" r=\"20\" fill=\"#b45309\"/>\n          </g>\n          <g transform=\"translate(130, 30)\">\n            <circle cx=\"20\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"40\" width=\"20\" height=\"30\" fill=\"#3b82f6\"/>\n            <line x1=\"12\" y1=\"48\" x2=\"-20\" y2=\"30\" stroke=\"#ffd7b5\" stroke-width=\"6\"/>\n          </g>\n          <!-- 飛ぶ石 -->\n          <ellipse cx=\"75\" cy=\"65\" rx=\"6\" ry=\"4\" fill=\"#64748b\"/>\n          <path d=\"M110 40 Q85 30 75 65\" stroke=\"#ef4444\" stroke-width=\"3\" stroke-dasharray=\"4\" fill=\"none\"/>\n        </svg>"}]}, {"id": 15, "category": "zoo", "category_name": "どうぶつえん", "category_icon": "🦁", "question": "のどが かわいたら？", "speech": "のどが かわいたら どうする？", "options": [{"label": "おちゃを のむ", "correct": true, "svg_key": "q16_drink", "image": "images/q16_drink.png", "speech": "おちゃを のむ", "explanation": "すいとうの おちゃを ごくごく のんで、げんきいっぱい！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 水筒からゴクゴク飲む子 -->\n          <g transform=\"translate(70, 20)\">\n            <circle cx=\"30\" cy=\"30\" r=\"18\" fill=\"#ffd7b5\"/>\n            <path d=\"M12 28 C12 12 48 12 48 28 Z\" fill=\"#4a3525\"/>\n            <circle cx=\"25\" cy=\"30\" r=\"2.5\" fill=\"#333\"/>\n            <rect x=\"18\" y=\"50\" width=\"24\" height=\"36\" rx=\"5\" fill=\"#06b6d4\"/>\n            <!-- 水筒 -->\n            <rect x=\"36\" y=\"35\" width=\"16\" height=\"35\" rx=\"4\" fill=\"#f59e0b\" transform=\"rotate(-30 44 52)\"/>\n            <line x1=\"30\" y1=\"52\" x2=\"42\" y2=\"38\" stroke=\"#38bdf8\" stroke-width=\"4\"/>\n          </g>\n          <!-- キラキラ・すっきり -->\n          <circle cx=\"140\" cy=\"40\" r=\"4\" fill=\"#38bdf8\"/>\n          <circle cx=\"150\" cy=\"55\" r=\"6\" fill=\"#38bdf8\"/>\n          <circle cx=\"160\" cy=\"35\" r=\"16\" fill=\"#22c55e\"/>\n          <path d=\"M152 35 L158 41 L168 29\" stroke=\"#fff\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "がまんする", "correct": false, "svg_key": "q16_bear_thirst", "speech": "がまんする", "explanation": "がまんすると、ねっちゅうしょうに なって あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- のどカラカラ我慢フラフラ -->\n          <g transform=\"translate(75, 25)\">\n            <circle cx=\"25\" cy=\"25\" r=\"18\" fill=\"#ffd7b5\"/>\n            <!-- 汗だく・苦しそう -->\n            <ellipse cx=\"25\" cy=\"35\" rx=\"4\" ry=\"4\" fill=\"#e11d48\"/>\n            <rect x=\"13\" y=\"45\" width=\"24\" height=\"34\" fill=\"#94a3b8\"/>\n            <!-- 太陽ギラギラ -->\n          </g>\n          <circle cx=\"150\" cy=\"40\" r=\"16\" fill=\"#ea580c\"/>\n          <text x=\"100\" y=\"130\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">がまん...</text>\n        </svg>"}, {"label": "ひとりで おみせにはしる", "correct": false, "svg_key": "q16_run_shop", "speech": "ひとりで おみせにはしる", "explanation": "ひとりで かってに はしっていくと、まいごになるよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 売店へ一人で走る -->\n          <rect x=\"20\" y=\"30\" width=\"50\" height=\"50\" rx=\"4\" fill=\"#fed7aa\" stroke=\"#ea580c\" stroke-width=\"3\"/>\n          <text x=\"45\" y=\"55\" font-size=\"10\" font-weight=\"bold\" fill=\"#ea580c\" text-anchor=\"middle\">SHOP</text>\n          <!-- 一人でダッシュ -->\n          <g transform=\"translate(100, 30)\">\n            <circle cx=\"30\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"20\" y=\"40\" width=\"20\" height=\"26\" fill=\"#ef4444\"/>\n            <line x1=\"22\" y1=\"66\" x2=\"5\" y2=\"85\" stroke=\"#334155\" stroke-width=\"6\"/>\n            <line x1=\"38\" y1=\"66\" x2=\"55\" y2=\"85\" stroke=\"#334155\" stroke-width=\"6\"/>\n          </g>\n        </svg>"}]}, {"id": 16, "category": "return", "category_name": "かえり", "category_icon": "🎒", "question": "かえる まえに することは？", "speech": "かえる まえに することは なにかな？", "options": [{"label": "にもつを たしかめる", "correct": true, "svg_key": "q17_check", "speech": "にもつを たしかめる", "explanation": "すいとうや ぼうし、わすれものがないか たしかめようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 荷物（帽子・水筒・リュック）を確認 -->\n          <g transform=\"translate(40, 25)\">\n            <circle cx=\"25\" cy=\"25\" r=\"16\" fill=\"#ffd7b5\"/>\n            <path d=\"M9 22 C9 10 41 10 41 22 Z\" fill=\"#4a3525\"/>\n            <rect x=\"13\" y=\"43\" width=\"24\" height=\"34\" rx=\"5\" fill=\"#10b981\"/>\n            <!-- 指差し確認 -->\n            <line x1=\"25\" y1=\"52\" x2=\"65\" y2=\"52\" stroke=\"#ffd7b5\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n          </g>\n          <!-- 荷物セット -->\n          <g transform=\"translate(115, 35)\">\n            <!-- リュック -->\n            <rect x=\"10\" y=\"25\" width=\"28\" height=\"35\" rx=\"6\" fill=\"#f59e0b\"/>\n            <!-- 水筒 -->\n            <rect x=\"42\" y=\"35\" width=\"14\" height=\"25\" rx=\"3\" fill=\"#06b6d4\"/>\n            <!-- 帽子 -->\n            <ellipse cx=\"24\" cy=\"15\" rx=\"16\" ry=\"5\" fill=\"#eab308\"/>\n            <path d=\"M12 15 C12 6 36 6 36 15 Z\" fill=\"#eab308\"/>\n            <!-- チェックマーク -->\n            <circle cx=\"50\" cy=\"15\" r=\"12\" fill=\"#22c55e\"/>\n            <path d=\"M44 15 L48 19 L56 11\" stroke=\"#fff\" stroke-width=\"2.5\" fill=\"none\" stroke-linecap=\"round\"/>\n          </g>\n        </svg>"}, {"label": "そのまま あそぶ", "correct": false, "svg_key": "q17_play", "speech": "そのまま あそぶ", "explanation": "あそんでいると、ばすに おくれちゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 荷物置いたまま遊ぶ -->\n          <g transform=\"translate(85, 30)\">\n            <circle cx=\"25\" cy=\"25\" r=\"16\" fill=\"#ffd7b5\"/>\n            <rect x=\"15\" y=\"43\" width=\"20\" height=\"26\" fill=\"#ec4899\"/>\n            <line x1=\"16\" y1=\"69\" x2=\"0\" y2=\"88\" stroke=\"#334155\" stroke-width=\"6\"/>\n            <line x1=\"34\" y1=\"69\" x2=\"50\" y2=\"88\" stroke=\"#334155\" stroke-width=\"6\"/>\n          </g>\n          <text x=\"100\" y=\"130\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">あそびまわる</text>\n        </svg>"}, {"label": "にもつを おいていく", "correct": false, "svg_key": "q17_leave", "speech": "にもつを おいていく", "explanation": "にもつを わすれたら たいへんだよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- ベンチに水筒ポツンと忘れる -->\n          <rect x=\"30\" y=\"80\" width=\"80\" height=\"10\" rx=\"2\" fill=\"#78350f\"/>\n          <line x1=\"45\" y1=\"90\" x2=\"45\" y2=\"120\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <line x1=\"95\" y1=\"90\" x2=\"95\" y2=\"120\" stroke=\"#78350f\" stroke-width=\"5\"/>\n          <rect x=\"60\" y=\"55\" width=\"16\" height=\"25\" rx=\"3\" fill=\"#06b6d4\"/>\n          <!-- 立ち去る子ども（遠くへ） -->\n          <g transform=\"translate(135, 45)\">\n            <circle cx=\"15\" cy=\"18\" r=\"10\" fill=\"#4a3525\"/>\n            <rect x=\"8\" y=\"28\" width=\"14\" height=\"20\" fill=\"#64748b\"/>\n          </g>\n          <text x=\"100\" y=\"140\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">わすれもの！</text>\n        </svg>"}]}, {"id": 17, "category": "return", "category_name": "かえり", "category_icon": "🎒", "question": "かえりの ばすでも？", "speech": "かえりの ばすでも どうする？", "options": [{"label": "シートベルトを しめる", "correct": true, "svg_key": "q18_seatbelt", "speech": "シートベルトを しめる", "explanation": "つかれていても、がっこうに つくまで カチッとしめようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <rect x=\"50\" y=\"30\" width=\"100\" height=\"110\" rx=\"16\" fill=\"#3b82f6\"/>\n          <circle cx=\"100\" cy=\"55\" r=\"22\" fill=\"#ffd7b5\"/>\n          <path d=\"M78 52 C78 35 122 35 122 52 Z\" fill=\"#4a3525\"/>\n          <rect x=\"78\" y=\"80\" width=\"44\" height=\"45\" rx=\"6\" fill=\"#10b981\"/>\n          <!-- シートベルトしっかり -->\n          <line x1=\"60\" y1=\"45\" x2=\"135\" y2=\"125\" stroke=\"#ea580c\" stroke-width=\"12\" stroke-linecap=\"round\"/>\n          <circle cx=\"160\" cy=\"35\" r=\"16\" fill=\"#22c55e\"/>\n          <path d=\"M152 35 L158 41 L168 29\" stroke=\"#fff\" stroke-width=\"3.5\" fill=\"none\" stroke-linecap=\"round\"/>\n        </svg>"}, {"label": "はずして ねころぶ", "correct": false, "svg_key": "q18_lie", "image": "images/q18_lie.png", "speech": "はずして ねころぶ", "explanation": "シートベルトを はずして ねころぶと あぶないよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <rect x=\"40\" y=\"70\" width=\"120\" height=\"60\" rx=\"12\" fill=\"#3b82f6\"/>\n          <!-- 座席に寝転がる -->\n          <g transform=\"translate(45, 60)\">\n            <circle cx=\"25\" cy=\"20\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"38\" y=\"12\" width=\"45\" height=\"18\" rx=\"4\" fill=\"#f59e0b\"/>\n            <rect x=\"80\" y=\"14\" width=\"30\" height=\"14\" rx=\"4\" fill=\"#64748b\"/>\n          </g>\n          <!-- シートベルトが外れている -->\n          <text x=\"100\" y=\"145\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">ねころんじゃだめ！</text>\n        </svg>"}, {"label": "つうろで あそぶ", "correct": false, "svg_key": "q18_play_aisle", "speech": "つうろで あそぶ", "explanation": "つうろで あそぶと、ゆれて ころんじゃうよ。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 通路で友達とじゃれ合う -->\n          <rect x=\"15\" y=\"40\" width=\"35\" height=\"90\" rx=\"6\" fill=\"#93c5fd\"/>\n          <rect x=\"150\" y=\"40\" width=\"35\" height=\"90\" rx=\"6\" fill=\"#93c5fd\"/>\n          <g transform=\"translate(60, 45)\">\n            <circle cx=\"18\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"33\" width=\"16\" height=\"22\" fill=\"#ef4444\"/>\n          </g>\n          <g transform=\"translate(100, 45)\">\n            <circle cx=\"18\" cy=\"20\" r=\"12\" fill=\"#ffd7b5\"/>\n            <rect x=\"10\" y=\"33\" width=\"16\" height=\"22\" fill=\"#eab308\"/>\n          </g>\n          <text x=\"100\" y=\"130\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">つうろで あそばない</text>\n        </svg>"}]}, {"id": 18, "category": "return", "category_name": "かえり", "category_icon": "🎒", "question": "がっこうに ついたら？", "speech": "がっこうに ついたら どうする？", "options": [{"label": "「ありがとう」と いう", "correct": true, "svg_key": "q19_thanks", "speech": "ありがとう と いう", "explanation": "うんてんしゅさんや せんせいに「ありがとうございました」と つたえようね！", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#f0fdf4\"/>\n          <!-- 運転手さん（制服・帽子） -->\n          <g transform=\"translate(30, 25)\">\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <ellipse cx=\"25\" cy=\"18\" rx=\"18\" ry=\"5\" fill=\"#1e293b\"/>\n            <path d=\"M12 18 C12 8 38 8 38 18 Z\" fill=\"#1e293b\"/>\n            <rect x=\"13\" y=\"48\" width=\"24\" height=\"34\" fill=\"#1e3a8a\"/>\n          </g>\n          <!-- お辞儀して「ありがとう」と言う子 -->\n          <g transform=\"translate(115, 35)\">\n            <circle cx=\"25\" cy=\"25\" r=\"15\" fill=\"#ffd7b5\"/>\n            <path d=\"M10 22 C10 10 40 10 40 22 Z\" fill=\"#4a3525\"/>\n            <!-- お辞儀の傾き -->\n            <rect x=\"15\" y=\"42\" width=\"20\" height=\"32\" rx=\"4\" fill=\"#10b981\" transform=\"rotate(15 25 58)\"/>\n          </g>\n          <!-- ふきだし「ありがとう！」 -->\n          <rect x=\"75\" y=\"95\" width=\"105\" height=\"35\" rx=\"8\" fill=\"#ffffff\" stroke=\"#22c55e\" stroke-width=\"2\"/>\n          <text x=\"127\" y=\"118\" font-family=\"'UD Digi Kyokasho N-R', 'Hiragino Maru Gothic ProN', sans-serif\" font-weight=\"bold\" font-size=\"13\" fill=\"#15803d\" text-anchor=\"middle\">ありがとう！</text>\n        </svg>"}, {"label": "だまって さっさと かえる", "correct": false, "svg_key": "q19_dash_home", "speech": "だまって さっさと かえる", "explanation": "だまって かえらないで、きちんとおれいを いおうね。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- 何も言わずにダッシュで帰る -->\n          <g transform=\"translate(30, 35)\">\n            <!-- 運転手さんがポカンとしている -->\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <rect x=\"13\" y=\"48\" width=\"24\" height=\"34\" fill=\"#1e3a8a\"/>\n            <text x=\"25\" y=\"98\" font-size=\"14\" font-weight=\"bold\" fill=\"#64748b\" text-anchor=\"middle\">？</text>\n          </g>\n          <!-- 一目散に走る子 -->\n          <g transform=\"translate(105, 30)\">\n            <circle cx=\"30\" cy=\"25\" r=\"14\" fill=\"#ffd7b5\"/>\n            <rect x=\"20\" y=\"40\" width=\"20\" height=\"26\" fill=\"#f97316\"/>\n            <line x1=\"22\" y1=\"66\" x2=\"5\" y2=\"85\" stroke=\"#334155\" stroke-width=\"6\"/>\n            <line x1=\"38\" y1=\"66\" x2=\"55\" y2=\"85\" stroke=\"#334155\" stroke-width=\"6\"/>\n          </g>\n          <text x=\"100\" y=\"135\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">だまって かえる</text>\n        </svg>"}, {"label": "あいさつ しない", "correct": false, "svg_key": "q19_ignore", "speech": "あいさつ しない", "explanation": "あんぜんに うんてんしてくれた うんてんしゅさんに おれいを いおうね。", "svg": "<svg viewBox=\"0 0 200 160\" class=\"card-svg\">\n          <rect width=\"200\" height=\"160\" rx=\"14\" fill=\"#fef2f2\"/>\n          <!-- そっぽを向いて通り過ぎる -->\n          <g transform=\"translate(40, 35)\">\n            <circle cx=\"25\" cy=\"30\" r=\"16\" fill=\"#ffd7b5\"/>\n            <rect x=\"13\" y=\"48\" width=\"24\" height=\"34\" fill=\"#1e3a8a\"/>\n          </g>\n          <g transform=\"translate(110, 35)\">\n            <circle cx=\"25\" cy=\"30\" r=\"15\" fill=\"#ffd7b5\"/>\n            <path d=\"M10 28 L15 28\" stroke=\"#333\" stroke-width=\"2\"/>\n            <!-- プイッ -->\n            <rect x=\"15\" y=\"47\" width=\"20\" height=\"30\" fill=\"#64748b\"/>\n          </g>\n          <text x=\"100\" y=\"135\" font-size=\"12\" font-weight=\"bold\" fill=\"#ef4444\" text-anchor=\"middle\">あいさつ しない</text>\n        </svg>"}]}];
+
+        // 状態管理
+        let currentQuestionIndex = 0;
+        let clearedSet = new Set(JSON.parse(localStorage.getItem("zoo_quiz_cleared") || "[]"));
+
+        // 効果音 (Web Audio API)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx && AudioContext) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // ユーザーの最初のタップ・クリックで確実にWeb Audioをアンロック
+        function unlockAudio() {
+            initAudio();
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                try {
+                    const buf = audioCtx.createBuffer(1, 1, 22050);
+                    const src = audioCtx.createBufferSource();
+                    src.buffer = buf;
+                    src.connect(audioCtx.destination);
+                    src.start(0);
+                } catch (e) {}
+            }
+        }
+        window.addEventListener('pointerdown', unlockAudio, { passive: true });
+        window.addEventListener('touchstart', unlockAudio, { passive: true });
+        window.addEventListener('click', unlockAudio, { passive: true });
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => doPlaySound(type));
+            } else {
+                doPlaySound(type);
+            }
+        }
+
+        function doPlaySound(type) {
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // 【正解音：ピーン・ポーン♪】
+                // 音1: ピン♪ (C6 1046.5Hz)
+                playTone(1046.50, now, 0.38, 'sine', 0.4);
+                playTone(2093.00, now, 0.25, 'triangle', 0.15);
+
+                // 音2: ポーン♪ (G5 783.99Hz)
+                playTone(783.99, now + 0.22, 0.65, 'sine', 0.45);
+                playTone(1567.98, now + 0.22, 0.45, 'triangle', 0.15);
+
+            } else if (type === 'wrong') {
+                // 【不正解音：ブッ・ブー！】小型スピーカーでも確実に響くバズ音
+                // 音1: ブッ (150Hz)
+                playBuzzer(150, now, 0.14, 0.38);
+
+                // 音2: ブーー (135Hz)
+                playBuzzer(135, now + 0.18, 0.32, 0.38);
+
+            } else if (type === 'fanfare') {
+                // クリアファンファーレ
+                const notes = [
+                    { f: 523.25, d: 0.12, t: 0.00 },
+                    { f: 659.25, d: 0.12, t: 0.12 },
+                    { f: 783.99, d: 0.12, t: 0.24 },
+                    { f: 1046.50, d: 0.22, t: 0.36 },
+                    { f: 783.99, d: 0.12, t: 0.58 },
+                    { f: 1046.50, d: 0.65, t: 0.70 }
+                ];
+                notes.forEach(n => {
+                    playTone(n.f, now + n.t, n.d, 'triangle', 0.35);
+                    playTone(n.f * 2, now + n.t, n.d * 0.7, 'sine', 0.15);
+                });
+
+            } else if (type === 'click') {
+                playTone(880, now, 0.05, 'sine', 0.15);
+            }
+        }
+
+        function playTone(freq, startTime, duration, waveType = 'sine', maxGain = 0.3) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = waveType;
+                osc.frequency.setValueAtTime(freq, startTime);
+                
+                gain.gain.setValueAtTime(maxGain, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration + 0.05);
+            } catch (e) {}
+        }
+
+        function playBuzzer(freq, startTime, duration, maxGain = 0.35) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, startTime);
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1100, startTime);
+                
+                gain.gain.setValueAtTime(maxGain, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(startTime);
+                osc.stop(startTime + duration + 0.05);
+            } catch (e) {}
+        }
+
+        // 紙吹雪アニメーション (Canvas)
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationFrame = null;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function spawnConfetti() {
+            particles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#ef4444'];
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+                    y: canvas.height * 0.45,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: -Math.random() * 12 - 5,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    vrot: (Math.random() - 0.5) * 10,
+                    gravity: 0.38,
+                    opacity: 1
+                });
+            }
+            if (!animationFrame) {
+                loopConfetti();
+            }
+        }
+
+        function loopConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+                p.rot += p.vrot;
+                p.opacity -= 0.008;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rot * Math.PI) / 180);
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.4);
+                ctx.restore();
+            });
+
+            particles = particles.filter(p => p.opacity > 0 && p.y < canvas.height + 50);
+            if (particles.length > 0) {
+                animationFrame = requestAnimationFrame(loopConfetti);
+            } else {
+                animationFrame = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // 画面切り替え
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'home-screen') {
+                renderGrid();
+            }
+        }
+
+        // ホーム画面のグリッド描画
+        let currentFilter = 'all';
+        function renderGrid() {
+            const grid = document.getElementById('question-grid');
+            grid.innerHTML = '';
+            
+            const filtered = QUESTIONS.filter(q => currentFilter === 'all' || q.category === currentFilter);
+
+            filtered.forEach(q => {
+                const isCleared = clearedSet.has(q.id);
+                const card = document.createElement('div');
+                card.className = `grid-card cat-${q.category} ${isCleared ? 'cleared' : ''}`;
+                card.innerHTML = `
+                    <div class="grid-num-badge">${q.id}</div>
+                    <div class="grid-info">
+                        <div class="grid-category-label">${q.category_icon} ${q.category_name}</div>
+                        <div class="grid-q-text">${q.question}</div>
+                    </div>
+                    <div class="grid-cleared-mark">★</div>
+                `;
+                card.addEventListener('click', () => {
+                    playSound('click');
+                    currentQuestionIndex = QUESTIONS.findIndex(item => item.id === q.id);
+                    openQuiz();
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        // カテゴリタブ切り替え
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                playSound('click');
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.cat;
+                renderGrid();
+            });
+        });
+
+        // クイズ画面を開く
+        function openQuiz() {
+            showScreen('quiz-screen');
+            loadQuestion(currentQuestionIndex);
+        }
+
+        let isAnswering = false;
+
+        // 問題の読み込み表示
+        function loadQuestion(index) {
+            isAnswering = false;
+            const panel = document.getElementById('correct-panel');
+            if (panel) panel.classList.remove('active');
+            const optContainer = document.getElementById('options-container');
+            if (optContainer) optContainer.classList.remove('has-correct-focus');
+
+            const q = QUESTIONS[index];
+            if (!q) return;
+
+            // ツールバー
+            document.getElementById('quiz-category-badge').textContent = `${q.category_icon} ${q.category_name}`;
+            document.getElementById('quiz-progress-text').textContent = `もんだい ${index + 1} / ${QUESTIONS.length}`;
+            document.getElementById('question-title').textContent = q.question;
+
+            // ナビボタン制御
+            document.getElementById('btn-quiz-prev').disabled = (index === 0);
+            document.getElementById('btn-quiz-next').disabled = (index === QUESTIONS.length - 1);
+
+            // 選択肢の描画
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            const isTwo = (q.options.length === 2);
+            container.className = `options-container ${isTwo ? 'two-options' : 'three-options'}`;
+
+            // 選択肢を毎回ランダムにシャッフル
+            const shuffledOptions = [...q.options];
+            for (let i = shuffledOptions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+            }
+
+            shuffledOptions.forEach((opt, optIndex) => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                
+                const imgPath = opt.image || `images/${opt.svg_key}.png`;
+                const imgId = `img-${index}-${optIndex}`;
+                const svgId = `svg-${index}-${optIndex}`;
+
+                card.innerHTML = `
+                    <div class="option-svg-wrap">
+                        <img id="${imgId}" src="${imgPath}" alt="${opt.label}" class="card-img" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.style.display='none'; var s=document.getElementById('${svgId}'); if(s) s.style.display='block';">
+                        <div id="${svgId}" style="display:none; width:100%; height:100%;">
+                            ${opt.svg}
+                        </div>
+                    </div>
+                    <div class="option-label">${opt.label}</div>
+                    <div class="option-stamp-overlay">
+                        <div class="stamp-icon stamp-correct">
+                            <svg viewBox="0 0 100 100" class="svg-stamp">
+                                <circle cx="50" cy="50" r="38" fill="none" stroke="#e11d48" stroke-width="11" />
+                            </svg>
+                        </div>
+                        <div class="stamp-icon stamp-wrong">
+                            <svg viewBox="0 0 100 100" class="svg-stamp">
+                                <line x1="25" y1="25" x2="75" y2="75" stroke="#ef4444" stroke-width="13" stroke-linecap="round" />
+                                <line x1="75" y1="25" x2="25" y2="75" stroke="#ef4444" stroke-width="13" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => handleOptionClick(card, opt, q));
+                container.appendChild(card);
+            });
+        }
+
+        // 選択肢タップ時の処理
+        function handleOptionClick(cardElement, option, question) {
+            if (isAnswering) return;
+            if (cardElement.classList.contains('card-disabled')) return;
+
+            if (option.correct) {
+                isAnswering = true;
+                // 正解！
+                playSound('correct');
+
+                // カードの演出（正解カードを特大主役に拡大、⭕️スタンプ、緑発光）
+                const container = document.getElementById('options-container');
+                if (container) container.classList.add('has-correct-focus');
+                cardElement.classList.add('card-correct');
+
+                spawnConfetti();
+
+                clearedSet.add(question.id);
+                localStorage.setItem("zoo_quiz_cleared", JSON.stringify(Array.from(clearedSet)));
+
+                // イラストを隠さない解説バーを表示
+                const panel = document.getElementById('correct-panel');
+                document.getElementById('correct-desc').textContent = option.explanation;
+                const nextBtnText = document.getElementById('btn-modal-next-text');
+                if (nextBtnText) {
+                    nextBtnText.textContent = (currentQuestionIndex === QUESTIONS.length - 1) ? '🏆 ぜんぶ クリア！' : 'つぎへ';
+                }
+                if (panel) {
+                    panel.classList.add('active');
+                }
+                isAnswering = false;
+            } else {
+                // 不正解
+                playSound('wrong');
+
+                cardElement.classList.remove('card-wrong');
+                void cardElement.offsetWidth; // リフロー
+                cardElement.classList.add('card-wrong');
+
+                showToast("❌ ちがうよ！ もういちど えらんでみよう！");
+
+                // シェイク後に非活性化（❌マークは残したままにして、再選択を促す）
+                setTimeout(() => {
+                    cardElement.classList.add('card-disabled');
+                }, 450);
+            }
+        }
+
+        // トースト通知
+        let toastTimer = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1800);
+        }
+
+        // ナビゲーションイベント
+        document.getElementById('btn-start-first').addEventListener('click', () => {
+            playSound('click');
+            currentQuestionIndex = 0;
+            openQuiz();
+        });
+
+        document.getElementById('btn-reset-history').addEventListener('click', () => {
+            playSound('click');
+            if (clearedSet.size === 0) {
+                showToast("まだ クリアした きろくが ありません");
+                return;
+            }
+            if (confirm("これまでの クリアきろくを ぜんぶ リセットしますか？")) {
+                clearedSet.clear();
+                localStorage.removeItem("zoo_quiz_cleared");
+                renderGrid();
+                showToast("✨ きろくを リセットしました！");
+            }
+        });
+
+        document.getElementById('btn-quiz-home').addEventListener('click', () => {
+            playSound('click');
+            showScreen('home-screen');
+        });
+
+        document.getElementById('btn-quiz-prev').addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                playSound('click');
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        document.getElementById('btn-quiz-next').addEventListener('click', () => {
+            if (currentQuestionIndex < QUESTIONS.length - 1) {
+                playSound('click');
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        // 正解解説バーの「つぎへ」
+        document.getElementById('btn-modal-next').addEventListener('click', () => {
+            playSound('click');
+            const panel = document.getElementById('correct-panel');
+            if (panel) panel.classList.remove('active');
+            const container = document.getElementById('options-container');
+            if (container) container.classList.remove('has-correct-focus');
+            
+            if (currentQuestionIndex < QUESTIONS.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                // 全問クリア！
+                playSound('fanfare');
+                spawnConfetti();
+                showScreen('complete-screen');
+            }
+        });
+
+        // クリア画面イベント
+        document.getElementById('btn-replay-all').addEventListener('click', () => {
+            playSound('click');
+            currentQuestionIndex = 0;
+            openQuiz();
+        });
+
+        document.getElementById('btn-complete-home').addEventListener('click', () => {
+            playSound('click');
+            showScreen('home-screen');
+        });
+
+        // 初回初期化
+        renderGrid();
+    </script>
+</body>
+</html>
