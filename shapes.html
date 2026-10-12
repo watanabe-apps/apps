@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>図形あそび (Shapes)</title>
     <style>
         * {
@@ -12,6 +12,16 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            touch-action: none; /* スクロールや拡大縮小を無効化 */
+            -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -19,11 +29,6 @@
             background-color: #f1f5f9;
             background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
             background-size: 24px 24px;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-            touch-action: none; /* スクロールや拡大縮小を無効化 */
         }
 
         /* --- 上の枠：ツールバー (SelectShapeView) --- */
@@ -80,6 +85,49 @@
             pointer-events: none;
         }
 
+        /* ツールバー右側のアクションボタンエリア */
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* 色切り替えボタン */
+        .color-btn {
+            width: 68px;
+            height: 68px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .color-btn:active {
+            transform: scale(0.92);
+            background: #f8fafc;
+        }
+
+        .color-btn svg {
+            width: 38px;
+            height: 38px;
+            pointer-events: none;
+            transition: transform 0.2s ease;
+        }
+
+        /* カラフルモード時のボタン強調 */
+        body.colorful-mode .color-btn {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
         /* ゴミ箱エリア */
         .trash-btn {
             width: 68px;
@@ -119,6 +167,27 @@
 
         .trash-btn.drag-hover svg {
             transform: rotate(-15deg) scale(1.1);
+        }
+
+        /* --- 図形カラー定義 --- */
+        /* 基本は全図形が同じ１色（鮮やかなブルー） */
+        .shape-fill {
+            transition: fill 0.25s ease;
+            fill: #3b82f6;
+        }
+
+        /* ボタンタップで有効になるカラフルモード（今の色） */
+        body.colorful-mode .shape-circle {
+            fill: #ef4444; /* 赤 */
+        }
+        body.colorful-mode .shape-square {
+            fill: #3b82f6; /* 青 */
+        }
+        body.colorful-mode .shape-rightTriangle {
+            fill: #10b981; /* 緑 */
+        }
+        body.colorful-mode .shape-equilateralTriangle {
+            fill: #f59e0b; /* オレンジ */
         }
 
         /* --- キャンバス領域 (ShapesView) --- */
@@ -166,6 +235,18 @@
             pointer-events: auto; /* 図形自体はポインタを受け取る */
             will-change: transform;
             z-index: 100; /* ツールバー(z-index: 10)より常に前面！ */
+            transform-origin: center center;
+        }
+
+        /* 直角三角形の回転軸を図形の幾何学的重心（底辺と高さの1/3と2/3の位置）に設定 */
+        .shape-item[data-shape="rightTriangle"] {
+            transform-origin: 33.3333% 66.6667%;
+        }
+
+        /* 正三角形の回転軸を図形の幾何学的重心（底辺から高さの1/3の位置）に設定 */
+        .shape-item[data-shape="equilateralTriangle"],
+        .shape-item[data-shape="isoscelesTriangle"] {
+            transform-origin: 50% 64.4338%;
         }
 
         /* ドラッグ中の状態：指に即時追従 */
@@ -204,41 +285,54 @@
             <!-- 1. ○（円） -->
             <div class="palette-item" data-shape="circle" title="円（ドラッグして配置）">
                 <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="50" fill="#EF4444"/>
+                    <circle cx="50" cy="50" r="50" class="shape-fill shape-circle"/>
                 </svg>
             </div>
 
             <!-- 2. □（四角 / 正方形・角丸なし） -->
             <div class="palette-item" data-shape="square" title="正方形（ドラッグして配置）">
                 <svg viewBox="0 0 100 100">
-                    <rect x="0" y="0" width="100" height="100" fill="#3B82F6"/>
+                    <rect x="0" y="0" width="100" height="100" class="shape-fill shape-square"/>
                 </svg>
             </div>
 
             <!-- 3. 直角三角形（正方形を半分に対角線で切った形） -->
             <div class="palette-item" data-shape="rightTriangle" title="直角三角形（ドラッグして配置）">
                 <svg viewBox="0 0 100 100">
-                    <polygon points="0,0 100,100 0,100" fill="#10B981"/>
+                    <polygon points="0,0 100,100 0,100" class="shape-fill shape-rightTriangle"/>
                 </svg>
             </div>
 
-            <!-- 4. 二等辺三角形（底辺が正方形と同じで面積が半分の形） -->
-            <div class="palette-item" data-shape="isoscelesTriangle" title="二等辺三角形（ドラッグして配置）">
+            <!-- 4. 正三角形（三辺がすべて等しい三角形） -->
+            <div class="palette-item" data-shape="equilateralTriangle" title="正三角形（ドラッグして配置）">
                 <svg viewBox="0 0 100 100">
-                    <polygon points="50,0 100,100 0,100" fill="#F59E0B"/>
+                    <polygon points="50,6.7 100,93.3 0,93.3" class="shape-fill shape-equilateralTriangle"/>
                 </svg>
             </div>
         </div>
 
-        <!-- ゴミ箱ボタン -->
-        <button class="trash-btn" id="btn-trash" title="ゴミ箱（タップで全消去 / ここにドラッグでポイ）">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-            </svg>
-        </button>
+        <!-- ツールバー右側のアクションボタン -->
+        <div class="toolbar-actions">
+            <!-- 色切り替えボタン（基本の1色 ⇄ 今の色） -->
+            <button class="color-btn" id="btn-color" title="色を切り替え（基本1色 / カラフル）" aria-label="色切り替え">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="7.5" cy="7.5" r="4" fill="#EF4444"/>
+                    <circle cx="16.5" cy="7.5" r="4" fill="#3B82F6"/>
+                    <circle cx="7.5" cy="16.5" r="4" fill="#10B981"/>
+                    <circle cx="16.5" cy="16.5" r="4" fill="#F59E0B"/>
+                </svg>
+            </button>
+
+            <!-- ゴミ箱ボタン -->
+            <button class="trash-btn" id="btn-trash" title="ゴミ箱（タップで全消去 / ここにドラッグでポイ）">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+        </div>
     </header>
 
     <!-- ガイド表示 -->
@@ -255,10 +349,12 @@
             ctx: null,
             init() {
                 if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (AudioContext) this.ctx = new AudioContext();
+                    const AudioContextClass = window.AudioContext || window['webkitAudioContext'];
+                    if (AudioContextClass) this.ctx = new AudioContextClass();
                 }
-                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(() => {});
+                }
             },
             playPop() {
                 try {
@@ -304,6 +400,21 @@
                     osc.connect(gain); gain.connect(this.ctx.destination);
                     osc.start(); osc.stop(this.ctx.currentTime + 0.14);
                 } catch (_) {}
+            },
+            playColor() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+                } catch (_) {}
             }
         };
 
@@ -319,25 +430,31 @@
             // ○（円）
             circle: `
                 <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="50" fill="#EF4444"/>
+                    <circle cx="50" cy="50" r="50" class="shape-fill shape-circle"/>
                 </svg>
             `,
             // □（正方形：角丸なし）
             square: `
                 <svg viewBox="0 0 100 100">
-                    <rect x="0" y="0" width="100" height="100" fill="#3B82F6"/>
+                    <rect x="0" y="0" width="100" height="100" class="shape-fill shape-square"/>
                 </svg>
             `,
             // 直角三角形（正方形を半分に対角線で割った形）
             rightTriangle: `
                 <svg viewBox="0 0 100 100">
-                    <polygon points="0,0 100,100 0,100" fill="#10B981"/>
+                    <polygon points="0,0 100,100 0,100" class="shape-fill shape-rightTriangle"/>
                 </svg>
             `,
-            // 二等辺三角形（底辺が正方形と同じで面積が半分の形）
+            // 正三角形（三辺がすべて等しい三角形）
+            equilateralTriangle: `
+                <svg viewBox="0 0 100 100">
+                    <polygon points="50,6.7 100,93.3 0,93.3" class="shape-fill shape-equilateralTriangle"/>
+                </svg>
+            `,
+            // 後方互換用
             isoscelesTriangle: `
                 <svg viewBox="0 0 100 100">
-                    <polygon points="50,0 100,100 0,100" fill="#F59E0B"/>
+                    <polygon points="50,6.7 100,93.3 0,93.3" class="shape-fill shape-equilateralTriangle"/>
                 </svg>
             `
         };
@@ -356,13 +473,35 @@
             el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rotation}deg)`;
         }
 
+        // 図形ごとの回転軸（重心）オフセット
+        function getShapeCenterOffset(type) {
+            if (type === 'rightTriangle') {
+                return {
+                    x: SHAPE_SIZE / 3,
+                    y: (SHAPE_SIZE * 2) / 3
+                };
+            }
+            if (type === 'equilateralTriangle' || type === 'isoscelesTriangle') {
+                return {
+                    x: SHAPE_SIZE / 2,
+                    y: SHAPE_SIZE * 0.644338
+                };
+            }
+            // 円・正方形は中心(50% 50%)
+            return {
+                x: SHAPE_SIZE / 2,
+                y: SHAPE_SIZE / 2
+            };
+        }
+
         // 新しい図形要素を生成してキャンバスに追加
         function createShapeElement(type, x, y, rotation = 0) {
             const shapeEl = document.createElement('div');
             shapeEl.className = 'shape-item';
+            shapeEl.dataset.shape = type;
 
             highestZIndex++;
-            shapeEl.style.zIndex = highestZIndex;
+            shapeEl.style.zIndex = String(highestZIndex);
 
             shapeEl.innerHTML = `
                 <div class="shape-body">
@@ -370,7 +509,9 @@
                 </div>
             `;
 
-            canvasArea.appendChild(shapeEl);
+            if (canvasArea) {
+                canvasArea.appendChild(shapeEl);
+            }
             applyTransform(shapeEl, x, y, rotation, false);
             return shapeEl;
         }
@@ -378,8 +519,9 @@
         // ----------------------------------------------------
         // 1. パレットからドラッグして自然に取り出す処理
         // ----------------------------------------------------
-        document.querySelectorAll('.palette-item').forEach(paletteItem => {
-            const shapeType = paletteItem.dataset.shape;
+        document.querySelectorAll('.palette-item').forEach(item => {
+            const paletteItem = /** @type {HTMLElement} */ (item);
+            const shapeType = paletteItem.dataset.shape || 'circle';
 
             paletteItem.addEventListener('pointerdown', (e) => {
                 if (e.button !== 0) return; // 左クリック・タッチのみ
@@ -387,9 +529,10 @@
                 // パレット側でポインタをキャプチャし、ドラッグを維持
                 paletteItem.setPointerCapture(e.pointerId);
 
-                // 指の真下に図形の中心が来るように配置
-                const startX = e.clientX - SHAPE_SIZE / 2;
-                const startY = e.clientY - SHAPE_SIZE / 2;
+                // 指の真下に図形の回転軸（重心）が来るように配置
+                const offset = getShapeCenterOffset(shapeType);
+                const startX = e.clientX - offset.x;
+                const startY = e.clientY - offset.y;
 
                 const newShape = createShapeElement(shapeType, startX, startY, 0);
                 newShape.classList.add('is-dragging');
@@ -398,8 +541,8 @@
                 let curY = startY;
 
                 const onPointerMove = (moveEvt) => {
-                    curX = moveEvt.clientX - SHAPE_SIZE / 2;
-                    curY = moveEvt.clientY - SHAPE_SIZE / 2;
+                    curX = moveEvt.clientX - offset.x;
+                    curY = moveEvt.clientY - offset.y;
                     applyTransform(newShape, curX, curY, 0, false);
 
                     // ゴミ箱エリアとの当たり判定
@@ -456,12 +599,12 @@
                 hasMoved = false;
                 startPointerX = e.clientX;
                 startPointerY = e.clientY;
-                startShapeX = parseFloat(el.dataset.x) || 0;
-                startShapeY = parseFloat(el.dataset.y) || 0;
+                startShapeX = parseFloat(el.dataset.x || '0');
+                startShapeY = parseFloat(el.dataset.y || '0');
 
                 // 触れた図形を常に最前面へ！
                 highestZIndex++;
-                el.style.zIndex = highestZIndex;
+                el.style.zIndex = String(highestZIndex);
 
                 el.setPointerCapture(e.pointerId);
                 el.classList.add('is-dragging');
@@ -480,7 +623,7 @@
                 if (hasMoved) {
                     const nextX = startShapeX + dx;
                     const nextY = startShapeY + dy;
-                    const currentRot = parseInt(el.dataset.rotation, 10) || 0;
+                    const currentRot = parseInt(el.dataset.rotation || '0', 10);
                     applyTransform(el, nextX, nextY, currentRot, false);
 
                     checkTrashTarget(e.clientX, e.clientY);
@@ -507,10 +650,10 @@
 
                 // 5px未満の移動であれば【タップ】と判定 ➔ 45度回転！
                 if (!hasMoved) {
-                    const currentRot = parseInt(el.dataset.rotation, 10) || 0;
-                    const nextRot = (currentRot + 45) % 360;
-                    const curX = parseFloat(el.dataset.x) || 0;
-                    const curY = parseFloat(el.dataset.y) || 0;
+                    const currentRot = parseInt(el.dataset.rotation || '0', 10);
+                    const nextRot = currentRot + 45; // 360度で巻き戻らないようにそのまま加算
+                    const curX = parseFloat(el.dataset.x || '0');
+                    const curY = parseFloat(el.dataset.y || '0');
                     applyTransform(el, curX, curY, nextRot, true);
                     AudioFX.playRotate();
                 }
@@ -532,6 +675,7 @@
 
         // ゴミ箱の当たり判定
         function isPointerOverTrash(clientX, clientY) {
+            if (!trashBtn) return false;
             const rect = trashBtn.getBoundingClientRect();
             return (
                 clientX >= rect.left - 12 &&
@@ -546,6 +690,7 @@
         }
 
         function setTrashHoverState(active) {
+            if (!trashBtn) return;
             if (active) {
                 trashBtn.classList.add('drag-hover');
             } else {
@@ -553,15 +698,64 @@
             }
         }
 
+        // 色切り替えボタン：基本の1色 ⇄ 今の色（カラフル）
+        const colorBtn = document.getElementById('btn-color');
+        if (colorBtn) {
+            colorBtn.addEventListener('click', () => {
+                document.body.classList.toggle('colorful-mode');
+                AudioFX.playColor();
+            });
+        }
+
         // ゴミ箱クリック：全消去
-        trashBtn.addEventListener('click', () => {
-            const shapes = canvasArea.querySelectorAll('.shape-item');
-            if (shapes.length === 0) return;
-            if (confirm('すべての図形を消しますか？')) {
-                AudioFX.playTrash();
-                shapes.forEach(shape => removeShape(shape));
+        if (trashBtn) {
+            trashBtn.addEventListener('click', () => {
+                if (!canvasArea) return;
+                const shapes = canvasArea.querySelectorAll('.shape-item');
+                if (shapes.length === 0) return;
+                if (confirm('すべての図形を消しますか？')) {
+                    AudioFX.playTrash();
+                    shapes.forEach(shape => removeShape(shape));
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // ダブルタップ拡大・ピンチ拡大の完全防止 (iOS / iPad / Safari / Android)
+        // ----------------------------------------------------
+        let lastTouchEndTime = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEndTime <= 350) {
+                e.preventDefault();
             }
+            lastTouchEndTime = now;
+        }, { passive: false });
+
+        // 2本指タップやピンチズームの防止
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Safariのジェスチャーズーム防止（文字列ループでTS型チェック警告を回避）
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(eventName => {
+            document.addEventListener(eventName, (e) => {
+                e.preventDefault();
+            });
         });
+
+        // ダブルクリック拡大防止
+        document.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+        }, { passive: false });
     </script>
 </body>
 </html>

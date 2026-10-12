@@ -1,0 +1,2286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>まほうのはこ</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --accent: #ff9f1c;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --bg: #f5f6fa;
+            --font-family: "UD Digi Kyokasho N-R", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+            --item-size: clamp(120px, min(24vw, 22vh), 190px); /* 画面サイズに追従し画面外へのはみ出しを防止 */
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--font-family);
+            background-color: var(--bg);
+            color: #333;
+            touch-action: none;
+        }
+
+        /* 画面共通 */
+        .screen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        /* --- 1. ホーム画面 --- */
+        #home-screen {
+            background: radial-gradient(circle, #fff9e6 0%, #ffeedb 100%);
+            gap: 28px;
+        }
+        .app-title {
+            font-size: 3.8rem;
+            font-weight: 900;
+            color: #d35400;
+            text-shadow: 3px 3px 0 #fff, 5px 5px 0 #f39c12;
+            margin: 0;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        .home-box-icon {
+            font-size: 7.5rem;
+            animation: floatBox 2.2s infinite ease-in-out;
+            cursor: pointer;
+        }
+        @keyframes floatBox {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-18px) scale(1.08); }
+        }
+        .btn-main {
+            font-family: var(--font-family);
+            font-size: 2.3rem;
+            font-weight: bold;
+            padding: 16px 70px;
+            background: linear-gradient(135deg, #ff9f1c, #ff4757);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-main:active {
+            transform: scale(0.94);
+        }
+        .btn-home-setting {
+            font-family: var(--font-family);
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #57606f;
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px solid #ced6e0;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+        }
+        .btn-home-setting:active {
+            background: #dfe4ea;
+        }
+
+        /* --- 2. プレイ画面 --- */
+        #play-screen {
+            background: radial-gradient(circle, #f8f9fa 0%, #e3ecf5 100%);
+            position: fixed;
+            inset: 0;
+        }
+        .play-header {
+            position: absolute;
+            top: 14px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+        .play-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-sub {
+            font-family: var(--font-family);
+            font-size: 1.25rem;
+            padding: 8px 20px;
+            background: #fff;
+            border: 2px solid #b2bec3;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #2d3436;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .btn-mini-setting {
+            font-size: 1.05rem;
+            padding: 7px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #b2bec3;
+            color: #57606f;
+        }
+        .btn-mini-setting:active {
+            background: #e4e7ea;
+        }
+        .round-counter {
+            font-size: 1.6rem;
+            font-weight: 900;
+            background: #fff;
+            padding: 8px 24px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            color: #d35400;
+            border: 2px solid #ffd32a;
+        }
+        .mic-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            color: #636e72;
+        }
+        .mic-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        .mic-dot.active {
+            background: #ff4757;
+            box-shadow: 0 0 10px #ff4757;
+        }
+
+        /* まほうのはこ (上部中央寄りに配置) */
+        .box-container {
+            position: absolute;
+            top: 24%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 190px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transition: transform 0.2s;
+        }
+        .box-container:active {
+            transform: translate(-50%, -50%) scale(0.96);
+        }
+        .box-lid {
+            width: 236px;
+            height: 52px;
+            background: linear-gradient(180deg, #ffd32a, #ff9f1a);
+            border: 5px solid #cc8e35;
+            border-radius: 14px 14px 4px 4px;
+            position: relative;
+            z-index: 2;
+            transform-origin: top center;
+            transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+        }
+        .box-lid::after {
+            content: "✨ ★ ✨";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .box-body {
+            width: 210px;
+            height: 145px;
+            background: linear-gradient(180deg, #ff9f1a, #e67e22);
+            border: 5px solid #cc8e35;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .box-body-ribbon {
+            width: 36px;
+            height: 100%;
+            background: #ff3838;
+            border-left: 3px solid #c0392b;
+            border-right: 3px solid #c0392b;
+        }
+
+        .box-container.opened .box-lid {
+            transform: translateY(-70px) rotate(-24deg) scale(0.94);
+        }
+        .box-container.opened {
+            cursor: default;
+        }
+
+        .box-hint {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #d35400;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 28px;
+            border-radius: 30px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            pointer-events: none;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+            z-index: 15;
+            border: 2px solid #ffeaa7;
+        }
+
+        /* 飛び出すイラスト (枠と同サイズ: 190px) */
+        .spawned-item {
+            position: absolute;
+            width: var(--item-size);
+            height: var(--item-size);
+            background: #ffffff;
+            border: 5px solid #ffd32a;
+            border-radius: 26px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+            cursor: grab;
+            touch-action: none;
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s;
+        }
+        .spawned-item:active {
+            cursor: grabbing;
+        }
+        .spawned-item.dragging {
+            z-index: 120;
+            transition: none !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.35);
+        }
+        .spawned-item img {
+            width: 88%;
+            height: 88%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        .spawned-item .emoji-content {
+            font-size: 7.2rem;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        /* 下部の受取枠 (イラストと同サイズ: --item-size) */
+        .targets-area {
+            position: absolute;
+            bottom: max(20px, env(safe-area-inset-bottom, 20px));
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 16px;
+            box-sizing: border-box;
+            z-index: 30;
+            pointer-events: none;
+            gap: 12px;
+        }
+        .target-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: auto;
+            max-width: var(--item-size);
+            flex: 1;
+        }
+        .target-slot.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .drop-box {
+            width: var(--item-size);
+            height: var(--item-size);
+            border: 5px dashed #487eb0;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 26px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            flex-shrink: 0;
+        }
+        .drop-box.hover {
+            border-color: #0984e3;
+            background: #e1f0fa;
+            transform: scale(1.05);
+        }
+        .drop-box.correct {
+            border: 5px solid var(--success);
+            background: #e6fffb;
+        }
+        .target-name {
+            font-size: clamp(1.2rem, 3vw, 2.5rem);
+            font-weight: 900;
+            color: #1e272e;
+            background: #ffffff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+            border: 3px solid #d2dae2;
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: var(--item-size);
+            text-align: center;
+            white-space: nowrap;
+            word-break: keep-all;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-sizing: border-box;
+        }
+
+        /* 画面サイズ適応メディアクエリ */
+        @media (max-width: 600px) or (max-height: 650px) {
+            .box-container {
+                top: 20%;
+                transform: translate(-50%, -50%) scale(0.85);
+            }
+            .box-container:active {
+                transform: translate(-50%, -50%) scale(0.80);
+            }
+            .box-hint {
+                top: 34%;
+                font-size: 1.15rem;
+                padding: 6px 18px;
+            }
+        }
+        @media (max-height: 520px) {
+            .box-container {
+                top: 18%;
+                transform: translate(-50%, -50%) scale(0.72);
+            }
+            .box-hint {
+                top: 31%;
+                font-size: 1rem;
+                padding: 4px 14px;
+            }
+            .targets-area {
+                bottom: 10px;
+            }
+        }
+
+        /* ボリュームプレビュー */
+        .mic-preview-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .preview-meter-track {
+            position: relative;
+            width: 100%;
+            height: 18px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: visible;
+        }
+        .preview-meter-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2ec4b6, #ff9f1c);
+            border-radius: 10px;
+            transition: width 0.08s ease-out;
+        }
+        .preview-meter-bar.active-thresh {
+            background: linear-gradient(90deg, #2ec4b6, #ff4757);
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.6);
+        }
+        .preview-thresh-line {
+            position: absolute;
+            top: -4px;
+            bottom: -4px;
+            width: 3px;
+            background: #d63031;
+            border-radius: 2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+            box-shadow: 0 0 6px rgba(214, 48, 49, 0.8);
+        }
+        .preview-thresh-line::after {
+            content: "▼";
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #d63031;
+        }
+        .preview-badge {
+            font-size: 0.85rem;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .preview-badge.normal {
+            background: #dfe4ea;
+            color: #57606f;
+        }
+        .preview-badge.opened {
+            background: #ff4757;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+            animation: pulseBadge 0.6s infinite alternate;
+        }
+        @keyframes pulseBadge {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.06); }
+        }
+
+        /* 正解・不正解スタンプ */
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 150;
+            display: none;
+        }
+
+        /* 演出Canvas */
+        #effects-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* クリア画面 */
+        #clear-modal {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        .clear-card {
+            background: #fff;
+            border-radius: 32px;
+            padding: 40px 60px;
+            text-align: center;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+        }
+        .clear-card h2 {
+            font-size: 3.4rem;
+            color: #d35400;
+            margin: 0;
+        }
+
+        /* --- 3. 設定モーダル (最大幅1.5倍: 1140px) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: #f1f2f6;
+            z-index: 300;
+            flex-direction: column;
+            touch-action: pan-y;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-header {
+            background: #fff;
+            padding: 16px 28px;
+            border-bottom: 2px solid #dcdde1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1140px; /* 従来の760pxの1.5倍 */
+            margin: 0 auto;
+            width: 100%;
+        }
+        .config-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid #dcdde1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .config-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 16px;
+            color: #2f3542;
+            border-left: 6px solid var(--primary);
+            padding-left: 12px;
+        }
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 1.15rem;
+            font-weight: bold;
+        }
+        .config-row:last-child {
+            border-bottom: none;
+        }
+        select.config-select {
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 2px solid #ced6e0;
+            background: #fff;
+        }
+
+        /* 横長スライダー */
+        .wide-slider {
+            width: 320px;
+            height: 8px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* カテゴリータブバー */
+        .category-tabs-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 2px 10px 2px;
+            margin-top: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-tabs-nav::-webkit-scrollbar {
+            height: 6px;
+        }
+        .category-tabs-nav::-webkit-scrollbar-thumb {
+            background: #ced6e0;
+            border-radius: 4px;
+        }
+        .cat-tab-btn {
+            font-family: var(--font-family);
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 7px 16px;
+            background: #f1f2f6;
+            color: #57606f;
+            border: 2px solid #dfe4ea;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .cat-tab-btn:hover {
+            background: #e4e7ea;
+        }
+        .cat-tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: #2b78d6;
+            box-shadow: 0 3px 8px rgba(74, 144, 226, 0.28);
+        }
+        .cat-tab-btn .cat-badge {
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.08);
+            padding: 1px 7px;
+            border-radius: 10px;
+        }
+        .cat-tab-btn.active .cat-badge {
+            background: rgba(255,255,255,0.35);
+            color: #fff;
+        }
+
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+        .word-chip {
+            background: #f8f9fa;
+            border: 1px solid #dfe4ea;
+            border-radius: 12px;
+            padding: 6px 9px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            box-sizing: border-box;
+            transition: transform 0.1s ease, border-color 0.15s ease;
+        }
+        .word-chip:hover {
+            border-color: #74b9ff;
+            background: #ffffff;
+        }
+        .word-chip img, .word-chip .chip-emoji {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: #ffffff;
+            flex-shrink: 0;
+        }
+        .word-chip .chip-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .word-chip .chip-name {
+            white-space: nowrap; /* 単語名は必ず1行 */
+            overflow: hidden; /* カード突き抜け防止 */
+            text-overflow: clip; /* 省略記号(...)なしで全文字表示 */
+            word-break: keep-all;
+            font-weight: bold;
+            line-height: 1.25;
+            display: block;
+            width: 100%;
+        }
+        .word-chip .chip-cat-tag {
+            color: #747d8c;
+            line-height: 1.2;
+            white-space: nowrap; /* カテゴリー名は必ず1行 */
+            overflow: hidden;
+            text-overflow: clip; /* 省略記号なし */
+            margin-top: 2px;
+            display: block;
+            width: 100%;
+        }
+        .word-chip .chip-del {
+            background: none;
+            border: none;
+            color: #ff4757;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-weight: bold;
+            flex-shrink: 0;
+            line-height: 1;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+        .word-chip .chip-del:hover {
+            background: #ffeaa7;
+            transform: scale(1.15);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. ホーム画面 -->
+    <div id="home-screen" class="screen active">
+        <h1 class="app-title">まほうのはこ</h1>
+        <div class="home-box-icon" onclick="startApp()">🎁</div>
+        <button class="btn-main" onclick="startApp()">はじめる</button>
+        <button class="btn-home-setting" onclick="openSettingModal()">⚙️ せってい</button>
+    </div>
+
+    <!-- 2. プレイ画面 -->
+    <div id="play-screen" class="screen">
+        <div class="play-header">
+            <div class="play-header-left">
+                <button class="btn-sub" onclick="exitToHome()">おわる</button>
+                <button class="btn-sub btn-mini-setting" onclick="openSettingModal()">⚙️ せってい</button>
+            </div>
+            <div class="round-counter" id="round-display">もんだい 1 / 3</div>
+            <div class="mic-indicator">
+                <div class="mic-dot" id="mic-indicator-dot"></div>
+                <span id="mic-label">こえ: 準備中</span>
+            </div>
+        </div>
+
+        <!-- まほうのはこ -->
+        <div class="box-container" id="magic-box" onclick="triggerMagicOpen()">
+            <div class="box-lid"></div>
+            <div class="box-body">
+                <div class="box-body-ribbon"></div>
+            </div>
+        </div>
+        <div class="box-hint" id="box-hint-text">箱をタップするか、大きなこえを出してね！</div>
+
+        <!-- アイテム出現エリア -->
+        <div id="items-container"></div>
+
+        <!-- 枠（左下・右下） -->
+        <div class="targets-area">
+            <div class="target-slot" id="target-left">
+                <div class="drop-box" id="drop-left"></div>
+                <div class="target-name" id="name-left">???</div>
+            </div>
+            <div class="target-slot" id="target-right">
+                <div class="drop-box" id="drop-right"></div>
+                <div class="target-name" id="name-right">???</div>
+            </div>
+        </div>
+
+        <!-- 演出Canvas -->
+        <canvas id="effects-canvas"></canvas>
+
+        <!-- 正解・不正解スタンプ -->
+        <div class="feedback-overlay" id="feedback-correct" style="color: #2ec4b6;">⭕️</div>
+        <div class="feedback-overlay" id="feedback-wrong" style="color: #e71d36;">❌</div>
+    </div>
+
+    <!-- クリア画面モーダル -->
+    <div id="clear-modal">
+        <div class="clear-card">
+            <h2>💮 たいへんよくできました！</h2>
+            <div style="font-size: 6rem;">🎉✨🎁✨🎉</div>
+            <button class="btn-main" onclick="exitToHome()">ホームへもどる</button>
+        </div>
+    </div>
+
+    <!-- 3. 設定モーダル -->
+    <div class="modal-overlay" id="setting-modal">
+        <div class="modal-header">
+            <h3 style="margin:0; font-size:1.5rem;">⚙️ せっていメニュー</h3>
+            <button class="btn-sub" onclick="closeSettingModal()">とじる</button>
+        </div>
+        <div class="modal-body">
+            <div class="config-card">
+                <div class="config-title">🎯 授業・出題設定</div>
+                
+                <!-- 問題数 (y回) -->
+                <div class="config-row">
+                    <span>問題数 ($y$問)</span>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <input type="range" id="setting-questions" class="wide-slider" min="1" max="20" step="1" oninput="onQuestionSettingChange(this.value)">
+                        <span id="questions-val-text" style="font-weight:900; min-width:55px; color:#d35400;">3問</span>
+                    </div>
+                </div>
+
+                <!-- 1問あたりの繰り返し回数 (x回) -->
+                <div class="config-row">
+                    <span>1問の中でのくりかえし回数 ($x$回)</span>
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <input type="range" id="setting-repeats" class="wide-slider" min="1" max="10" step="1" oninput="onRepeatSettingChange(this.value)">
+                        <span id="repeats-val-text" style="font-weight:900; min-width:55px; color:#d35400;">2回</span>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <span>単語ペアの出題順</span>
+                    <select id="setting-order" class="config-select">
+                        <option value="original">登録順 (標準)</option>
+                        <option value="kana">名前順 (あいうえお順)</option>
+                        <option value="random">ランダム</option>
+                    </select>
+                </div>
+
+                <!-- 出題カテゴリー (平仮名図鑑準拠) -->
+                <div class="config-row">
+                    <span>出題カテゴリー</span>
+                    <select id="setting-category" class="config-select">
+                        <option value="all">🌟 すべて (全カテゴリー)</option>
+                        <option value="くだもの">🍎 くだもの</option>
+                        <option value="やさい">🥕 やさい</option>
+                        <option value="どうぶつ">🐶 どうぶつ</option>
+                        <option value="のりもの">🚗 のりもの</option>
+                        <option value="たべもの">🍙 たべもの</option>
+                        <option value="みぢかなもの">🎒 みぢかなもの</option>
+                        <option value="どうし">🏃 どうし (うごき)</option>
+                    </select>
+                </div>
+
+                <div class="config-row">
+                    <span>マイク大声検知</span>
+                    <input type="checkbox" id="setting-mic-enable" checked style="transform: scale(1.4);">
+                </div>
+
+                <!-- 大声の感度（横長スライダー & リアルタイム・プレビュー） -->
+                <div class="config-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>大声の感度 (しきい値)</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.9rem; color:#888;">しきい値:</span>
+                            <span id="mic-thresh-val-text" style="font-weight:900; font-size:1.3rem; color:#d35400;">45</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <span style="font-size:0.9rem; color:#888; white-space:nowrap;">ひくい(敏感)</span>
+                        <input type="range" id="setting-mic-thresh" class="wide-slider" style="flex:1;" min="10" max="180" step="2" oninput="onMicThreshSliderChange(this.value)">
+                        <span style="font-size:0.9rem; color:#888; white-space:nowrap;">たかい(大声)</span>
+                    </div>
+
+                    <!-- リアルタイム・ボリュームプレビュー -->
+                    <div class="mic-preview-box">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.95rem; font-weight:bold; color:#2d3436;">
+                                🎤 こえの大きさ: <span id="preview-vol-num" style="color:#0984e3; font-size:1.25rem; min-width:38px; display:inline-block;">0</span>
+                            </span>
+                            <span id="preview-status-badge" class="preview-badge normal">こえを出してみてね</span>
+                        </div>
+                        <div class="preview-meter-track">
+                            <div class="preview-meter-bar" id="preview-meter-fill"></div>
+                            <div class="preview-thresh-line" id="preview-thresh-marker" title="この線を超えると箱が開きます"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#718096; margin-top:2px;">
+                            <span>0</span>
+                            <span>▲ 赤い線（しきい値）を超えると箱が開きます</span>
+                            <span>180</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <div class="config-title">📁 単語の登録・カテゴリー別一覧</div>
+                <p style="font-size:0.98rem; color:#555; margin:4px 0 12px 0;">
+                    画像ファイル名がそのまま「単語の名前」になります。（例: <code>りんご.png</code> → 単語「りんご」）<br>
+                    下のタブでカテゴリーを切り替えて確認・整理できます。
+                </p>
+                <div style="display:flex; gap:12px; margin-bottom:14px;">
+                    <input type="file" id="batch-file-input" accept="image/*" multiple style="display:none;" onchange="handleImageBatchUpload(event)">
+                    <button class="btn-sub" style="flex:1; background:#f0f8ff; border-color:#0984e3; color:#0984e3;" onclick="document.getElementById('batch-file-input').click()">
+                        📷 画像をえらんで追加
+                    </button>
+                    <button class="btn-sub" onclick="resetDefaultWords()">初期データに戻す</button>
+                </div>
+
+                <!-- カテゴリー選択タブ -->
+                <div class="category-tabs-nav" id="word-mgmt-cat-nav"></div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <span style="font-size:1.05rem; font-weight:bold;" id="words-filter-title">登録単語 (<span id="words-count-label">0</span>件):</span>
+                </div>
+                <div class="word-grid" id="word-chips-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. カテゴリー定義 (平仮名図鑑準拠) ---
+        const CATEGORIES = [
+            { id: 'all', name: 'すべて', icon: '🌟' },
+            { id: 'くだもの', name: 'くだもの', icon: '🍎' },
+            { id: 'やさい', name: 'やさい', icon: '🥕' },
+            { id: 'どうぶつ', name: 'どうぶつ', icon: '🐶' },
+            { id: 'のりもの', name: 'のりもの', icon: '🚗' },
+            { id: 'たべもの', name: 'たべもの', icon: '🍙' },
+            { id: 'みぢかなもの', name: 'みぢかなもの', icon: '🎒' },
+            { id: 'どうし', name: 'どうし', icon: '🏃' }
+        ];
+        let currentMgmtCategory = 'all';
+
+        // --- 2. デフォルト単語マスターリスト (くだもの・やさい拡充、動詞イラスト含む) ---
+        const DEFAULT_WORDS_MASTER = [
+            // くだもの (18)
+            { id: "k_apple", category: "くだもの", name: "りんご", emoji: "🍎", image: null },
+            { id: "k_banana", category: "くだもの", name: "ばなな", emoji: "🍌", image: null },
+            { id: "k_grape", category: "くだもの", name: "ぶどう", emoji: "🍇", image: null },
+            { id: "k_strawberry", category: "くだもの", name: "いちご", emoji: "🍓", image: null },
+            { id: "k_mikan", category: "くだもの", name: "みかん", emoji: "🍊", image: null },
+            { id: "k_peach", category: "くだもの", name: "もも", emoji: "🍑", image: null },
+            { id: "k_watermelon", category: "くだもの", name: "すいか", emoji: "🍉", image: null },
+            { id: "k_melon", category: "くだもの", name: "めろん", emoji: "🍈", image: null },
+            { id: "k_lemon", category: "くだもの", name: "れもん", emoji: "🍋", image: null },
+            { id: "k_cherry", category: "くだもの", name: "さくらんぼ", emoji: "🍒", image: null },
+            { id: "k_pineapple", category: "くだもの", name: "ぱいなっぷる", emoji: "🍍", image: null },
+            { id: "k_mango", category: "くだもの", name: "まんごー", emoji: "🥭", image: null },
+            { id: "k_kiwi", category: "くだもの", name: "きうい", emoji: "🥝", image: null },
+            { id: "k_pear", category: "くだもの", name: "なし", emoji: "🍐", image: null },
+            { id: "k_blueberry", category: "くだもの", name: "ぶるーべりー", emoji: "🫐", image: null },
+            { id: "k_greenapple", category: "くだもの", name: "あおりんご", emoji: "🍏", image: null },
+            { id: "k_coconut", category: "くだもの", name: "ここなっつ", emoji: "🥥", image: null },
+            { id: "k_chestnut", category: "くだもの", name: "くり", emoji: "🌰", image: null },
+
+            // やさい (20)
+            { id: "y_carrot", category: "やさい", name: "にんじん", emoji: "🥕", image: null },
+            { id: "y_tomato", category: "やさい", name: "とまと", emoji: "🍅", image: null },
+            { id: "y_nasu", category: "やさい", name: "なす", emoji: "🍆", image: null },
+            { id: "y_edamame", category: "やさい", name: "えだまめ", emoji: "🫛", image: null },
+            { id: "y_kinoko", category: "やさい", name: "きのこ", emoji: "🍄", image: null },
+            { id: "y_corn", category: "やさい", name: "とうもろこし", emoji: "🌽", image: null },
+            { id: "y_cucumber", category: "やさい", name: "きゅうり", emoji: "🥒", image: null },
+            { id: "y_pepper", category: "やさい", name: "ぴーまん", emoji: "🫑", image: null },
+            { id: "y_onion", category: "やさい", name: "たまねぎ", emoji: "🧅", image: null },
+            { id: "y_potato", category: "やさい", name: "じゃがいも", emoji: "🥔", image: null },
+            { id: "y_sweetpotato", category: "やさい", name: "さつまいも", emoji: "🍠", image: null },
+            { id: "y_pumpkin", category: "やさい", name: "かぼちゃ", emoji: "🎃", image: null },
+            { id: "y_broccoli", category: "やさい", name: "ぶろっこりー", emoji: "🥦", image: null },
+            { id: "y_lettuce", category: "やさい", name: "れたす", emoji: "🥬", image: null },
+            { id: "y_avocado", category: "やさい", name: "あぼかど", emoji: "🥑", image: null },
+            { id: "y_garlic", category: "やさい", name: "にんにく", emoji: "🧄", image: null },
+            { id: "y_peanut", category: "やさい", name: "ぴーなっつ", emoji: "🥜", image: null },
+            { id: "y_daikon", category: "やさい", name: "だいこん", emoji: "🥬", image: "images/daikon.png" },
+            { id: "y_renkon", category: "やさい", name: "れんこん", emoji: "🥔", image: "images/renkon.png" },
+            { id: "y_negi", category: "やさい", name: "ねぎ", emoji: "🌱", image: "images/negi.png" },
+
+            // どうぶつ (35)
+            { id: "d_dog", category: "どうぶつ", name: "いぬ", emoji: "🐶", image: null },
+            { id: "d_cat", category: "どうぶつ", name: "ねこ", emoji: "🐱", image: null },
+            { id: "d_bear", category: "どうぶつ", name: "くま", emoji: "🐻", image: null },
+            { id: "d_rabbit", category: "どうぶつ", name: "うさぎ", emoji: "🐰", image: null },
+            { id: "d_horse", category: "どうぶつ", name: "うま", emoji: "🐴", image: null },
+            { id: "d_cow", category: "どうぶつ", name: "うし", emoji: "🐮", image: null },
+            { id: "d_fox", category: "どうぶつ", name: "きつね", emoji: "🦊", image: null },
+            { id: "d_giraffe", category: "どうぶつ", name: "きりん", emoji: "🦒", image: null },
+            { id: "d_monkey", category: "どうぶつ", name: "さる", emoji: "🐵", image: null },
+            { id: "d_deer", category: "どうぶつ", name: "しか", emoji: "🦌", image: null },
+            { id: "d_elephant", category: "どうぶつ", name: "ぞう", emoji: "🐘", image: null },
+            { id: "d_lion", category: "どうぶつ", name: "らいおん", emoji: "🦁", image: null },
+            { id: "d_camel", category: "どうぶつ", name: "らくだ", emoji: "🐪", image: null },
+            { id: "d_squirrel", category: "どうぶつ", name: "りす", emoji: "🐿️", image: null },
+            { id: "d_crocodile", category: "どうぶつ", name: "わに", emoji: "🐊", image: null },
+            { id: "d_gorilla", category: "どうぶつ", name: "ごりら", emoji: "🦍", image: null },
+            { id: "d_pig", category: "どうぶつ", name: "ぶた", emoji: "🐷", image: null },
+            { id: "d_panda", category: "どうぶつ", name: "ぱんだ", emoji: "🐼", image: null },
+            { id: "d_sheep", category: "どうぶつ", name: "ひつじ", emoji: "🐑", image: null },
+            { id: "d_bat", category: "どうぶつ", name: "こうもり", emoji: "🦇", image: null },
+            { id: "d_owl", category: "どうぶつ", name: "ふくろう", emoji: "🦉", image: null },
+            { id: "d_snake", category: "どうぶつ", name: "へび", emoji: "🐍", image: null },
+            { id: "d_dino", category: "どうぶつ", name: "きょうりゅう", emoji: "🦖", image: null },
+            { id: "d_mouse", category: "どうぶつ", name: "ねずみ", emoji: "🐭", image: null },
+            { id: "d_chicken", category: "どうぶつ", name: "にわとり", emoji: "🐔", image: null },
+            { id: "d_ant", category: "どうぶつ", name: "あり", emoji: "🐜", image: null },
+            { id: "d_squid", category: "どうぶつ", name: "いか", emoji: "🦑", image: null },
+            { id: "d_frog", category: "どうぶつ", name: "かえる", emoji: "🐸", image: null },
+            { id: "d_crab", category: "どうぶつ", name: "かに", emoji: "🦀", image: null },
+            { id: "d_turtle", category: "どうぶつ", name: "かめ", emoji: "🐢", image: null },
+            { id: "d_fish", category: "どうぶつ", name: "さかな", emoji: "🐟", image: null },
+            { id: "d_octopus", category: "どうぶつ", name: "たこ", emoji: "🐙", image: null },
+            { id: "d_ladybug", category: "どうぶつ", name: "てんとうむし", emoji: "🐞", image: null },
+            { id: "d_bee", category: "どうぶつ", name: "はち", emoji: "🐝", image: null },
+
+            // のりもの (10)
+            { id: "n_car", category: "のりもの", name: "くるま", emoji: "🚗", image: null },
+            { id: "n_plane", category: "のりもの", name: "ひこうき", emoji: "✈️", image: null },
+            { id: "n_ship", category: "のりもの", name: "ふね", emoji: "🚢", image: null },
+            { id: "n_train", category: "のりもの", name: "でんしゃ", emoji: "🚃", image: null },
+            { id: "n_shinkansen", category: "のりもの", name: "しんかんせん", emoji: "🚅", image: null },
+            { id: "n_bicycle", category: "のりもの", name: "じてんしゃ", emoji: "🚲", image: null },
+            { id: "n_bike", category: "のりもの", name: "ばいく", emoji: "🏍️", image: null },
+            { id: "n_heli", category: "のりもの", name: "へりこぷたー", emoji: "🚁", image: null },
+            { id: "n_rocket", category: "のりもの", name: "ろけっと", emoji: "🚀", image: null },
+            { id: "n_yacht", category: "のりもの", name: "よっと", emoji: "⛵", image: null },
+
+            // たべもの (12)
+            { id: "t_onigiri", category: "たべもの", name: "おにぎり", emoji: "🍙", image: null },
+            { id: "t_bread", category: "たべもの", name: "ぱん", emoji: "🍞", image: null },
+            { id: "t_cake", category: "たべもの", name: "けーき", emoji: "🍰", image: null },
+            { id: "t_ice", category: "たべもの", name: "あいす", emoji: "🍨", image: null },
+            { id: "t_candy", category: "たべもの", name: "あめ", emoji: "🍬", image: null },
+            { id: "t_cheese", category: "たべもの", name: "ちーず", emoji: "🧀", image: null },
+            { id: "t_egg", category: "たべもの", name: "たまご", emoji: "🥚", image: null },
+            { id: "t_gyoza", category: "たべもの", name: "ぎょうざ", emoji: "🥟", image: null },
+            { id: "t_pizza", category: "たべもの", name: "ぴざ", emoji: "🍕", image: null },
+            { id: "t_pudding", category: "たべもの", name: "ぷりん", emoji: "🍮", image: null },
+            { id: "t_popcorn", category: "たべもの", name: "ぽっぷこーん", emoji: "🍿", image: null },
+            { id: "t_chocolate", category: "たべもの", name: "ちょこれーと", emoji: "🍫", image: null },
+
+            // みぢかなもの (35)
+            { id: "m_pencil", category: "みぢかなもの", name: "えんぴつ", emoji: "✏️", image: null },
+            { id: "m_umbrella", category: "みぢかなもの", name: "かさ", emoji: "☂️", image: null },
+            { id: "m_shoes", category: "みぢかなもの", name: "くつ", emoji: "👞", image: null },
+            { id: "m_cloud", category: "みぢかなもの", name: "くも", emoji: "☁️", image: null },
+            { id: "m_cup", category: "みぢかなもの", name: "こっぷ", emoji: "🥛", image: null },
+            { id: "m_broom", category: "みぢかなもの", name: "ほうき", emoji: "🧹", image: null },
+            { id: "m_moon", category: "みぢかなもの", name: "つき", emoji: "🌙", image: null },
+            { id: "m_letter", category: "みぢかなもの", name: "てがみ", emoji: "✉️", image: null },
+            { id: "m_clock", category: "みぢかなもの", name: "とけい", emoji: "⌚", image: null },
+            { id: "m_saw", category: "みぢかなもの", name: "のこぎり", emoji: "🪚", image: null },
+            { id: "m_scissors", category: "みぢかなもの", name: "はさみ", emoji: "✂️", image: null },
+            { id: "m_sunflower", category: "みぢかなもの", name: "ひまわり", emoji: "🌻", image: null },
+            { id: "m_balloon", category: "みぢかなもの", name: "ふうせん", emoji: "🎈", image: null },
+            { id: "m_star", category: "みぢかなもの", name: "ほし", emoji: "⭐️", image: null },
+            { id: "m_book", category: "みぢかなもの", name: "ほん", emoji: "📖", image: null },
+            { id: "m_mic", category: "みぢかなもの", name: "まいく", emoji: "🎤", image: null },
+            { id: "m_ear", category: "みぢかなもの", name: "みみ", emoji: "👂", image: null },
+            { id: "m_glass", category: "みぢかなもの", name: "めがね", emoji: "👓", image: null },
+            { id: "m_loupe", category: "みぢかなもの", name: "むしめがね", emoji: "🔍", image: null },
+            { id: "m_mountain", category: "みぢかなもの", name: "やま", emoji: "⛰️", image: null },
+            { id: "m_snowman", category: "みぢかなもの", name: "ゆきだるま", emoji: "⛄", image: null },
+            { id: "m_trumpet", category: "みぢかなもの", name: "らっぱ", emoji: "🎺", image: null },
+            { id: "m_candle", category: "みぢかなもの", name: "ろうそく", emoji: "🕯️", image: null },
+            { id: "m_school", category: "みぢかなもの", name: "がっこう", emoji: "🏫", image: null },
+            { id: "m_guitar", category: "みぢかなもの", name: "ぎたー", emoji: "🎸", image: null },
+            { id: "m_game", category: "みぢかなもの", name: "げーむ", emoji: "🎮", image: null },
+            { id: "m_pants", category: "みぢかなもの", name: "ずぼん", emoji: "👖", image: null },
+            { id: "m_phone", category: "みぢかなもの", name: "でんわ", emoji: "☎️", image: null },
+            { id: "m_ball", category: "みぢかなもの", name: "ぼーる", emoji: "⚽", image: null },
+            { id: "m_hat", category: "みぢかなもの", name: "ぼうし", emoji: "🧢", image: null },
+            { id: "m_piano", category: "みぢかなもの", name: "ぴあの", emoji: "🎹", image: null },
+            { id: "m_shirt", category: "みぢかなもの", name: "しゃつ", emoji: "👕", image: null },
+            { id: "m_ninja", category: "みぢかなもの", name: "にんじゃ", emoji: "🥷", image: null },
+            { id: "m_backpack", category: "みぢかなもの", name: "りゅっく", emoji: "🎒", image: null },
+            { id: "m_oni", category: "みぢかなもの", name: "おに", emoji: "👹", image: null },
+
+            // どうし (10) - 生成イラスト（白背景・全平仮名）
+            { id: "v_jump", category: "どうし", name: "じゃんぷ", emoji: "🦘", image: "images/jump.png" },
+            { id: "v_neru", category: "どうし", name: "ねる", emoji: "🛌", image: "images/neru.png" },
+            { id: "v_aruku", category: "どうし", name: "あるく", emoji: "🚶", image: "images/aruku.png" },
+            { id: "v_hashiru", category: "どうし", name: "はしる", emoji: "🏃", image: "images/hashiru.png" },
+            { id: "v_oyogu", category: "どうし", name: "およぐ", emoji: "🏊", image: "images/oyogu.png" },
+            { id: "v_taberu", category: "どうし", name: "たべる", emoji: "🍽️", image: "images/taberu.png" },
+            { id: "v_nomu", category: "どうし", name: "のむ", emoji: "🥤", image: "images/nomu.png" },
+            { id: "v_warau", category: "どうし", name: "わらう", emoji: "😄", image: "images/warau.png" },
+            { id: "v_utau", category: "どうし", name: "うたう", emoji: "🎵", image: "images/utau.png" },
+            { id: "v_odoru", category: "どうし", name: "おどる", emoji: "💃", image: "images/odoru.png" }
+        ];
+
+        let words = [];
+        let config = {
+            questions: 3,   // y: 問題数
+            repeats: 2,     // x: 1問あたりのくりかえし回数
+            order: "original",
+            category: "all", // 出題カテゴリー (平仮名図鑑準拠)
+            micEnabled: true,
+            micThreshold: 45
+        };
+
+        // ゲーム状態管理
+        let currentQuestionIndex = 1; // 現在の問題 (1〜y)
+        let currentRepeatIndex = 0;   // 現在の問題内での正解回数 (0〜x)
+        let isBoxOpen = false;
+        let wordDeck = [];            // 出題用デッキ
+        let currentPair = [];         // 現在の問題で繰り返し使う同じ2つのイラストペア
+        let targets = { left: null, right: null };
+        let resolvedSlots = { left: false, right: false };
+        let activeDraggables = [];
+
+        // オーディオ関連
+        let audioCtx = null;
+        let micStream = null;
+        let micAnalyser = null;
+        let micDataArray = null;
+        let isListeningMic = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            loadWords();
+            renderManagementCategoryTabs();
+            initResizeCanvas();
+        });
+
+        function loadConfig() {
+            const saved = localStorage.getItem('mahounohako_v5_cfg') || localStorage.getItem('mahounohako_v4_cfg');
+            if (saved) {
+                try { config = { ...config, ...JSON.parse(saved) }; } catch(e){}
+            }
+            document.getElementById('setting-questions').value = config.questions;
+            document.getElementById('questions-val-text').innerText = `${config.questions}問`;
+            document.getElementById('setting-repeats').value = config.repeats;
+            document.getElementById('repeats-val-text').innerText = `${config.repeats}回`;
+            document.getElementById('setting-order').value = config.order || "original";
+            document.getElementById('setting-category').value = config.category || "all";
+            document.getElementById('setting-mic-enable').checked = config.micEnabled;
+            document.getElementById('setting-mic-thresh').value = config.micThreshold;
+            document.getElementById('mic-thresh-val-text').innerText = config.micThreshold;
+        }
+
+        function saveConfig() {
+            localStorage.setItem('mahounohako_v5_cfg', JSON.stringify(config));
+        }
+
+        function loadWords() {
+            const saved = localStorage.getItem('mahounohako_v5_words') || localStorage.getItem('mahounohako_v4_words');
+            if (saved) {
+                try {
+                    let loaded = JSON.parse(saved);
+                    // マイグレーション: カテゴリーが未設定の単語にカテゴリーを付与し、動詞単語を追加
+                    const masterMap = new Map();
+                    DEFAULT_WORDS_MASTER.forEach(m => masterMap.set(m.name, m));
+
+                    loaded.forEach(w => {
+                        // 「そうじき」を「ほうき」に自動修正
+                        if (w.name === 'そうじき' || w.id === 'm_cleaner') {
+                            w.name = 'ほうき';
+                            w.id = 'm_broom';
+                            w.category = 'みぢかなもの';
+                            w.emoji = '🧹';
+                        }
+                        if (!w.category) {
+                            const ref = masterMap.get(w.name);
+                            w.category = ref ? ref.category : 'みぢかなもの';
+                        }
+                    });
+
+                    // マスター単語（追加された果物・野菜・動詞など）が含まれているか確認し、無ければ追加・更新
+                    DEFAULT_WORDS_MASTER.forEach(mw => {
+                        const existing = loaded.find(w => w.name === mw.name);
+                        if (!existing) {
+                            loaded.push({ ...mw });
+                        } else {
+                            if (mw.image && !existing.image) {
+                                existing.image = mw.image;
+                            }
+                        }
+                    });
+
+                    words = loaded;
+                } catch(e) {
+                    words = [...DEFAULT_WORDS_MASTER];
+                }
+            } else {
+                words = [...DEFAULT_WORDS_MASTER];
+            }
+            saveWords();
+            renderWordChips();
+        }
+
+        function saveWords() {
+            localStorage.setItem('mahounohako_v5_words', JSON.stringify(words));
+            renderManagementCategoryTabs();
+            renderWordChips();
+        }
+
+        // 管理画面のカテゴリータブを描画
+        function renderManagementCategoryTabs() {
+            const nav = document.getElementById('word-mgmt-cat-nav');
+            if (!nav) return;
+            nav.innerHTML = '';
+
+            CATEGORIES.forEach(cat => {
+                const count = cat.id === 'all' 
+                    ? words.length 
+                    : words.filter(w => w.category === cat.id).length;
+
+                const btn = document.createElement('button');
+                btn.className = `cat-tab-btn ${currentMgmtCategory === cat.id ? 'active' : ''}`;
+                btn.innerHTML = `${cat.icon} ${cat.name} <span class="cat-badge">${count}</span>`;
+                btn.onclick = () => selectMgmtCategory(cat.id);
+                nav.appendChild(btn);
+            });
+        }
+
+        function selectMgmtCategory(catId) {
+            currentMgmtCategory = catId;
+            renderManagementCategoryTabs();
+            renderWordChips();
+        }
+
+        // 単語文字数に応じた初期フォントサイズ・字間の動的算出
+        function getWordChipNameStyle(name) {
+            const len = (name || '').length;
+            if (len <= 2) return 'font-size: 1.05rem; letter-spacing: 0px;';
+            if (len === 3) return 'font-size: 1.02rem; letter-spacing: 0px;';
+            if (len === 4) return 'font-size: 0.94rem; letter-spacing: -0.2px;';
+            if (len === 5) return 'font-size: 0.85rem; letter-spacing: -0.3px;';
+            if (len === 6) return 'font-size: 0.76rem; letter-spacing: -0.4px;';
+            if (len === 7) return 'font-size: 0.68rem; letter-spacing: -0.5px;';
+            const rem = Math.max(0.50, 4.6 / len).toFixed(2);
+            return `font-size: ${rem}rem; letter-spacing: -0.5px;`;
+        }
+
+        // カテゴリー名文字数に応じた初期フォントサイズ・字間の動的算出
+        function getCategoryTagStyle(catName) {
+            const len = (catName || '').length;
+            if (len <= 4) return 'font-size: 0.72rem; letter-spacing: 0px;';
+            if (len === 5) return 'font-size: 0.68rem; letter-spacing: -0.2px;';
+            return 'font-size: 0.62rem; letter-spacing: -0.3px;';
+        }
+
+        // 実描画幅に基づき文字のはみ出し・省略を防止する動的フォントサイズ微調整
+        function fitWordChipTexts() {
+            const nameEls = document.querySelectorAll('#word-chips-container .chip-name');
+            nameEls.forEach(el => {
+                if (!el.clientWidth) return;
+                let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+                let safety = 0;
+                while (el.scrollWidth > el.clientWidth && currentSize > 8 && safety < 15) {
+                    currentSize -= 0.5;
+                    el.style.fontSize = `${currentSize}px`;
+                    safety++;
+                }
+            });
+
+            const catEls = document.querySelectorAll('#word-chips-container .chip-cat-tag');
+            catEls.forEach(el => {
+                if (!el.clientWidth) return;
+                let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+                let safety = 0;
+                while (el.scrollWidth > el.clientWidth && currentSize > 7 && safety < 15) {
+                    currentSize -= 0.5;
+                    el.style.fontSize = `${currentSize}px`;
+                    safety++;
+                }
+            });
+        }
+
+        function renderWordChips() {
+            const container = document.getElementById('word-chips-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filteredWords = currentMgmtCategory === 'all'
+                ? words
+                : words.filter(w => w.category === currentMgmtCategory);
+
+            const catInfo = CATEGORIES.find(c => c.id === currentMgmtCategory) || CATEGORIES[0];
+            const filterTitle = document.getElementById('words-filter-title');
+            if (filterTitle) {
+                filterTitle.innerHTML = `${catInfo.icon} ${catInfo.name} (<span id="words-count-label">${filteredWords.length}</span>件):`;
+            }
+
+            filteredWords.forEach(w => {
+                const chip = document.createElement('div');
+                chip.className = 'word-chip';
+                let visual = w.image ? `<img src="${w.image}">` : `<div class="chip-emoji">${w.emoji || '📦'}</div>`;
+                const catName = w.category || 'みぢかなもの';
+                chip.innerHTML = `
+                    ${visual}
+                    <div class="chip-info">
+                        <span class="chip-name" style="${getWordChipNameStyle(w.name)}" title="${w.name}">${w.name}</span>
+                        <span class="chip-cat-tag" style="${getCategoryTagStyle(catName)}">${catName}</span>
+                    </div>
+                    <button class="chip-del" onclick="deleteWord('${w.id}')" title="削除">✕</button>
+                `;
+                container.appendChild(chip);
+            });
+
+            // 実幅測定による動的フィット調整
+            fitWordChipTexts();
+        }
+
+        function deleteWord(id) {
+            if (words.length <= 2) {
+                alert("単語は最低2つ必要です。");
+                return;
+            }
+            words = words.filter(w => w.id !== id);
+            saveWords();
+        }
+
+        function resetDefaultWords() {
+            if (confirm("単語リストを初期のマスターデータ（全139語）に戻しますか？")) {
+                words = [...DEFAULT_WORDS_MASTER];
+                currentMgmtCategory = 'all';
+                saveWords();
+            }
+        }
+
+        function handleImageBatchUpload(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const targetCategory = currentMgmtCategory === 'all' ? 'みぢかなもの' : currentMgmtCategory;
+
+            Array.from(files).forEach(file => {
+                const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    words.push({
+                        id: Date.now() + Math.random().toString(36).substring(2, 6),
+                        category: targetCategory,
+                        name: nameWithoutExt,
+                        emoji: null,
+                        image: event.target.result
+                    });
+                    saveWords();
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        // --- 設定モーダル制御 & マイク・プレビュー ---
+        let previewMicStream = null;
+        let previewAnalyser = null;
+        let previewDataArray = null;
+        let isPreviewingMic = false;
+        let previewAnimFrameId = null;
+
+        function openSettingModal() {
+            currentMgmtCategory = 'all';
+            document.getElementById('setting-modal').classList.add('active');
+            renderManagementCategoryTabs();
+            renderWordChips();
+            updateThreshMarkerUI();
+            startPreviewMic();
+        }
+
+        function closeSettingModal() {
+            stopPreviewMic();
+            config.questions = parseInt(document.getElementById('setting-questions').value, 10);
+            config.repeats = parseInt(document.getElementById('setting-repeats').value, 10);
+            config.order = document.getElementById('setting-order').value;
+            config.category = document.getElementById('setting-category').value;
+            config.micEnabled = document.getElementById('setting-mic-enable').checked;
+            config.micThreshold = parseInt(document.getElementById('setting-mic-thresh').value, 10);
+            saveConfig();
+            document.getElementById('setting-modal').classList.remove('active');
+            updateRoundUI();
+
+            // プレイ中ならマイク状態を再同期
+            if (document.getElementById('play-screen').classList.contains('active')) {
+                if (config.micEnabled) {
+                    startMicListening();
+                } else {
+                    stopMicListening();
+                }
+            }
+        }
+
+        function onQuestionSettingChange(val) {
+            document.getElementById('questions-val-text').innerText = `${val}問`;
+        }
+
+        function onRepeatSettingChange(val) {
+            document.getElementById('repeats-val-text').innerText = `${val}回`;
+        }
+
+        function onMicThreshSliderChange(val) {
+            config.micThreshold = parseInt(val, 10);
+            document.getElementById('mic-thresh-val-text').innerText = val;
+            updateThreshMarkerUI();
+        }
+
+        function updateThreshMarkerUI() {
+            const marker = document.getElementById('preview-thresh-marker');
+            if (!marker) return;
+            const pct = Math.max(0, Math.min(100, (config.micThreshold / 180) * 100));
+            marker.style.left = `${pct}%`;
+        }
+
+        async function startPreviewMic() {
+            updateThreshMarkerUI();
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const badge = document.getElementById('preview-status-badge');
+                if (badge) badge.innerText = "マイク非対応";
+                return;
+            }
+            if (isPreviewingMic) return;
+            try {
+                initAudioContext();
+                if (!previewMicStream) {
+                    previewMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
+                previewAnalyser = audioCtx.createAnalyser();
+                previewAnalyser.fftSize = 256;
+                const source = audioCtx.createMediaStreamSource(previewMicStream);
+                source.connect(previewAnalyser);
+                previewDataArray = new Uint8Array(previewAnalyser.frequencyBinCount);
+                isPreviewingMic = true;
+                updateMicPreviewLoop();
+            } catch (e) {
+                const badge = document.getElementById('preview-status-badge');
+                if (badge) badge.innerText = "マイク未許可";
+            }
+        }
+
+        function stopPreviewMic() {
+            isPreviewingMic = false;
+            if (previewAnimFrameId) {
+                cancelAnimationFrame(previewAnimFrameId);
+                previewAnimFrameId = null;
+            }
+        }
+
+        function updateMicPreviewLoop() {
+            if (!isPreviewingMic || !previewAnalyser) return;
+            previewAnalyser.getByteFrequencyData(previewDataArray);
+
+            let sum = 0;
+            for (let i = 0; i < previewDataArray.length; i++) {
+                sum += previewDataArray[i];
+            }
+            const avg = Math.round(sum / previewDataArray.length);
+
+            const volNumEl = document.getElementById('preview-vol-num');
+            const fillEl = document.getElementById('preview-meter-fill');
+            const badgeEl = document.getElementById('preview-status-badge');
+
+            if (volNumEl) volNumEl.innerText = avg;
+            if (fillEl) {
+                const pct = Math.max(0, Math.min(100, (avg / 180) * 100));
+                fillEl.style.width = `${pct}%`;
+                const isExceeded = avg > config.micThreshold;
+                fillEl.classList.toggle('active-thresh', isExceeded);
+
+                if (badgeEl) {
+                    if (isExceeded) {
+                        badgeEl.className = 'preview-badge opened';
+                        badgeEl.innerText = "🎉 箱が開く大きさ！";
+                    } else if (avg > 15) {
+                        badgeEl.className = 'preview-badge normal';
+                        badgeEl.innerText = "もう少し大きな声で！";
+                    } else {
+                        badgeEl.className = 'preview-badge normal';
+                        badgeEl.innerText = "こえを出してみてね";
+                    }
+                }
+            }
+
+            previewAnimFrameId = requestAnimationFrame(updateMicPreviewLoop);
+        }
+
+        // --- 2. ゲーム開始 & ラウンド進行 ---
+        function startApp() {
+            initAudioContext();
+            currentQuestionIndex = 1;
+            currentRepeatIndex = 0;
+
+            buildWordDeck();
+
+            document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('play-screen').classList.add('active');
+            document.getElementById('clear-modal').style.display = 'none';
+
+            if (config.micEnabled) {
+                startMicListening();
+            } else {
+                updateMicUI(false, "マイク: オフ");
+            }
+
+            prepareNewQuestion();
+        }
+
+        function buildWordDeck() {
+            let pool = [...words];
+            if (config.category && config.category !== 'all') {
+                const catPool = pool.filter(w => w.category === config.category);
+                if (catPool.length >= 2) {
+                    pool = catPool;
+                }
+            }
+
+            if (config.order === 'kana') {
+                pool.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+            } else if (config.order === 'random') {
+                pool.sort(() => Math.random() - 0.5);
+            }
+            wordDeck = pool;
+        }
+
+        function exitToHome() {
+            stopMicListening();
+            document.getElementById('play-screen').classList.remove('active');
+            document.getElementById('clear-modal').style.display = 'none';
+            document.getElementById('home-screen').classList.add('active');
+            resetPlayArea();
+        }
+
+        function updateRoundUI() {
+            document.getElementById('round-display').innerText = 
+                `もんだい ${currentQuestionIndex} / ${config.questions} (${currentRepeatIndex} / ${config.repeats}回)`;
+        }
+
+        // 新しい問題（単語ペアの切り替え）
+        function prepareNewQuestion() {
+            currentRepeatIndex = 0;
+            resetPlayArea();
+
+            if (wordDeck.length < 2) {
+                buildWordDeck();
+            }
+
+            const firstWord = wordDeck.shift();
+            let secondIdx = -1;
+            if (firstWord.category) {
+                secondIdx = wordDeck.findIndex(w => w.category === firstWord.category);
+            }
+
+            let secondWord;
+            if (secondIdx !== -1) {
+                secondWord = wordDeck.splice(secondIdx, 1)[0];
+            } else {
+                secondWord = wordDeck.shift();
+            }
+
+            currentPair = [firstWord, secondWord];
+
+            isBoxOpen = false;
+            document.getElementById('magic-box').classList.remove('opened');
+            document.getElementById('box-hint-text').style.opacity = '1';
+            updateRoundUI();
+        }
+
+        function resetPlayArea() {
+            document.getElementById('items-container').innerHTML = '';
+            document.getElementById('target-left').classList.remove('show');
+            document.getElementById('target-right').classList.remove('show');
+            document.getElementById('drop-left').className = 'drop-box';
+            document.getElementById('drop-right').className = 'drop-box';
+            activeDraggables = [];
+        }
+
+        function setTargetNameDisplay(elementId, wordName) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerText = wordName;
+            if (wordName.length >= 6) {
+                el.style.fontSize = 'clamp(1rem, 2.2vw, 1.6rem)';
+                el.style.padding = '4px 10px';
+            } else if (wordName.length >= 4) {
+                el.style.fontSize = 'clamp(1.15rem, 2.6vw, 1.9rem)';
+                el.style.padding = '6px 14px';
+            } else {
+                el.style.fontSize = '';
+                el.style.padding = '';
+            }
+        }
+
+        // --- 3. 箱を開くアクション ---
+        function triggerMagicOpen() {
+            if (isBoxOpen) return;
+            isBoxOpen = true;
+
+            document.getElementById('magic-box').classList.add('opened');
+            document.getElementById('box-hint-text').style.opacity = '0';
+
+            playMagicalSound();
+            launchSuperExplosion();
+
+            setTimeout(() => {
+                spawnCurrentPairRandomly();
+            }, 550);
+        }
+
+        // 現在のイラストの実サイズを取得（レスポンシブ）
+        function getItemPixelSize() {
+            const sample = document.querySelector('.drop-box') || document.querySelector('.spawned-item');
+            if (sample) {
+                const rect = sample.getBoundingClientRect();
+                if (rect.width > 20) return rect.width;
+            }
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            return Math.max(120, Math.min(190, Math.min(screenW * 0.24, screenH * 0.22)));
+        }
+
+        // イラストの定位置計算（左右対称・高さ完全同一・画面内クランプ）
+        function calculateItemFixedPositions(itemSize) {
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const boxCenterX = screenW / 2;
+            const boxCenterY = screenH * 0.20;
+
+            const targetArea = document.querySelector('.targets-area');
+            let targetTop = screenH * 0.72;
+            if (targetArea) {
+                const rect = targetArea.getBoundingClientRect();
+                if (rect.top > 50) targetTop = rect.top;
+            }
+
+            const boxBottom = boxCenterY + 80;
+            // 箱の下端と受取枠の上のちょうど中央の定位置
+            let fixedY = (boxBottom + targetTop) / 2 - (itemSize / 2);
+            // 上下の画面外はみ出し防止
+            fixedY = Math.max(boxBottom + 10, Math.min(targetTop - itemSize - 12, fixedY));
+
+            // 左右均等の定位置
+            const gap = Math.max(16, Math.min(44, screenW * 0.05));
+            let leftX = boxCenterX - itemSize - (gap / 2);
+            let rightX = boxCenterX + (gap / 2);
+
+            // 画面左右端からの安全マージン（最低12px）ではみ出し完全防止
+            const margin = 12;
+            if (leftX < margin) {
+                leftX = margin;
+                rightX = Math.min(screenW - itemSize - margin, leftX + itemSize + gap);
+            }
+            if (rightX + itemSize > screenW - margin) {
+                rightX = screenW - itemSize - margin;
+                leftX = Math.max(margin, rightX - itemSize - gap);
+            }
+
+            return [
+                { x: leftX, y: fixedY },
+                { x: rightX, y: fixedY }
+            ];
+        }
+
+        // 現在のペアを「ブレのない定位置」に出現させる
+        function spawnCurrentPairRandomly() {
+            resetPlayArea();
+
+            // 枠の左右の配置（名前）を50%の確率で入れ替え
+            const shuffleSlots = [...currentPair].sort(() => Math.random() - 0.5);
+            targets = {
+                left: shuffleSlots[0],
+                right: shuffleSlots[1]
+            };
+            resolvedSlots = { left: false, right: false };
+
+            setTargetNameDisplay('name-left', targets.left.name);
+            setTargetNameDisplay('name-right', targets.right.name);
+
+            const container = document.getElementById('items-container');
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const boxCenterX = screenW / 2;
+            const boxCenterY = screenH * 0.20;
+            const itemSize = getItemPixelSize();
+            const halfSize = itemSize / 2;
+
+            // 定位置を計算（微妙なズレを完全排除し、ピシッと揃った対称位置）
+            const fixedPositions = calculateItemFixedPositions(itemSize);
+
+            currentPair.forEach((wordData, idx) => {
+                const el = document.createElement('div');
+                el.className = 'spawned-item';
+                el.dataset.wordId = wordData.id;
+
+                if (wordData.image) {
+                    el.innerHTML = `<img src="${wordData.image}">`;
+                } else {
+                    el.innerHTML = `<span class="emoji-content">${wordData.emoji || '🎁'}</span>`;
+                }
+
+                // 箱の中央から射出
+                el.style.left = `${boxCenterX - halfSize}px`;
+                el.style.top = `${boxCenterY - 40}px`;
+                el.style.transform = 'scale(0.05)';
+                el.style.opacity = '0';
+
+                container.appendChild(el);
+
+                const dest = fixedPositions[idx];
+
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'scale(1)';
+                        el.style.left = `${dest.x}px`;
+                        el.style.top = `${dest.y}px`;
+                    }, 80 * idx);
+                });
+
+                const itemObj = {
+                    element: el,
+                    data: wordData,
+                    homeX: dest.x,
+                    homeY: dest.y,
+                    isLocked: false,
+                    isDragging: false,
+                    lockedSide: null
+                };
+                activeDraggables.push(itemObj);
+                setupDraggable(itemObj);
+            });
+
+            setTimeout(() => {
+                document.getElementById('target-left').classList.add('show');
+                document.getElementById('target-right').classList.add('show');
+                playPopSound();
+            }, 750);
+        }
+
+        // --- 4. ドラッグ＆ドロップ判定 ---
+        function setupDraggable(itemObj) {
+            const el = itemObj.element;
+            let startPointerX = 0, startPointerY = 0;
+            let startItemX = 0, startItemY = 0;
+
+            el.addEventListener('pointerdown', (e) => {
+                if (itemObj.isLocked) return;
+                itemObj.isDragging = true;
+                el.setPointerCapture(e.pointerId);
+                el.classList.add('dragging');
+
+                startPointerX = e.clientX;
+                startPointerY = e.clientY;
+
+                const rect = el.getBoundingClientRect();
+                startItemX = rect.left;
+                startItemY = rect.top;
+                e.preventDefault();
+            });
+
+            el.addEventListener('pointermove', (e) => {
+                if (!itemObj.isDragging || itemObj.isLocked) return;
+                const dx = e.clientX - startPointerX;
+                const dy = e.clientY - startPointerY;
+
+                const curX = startItemX + dx;
+                const curY = startItemY + dy;
+                el.style.left = `${curX}px`;
+                el.style.top = `${curY}px`;
+
+                const rect = el.getBoundingClientRect();
+                checkHover(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            });
+
+            const onEnd = (e) => {
+                if (!itemObj.isDragging) return;
+                itemObj.isDragging = false;
+                el.classList.remove('dragging');
+                try { el.releasePointerCapture(e.pointerId); } catch(err){}
+
+                clearHovers();
+
+                const rect = el.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const dropSide = getDropSideAt(centerX, centerY);
+                if (dropSide) {
+                    evaluateDrop(itemObj, dropSide);
+                } else {
+                    revertToHome(itemObj);
+                }
+            };
+
+            el.addEventListener('pointerup', onEnd);
+            el.addEventListener('pointercancel', onEnd);
+        }
+
+        function getDropSideAt(x, y) {
+            const leftBox = document.getElementById('drop-left').getBoundingClientRect();
+            const rightBox = document.getElementById('drop-right').getBoundingClientRect();
+
+            if (x >= leftBox.left && x <= leftBox.right && y >= leftBox.top && y <= leftBox.bottom) {
+                return 'left';
+            }
+            if (x >= rightBox.left && x <= rightBox.right && y >= rightBox.top && y <= rightBox.bottom) {
+                return 'right';
+            }
+            return null;
+        }
+
+        function checkHover(x, y) {
+            const side = getDropSideAt(x, y);
+            document.getElementById('drop-left').classList.toggle('hover', side === 'left');
+            document.getElementById('drop-right').classList.toggle('hover', side === 'right');
+        }
+
+        function clearHovers() {
+            document.getElementById('drop-left').classList.remove('hover');
+            document.getElementById('drop-right').classList.remove('hover');
+        }
+
+        function evaluateDrop(itemObj, side) {
+            const expectedWord = targets[side];
+
+            if (resolvedSlots[side]) {
+                revertToHome(itemObj);
+                return;
+            }
+
+            if (itemObj.data.id === expectedWord.id) {
+                // 正解！
+                itemObj.isLocked = true;
+                itemObj.lockedSide = side;
+                resolvedSlots[side] = true;
+
+                const dropEl = document.getElementById(side === 'left' ? 'drop-left' : 'drop-right');
+                dropEl.classList.add('correct');
+
+                const dropRect = dropEl.getBoundingClientRect();
+                itemObj.element.style.transition = 'all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                itemObj.element.style.left = `${dropRect.left}px`;
+                itemObj.element.style.top = `${dropRect.top}px`;
+
+                showFeedback('correct');
+                playDingSound();
+                speakWord(itemObj.data.name);
+
+                // 2つとも正解したか判定
+                if (resolvedSlots.left && resolvedSlots.right) {
+                    currentRepeatIndex++;
+                    updateRoundUI();
+
+                    setTimeout(() => {
+                        // 1問の中でのx回繰り返しが完了したか判定
+                        if (currentRepeatIndex >= config.repeats) {
+                            // この問題はクリア！
+                            if (currentQuestionIndex >= config.questions) {
+                                // 全問題クリア！
+                                playFinishFanfare();
+                                launchConfetti();
+                                setTimeout(() => {
+                                    document.getElementById('clear-modal').style.display = 'flex';
+                                }, 1200);
+                            } else {
+                                // 次の問題へ進む（新しいペアが登場）
+                                currentQuestionIndex++;
+                                playFinishFanfare();
+                                launchSparklesOnly();
+                                prepareNewQuestion();
+                            }
+                        } else {
+                            // まだ同じ問題の繰り返し中：同じペアが再度ランダム配置で飛び出す
+                            playMagicalSound();
+                            launchSparklesOnly();
+                            spawnCurrentPairRandomly();
+                        }
+                    }, 1200);
+                }
+            } else {
+                // 不正解！
+                showFeedback('wrong');
+                playBuzzSound();
+                revertToHome(itemObj);
+            }
+        }
+
+        function revertToHome(itemObj) {
+            itemObj.element.style.transition = 'all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            itemObj.element.style.left = `${itemObj.homeX}px`;
+            itemObj.element.style.top = `${itemObj.homeY}px`;
+        }
+
+        function showFeedback(type) {
+            const overlay = document.getElementById(type === 'correct' ? 'feedback-correct' : 'feedback-wrong');
+            overlay.style.display = 'block';
+            setTimeout(() => { overlay.style.display = 'none'; }, 650);
+        }
+
+        // --- 5. 音声合成 (Web Speech API) ---
+        function speakWord(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- 6. サウンド生成 (Web Audio API) ---
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playMagicalSound() {
+            initAudioContext();
+            const now = audioCtx.currentTime;
+
+            const chimeNotes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00];
+            chimeNotes.forEach((freq, idx) => {
+                const start = now + idx * 0.07;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + 0.75);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(start);
+                osc.stop(start + 0.75);
+            });
+
+            const sweepOsc = audioCtx.createOscillator();
+            const sweepGain = audioCtx.createGain();
+            sweepOsc.type = 'triangle';
+            sweepOsc.frequency.setValueAtTime(260, now);
+            sweepOsc.frequency.exponentialRampToValueAtTime(880, now + 0.6);
+
+            sweepGain.gain.setValueAtTime(0.25, now);
+            sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+            sweepOsc.connect(sweepGain);
+            sweepGain.connect(audioCtx.destination);
+            sweepOsc.start(now);
+            sweepOsc.stop(now + 0.7);
+        }
+
+        function playDingSound() {
+            initAudioContext();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(659.25, now);
+            osc.frequency.setValueAtTime(880, now + 0.12);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        }
+
+        function playBuzzSound() {
+            initAudioContext();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(145, now);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+
+        function playPopSound() {
+            initAudioContext();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(450, now);
+            osc.frequency.exponentialRampToValueAtTime(950, now + 0.08);
+            gain.gain.setValueAtTime(0.22, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+
+        function playFinishFanfare() {
+            initAudioContext();
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            notes.forEach((freq, i) => {
+                const now = audioCtx.currentTime + i * 0.14;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            });
+        }
+
+        // --- 7. マイクの大声検知 ---
+        async function startMicListening() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                updateMicUI(false, "マイク非対応");
+                return;
+            }
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                initAudioContext();
+                micAnalyser = audioCtx.createAnalyser();
+                micAnalyser.fftSize = 256;
+                const source = audioCtx.createMediaStreamSource(micStream);
+                source.connect(micAnalyser);
+                micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+                isListeningMic = true;
+                updateMicUI(true, "こえ: 準備OK");
+                checkVolumeLoop();
+            } catch (e) {
+                updateMicUI(false, "マイク未許可");
+            }
+        }
+
+        function stopMicListening() {
+            isListeningMic = false;
+            if (micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+            updateMicUI(false, "マイク停止");
+        }
+
+        function updateMicUI(active, text) {
+            document.getElementById('mic-indicator-dot').className = `mic-dot ${active ? 'active' : ''}`;
+            document.getElementById('mic-label').innerText = text;
+        }
+
+        function checkVolumeLoop() {
+            if (!isListeningMic) return;
+            micAnalyser.getByteFrequencyData(micDataArray);
+
+            let sum = 0;
+            for (let i = 0; i < micDataArray.length; i++) {
+                sum += micDataArray[i];
+            }
+            const average = sum / micDataArray.length;
+
+            if (average > config.micThreshold && !isBoxOpen) {
+                triggerMagicOpen();
+            }
+
+            requestAnimationFrame(checkVolumeLoop);
+        }
+
+        // --- 8. パーティクル演出 (煙 & スパークル & 紙吹雪) ---
+        let canvas, ctx;
+        let particles = [];
+        let animFrameId = null;
+
+        function initResizeCanvas() {
+            canvas = document.getElementById('effects-canvas');
+            ctx = canvas.getContext('2d');
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('orientationchange', onWindowResize);
+            onWindowResize();
+        }
+
+        function onWindowResize() {
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            repositionActiveItems();
+            updateThreshMarkerUI();
+            if (document.getElementById('setting-modal').classList.contains('active')) {
+                fitWordChipTexts();
+            }
+        }
+
+        // 画面サイズ変更時（回転・拡縮）にアイテムが画面外に出ないよう定位置・受取枠に即時追従
+        function repositionActiveItems() {
+            if (!activeDraggables || activeDraggables.length === 0) return;
+            const itemSize = getItemPixelSize();
+            const fixedPositions = calculateItemFixedPositions(itemSize);
+
+            activeDraggables.forEach((itemObj, idx) => {
+                if (itemObj.isLocked && itemObj.lockedSide) {
+                    const dropEl = document.getElementById(itemObj.lockedSide === 'left' ? 'drop-left' : 'drop-right');
+                    if (dropEl) {
+                        const dropRect = dropEl.getBoundingClientRect();
+                        itemObj.element.style.transition = 'all 0.15s ease-out';
+                        itemObj.element.style.left = `${dropRect.left}px`;
+                        itemObj.element.style.top = `${dropRect.top}px`;
+                    }
+                } else if (!itemObj.isLocked) {
+                    const dest = fixedPositions[idx] || fixedPositions[0];
+                    itemObj.homeX = dest.x;
+                    itemObj.homeY = dest.y;
+                    if (!itemObj.isDragging) {
+                        itemObj.element.style.transition = 'all 0.15s ease-out';
+                        itemObj.element.style.left = `${dest.x}px`;
+                        itemObj.element.style.top = `${dest.y}px`;
+                    }
+                }
+            });
+        }
+
+        function launchSuperExplosion() {
+            const originX = canvas.width / 2;
+            const originY = canvas.height * 0.24;
+
+            for (let i = 0; i < 50; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 5 + Math.random() * 11;
+                particles.push({
+                    type: 'smoke',
+                    x: originX,
+                    y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 40 + Math.random() * 55,
+                    color: `hsl(${Math.random() * 360}, 95%, 75%)`,
+                    alpha: 0.95,
+                    decay: 0.014 + Math.random() * 0.01
+                });
+            }
+
+            for (let i = 0; i < 80; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 7 + Math.random() * 14;
+                particles.push({
+                    type: 'sparkle',
+                    x: originX,
+                    y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 3,
+                    size: 10 + Math.random() * 14,
+                    color: `hsl(${Math.random() * 60 + 35}, 100%, 65%)`,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI,
+                    vRot: (Math.random() - 0.5) * 0.25,
+                    decay: 0.018 + Math.random() * 0.015
+                });
+            }
+
+            if (!animFrameId) renderParticles();
+        }
+
+        function launchSparklesOnly() {
+            const originX = canvas.width / 2;
+            const originY = canvas.height * 0.24;
+            for (let i = 0; i < 45; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 5 + Math.random() * 10;
+                particles.push({
+                    type: 'sparkle',
+                    x: originX,
+                    y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2,
+                    size: 8 + Math.random() * 12,
+                    color: `hsl(${Math.random() * 60 + 40}, 100%, 65%)`,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI,
+                    vRot: (Math.random() - 0.5) * 0.2,
+                    decay: 0.02
+                });
+            }
+            if (!animFrameId) renderParticles();
+        }
+
+        function launchConfetti() {
+            for (let i = 0; i < 90; i++) {
+                particles.push({
+                    type: 'confetti',
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: 3.5 + Math.random() * 5,
+                    size: 12 + Math.random() * 10,
+                    color: `hsl(${Math.random() * 360}, 95%, 60%)`,
+                    alpha: 1,
+                    rotation: Math.random() * Math.PI,
+                    vRot: (Math.random() - 0.5) * 0.16,
+                    decay: 0.007
+                });
+            }
+            if (!animFrameId) renderParticles();
+        }
+
+        function renderParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.decay;
+
+                if (p.type === 'smoke') {
+                    p.size += 0.9;
+                    p.vx *= 0.93;
+                    p.vy *= 0.93;
+
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (p.type === 'sparkle') {
+                    p.rotation += p.vRot;
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+
+                    ctx.beginPath();
+                    for (let s = 0; s < 4; s++) {
+                        ctx.lineTo(Math.cos(s * Math.PI / 2) * p.size, Math.sin(s * Math.PI / 2) * p.size);
+                        ctx.lineTo(Math.cos((s + 0.5) * Math.PI / 2) * (p.size * 0.32), Math.sin((s + 0.5) * Math.PI / 2) * (p.size * 0.32));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                } else if (p.type === 'confetti') {
+                    p.rotation += p.vRot;
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fillStyle = p.color;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+                    ctx.restore();
+                }
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            if (particles.length > 0) {
+                animFrameId = requestAnimationFrame(renderParticles);
+            } else {
+                animFrameId = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+    </script>
+</body>
+</html>
