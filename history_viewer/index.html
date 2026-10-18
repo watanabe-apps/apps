@@ -140,53 +140,57 @@
             margin-top: 6px;
         }
 
-        /* --- iOS Segmented Control（アプリ切り替え） --- */
+        /* --- アプリ切り替え（折り返しチップ形式で全アプリを一度に全表示） --- */
         .seg-wrapper {
             margin-bottom: 16px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 4px;
         }
-        .seg-wrapper::-webkit-scrollbar { display: none; }
         .seg-bar {
-            display: inline-flex;
-            background: #e3e3e8;
-            padding: 3px;
-            border-radius: 10px;
-            gap: 2px;
-            min-width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: transparent;
+            padding: 0;
+            width: 100%;
         }
         .seg-btn {
             font-family: var(--font-family);
-            border: none;
-            background: transparent;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: 20px;
             font-size: 13px;
             font-weight: 700;
-            color: #48484a;
+            color: #3a3a3c;
             cursor: pointer;
             white-space: nowrap;
-            transition: all 0.18s;
-            display: flex;
+            transition: all 0.15s ease;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            flex-shrink: 0;
+        }
+        .seg-btn:active {
+            transform: scale(0.96);
+            opacity: 0.85;
         }
         .seg-btn.selected {
-            background: #ffffff;
-            color: #000;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 3px 8px rgba(0, 122, 255, 0.28);
         }
         .badge-count {
             font-size: 11px;
-            padding: 1px 6px;
+            padding: 2px 7px;
             border-radius: 10px;
-            background: rgba(0, 0, 0, 0.08);
+            background: #f2f2f7;
+            color: #48484a;
             font-weight: 800;
         }
         .seg-btn.selected .badge-count {
-            background: var(--primary);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.28);
+            color: #ffffff;
         }
 
         /* --- サマリーカード群 --- */
