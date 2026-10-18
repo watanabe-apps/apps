@@ -193,6 +193,75 @@
             color: #ffffff;
         }
 
+        /* --- 日付フィルターバー --- */
+        .date-filter-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            border: 0.5px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .date-filter-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .date-filter-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .date-filter-chips {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .date-chip {
+            font-family: var(--font-family);
+            border: 1px solid var(--border-color);
+            background: #f2f2f7;
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #3a3a3c;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .date-chip:active {
+            transform: scale(0.96);
+        }
+        .date-chip.selected {
+            background: var(--success);
+            color: #fff;
+            border-color: var(--success);
+            box-shadow: 0 2px 6px rgba(52, 199, 89, 0.3);
+        }
+        .date-picker-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .date-picker-input {
+            font-family: var(--font-family);
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #3a3a3c;
+            cursor: pointer;
+        }
+
         /* --- サマリーカード群 --- */
         .stats-grid {
             display: grid;
@@ -442,6 +511,22 @@
             <!-- JSで動的生成 -->
         </div>
 
+        <!-- 日付フィルターバー -->
+        <div class="date-filter-card">
+            <div class="date-filter-left">
+                <span class="date-filter-label">📅 日付絞り込み:</span>
+                <div class="date-filter-chips">
+                    <button class="date-chip selected" data-date="all">すべて</button>
+                    <button class="date-chip" data-date="today">今日</button>
+                    <button class="date-chip" data-date="yesterday">昨日</button>
+                </div>
+            </div>
+            <div class="date-picker-wrap">
+                <span style="font-size:12px; color:var(--text-sub);">指定日:</span>
+                <input type="date" id="date-picker-input" class="date-picker-input">
+            </div>
+        </div>
+
         <!-- 履歴一覧 -->
         <div class="ios-section-title">
             <span id="list-section-title">プレイ履歴一覧</span>
@@ -536,31 +621,234 @@
         ];
 
         let currentAppId = 'all';
+        let currentDateFilter = 'all'; // 'all', 'today', 'yesterday', or 'YYYY-MM-DD'
+
+        // 日付文字列から YYYY-MM-DD を抽出・正規化
+        function parseToYMD(dateStr) {
+            if (!dateStr) return '';
+            const now = new Date();
+            const currentYear = now.getFullYear();
+
+            // 例: "2026/10/18 14:30" や "2026-10-18"
+            const m1 = dateStr.match(/(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/);
+            if (m1) {
+                return `${m1[1]}-${String(m1[2]).padStart(2, '0')}-${String(m1[3]).padStart(2, '0')}`;
+            }
+            // 例: "10/18 14:30" や "10.18"
+            const m2 = dateStr.match(/(\d{1,2})[\/\.\-](\d{1,2})/);
+            if (m2) {
+                return `${currentYear}-${String(m2[1]).padStart(2, '0')}-${String(m2[2]).padStart(2, '0')}`;
+            }
+            // 例: "10月18日 15:30"
+            const m3 = dateStr.match(/(\d{1,2})月(\d{1,2})日/);
+            if (m3) {
+                return `${currentYear}-${String(m3[1]).padStart(2, '0')}-${String(m3[2]).padStart(2, '0')}`;
+            }
+            return '';
+        }
+
+        function getTodayYMD() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function getYesterdayYMD() {
+            const y = new Date();
+            y.setDate(y.getDate() - 1);
+            return `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+        }
+
+        function filterByDate(items) {
+            if (currentDateFilter === 'all') return items;
+
+            const targetYMD = currentDateFilter === 'today' ? getTodayYMD() : 
+                              currentDateFilter === 'yesterday' ? getYesterdayYMD() : 
+                              currentDateFilter;
+
+            return items.filter(item => {
+                const ymd = parseToYMD(item.date);
+                return ymd === targetYMD;
+            });
+        }
 
         // --- パーサー群（各アプリのデータ構造を共通フォーマットに正規化） ---
+        // 1. なんばんめ
         function parseNanbanme(raw) {
             if (!Array.isArray(raw)) return [];
             return raw.map((item, idx) => {
                 const total = item.total || item.answered || 0;
                 const first = item.firstTry != null ? item.firstTry : (item.first || 0);
                 const rate = total > 0 ? Math.round((first / total) * 100) : 0;
+                const misses = item.misses != null ? item.misses : 0;
                 return {
                     id: `nanbanme_${idx}`,
                     appName: 'なんばんめ',
                     appId: 'nanbanme',
                     date: item.date || '日時不明',
                     scoreText: `一発正解: ${first}/${total} (${rate}%)`,
-                    isPerfect: rate === 100,
+                    isPerfect: misses === 0 && first === total && total > 0,
                     tags: [
                         item.pattern || '',
                         item.dirs ? `向き: ${item.dirs}` : '',
                         item.itemCount ? `${item.itemCount}こ並び` : '',
                         item.duration != null ? `${item.duration}秒` : '',
-                        item.misses ? `ミス ${item.misses}回` : 'ノーミス'
+                        misses > 0 ? `ミス ${misses}回` : 'ノーミス'
                     ].filter(Boolean),
                     details: item.logs ? item.logs.map(l => 
                         `第${l.qIndex+1}問 [${l.dir}から${l.num}番目] → ${l.firstTry ? '一発正解 💮' : 'ミスあり (ミス: ' + (l.mistakes?.join(', ') || 'あり') + ')'}`
                     ).join('<br>') : null
+                };
+            });
+        }
+
+        // 2. おおいすくない
+        function parseOoiSukunai(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const scoreParts = (item.score || '').split('/');
+                const isPerfect = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                return {
+                    id: `ooi_${item.id || idx}`,
+                    appName: 'おおいすくない',
+                    appId: 'ooi_sukunai',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${item.score || ''}`,
+                    isPerfect: isPerfect,
+                    tags: [
+                        item.step ? `設定: ${item.step}` : '',
+                        item.pairs ? `${item.pairs}組ペア` : '',
+                        item.time || ''
+                    ].filter(Boolean),
+                    details: item.details ? item.details.map(d => 
+                        `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
+                    ).join('<br>') : null
+                };
+            });
+        }
+
+        // 3. おおきいちいさい
+        function parseOokiiChiisai(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const scoreParts = (item.score || '').split('/');
+                const isPerfect = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                return {
+                    id: `ookii_${item.id || idx}`,
+                    appName: 'おおきいちいさい',
+                    appId: 'ookii_chiisai',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${item.score || ''}`,
+                    isPerfect: isPerfect,
+                    tags: [
+                        item.step ? `設定: ${item.step}` : '',
+                        item.pairs ? `${item.pairs}組` : '',
+                        item.time || ''
+                    ].filter(Boolean),
+                    details: item.details ? item.details.map(d => 
+                        `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
+                    ).join('<br>') : null
+                };
+            });
+        }
+
+        // 4. カルタ
+        function parseKaruta(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const corrects = item.corrects != null ? item.corrects : (item.correct || 0);
+                const wrongs = item.wrongs != null ? item.wrongs : (item.miss || 0);
+                const total = item.totalQuestions || (corrects + wrongs);
+                const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+                return {
+                    id: `karuta_${item.id || idx}`,
+                    appName: 'カルタ',
+                    appId: 'karuta',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
+                    isPerfect: wrongs === 0 && corrects > 0,
+                    tags: [
+                        `ミス: ${wrongs}回`,
+                        item.time ? `所要時間: ${item.time}` : ''
+                    ].filter(Boolean),
+                    details: item.wrongWords && item.wrongWords.length > 0 ? 
+                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : 'ミスした言葉なし 💮'
+                };
+            });
+        }
+
+        // 5. ひらがなさがし
+        function parseHiraganaSagashi(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const corrects = item.correctCount != null ? item.correctCount : (item.total || 0);
+                const wrongs = item.wrongCount != null ? item.wrongCount : (item.missCount || 0);
+                const total = item.totalRounds || (corrects + wrongs);
+                const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+                return {
+                    id: `sagashi_${item.id || idx}`,
+                    appName: 'ひらがなさがし',
+                    appId: 'hiragana_sagashi',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
+                    isPerfect: wrongs === 0 && corrects > 0,
+                    tags: [
+                        item.mode ? `モード: ${item.mode}` : '',
+                        item.candidateCount ? `候補: ${item.candidateCount}` : '',
+                        wrongs > 0 ? `ミス: ${wrongs}回` : 'ノーミス'
+                    ].filter(Boolean),
+                    details: item.mistakes && item.mistakes.length > 0 ? 
+                        `<span class="error-tag">間違い履歴:</span> ${item.mistakes.map(m => typeof m === 'object' ? `${m.target || ''}を探すところで「${m.chosen || ''}」を選択` : m).join('<br>')}` : 'ノーミスクリア 💮'
+                };
+            });
+        }
+
+        // 6. いくつといくつ
+        function parseIkutsutoIkutsu(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const clear = item.clear != null ? item.clear : 0;
+                const wrong = item.wrong != null ? item.wrong : (item.missCount || 0);
+                const total = clear + wrong;
+                const rate = total > 0 ? Math.round((clear / total) * 100) : 0;
+                return {
+                    id: `ikutsu_${idx}`,
+                    appName: 'いくつといくつ',
+                    appId: 'ikutsuto_ikutsu',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${clear}/${total}問 (${rate}%)`,
+                    isPerfect: wrong === 0 && clear > 0,
+                    tags: [
+                        item.mode ? `モード: ${item.mode}` : '',
+                        item.targetNum ? `数の範囲: ${item.targetNum}` : '',
+                        wrong > 0 ? `ミス: ${wrong}回` : 'ノーミス'
+                    ].filter(Boolean),
+                    details: item.details ? item.details.map((d, i) => 
+                        typeof d === 'object' ? `第${i+1}問: ${d.q || ''} → ${d.isCorrect ? '○' : '✕ (選んだ値: ' + (d.userAns || '') + ')'}` : d
+                    ).join('<br>') : null
+                };
+            });
+        }
+
+        // 7. 平仮名キーボードクイズ
+        function parseKeyboardQuiz(raw) {
+            if (!raw || !raw.playHistory || !Array.isArray(raw.playHistory)) return [];
+            return raw.playHistory.map((item, idx) => {
+                const corrects = item.correctCount || 0;
+                const wrongs = item.wrongCount || 0;
+                const total = item.total || (corrects + wrongs);
+                const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+                return {
+                    id: `kb_${idx}`,
+                    appName: '平仮名キーボードクイズ',
+                    appId: 'keyboard_quiz',
+                    date: item.date || '日時不明',
+                    scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
+                    isPerfect: wrongs === 0 && corrects > 0,
+                    tags: [
+                        total ? `全${total}問` : '',
+                        wrongs > 0 ? `ミス: ${wrongs}回` : 'ノーミス'
+                    ].filter(Boolean),
+                    details: item.logs ? item.logs.map(l => `${l.word}: ${l.correct ? '○' : '✕ (入力: ' + (l.input || '') + ')'}`).join(', ') : null
                 };
             });
         }
@@ -580,120 +868,6 @@
                     details: item.details || item.logs ? JSON.stringify(item.details || item.logs) : null
                 };
             });
-        }
-
-        function parseOoiSukunai(raw) {
-            if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `ooi_${item.id || idx}`,
-                appName: 'おおいすくない',
-                appId: 'ooi_sukunai',
-                date: item.date || '日時不明',
-                scoreText: `正解: ${item.score || ''}`,
-                isPerfect: item.score && item.score.startsWith(item.score.split('/')[1]?.trim() || '___'),
-                tags: [
-                    item.step ? `設定: ${item.step}` : '',
-                    item.pairs ? `${item.pairs}組ペア` : '',
-                    item.time || ''
-                ].filter(Boolean),
-                details: item.details ? item.details.map(d => 
-                    `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
-                ).join('<br>') : null
-            }));
-        }
-
-        function parseOokiiChiisai(raw) {
-            if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `ookii_${item.id || idx}`,
-                appName: 'おおきいちいさい',
-                appId: 'ookii_chiisai',
-                date: item.date || '日時不明',
-                scoreText: `正解: ${item.score || ''}`,
-                isPerfect: item.score && item.score.startsWith(item.score.split('/')[1]?.trim() || '___'),
-                tags: [
-                    item.step ? `設定: ${item.step}` : '',
-                    item.pairs ? `${item.pairs}組` : '',
-                    item.time || ''
-                ].filter(Boolean),
-                details: item.details ? item.details.map(d => 
-                    `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
-                ).join('<br>') : null
-            }));
-        }
-
-        function parseKaruta(raw) {
-            if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => {
-                const total = (item.correct || 0) + (item.miss || 0);
-                const rate = total > 0 ? Math.round(((item.correct || 0) / total) * 100) : 0;
-                return {
-                    id: `karuta_${idx}`,
-                    appName: 'カルタ',
-                    appId: 'karuta',
-                    date: item.date || '日時不明',
-                    scoreText: `正答率: ${rate}% (取った札: ${item.correct || 0}枚)`,
-                    isPerfect: item.miss === 0 && (item.correct || 0) > 0,
-                    tags: [
-                        `ミス: ${item.miss || 0}回`,
-                        item.time ? `所要時間: ${item.time}` : ''
-                    ].filter(Boolean),
-                    details: item.wrongWords && item.wrongWords.length > 0 ? 
-                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : 'ミスした言葉なし'
-                };
-            });
-        }
-
-        function parseHiraganaSagashi(raw) {
-            if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `sagashi_${idx}`,
-                appName: 'ひらがなさがし',
-                appId: 'hiragana_sagashi',
-                date: item.date || '日時不明',
-                scoreText: `クリア: ${item.total || item.score || '完了'}`,
-                isPerfect: item.missCount === 0,
-                tags: [
-                    item.missCount ? `ミス: ${item.missCount}回` : 'ノーミス',
-                    item.duration ? `${item.duration}秒` : ''
-                ].filter(Boolean),
-                details: item.mistakes ? `<span class="error-tag">間違い履歴:</span> ${item.mistakes.join(', ')}` : null
-            }));
-        }
-
-        function parseIkutsutoIkutsu(raw) {
-            if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `ikutsu_${idx}`,
-                appName: 'いくつといくつ',
-                appId: 'ikutsuto_ikutsu',
-                date: item.date || '日時不明',
-                scoreText: `正解率: ${item.accuracy || item.score || ''}`,
-                isPerfect: item.missCount === 0,
-                tags: [
-                    item.mode ? `モード: ${item.mode}` : '',
-                    item.targetNum ? `数の範囲: ${item.targetNum}` : '',
-                    item.missCount ? `ミス: ${item.missCount}回` : ''
-                ].filter(Boolean),
-                details: item.details ? JSON.stringify(item.details) : null
-            }));
-        }
-
-        function parseKeyboardQuiz(raw) {
-            if (!raw || !raw.playHistory || !Array.isArray(raw.playHistory)) return [];
-            return raw.playHistory.map((item, idx) => ({
-                id: `kb_${idx}`,
-                appName: '平仮名キーボードクイズ',
-                appId: 'keyboard_quiz',
-                date: item.date || '日時不明',
-                scoreText: `正解: ${item.correctCount || 0}問`,
-                isPerfect: (item.wrongCount || 0) === 0,
-                tags: [
-                    item.total ? `全${item.total}問` : '',
-                    item.wrongCount ? `ミス: ${item.wrongCount}回` : 'ノーミス'
-                ].filter(Boolean),
-                details: item.logs ? item.logs.map(l => `${l.word}: ${l.correct ? '○' : '✕'}`).join(', ') : null
-            }));
         }
 
         // --- 全アプリの履歴を取得 ---
@@ -798,17 +972,23 @@
 
             const isAll = currentAppId === 'all';
             const currentCfg = APPS_CONFIG.find(c => c.id === currentAppId) || APPS_CONFIG[0];
-            const items = isAll ? getAllHistories() : getAppHistory(currentCfg);
+            const rawItems = isAll ? getAllHistories() : getAppHistory(currentCfg);
 
-            // サマリーエリア
+            // 日付フィルター適用
+            const items = filterByDate(rawItems);
+
+            // サマリーエリア（フィルター後データで計算）
             const statsArea = document.getElementById('stats-area');
             const totalSessions = items.length;
             const perfectCount = items.filter(it => it.isPerfect).length;
             const perfectRate = totalSessions > 0 ? Math.round((perfectCount / totalSessions) * 100) : 0;
 
+            const dateLabelMap = { all: '', today: '（今日）', yesterday: '（昨日）' };
+            const dateLabel = dateLabelMap[currentDateFilter] != null ? dateLabelMap[currentDateFilter] : `（${currentDateFilter}）`;
+
             statsArea.innerHTML = `
                 <div class="stat-box">
-                    <div class="stat-label">総プレイ回数</div>
+                    <div class="stat-label">総プレイ回数 ${dateLabel}</div>
                     <div class="stat-val">${totalSessions}</div>
                 </div>
                 <div class="stat-box">
@@ -823,7 +1003,7 @@
 
             // セクションタイトル & 削除ボタン制御
             document.getElementById('list-section-title').textContent = 
-                isAll ? `全アプリの履歴一覧 (${items.length}件)` : `${currentCfg.name}の履歴一覧 (${items.length}件)`;
+                isAll ? `全アプリの履歴一覧 ${dateLabel} (${items.length}件)` : `${currentCfg.name}の履歴一覧 ${dateLabel} (${items.length}件)`;
             
             const btnClearCurrent = document.getElementById('btn-clear-current');
             btnClearCurrent.style.display = isAll ? 'none' : 'inline-flex';
@@ -834,17 +1014,20 @@
             listContainer.innerHTML = '';
 
             if (items.length === 0) {
+                const emptyMsg = rawItems.length > 0 ? 
+                    `選択した日付${dateLabel}の学習履歴はありません` : 
+                    'まだプレイ履歴がありません';
                 listContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📭</div>
-                        <p style="font-weight:700;">まだプレイ履歴がありません</p>
+                        <p style="font-weight:700;">${emptyMsg}</p>
                         <p style="font-size:12px; margin-top:6px; color:#888;">
-                            アプリ（なんばんめ・おおいすくない等）をプレイしてクリア画面まで進むと、自動的に履歴が保存されます。<br>
-                            ※テスト用にダミーデータを作成して動作確認したい場合は、下のボタンを押してください。
+                            ${rawItems.length > 0 ? '「すべて」を選択すると過去の全履歴を確認できます。' : 'アプリ（なんばんめ・おおいすくない等）をプレイしてクリア画面まで進むと、自動的に履歴が保存されます。'}
                         </p>
+                        ${rawItems.length === 0 ? `
                         <button class="btn btn-sub" id="btn-create-dummy" style="margin-top:14px;">
                             🧪 テスト用のダミー履歴を作成
-                        </button>
+                        </button>` : ''}
                     </div>
                 `;
                 const dummyBtn = document.getElementById('btn-create-dummy');
@@ -987,6 +1170,29 @@
                 renderTabs();
                 renderView();
             };
+        }
+
+        // --- 日付フィルターイベントリスナー ---
+        document.querySelectorAll('.date-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.date-chip').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                currentDateFilter = btn.dataset.date;
+                const picker = document.getElementById('date-picker-input');
+                if (picker) picker.value = '';
+                renderView();
+            });
+        });
+
+        const datePicker = document.getElementById('date-picker-input');
+        if (datePicker) {
+            datePicker.addEventListener('change', () => {
+                if (datePicker.value) {
+                    document.querySelectorAll('.date-chip').forEach(b => b.classList.remove('selected'));
+                    currentDateFilter = datePicker.value; // "YYYY-MM-DD"
+                    renderView();
+                }
+            });
         }
 
         // --- 画面復帰・別タブ更新時の自動検知 ---
