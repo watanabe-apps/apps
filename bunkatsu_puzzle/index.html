@@ -29,6 +29,10 @@
                 <button id="btn-setting" class="btn-secondary">設定</button>
                 <div class="setting-note">※トリプルタップ</div>
             </div>
+            <div class="setting-wrapper">
+                <button id="btn-history" class="btn-secondary">履歴</button>
+                <div class="setting-note">※トリプルタップ</div>
+            </div>
         </div>
 
         <!-- 2. プレイ画面 -->
@@ -40,6 +44,20 @@
 
             <div id="next-overlay" class="next-overlay hidden">
                 <button id="btn-next" class="btn-next">つぎへ</button>
+            </div>
+        </div>
+
+        <!-- 履歴モーダル -->
+        <div id="history-modal" class="modal-overlay hidden">
+            <div class="history-modal-container">
+                <div class="history-modal-header">
+                    <span class="history-modal-title">プレイ履歴</span>
+                    <button id="btn-close-history" class="btn-modal-close">閉じる</button>
+                </div>
+                <div id="history-modal-list" class="history-modal-list"></div>
+                <div class="history-modal-footer">
+                    <button id="btn-clear-history" class="btn-modal-danger">履歴を消去</button>
+                </div>
             </div>
         </div>
 

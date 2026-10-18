@@ -823,7 +823,10 @@
                 <button class="btn btn-secondary" id="btn-setting">設定</button>
                 <span class="hint">※トリプルタップ</span>
             </div>
-            <button class="btn btn-secondary" id="btn-history">履歴</button>
+            <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                <button class="btn btn-secondary" id="btn-history">履歴</button>
+                <span class="hint">※トリプルタップ</span>
+            </div>
         </div>
     </div>
 
@@ -2207,7 +2210,17 @@
         loadSettings();
 
         document.getElementById('btn-start').addEventListener('click', startGame);
-        document.getElementById('btn-history').addEventListener('click', openHistory);
+
+        let histTapCount = 0, histTapTimer = null;
+        document.getElementById('btn-history').addEventListener('click', () => {
+            histTapCount++;
+            clearTimeout(histTapTimer);
+            histTapTimer = setTimeout(() => { histTapCount = 0; }, 500);
+            if (histTapCount >= 3) {
+                histTapCount = 0;
+                openHistory();
+            }
+        });
 
         let tapCount = 0, tapTimer = null;
         document.getElementById('btn-setting').addEventListener('click', () => {

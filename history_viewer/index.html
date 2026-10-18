@@ -462,41 +462,24 @@
 
     <!-- ヘッダー -->
     <header class="app-header">
-        <h1 class="header-title">📊 学習履歴ダッシュボード</h1>
+        <h1 class="header-title">📊 学習履歴</h1>
         <div class="header-actions">
-            <button class="btn btn-sub" id="btn-refresh" title="最新の履歴を再読み込みします">
-                🔄 更新
-            </button>
-            <button class="btn btn-sub" id="btn-export" title="全履歴をJSON形式でダウンロード保存します">
-                💾 書き出し
-            </button>
-            <button class="btn btn-danger" id="btn-clear-all" title="ブラウザに保存された学習履歴を一括消去します">
-                🗑️ 一括消去
-            </button>
+            <button class="btn btn-sub" id="btn-refresh">🔄 更新</button>
+            <button class="btn btn-sub" id="btn-export">💾 保存</button>
+            <button class="btn btn-danger" id="btn-clear-all">🗑️ 全消去</button>
         </div>
     </header>
 
     <main class="main-container">
-        <!-- 診断・オリジン情報バー -->
-        <div id="origin-diagnostic" style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:10px 14px; border-radius:10px; font-size:12px; margin-bottom:14px; line-height:1.5;">
-            <strong>⚠️ 反映されない場合の確認ポイント：</strong><br>
-            • 現在のURL: <code id="diag-origin" style="background:#fff; padding:2px 4px; border-radius:4px;"></code><br>
-            • 検出された履歴件数: <span id="diag-count" style="font-weight:bold;">0件</span> / localStorage総キー数: <span id="diag-keys-count" style="font-weight:bold;">0個</span><br>
-            <span style="color:#666;">※ブラウザの仕様上、<strong>同じURL（ドメイン）</strong>で開いたアプリ同士でのみ履歴が共有されます（Safariとホーム画面PWA、またはローカルfile://とhttps://の間では共有されません）。</span>
-        </div>
-
-        <!-- 容量メーター -->
+        <!-- 保存容量メーター -->
         <div class="storage-card">
             <div class="storage-header">
-                <span>📦 端末内 localStorage 保存状況</span>
+                <span>保存容量</span>
                 <span id="storage-text">計算中...</span>
             </div>
             <div class="storage-bar-bg">
                 <div class="storage-bar-fill" id="storage-bar"></div>
             </div>
-            <p class="storage-tip">
-                ※テキストデータのみを保存しているため、数十〜数百問の履歴を記録しても容量（約5MB）の1%未満です。容量不足の心配はありません。
-            </p>
         </div>
 
         <!-- アプリ選択セグメント -->
@@ -514,7 +497,7 @@
         <!-- 日付フィルターバー -->
         <div class="date-filter-card">
             <div class="date-filter-left">
-                <span class="date-filter-label">📅 日付絞り込み:</span>
+                <span class="date-filter-label">📅 日付:</span>
                 <div class="date-filter-chips">
                     <button class="date-chip selected" data-date="all">すべて</button>
                     <button class="date-chip" data-date="today">今日</button>
@@ -529,7 +512,7 @@
 
         <!-- 履歴一覧 -->
         <div class="ios-section-title">
-            <span id="list-section-title">プレイ履歴一覧</span>
+            <span id="list-section-title">履歴一覧</span>
             <button class="btn btn-sub" id="btn-clear-current" style="padding: 4px 8px; font-size: 11px;">
                 このアプリの履歴を消去
             </button>
@@ -617,6 +600,54 @@
                 key: 'hiraganaAppConfig',
                 dir: '../keyboard_quiz/',
                 parser: parseKeyboardQuiz
+            },
+            {
+                id: 'suuji_touch',
+                name: '数字タッチ',
+                icon: '👆',
+                key: 'suuji_touch_history',
+                dir: '../suuji_touch/',
+                parser: parseSuujiTouch
+            },
+            {
+                id: '1tai1',
+                name: '一つずつ配ろう',
+                icon: '🍎',
+                key: '1tai1_history',
+                dir: '../1tai1/',
+                parser: parse1tai1
+            },
+            {
+                id: 'suuji_narabe',
+                name: '数字ならべ',
+                icon: '🎛️',
+                key: 'suuji_narabe_history',
+                dir: '../suuji_narabe/',
+                parser: parseSuujiNarabe
+            },
+            {
+                id: 'bunkatsu_puzzle',
+                name: '分割パズル',
+                icon: '🧩',
+                key: 'bunkatsu_puzzle_history',
+                dir: '../bunkatsu_puzzle/',
+                parser: parseBunkatsuPuzzle
+            },
+            {
+                id: 'category_bunrui',
+                name: 'カテゴリー分類',
+                icon: '🧺',
+                key: 'category_bunrui_history',
+                dir: '../category_bunrui/',
+                parser: parseCategoryBunrui
+            },
+            {
+                id: 'kazoeyou_kiso',
+                name: '数えよう基礎',
+                icon: '🔴',
+                key: 'kazoeyou_kiso_history',
+                dir: '../kazoeyou_kiso/',
+                parser: parseKazoeyouKiso
             }
         ];
 
@@ -853,6 +884,124 @@
             });
         }
 
+        // 8. 数字タッチ
+        function parseSuujiTouch(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `touch_${item.id || idx}`,
+                appName: '数字タッチ',
+                appId: 'suuji_touch',
+                date: item.date || '日時不明',
+                scoreText: `タイム: ${item.time || ''} (1〜${item.targetMax})`,
+                isPerfect: item.isPerfect === true || item.miss === 0,
+                tags: [
+                    item.grid ? `マス: ${item.grid}` : '',
+                    item.miss != null ? (item.miss > 0 ? `ミス ${item.miss}回` : 'ノーミス') : ''
+                ].filter(Boolean),
+                details: null
+            }));
+        }
+
+        // 9. 一つずつ配ろう
+        function parse1tai1(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `1tai1_${item.id || idx}`,
+                appName: '一つずつ配ろう',
+                appId: '1tai1',
+                date: item.date || '日時不明',
+                scoreText: item.score || `${item.totalRounds || 0}問クリア`,
+                isPerfect: true,
+                tags: [
+                    item.plateCount ? `お皿: ${item.plateCount}枚` : '',
+                    item.plateStyle ? `表示: ${item.plateStyle}` : ''
+                ].filter(Boolean),
+                details: null
+            }));
+        }
+
+        // 10. 数字ならべ
+        function parseSuujiNarabe(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `narabe_${item.id || idx}`,
+                appName: '数字ならべ',
+                appId: 'suuji_narabe',
+                date: item.date || '日時不明',
+                scoreText: item.score || `${item.totalQuestions || 0}問クリア`,
+                isPerfect: true,
+                tags: [
+                    item.range ? `範囲: ${item.range}` : '',
+                    item.mode ? `モード: ${item.mode}` : ''
+                ].filter(Boolean),
+                details: null
+            }));
+        }
+
+        // 11. 分割パズル
+        function parseBunkatsuPuzzle(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `puzzle_${item.id || idx}`,
+                appName: '分割パズル',
+                appId: 'bunkatsu_puzzle',
+                date: item.date || '日時不明',
+                scoreText: `${item.cleared || item.total || 0}問クリア`,
+                isPerfect: true,
+                tags: [
+                    item.piecesCount ? `ピース数: ${item.piecesCount} (${item.rows}×${item.cols})` : '',
+                    item.rotation !== undefined ? `回転: ${item.rotation ? 'あり' : 'なし'}` : '',
+                    item.duration ? `所要時間: ${item.duration}秒` : ''
+                ].filter(Boolean),
+                details: null
+            }));
+        }
+
+        // 12. カテゴリー分類
+        function parseCategoryBunrui(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const mistakes = item.mistakes || 0;
+                return {
+                    id: `cat_${item.id || idx}`,
+                    appName: 'カテゴリー分類',
+                    appId: 'category_bunrui',
+                    date: item.date || '日時不明',
+                    scoreText: `${item.questionsCompleted || 0}問クリア (ミス ${mistakes}回)`,
+                    isPerfect: mistakes === 0,
+                    tags: [
+                        item.totalImagesPlaced ? `配置数: ${item.totalImagesPlaced}個` : '',
+                        mistakes === 0 ? 'ノーミス' : `ミス: ${mistakes}回`
+                    ].filter(Boolean),
+                    details: null
+                };
+            });
+        }
+
+        // 13. 数えよう基礎
+        function parseKazoeyouKiso(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const misses = item.misses || 0;
+                return {
+                    id: `kazoeyou_${item.id || idx}`,
+                    appName: '数えよう基礎',
+                    appId: 'kazoeyou_kiso',
+                    date: item.date || '日時不明',
+                    scoreText: `${item.cleared || item.total || 0}問クリア (ミス ${misses}回)`,
+                    isPerfect: misses === 0,
+                    tags: [
+                        item.mode ? `モード: ${item.mode}` : '',
+                        item.range ? `範囲: ${item.range}` : '',
+                        item.pieces ? `円の数: ${item.pieces}` : '',
+                        misses === 0 ? 'ノーミス' : `ミス: ${misses}回`,
+                        item.duration ? `時間: ${item.duration}秒` : ''
+                    ].filter(Boolean),
+                    details: null
+                };
+            });
+        }
+
         // 未知の履歴キー用汎用パーサー
         function parseGeneric(raw, keyName) {
             if (!Array.isArray(raw)) return [];
@@ -913,13 +1062,11 @@
             return all.sort((a, b) => (b.date > a.date ? 1 : -1));
         }
 
-        // --- ストレージ使用量の計算 & 診断表示 ---
+        // --- ストレージ使用量の計算 ---
         function updateStorageUsage() {
             let totalBytes = 0;
-            const allKeys = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                allKeys.push(k);
                 const v = localStorage.getItem(k);
                 totalBytes += (k.length + (v ? v.length : 0)) * 2; // UTF-16概算
             }
@@ -928,12 +1075,6 @@
 
             document.getElementById('storage-text').textContent = `${kb} KB / 5,120 KB (${percent}%)`;
             document.getElementById('storage-bar').style.width = `${percent}%`;
-
-            // 診断パネル更新
-            const diagOrigin = document.getElementById('diag-origin');
-            if (diagOrigin) diagOrigin.textContent = location.origin + location.pathname;
-            const diagKeysCount = document.getElementById('diag-keys-count');
-            if (diagKeysCount) diagKeysCount.textContent = `${allKeys.length}個 (${allKeys.join(', ') || 'なし'})`;
         }
 
         // --- タブUIレンダリング ---
@@ -943,10 +1084,6 @@
             tabsContainer.innerHTML = '';
 
             const allList = getAllHistories();
-
-            // 診断の総件数
-            const diagCount = document.getElementById('diag-count');
-            if (diagCount) diagCount.textContent = `${allList.length}件`;
 
             APPS_CONFIG.forEach(cfg => {
                 const count = cfg.isSpecial ? allList.length : getAppHistory(cfg).length;
@@ -988,15 +1125,15 @@
 
             statsArea.innerHTML = `
                 <div class="stat-box">
-                    <div class="stat-label">総プレイ回数 ${dateLabel}</div>
+                    <div class="stat-label">プレイ回数 ${dateLabel}</div>
                     <div class="stat-val">${totalSessions}</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-label">パーフェクト回数</div>
+                    <div class="stat-label">満点回数</div>
                     <div class="stat-val" style="color:var(--success);">${perfectCount}</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-label">パーフェクト達成率</div>
+                    <div class="stat-label">満点達成率</div>
                     <div class="stat-val" style="color:var(--warning);">${perfectRate}%</div>
                 </div>
             `;
@@ -1015,25 +1152,14 @@
 
             if (items.length === 0) {
                 const emptyMsg = rawItems.length > 0 ? 
-                    `選択した日付${dateLabel}の学習履歴はありません` : 
-                    'まだプレイ履歴がありません';
+                    `選択した日付${dateLabel}の履歴はありません` : 
+                    '履歴がありません';
                 listContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">📭</div>
                         <p style="font-weight:700;">${emptyMsg}</p>
-                        <p style="font-size:12px; margin-top:6px; color:#888;">
-                            ${rawItems.length > 0 ? '「すべて」を選択すると過去の全履歴を確認できます。' : 'アプリ（なんばんめ・おおいすくない等）をプレイしてクリア画面まで進むと、自動的に履歴が保存されます。'}
-                        </p>
-                        ${rawItems.length === 0 ? `
-                        <button class="btn btn-sub" id="btn-create-dummy" style="margin-top:14px;">
-                            🧪 テスト用のダミー履歴を作成
-                        </button>` : ''}
                     </div>
                 `;
-                const dummyBtn = document.getElementById('btn-create-dummy');
-                if (dummyBtn) {
-                    dummyBtn.onclick = createDummyHistory;
-                }
                 return;
             }
 
@@ -1068,33 +1194,6 @@
                 `;
                 listContainer.appendChild(row);
             });
-        }
-
-        // テスト用ダミーデータ生成
-        function createDummyHistory() {
-            const now = new Date();
-            const dateStr = now.toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            
-            const dummyNanbanme = [
-                {
-                    date: dateStr,
-                    completed: true,
-                    pattern: '場所をタップ',
-                    dirs: 'うえ・した',
-                    itemCount: 5,
-                    firstTry: 5,
-                    total: 5,
-                    misses: 0,
-                    duration: 24,
-                    logs: [
-                        { qIndex: 0, dir: 'top', num: 2, N: 5, firstTry: true },
-                        { qIndex: 1, dir: 'bottom', num: 4, N: 5, firstTry: true }
-                    ]
-                }
-            ];
-            localStorage.setItem('nanbanme_history', JSON.stringify(dummyNanbanme));
-            renderTabs();
-            renderView();
         }
 
         // 詳細アコーディオン

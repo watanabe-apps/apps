@@ -740,6 +740,13 @@ async function recordHistory() {
   };
 
   await dbAddHistory(historyEntry);
+
+  try {
+    const localHist = JSON.parse(localStorage.getItem('category_bunrui_history') || '[]');
+    localHist.unshift(historyEntry);
+    if (localHist.length > 100) localHist.pop();
+    localStorage.setItem('category_bunrui_history', JSON.stringify(localHist));
+  } catch (e) {}
 }
 
 // 履歴トリプルタップ処理
@@ -764,6 +771,7 @@ document.getElementById('btn-close-history').addEventListener('click', () => {
 document.getElementById('btn-clear-history').addEventListener('click', async () => {
   if (confirm("履歴をすべて削除しますか？")) {
     await dbClearHistory();
+    try { localStorage.removeItem('category_bunrui_history'); } catch (e) {}
     await renderHistoryUI();
   }
 });

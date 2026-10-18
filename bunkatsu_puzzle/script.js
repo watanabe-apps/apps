@@ -223,6 +223,7 @@ class PhotoPuzzleApp {
         this.currentImage = null;
         // マルチタッチ・複数同時ドラッグ管理 (pointerId => session)
         this.activePointers = new Map();
+        this.maxZIndex = 10;
 
         // トリプルタップ
         this.settingTapCount = 0;
@@ -325,6 +326,45 @@ class PhotoPuzzleApp {
                 this.openSetting();
             }
         });
+
+        // 履歴ボタン（トリプルタップ）
+        const btnHistory = document.getElementById('btn-history');
+        if (btnHistory) {
+            let histTapCount = 0;
+            let histTapTimer = null;
+            btnHistory.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                histTapCount++;
+                if (histTapCount === 1) {
+                    histTapTimer = setTimeout(() => {
+                        histTapCount = 0;
+                    }, 700);
+                } else if (histTapCount === 3) {
+                    clearTimeout(histTapTimer);
+                    histTapCount = 0;
+                    this.openHistoryModal();
+                }
+            });
+        }
+
+        const btnCloseHistory = document.getElementById('btn-close-history');
+        if (btnCloseHistory) {
+            btnCloseHistory.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                document.getElementById('history-modal').classList.add('hidden');
+            });
+        }
+
+        const btnClearHistory = document.getElementById('btn-clear-history');
+        if (btnClearHistory) {
+            btnClearHistory.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (confirm('履歴をすべて消去しますか？')) {
+                    localStorage.removeItem('bunkatsu_puzzle_history');
+                    this.renderHistoryUI();
+                }
+            });
+        }
 
         // 戻るボタン
         this.dom.btnBackHome.addEventListener('pointerdown', (e) => {
@@ -603,6 +643,7 @@ class PhotoPuzzleApp {
 
     // --- ゲームプレイ ---
     startPlay() {
+        this.startTime = Date.now();
         this.numOfClear = 0;
         this.dom.clearCount.textContent = String(this.numOfClear);
         this.dom.nextOverlay.classList.add('hidden');
@@ -652,6 +693,7 @@ class PhotoPuzzleApp {
         if (!stage) return;
         stage.innerHTML = '';
         this.pieces = [];
+        this.maxZIndex = 10;
 
         // ステージサイズの確実な取得
         const stageWidth = stage.clientWidth || window.innerWidth;
@@ -737,7 +779,7 @@ class PhotoPuzzleApp {
                     position: position,
                     offset: { width: offsetX, height: offsetY },
                     rotation: randomRot,
-                    zIndex: 1,
+                    zIndex: 10,
                     canvas: pCanvas,
                     width: pieceWidth,
                     height: pieceHeight
@@ -765,6 +807,23 @@ class PhotoPuzzleApp {
         this.bindPiecePointerEvents(div, index);
     }
 
+    bringPieceToFront(pieceIndex) {
+        const targetPiece = this.pieces[pieceIndex];
+        if (!targetPiece) return;
+        this.maxZIndex += 1;
+        targetPiece.zIndex = this.maxZIndex;
+        if (targetPiece.groupID) {
+            this.pieces.forEach(p => {
+                if (p.groupID === targetPiece.groupID) {
+                    p.zIndex = this.maxZIndex;
+                    if (p.element) p.element.style.zIndex = this.maxZIndex;
+                }
+            });
+        } else {
+            if (targetPiece.element) targetPiece.element.style.zIndex = this.maxZIndex;
+        }
+    }
+
     bindPiecePointerEvents(elem, pieceIndex) {
         elem.addEventListener('pointerdown', (e) => {
             e.preventDefault();
@@ -781,15 +840,8 @@ class PhotoPuzzleApp {
                 }
             }
 
-            // 最前面化
-            this.maxZIndex += 2;
-            targetPiece.zIndex = this.maxZIndex;
-            if (targetPiece.groupID) {
-                this.pieces.forEach(p => {
-                    if (p.groupID === targetPiece.groupID) p.zIndex = this.maxZIndex;
-                });
-            }
-            this.renderAllPieces();
+            // 最前面化（タッチした瞬間に最前面へ）
+            this.bringPieceToFront(pieceIndex);
 
             try { elem.setPointerCapture(e.pointerId); } catch (err) {}
 
@@ -811,13 +863,29 @@ class PhotoPuzzleApp {
             const dx = e.clientX - session.startX;
             const dy = e.clientY - session.startY;
 
+            const targetPiece = this.pieces[session.pieceIndex];
+
             if (!session.isDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
                 session.isDragging = true;
-                elem.classList.add('dragging');
+                if (targetPiece.groupID) {
+                    this.pieces.forEach(p => {
+                        if (p.groupID === targetPiece.groupID && p.element) {
+                            p.element.classList.add('dragging');
+                        }
+                    });
+                } else {
+                    elem.classList.add('dragging');
+                }
+                // ドラッグ開始時にも確実に最前面へ
+                this.bringPieceToFront(session.pieceIndex);
             }
 
             if (session.isDragging) {
-                const targetPiece = this.pieces[session.pieceIndex];
+                // ドラッグ中のピースが他ピースより背面にあれば最前面化
+                if (targetPiece.zIndex < this.maxZIndex) {
+                    this.bringPieceToFront(session.pieceIndex);
+                }
+
                 const stageW = this.dom.puzzleStage.clientWidth || window.innerWidth;
                 const stageH = this.dom.puzzleStage.clientHeight || window.innerHeight;
 
@@ -851,10 +919,19 @@ class PhotoPuzzleApp {
             if (!session) return;
             this.activePointers.delete(e.pointerId);
 
-            elem.classList.remove('dragging');
-            try { elem.releasePointerCapture(e.pointerId); } catch (err) {}
-
             const targetPiece = this.pieces[session.pieceIndex];
+
+            if (targetPiece && targetPiece.groupID) {
+                this.pieces.forEach(p => {
+                    if (p.groupID === targetPiece.groupID && p.element) {
+                        p.element.classList.remove('dragging');
+                    }
+                });
+            } else {
+                elem.classList.remove('dragging');
+            }
+
+            try { elem.releasePointerCapture(e.pointerId); } catch (err) {}
 
             if (!session.isDragging) {
                 // タップ判定：回転のロックをはずした（回転OFFの）ときは回転しない！
@@ -996,6 +1073,7 @@ class PhotoPuzzleApp {
 
         if (anyConnected) {
             this.soundPlayer.playTik();
+            this.bringPieceToFront(offset);
         }
 
         // クリア判定
@@ -1008,6 +1086,7 @@ class PhotoPuzzleApp {
                 this.dom.clearCount.textContent = String(this.numOfClear);
 
                 if (this.numOfClear >= this.questions) {
+                    this.saveHistory();
                     setTimeout(() => {
                         this.showScreen('home');
                     }, 1000);
@@ -1018,6 +1097,70 @@ class PhotoPuzzleApp {
                 }
             }
         }
+    }
+
+    saveHistory() {
+        try {
+            const now = new Date();
+            const dateStr = now.toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const item = {
+                date: dateStr,
+                total: this.questions,
+                cleared: this.numOfClear,
+                rows: this.row,
+                cols: this.column,
+                piecesCount: this.row * this.column,
+                rotation: this.allowRotation,
+                duration: this.startTime ? Math.round((Date.now() - this.startTime) / 1000) : 0,
+                completed: true
+            };
+            const list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
+            list.unshift(item);
+            if (list.length > 100) list.pop();
+            localStorage.setItem('bunkatsu_puzzle_history', JSON.stringify(list));
+        } catch (e) {
+            console.warn('Failed to save history', e);
+        }
+    }
+
+    openHistoryModal() {
+        this.renderHistoryUI();
+        document.getElementById('history-modal').classList.remove('hidden');
+    }
+
+    renderHistoryUI() {
+        const listEl = document.getElementById('history-modal-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        let list = [];
+        try {
+            list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
+        } catch (e) {}
+
+        if (list.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding: 30px; color:#8e8e93; font-weight:700;">履歴がありません</div>';
+            return;
+        }
+
+        list.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'history-card-item';
+            const rotText = item.rotation ? '回転あり' : '回転なし';
+            const secText = item.duration ? `${item.duration}秒` : '';
+            card.innerHTML = `
+                <div class="history-card-top">
+                    <span class="history-card-date">${item.date || ''}</span>
+                    <span class="history-card-score">${item.cleared || item.total || 0}問クリア</span>
+                </div>
+                <div class="history-card-tags">
+                    <span class="history-tag">ピース: ${item.piecesCount || (item.rows * item.cols)} (${item.rows}×${item.cols})</span>
+                    <span class="history-tag">${rotText}</span>
+                    ${secText ? `<span class="history-tag">${secText}</span>` : ''}
+                </div>
+            `;
+            listEl.appendChild(card);
+        });
     }
 }
 

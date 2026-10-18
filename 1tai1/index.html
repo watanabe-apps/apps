@@ -540,6 +540,116 @@
         .ios-btn-done:active {
             background-color: var(--primary-active);
         }
+
+        /* 履歴モーダル (iOS Formスタイル) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .history-modal-container {
+            background: #f2f2f7;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .history-modal-header {
+            background: #ffffff;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 0.5px solid #c6c6c8;
+        }
+        .history-modal-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #000;
+        }
+        .btn-modal-close {
+            background: none;
+            border: none;
+            color: #007aff;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 4px 8px;
+        }
+        .history-modal-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .history-card-item {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 0.5px solid #e5e5ea;
+        }
+        .history-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        .history-card-date {
+            font-size: 0.85rem;
+            color: #8e8e93;
+            font-weight: 600;
+        }
+        .history-card-score {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #007aff;
+        }
+        .history-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .history-tag {
+            font-size: 0.75rem;
+            background: #f2f2f7;
+            color: #3a3a3c;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .history-modal-footer {
+            background: #ffffff;
+            padding: 10px 16px;
+            border-top: 0.5px solid #c6c6c8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-modal-danger {
+            background: #ffe5e5;
+            color: #ff3b30;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -700,6 +810,23 @@
         <button id="setting-trigger-btn" class="btn-ios-secondary">
             設定 <span class="sub-text">※トリプルタップ</span>
         </button>
+        <button id="history-trigger-btn" class="btn-ios-secondary" style="margin-top: 10px;">
+            履歴 <span class="sub-text">※トリプルタップ</span>
+        </button>
+    </div>
+
+    <!-- 履歴モーダル -->
+    <div id="history-modal" class="modal-overlay hidden">
+        <div class="history-modal-container">
+            <div class="history-modal-header">
+                <span class="history-modal-title">プレイ履歴</span>
+                <button id="btn-close-history" class="btn-modal-close">閉じる</button>
+            </div>
+            <div id="history-modal-list" class="history-modal-list"></div>
+            <div class="history-modal-footer">
+                <button id="btn-clear-history" class="btn-modal-danger">履歴を消去</button>
+            </div>
+        </div>
     </div>
 
     <!-- プレイ画面 -->
@@ -1228,6 +1355,7 @@
                 
                 if (round >= settings.totalRounds) {
                     AudioController.play('all_clear');
+                    saveHistory();
                     setTimeout(() => {
                         returnToHome();
                     }, 2200);
@@ -1242,6 +1370,27 @@
             }
         }
 
+        // --- 履歴保存 ---
+        function saveHistory() {
+            try {
+                const now = new Date();
+                const dateStr = now.toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const historyList = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
+                const styleName = settings.plateStyle === 'normal' ? '標準の皿' : (settings.plateStyle === 'dot' ? '目印の点' : '数字付き');
+                historyList.unshift({
+                    id: Date.now(),
+                    date: dateStr,
+                    totalRounds: settings.totalRounds,
+                    plateCount: settings.plateCount,
+                    plateStyle: styleName,
+                    score: `${settings.totalRounds}/${settings.totalRounds}問クリア`,
+                    isPerfect: true
+                });
+                if (historyList.length > 50) historyList.length = 50;
+                localStorage.setItem('1tai1_history', JSON.stringify(historyList));
+            } catch (e) {}
+        }
+
         let tapTimes = [];
         document.getElementById('setting-trigger-btn').addEventListener('pointerdown', (e) => {
             e.preventDefault();
@@ -1253,6 +1402,67 @@
                 openSettings();
             }
         });
+
+        // 履歴トリプルタップ
+        let histTapTimes = [];
+        document.getElementById('history-trigger-btn').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            const now = Date.now();
+            histTapTimes.push(now);
+            histTapTimes = histTapTimes.filter(t => now - t <= 600);
+            if (histTapTimes.length >= 3) {
+                histTapTimes = [];
+                openHistoryModal();
+            }
+        });
+
+        document.getElementById('btn-close-history').addEventListener('click', () => {
+            document.getElementById('history-modal').classList.add('hidden');
+        });
+
+        document.getElementById('btn-clear-history').addEventListener('click', () => {
+            if (confirm('履歴をすべて消去しますか？')) {
+                localStorage.removeItem('1tai1_history');
+                renderHistoryUI();
+            }
+        });
+
+        function openHistoryModal() {
+            renderHistoryUI();
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        function renderHistoryUI() {
+            const listEl = document.getElementById('history-modal-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            let list = [];
+            try {
+                list = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
+            } catch (e) {}
+
+            if (list.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding: 30px; color:#8e8e93; font-weight:700;">履歴がありません</div>';
+                return;
+            }
+
+            list.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'history-card-item';
+                card.innerHTML = `
+                    <div class="history-card-top">
+                        <span class="history-card-date">${item.date || ''}</span>
+                        <span class="history-card-score">${item.score || `${item.totalRounds || 0}問クリア`}</span>
+                    </div>
+                    <div class="history-card-tags">
+                        <span class="history-tag">お皿: ${item.plateCount || 0}枚</span>
+                        <span class="history-tag">${item.plateStyle || '標準'}</span>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
 
         document.getElementById('btn-select-all').addEventListener('click', () => {
             document.querySelectorAll('input[name="setting-items"]').forEach(cb => cb.checked = true);

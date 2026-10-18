@@ -988,7 +988,10 @@
                 <button class="btn btn-secondary" id="go-setting-btn" style="margin-bottom: 6px;">設定</button>
                 <span style="font-size: 13px; color: #8e8e93; font-weight: 500; letter-spacing: 0.5px;">※トリプルタップ</span>
             </div>
-            <button class="btn btn-secondary" id="go-history-btn" style="margin-top: 8px;">履歴</button>
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 8px;">
+                <button class="btn btn-secondary" id="go-history-btn" style="margin-bottom: 6px;">履歴</button>
+                <span style="font-size: 13px; color: #8e8e93; font-weight: 500; letter-spacing: 0.5px;">※トリプルタップ</span>
+            </div>
         </div>
     </div>
 
@@ -1925,9 +1928,22 @@
             startNewGame();
         });
 
+        let historyTapCount = 0;
+        let historyLastTapTime = 0;
         document.getElementById('go-history-btn').addEventListener('click', (e) => {
             e.preventDefault();
-            showScreen('history-screen');
+            const now = Date.now();
+            if (now - historyLastTapTime < 600) {
+                historyTapCount++;
+            } else {
+                historyTapCount = 1;
+            }
+            historyLastTapTime = now;
+
+            if (historyTapCount === 3) {
+                historyTapCount = 0;
+                showScreen('history-screen');
+            }
         });
 
         document.getElementById('save-setting-btn').addEventListener('click', (e) => {
