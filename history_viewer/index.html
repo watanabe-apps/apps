@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>学習履歴ダッシュボード</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-family: "UD Digi Kyokasho N-R", "UD デジタル 教科書体 N-R", "Klee One", "Hiragino Maru Gothic ProN", -apple-system, BlinkMacSystemFont, sans-serif;
+            --bg-color: #f2f2f7;
+            --card-bg: #ffffff;
+            --text-main: #1c1c1e;
+            --text-sub: #8e8e93;
+            --text-muted: #aeaeb2;
+            --primary: #007aff;
+            --success: #34c759;
+            --warning: #ff9500;
+            --danger: #ff3b30;
+            --border-color: #e5e5ea;
+            --separator: #c6c6c8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        /* --- ヘッダー --- */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(242, 242, 247, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid var(--border-color);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            font-family: var(--font-family);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn:active {
+            opacity: 0.7;
+            transform: scale(0.97);
+        }
+        .btn-sub {
+            background: #e5e5ea;
+            color: #3a3a3c;
+        }
+        .btn-danger {
+            background: #ffe5e5;
+            color: var(--danger);
+        }
+
+        /* --- メインコンテナ --- */
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* --- ストレージ容量メーター --- */
+        .storage-card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 0.5px solid var(--border-color);
+        }
+        .storage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .storage-bar-bg {
+            height: 8px;
+            background: #e5e5ea;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .storage-bar-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            width: 1%;
+            transition: width 0.3s ease;
+        }
+        .storage-tip {
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-top: 6px;
+        }
+
+        /* --- iOS Segmented Control（アプリ切り替え） --- */
+        .seg-wrapper {
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+        }
+        .seg-wrapper::-webkit-scrollbar { display: none; }
+        .seg-bar {
+            display: inline-flex;
+            background: #e3e3e8;
+            padding: 3px;
+            border-radius: 10px;
+            gap: 2px;
+            min-width: 100%;
+        }
+        .seg-btn {
+            font-family: var(--font-family);
+            border: none;
+            background: transparent;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #48484a;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .seg-btn.selected {
+            background: #ffffff;
+            color: #000;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+        .badge-count {
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.08);
+            font-weight: 800;
+        }
+        .seg-btn.selected .badge-count {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* --- サマリーカード群 --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px;
+            border: 0.5px solid var(--border-color);
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-sub);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* --- iOS Form / Grouped List --- */
+        .ios-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            padding: 0 14px 6px;
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ios-list {
+            background: var(--card-bg);
+            border-radius: 14px;
+            border: 0.5px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .ios-row {
+            padding: 12px 16px;
+            border-bottom: 0.5px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .ios-row:last-child {
+            border-bottom: none;
+        }
+        .row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .row-date {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .row-score {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .row-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .chip {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 5px;
+            background: #f2f2f7;
+            color: #3a3a3c;
+            font-weight: 600;
+        }
+        .chip-success {
+            background: #e8f9ed;
+            color: #248a3d;
+        }
+        .chip-warn {
+            background: #fff4e5;
+            color: #b25e00;
+        }
+
+        /* --- 詳細展開エリア --- */
+        .detail-toggle {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .detail-body {
+            display: none;
+            background: #f8f8fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #48484a;
+            line-height: 1.5;
+        }
+        .detail-body.active {
+            display: block;
+        }
+        .error-tag {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* --- 空状態 --- */
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-sub);
+        }
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* --- 確認ダイアログ（iOS Alert風） --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .ios-alert {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 300px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            animation: popIn 0.18s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .alert-body {
+            padding: 18px 16px;
+        }
+        .alert-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .alert-text {
+            font-size: 13px;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+        .alert-buttons {
+            display: flex;
+            border-top: 0.5px solid var(--border-color);
+        }
+        .alert-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-family: var(--font-family);
+        }
+        .alert-btn.cancel {
+            color: var(--primary);
+            border-right: 0.5px solid var(--border-color);
+        }
+        .alert-btn.destructive {
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+        <h1 class="header-title">📊 学習履歴ダッシュボード</h1>
+        <div class="header-actions">
+            <button class="btn btn-sub" id="btn-refresh" title="最新の履歴を再読み込みします">
+                🔄 更新
+            </button>
+            <button class="btn btn-sub" id="btn-export" title="全履歴をJSON形式でダウンロード保存します">
+                💾 書き出し
+            </button>
+            <button class="btn btn-danger" id="btn-clear-all" title="ブラウザに保存された学習履歴を一括消去します">
+                🗑️ 一括消去
+            </button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- 診断・オリジン情報バー -->
+        <div id="origin-diagnostic" style="background:#fff3cd; border:1px solid #ffeeba; color:#856404; padding:10px 14px; border-radius:10px; font-size:12px; margin-bottom:14px; line-height:1.5;">
+            <strong>⚠️ 反映されない場合の確認ポイント：</strong><br>
+            • 現在のURL: <code id="diag-origin" style="background:#fff; padding:2px 4px; border-radius:4px;"></code><br>
+            • 検出された履歴件数: <span id="diag-count" style="font-weight:bold;">0件</span> / localStorage総キー数: <span id="diag-keys-count" style="font-weight:bold;">0個</span><br>
+            <span style="color:#666;">※ブラウザの仕様上、<strong>同じURL（ドメイン）</strong>で開いたアプリ同士でのみ履歴が共有されます（Safariとホーム画面PWA、またはローカルfile://とhttps://の間では共有されません）。</span>
+        </div>
+
+        <!-- 容量メーター -->
+        <div class="storage-card">
+            <div class="storage-header">
+                <span>📦 端末内 localStorage 保存状況</span>
+                <span id="storage-text">計算中...</span>
+            </div>
+            <div class="storage-bar-bg">
+                <div class="storage-bar-fill" id="storage-bar"></div>
+            </div>
+            <p class="storage-tip">
+                ※テキストデータのみを保存しているため、数十〜数百問の履歴を記録しても容量（約5MB）の1%未満です。容量不足の心配はありません。
+            </p>
+        </div>
+
+        <!-- アプリ選択セグメント -->
+        <div class="seg-wrapper">
+            <div class="seg-bar" id="app-tabs">
+                <!-- JSで動的生成 -->
+            </div>
+        </div>
+
+        <!-- 選択中アプリのサマリーカード -->
+        <div class="stats-grid" id="stats-area">
+            <!-- JSで動的生成 -->
+        </div>
+
+        <!-- 履歴一覧 -->
+        <div class="ios-section-title">
+            <span id="list-section-title">プレイ履歴一覧</span>
+            <button class="btn btn-sub" id="btn-clear-current" style="padding: 4px 8px; font-size: 11px;">
+                このアプリの履歴を消去
+            </button>
+        </div>
+        <div class="ios-list" id="history-items">
+            <!-- JSで動的生成 -->
+        </div>
+    </main>
+
+    <!-- 確認モーダル -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="ios-alert">
+            <div class="alert-body">
+                <div class="alert-title" id="modal-title">履歴の消去</div>
+                <div class="alert-text" id="modal-msg">本当に消去しますか？</div>
+            </div>
+            <div class="alert-buttons">
+                <button class="alert-btn cancel" id="modal-btn-cancel">キャンセル</button>
+                <button class="alert-btn destructive" id="modal-btn-confirm">消去する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 既知の履歴対応アプリ定義 ---
+        const APPS_CONFIG = [
+            {
+                id: 'all',
+                name: '全アプリ総合',
+                icon: '🌟',
+                isSpecial: true
+            },
+            {
+                id: 'nanbanme',
+                name: 'なんばんめ',
+                icon: '🔢',
+                key: 'nanbanme_history',
+                dir: '../nanbanme/',
+                parser: parseNanbanme
+            },
+            {
+                id: 'ooi_sukunai',
+                name: 'おおいすくない',
+                icon: '⚖️',
+                key: 'ooi_sukunai_history',
+                dir: '../ooi_sukunai/',
+                parser: parseOoiSukunai
+            },
+            {
+                id: 'ookii_chiisai',
+                name: 'おおきいちいさい',
+                icon: '🐘',
+                key: 'ookii_chiisai_history',
+                dir: '../ookii_chiisai/',
+                parser: parseOokiiChiisai
+            },
+            {
+                id: 'karuta',
+                name: 'カルタ',
+                icon: '🎴',
+                key: 'karuta_history',
+                dir: '../karuta/',
+                parser: parseKaruta
+            },
+            {
+                id: 'hiragana_sagashi',
+                name: 'ひらがなさがし',
+                icon: '🔍',
+                key: 'hiragana_sagashi_history',
+                dir: '../hiragana_sagashi/',
+                parser: parseHiraganaSagashi
+            },
+            {
+                id: 'ikutsuto_ikutsu',
+                name: 'いくつといくつ',
+                icon: '➕',
+                key: 'mathDetailedHistory',
+                dir: '../ikutsuto_ikutsu/',
+                parser: parseIkutsutoIkutsu
+            },
+            {
+                id: 'keyboard_quiz',
+                name: '平仮名キーボードクイズ',
+                icon: '⌨️',
+                key: 'hiraganaAppConfig',
+                dir: '../keyboard_quiz/',
+                parser: parseKeyboardQuiz
+            }
+        ];
+
+        let currentAppId = 'all';
+
+        // --- パーサー群（各アプリのデータ構造を共通フォーマットに正規化） ---
+        function parseNanbanme(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const total = item.total || item.answered || 0;
+                const first = item.firstTry != null ? item.firstTry : (item.first || 0);
+                const rate = total > 0 ? Math.round((first / total) * 100) : 0;
+                return {
+                    id: `nanbanme_${idx}`,
+                    appName: 'なんばんめ',
+                    appId: 'nanbanme',
+                    date: item.date || '日時不明',
+                    scoreText: `一発正解: ${first}/${total} (${rate}%)`,
+                    isPerfect: rate === 100,
+                    tags: [
+                        item.pattern || '',
+                        item.dirs ? `向き: ${item.dirs}` : '',
+                        item.itemCount ? `${item.itemCount}こ並び` : '',
+                        item.duration != null ? `${item.duration}秒` : '',
+                        item.misses ? `ミス ${item.misses}回` : 'ノーミス'
+                    ].filter(Boolean),
+                    details: item.logs ? item.logs.map(l => 
+                        `第${l.qIndex+1}問 [${l.dir}から${l.num}番目] → ${l.firstTry ? '一発正解 💮' : 'ミスあり (ミス: ' + (l.mistakes?.join(', ') || 'あり') + ')'}`
+                    ).join('<br>') : null
+                };
+            });
+        }
+
+        // 未知の履歴キー用汎用パーサー
+        function parseGeneric(raw, keyName) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                return {
+                    id: `gen_${keyName}_${idx}`,
+                    appName: keyName,
+                    appId: keyName,
+                    date: item.date || item.timestamp || '日時不明',
+                    scoreText: item.score || item.accuracy || (item.correct != null ? `正解: ${item.correct}` : '記録あり'),
+                    isPerfect: item.perfect === true || item.miss === 0 || item.misses === 0,
+                    tags: Object.keys(item).filter(k => !['logs', 'details', 'date', 'id'].includes(k)).slice(0, 4).map(k => `${k}: ${item[k]}`),
+                    details: item.details || item.logs ? JSON.stringify(item.details || item.logs) : null
+                };
+            });
+        }
+
+        function parseOoiSukunai(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `ooi_${item.id || idx}`,
+                appName: 'おおいすくない',
+                appId: 'ooi_sukunai',
+                date: item.date || '日時不明',
+                scoreText: `正解: ${item.score || ''}`,
+                isPerfect: item.score && item.score.startsWith(item.score.split('/')[1]?.trim() || '___'),
+                tags: [
+                    item.step ? `設定: ${item.step}` : '',
+                    item.pairs ? `${item.pairs}組ペア` : '',
+                    item.time || ''
+                ].filter(Boolean),
+                details: item.details ? item.details.map(d => 
+                    `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
+                ).join('<br>') : null
+            }));
+        }
+
+        function parseOokiiChiisai(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `ookii_${item.id || idx}`,
+                appName: 'おおきいちいさい',
+                appId: 'ookii_chiisai',
+                date: item.date || '日時不明',
+                scoreText: `正解: ${item.score || ''}`,
+                isPerfect: item.score && item.score.startsWith(item.score.split('/')[1]?.trim() || '___'),
+                tags: [
+                    item.step ? `設定: ${item.step}` : '',
+                    item.pairs ? `${item.pairs}組` : '',
+                    item.time || ''
+                ].filter(Boolean),
+                details: item.details ? item.details.map(d => 
+                    `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
+                ).join('<br>') : null
+            }));
+        }
+
+        function parseKaruta(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => {
+                const total = (item.correct || 0) + (item.miss || 0);
+                const rate = total > 0 ? Math.round(((item.correct || 0) / total) * 100) : 0;
+                return {
+                    id: `karuta_${idx}`,
+                    appName: 'カルタ',
+                    appId: 'karuta',
+                    date: item.date || '日時不明',
+                    scoreText: `正答率: ${rate}% (取った札: ${item.correct || 0}枚)`,
+                    isPerfect: item.miss === 0 && (item.correct || 0) > 0,
+                    tags: [
+                        `ミス: ${item.miss || 0}回`,
+                        item.time ? `所要時間: ${item.time}` : ''
+                    ].filter(Boolean),
+                    details: item.wrongWords && item.wrongWords.length > 0 ? 
+                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : 'ミスした言葉なし'
+                };
+            });
+        }
+
+        function parseHiraganaSagashi(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `sagashi_${idx}`,
+                appName: 'ひらがなさがし',
+                appId: 'hiragana_sagashi',
+                date: item.date || '日時不明',
+                scoreText: `クリア: ${item.total || item.score || '完了'}`,
+                isPerfect: item.missCount === 0,
+                tags: [
+                    item.missCount ? `ミス: ${item.missCount}回` : 'ノーミス',
+                    item.duration ? `${item.duration}秒` : ''
+                ].filter(Boolean),
+                details: item.mistakes ? `<span class="error-tag">間違い履歴:</span> ${item.mistakes.join(', ')}` : null
+            }));
+        }
+
+        function parseIkutsutoIkutsu(raw) {
+            if (!Array.isArray(raw)) return [];
+            return raw.map((item, idx) => ({
+                id: `ikutsu_${idx}`,
+                appName: 'いくつといくつ',
+                appId: 'ikutsuto_ikutsu',
+                date: item.date || '日時不明',
+                scoreText: `正解率: ${item.accuracy || item.score || ''}`,
+                isPerfect: item.missCount === 0,
+                tags: [
+                    item.mode ? `モード: ${item.mode}` : '',
+                    item.targetNum ? `数の範囲: ${item.targetNum}` : '',
+                    item.missCount ? `ミス: ${item.missCount}回` : ''
+                ].filter(Boolean),
+                details: item.details ? JSON.stringify(item.details) : null
+            }));
+        }
+
+        function parseKeyboardQuiz(raw) {
+            if (!raw || !raw.playHistory || !Array.isArray(raw.playHistory)) return [];
+            return raw.playHistory.map((item, idx) => ({
+                id: `kb_${idx}`,
+                appName: '平仮名キーボードクイズ',
+                appId: 'keyboard_quiz',
+                date: item.date || '日時不明',
+                scoreText: `正解: ${item.correctCount || 0}問`,
+                isPerfect: (item.wrongCount || 0) === 0,
+                tags: [
+                    item.total ? `全${item.total}問` : '',
+                    item.wrongCount ? `ミス: ${item.wrongCount}回` : 'ノーミス'
+                ].filter(Boolean),
+                details: item.logs ? item.logs.map(l => `${l.word}: ${l.correct ? '○' : '✕'}`).join(', ') : null
+            }));
+        }
+
+        // --- 全アプリの履歴を取得 ---
+        function getAppHistory(appConfig) {
+            if (appConfig.isSpecial) return [];
+            try {
+                const rawStr = localStorage.getItem(appConfig.key);
+                if (!rawStr) return [];
+                const raw = JSON.parse(rawStr);
+                return appConfig.parser ? appConfig.parser(raw) : parseGeneric(raw, appConfig.name);
+            } catch (e) {
+                console.warn(`Failed to parse history for ${appConfig.name}`, e);
+                return [];
+            }
+        }
+
+        // 動的な未知キーの検出
+        function detectDynamicHistoryKeys() {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if ((key.includes('history') || key.includes('History')) && !APPS_CONFIG.some(c => c.key === key)) {
+                    APPS_CONFIG.push({
+                        id: key,
+                        name: key.replace(/_?history/i, ''),
+                        icon: '📁',
+                        key: key,
+                        parser: (raw) => parseGeneric(raw, key)
+                    });
+                }
+            }
+        }
+
+        function getAllHistories() {
+            detectDynamicHistoryKeys();
+            let all = [];
+            APPS_CONFIG.forEach(cfg => {
+                if (!cfg.isSpecial) {
+                    const list = getAppHistory(cfg);
+                    all = all.concat(list);
+                }
+            });
+            // 日時順に降順ソート（新しい順）
+            return all.sort((a, b) => (b.date > a.date ? 1 : -1));
+        }
+
+        // --- ストレージ使用量の計算 & 診断表示 ---
+        function updateStorageUsage() {
+            let totalBytes = 0;
+            const allKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                allKeys.push(k);
+                const v = localStorage.getItem(k);
+                totalBytes += (k.length + (v ? v.length : 0)) * 2; // UTF-16概算
+            }
+            const kb = (totalBytes / 1024).toFixed(1);
+            const percent = Math.min(100, Math.max(0.5, (totalBytes / (5 * 1024 * 1024)) * 100)).toFixed(2);
+
+            document.getElementById('storage-text').textContent = `${kb} KB / 5,120 KB (${percent}%)`;
+            document.getElementById('storage-bar').style.width = `${percent}%`;
+
+            // 診断パネル更新
+            const diagOrigin = document.getElementById('diag-origin');
+            if (diagOrigin) diagOrigin.textContent = location.origin + location.pathname;
+            const diagKeysCount = document.getElementById('diag-keys-count');
+            if (diagKeysCount) diagKeysCount.textContent = `${allKeys.length}個 (${allKeys.join(', ') || 'なし'})`;
+        }
+
+        // --- タブUIレンダリング ---
+        function renderTabs() {
+            detectDynamicHistoryKeys();
+            const tabsContainer = document.getElementById('app-tabs');
+            tabsContainer.innerHTML = '';
+
+            const allList = getAllHistories();
+
+            // 診断の総件数
+            const diagCount = document.getElementById('diag-count');
+            if (diagCount) diagCount.textContent = `${allList.length}件`;
+
+            APPS_CONFIG.forEach(cfg => {
+                const count = cfg.isSpecial ? allList.length : getAppHistory(cfg).length;
+                const btn = document.createElement('button');
+                btn.className = `seg-btn ${cfg.id === currentAppId ? 'selected' : ''}`;
+                btn.innerHTML = `
+                    <span>${cfg.icon}</span>
+                    <span>${cfg.name}</span>
+                    <span class="badge-count">${count}</span>
+                `;
+                btn.onclick = () => {
+                    currentAppId = cfg.id;
+                    renderTabs();
+                    renderView();
+                };
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        // --- メイン描画 ---
+        function renderView() {
+            updateStorageUsage();
+
+            const isAll = currentAppId === 'all';
+            const currentCfg = APPS_CONFIG.find(c => c.id === currentAppId) || APPS_CONFIG[0];
+            const items = isAll ? getAllHistories() : getAppHistory(currentCfg);
+
+            // サマリーエリア
+            const statsArea = document.getElementById('stats-area');
+            const totalSessions = items.length;
+            const perfectCount = items.filter(it => it.isPerfect).length;
+            const perfectRate = totalSessions > 0 ? Math.round((perfectCount / totalSessions) * 100) : 0;
+
+            statsArea.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-label">総プレイ回数</div>
+                    <div class="stat-val">${totalSessions}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">パーフェクト回数</div>
+                    <div class="stat-val" style="color:var(--success);">${perfectCount}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">パーフェクト達成率</div>
+                    <div class="stat-val" style="color:var(--warning);">${perfectRate}%</div>
+                </div>
+            `;
+
+            // セクションタイトル & 削除ボタン制御
+            document.getElementById('list-section-title').textContent = 
+                isAll ? `全アプリの履歴一覧 (${items.length}件)` : `${currentCfg.name}の履歴一覧 (${items.length}件)`;
+            
+            const btnClearCurrent = document.getElementById('btn-clear-current');
+            btnClearCurrent.style.display = isAll ? 'none' : 'inline-flex';
+            btnClearCurrent.textContent = `${currentCfg.name}の履歴を消去`;
+
+            // リスト描画
+            const listContainer = document.getElementById('history-items');
+            listContainer.innerHTML = '';
+
+            if (items.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p style="font-weight:700;">まだプレイ履歴がありません</p>
+                        <p style="font-size:12px; margin-top:6px; color:#888;">
+                            アプリ（なんばんめ・おおいすくない等）をプレイしてクリア画面まで進むと、自動的に履歴が保存されます。<br>
+                            ※テスト用にダミーデータを作成して動作確認したい場合は、下のボタンを押してください。
+                        </p>
+                        <button class="btn btn-sub" id="btn-create-dummy" style="margin-top:14px;">
+                            🧪 テスト用のダミー履歴を作成
+                        </button>
+                    </div>
+                `;
+                const dummyBtn = document.getElementById('btn-create-dummy');
+                if (dummyBtn) {
+                    dummyBtn.onclick = createDummyHistory;
+                }
+                return;
+            }
+
+            items.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'ios-row';
+
+                const tagsHtml = item.tags.map(t => `<span class="chip">${t}</span>`).join('');
+                const perfectBadge = item.isPerfect ? `<span class="chip chip-success">💮 満点</span>` : '';
+
+                let detailBtnHtml = '';
+                let detailBodyHtml = '';
+                if (item.details) {
+                    detailBtnHtml = `<div class="detail-toggle" onclick="toggleDetail('detail-${idx}')">▼ 詳細ログを見る</div>`;
+                    detailBodyHtml = `<div class="detail-body" id="detail-${idx}">${item.details}</div>`;
+                }
+
+                row.innerHTML = `
+                    <div class="row-top">
+                        <div>
+                            <span class="row-date">${item.date}</span>
+                            ${isAll ? `<span class="chip" style="margin-left:6px; font-weight:800; background:#e0e7ff; color:#3730a3;">${item.appName}</span>` : ''}
+                        </div>
+                        <div class="row-score">${item.scoreText}</div>
+                    </div>
+                    <div class="row-tags">
+                        ${perfectBadge}
+                        ${tagsHtml}
+                    </div>
+                    ${detailBtnHtml}
+                    ${detailBodyHtml}
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // テスト用ダミーデータ生成
+        function createDummyHistory() {
+            const now = new Date();
+            const dateStr = now.toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const dummyNanbanme = [
+                {
+                    date: dateStr,
+                    completed: true,
+                    pattern: '場所をタップ',
+                    dirs: 'うえ・した',
+                    itemCount: 5,
+                    firstTry: 5,
+                    total: 5,
+                    misses: 0,
+                    duration: 24,
+                    logs: [
+                        { qIndex: 0, dir: 'top', num: 2, N: 5, firstTry: true },
+                        { qIndex: 1, dir: 'bottom', num: 4, N: 5, firstTry: true }
+                    ]
+                }
+            ];
+            localStorage.setItem('nanbanme_history', JSON.stringify(dummyNanbanme));
+            renderTabs();
+            renderView();
+        }
+
+        // 詳細アコーディオン
+        window.toggleDetail = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('active');
+        };
+
+        // --- モーダルダイアログ ---
+        let currentModalAction = null;
+        function showModal(title, msg, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-msg').textContent = msg;
+            currentModalAction = onConfirm;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+        function hideModal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+            currentModalAction = null;
+        }
+
+        document.getElementById('modal-btn-cancel').onclick = hideModal;
+        document.getElementById('modal-btn-confirm').onclick = () => {
+            if (currentModalAction) currentModalAction();
+            hideModal();
+        };
+
+        // --- 消去処理 ---
+        // 1. 選択中アプリの消去
+        document.getElementById('btn-clear-current').onclick = () => {
+            const cfg = APPS_CONFIG.find(c => c.id === currentAppId);
+            if (!cfg || cfg.isSpecial) return;
+            showModal(
+                `「${cfg.name}」の履歴消去`,
+                `この端末に保存されている「${cfg.name}」の学習履歴をすべて消去しますか？（設定値は残ります）`,
+                () => {
+                    localStorage.removeItem(cfg.key);
+                    renderTabs();
+                    renderView();
+                }
+            );
+        };
+
+        // 2. 全アプリの履歴一括消去
+        document.getElementById('btn-clear-all').onclick = () => {
+            showModal(
+                '全履歴の一括消去',
+                'この端末に保存されているすべてのアプリの学習履歴を完全に消去しますか？この操作は元に戻せません。',
+                () => {
+                    APPS_CONFIG.forEach(cfg => {
+                        if (!cfg.isSpecial && cfg.key) {
+                            if (cfg.key === 'hiraganaAppConfig') {
+                                try {
+                                    const conf = JSON.parse(localStorage.getItem(cfg.key) || '{}');
+                                    conf.playHistory = [];
+                                    localStorage.setItem(cfg.key, JSON.stringify(conf));
+                                } catch (e) {}
+                            } else {
+                                localStorage.removeItem(cfg.key);
+                            }
+                        }
+                    });
+                    renderTabs();
+                    renderView();
+                }
+            );
+        };
+
+        // --- 手動更新ボタン ---
+        const btnRefresh = document.getElementById('btn-refresh');
+        if (btnRefresh) {
+            btnRefresh.onclick = () => {
+                renderTabs();
+                renderView();
+            };
+        }
+
+        // --- 画面復帰・別タブ更新時の自動検知 ---
+        window.addEventListener('storage', () => {
+            renderTabs();
+            renderView();
+        });
+        window.addEventListener('focus', () => {
+            renderTabs();
+            renderView();
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                renderTabs();
+                renderView();
+            }
+        });
+
+        // --- JSONエクスポート ---
+        document.getElementById('btn-export').onclick = () => {
+            const backup = {};
+            APPS_CONFIG.forEach(cfg => {
+                if (!cfg.isSpecial && cfg.key) {
+                    const val = localStorage.getItem(cfg.key);
+                    if (val) backup[cfg.key] = JSON.parse(val);
+                }
+            });
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `special_education_history_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // 初期化実行
+        renderTabs();
+        renderView();
+    </script>
+</body>
+</html>
+
