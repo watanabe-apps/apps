@@ -112,13 +112,80 @@
         #text {
             font-size: 6vh;
             font-weight: bold;
-            white-space: pre-wrap;
-            word-break: break-all;
             overflow-y: auto;
             width: 100%;
             height: 100%;
             text-align: left;
             margin-right: 2vw;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            align-items: center;
+            padding: 4px;
+            box-sizing: border-box;
+            cursor: pointer;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .char-cell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 1.25em;
+            padding: 0 1px;
+            margin: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .char-cell.selected {
+            background-color: #dbeafe !important;
+            border-color: #007AFF !important;
+            color: #0056b3;
+        }
+
+        .char-cell.space-char {
+            min-width: 0.6em;
+            color: #aaa;
+        }
+
+        /* 非アクティブ時は幅0！文字間隔を広げず完全に自然な見た目を保つ */
+        .cursor-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 0;
+            height: 1.25em;
+            margin: 0;
+            position: relative;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        /* アクティブ時だけ青い縦棒カーソル（幅3px）が現れる */
+        .cursor-slot.active {
+            width: 3px;
+            margin: 0 1.5px;
+        }
+
+        .cursor-slot.active::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 85%;
+            background-color: #007AFF;
+            border-radius: 2px;
+            animation: cursor-blink 1s infinite;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         .controls-grid {
@@ -321,7 +388,10 @@
         const yoonCols = [["ゃ", " ", "ゅ", " ", "ょ"], ["っ", " ", " ", " ", " "], ["ぁ", "ぃ", "ぅ", "ぇ", "ぉ"]];
         const numberCols = [["1", "2", "3", "4", "5"], ["6", "7", "8", "9", "0"]];
 
-        let txt = "";
+        let chars = [];
+        let selectionType = 'cursor'; // 'cursor' または 'char'
+        let cursorIndex = 0;          // 0 <= cursorIndex <= chars.length
+        let selectedCharIndex = -1;   // 0 <= selectedCharIndex < chars.length
         const synth = window.speechSynthesis;
 
         // ★iOS音声制限解除の決定版★
@@ -336,6 +406,7 @@
 
             // スタート画面を隠す
             document.getElementById('start-screen').classList.add('hidden');
+            update();
         });
 
         function spk(str) {
@@ -350,14 +421,47 @@
             synth.speak(u);
         }
 
-        function spkFull() { spk(txt); }
-        function del() { txt = txt.slice(0, -1); update(); resetClr(); }
+        function spkFull() {
+            const fullText = chars.join('');
+            spk(fullText);
+        }
+
+        // 1文字削除（文字選択時はその文字を削除、カーソル時は直前文字を削除）
+        function del() {
+            resetClr();
+            if (chars.length === 0) return;
+
+            if (selectionType === 'char' && selectedCharIndex >= 0 && selectedCharIndex < chars.length) {
+                // 選択されている文字を削除
+                const removedIdx = selectedCharIndex;
+                chars.splice(removedIdx, 1);
+                // 削除後はその位置にカーソルを移動
+                cursorIndex = Math.min(removedIdx, chars.length);
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+                update();
+            } else {
+                // カーソル位置の直前の文字を削除
+                if (cursorIndex > 0) {
+                    chars.splice(cursorIndex - 1, 1);
+                    cursorIndex--;
+                    selectionType = 'cursor';
+                    selectedCharIndex = -1;
+                    update();
+                }
+            }
+        }
 
         let clrTimer = null;
         function clr() {
             const btn = document.getElementById('btn-clr');
             if (btn.dataset.confirm === "true") {
-                txt = ""; update(); resetClr();
+                chars = [];
+                cursorIndex = 0;
+                selectedCharIndex = -1;
+                selectionType = 'cursor';
+                update();
+                resetClr();
             } else {
                 btn.dataset.confirm = "true";
                 btn.innerText = "けす？";
@@ -377,11 +481,215 @@
             if (clrTimer) clearTimeout(clrTimer);
         }
 
+        // キー入力処理（文字選択時は置換、カーソル時は挿入）
+        function handleInput(charVal, speakName) {
+            resetClr();
+            if (selectionType === 'char' && selectedCharIndex >= 0 && selectedCharIndex < chars.length) {
+                // 置き換え（置換）
+                chars[selectedCharIndex] = charVal;
+                // 置換後はその文字の後ろにカーソルを移動
+                cursorIndex = selectedCharIndex + 1;
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+            } else {
+                // カーソル位置への挿入（または末尾追加）
+                if (cursorIndex < 0 || cursorIndex > chars.length) {
+                    cursorIndex = chars.length;
+                }
+                chars.splice(cursorIndex, 0, charVal);
+                cursorIndex++;
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+            }
+            spk(speakName || charVal);
+            update();
+        }
+
+        // 文字の選択
+        function selectChar(idx) {
+            resetClr();
+            selectionType = 'char';
+            selectedCharIndex = idx;
+            cursorIndex = -1;
+            update();
+            const charToSpeak = chars[idx];
+            if (charToSpeak) {
+                spk(charToSpeak === '　' ? 'スペース' : charToSpeak);
+            }
+        }
+
+        // カーソルスロット（文字間・文頭・文末）の選択
+        function selectSlot(idx) {
+            resetClr();
+            selectionType = 'cursor';
+            cursorIndex = Math.max(0, Math.min(chars.length, idx));
+            selectedCharIndex = -1;
+            update();
+        }
+
+        // 画面座標から最も近い文字間スロット（0〜chars.length）を特定してカーソル移動
+        function updateCursorByCoord(clientX, clientY) {
+            if (chars.length === 0) {
+                selectSlot(0);
+                return;
+            }
+
+            const t = document.getElementById('text');
+            const cells = Array.from(t.querySelectorAll('.char-cell'));
+            if (cells.length === 0) {
+                selectSlot(0);
+                return;
+            }
+
+            let closestSlot = chars.length;
+            let minDistance = Infinity;
+
+            cells.forEach((cell, idx) => {
+                const rect = cell.getBoundingClientRect();
+                const centerY = rect.top + rect.height / 2;
+
+                // セル左端（スロット idx）
+                const leftDist = Math.hypot(clientX - rect.left, clientY - centerY);
+                if (leftDist < minDistance) {
+                    minDistance = leftDist;
+                    closestSlot = idx;
+                }
+
+                // セル右端（スロット idx + 1）
+                const rightDist = Math.hypot(clientX - rect.right, clientY - centerY);
+                if (rightDist < minDistance) {
+                    minDistance = rightDist;
+                    closestSlot = idx + 1;
+                }
+            });
+
+            selectSlot(closestSlot);
+        }
+
+        // カーソルスロット要素の生成
+        function createCursorSlot(index) {
+            const slot = document.createElement('span');
+            slot.className = 'cursor-slot' + (selectionType === 'cursor' && cursorIndex === index ? ' active' : '');
+            slot.dataset.slot = index;
+            return slot;
+        }
+
         function update() {
             const t = document.getElementById('text');
-            t.innerText = txt;
-            t.scrollTop = t.scrollHeight;
+            t.innerHTML = '';
+
+            // スロット0（文頭）
+            t.appendChild(createCursorSlot(0));
+
+            chars.forEach((c, idx) => {
+                // 文字セル
+                const cell = document.createElement('span');
+                const isSelected = selectionType === 'char' && selectedCharIndex === idx;
+                cell.className = 'char-cell' + (c === '　' ? ' space-char' : '') + (isSelected ? ' selected' : '');
+                cell.innerText = c === '　' ? '␣' : c;
+                cell.dataset.index = idx;
+                t.appendChild(cell);
+
+                // 文字直後のスロット（idx + 1）
+                t.appendChild(createCursorSlot(idx + 1));
+            });
+
+            // 選択中セルまたはアクティブカーソルへスクロール
+            const activeEl = t.querySelector('.selected') || t.querySelector('.cursor-slot.active');
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
         }
+
+        // タップ ＝ 文字選択 / 長押し＆ドラッグ ＝ カーソル移動
+        // ★最後の文字の右側や下側（余白）をタップした時は、長押しも厳密判定も不要で即座に文末へ移動！
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let longPressTimer = null;
+        let isLongPressActive = false;
+        let touchedCharIndex = -1;
+
+        const textEl = document.getElementById('text');
+
+        textEl.addEventListener('pointerdown', (e) => {
+            const targetChar = e.target.closest('.char-cell');
+
+            if (!targetChar) {
+                // 文字以外のエリア（最後の文字の右側、文字の下側の広い余白など）
+                // 長押しタイマーも待たず、触れた瞬間に即座に文末（末尾）へカーソル移動！
+                e.preventDefault();
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                isLongPressActive = false;
+                touchedCharIndex = -1;
+                selectSlot(chars.length);
+                return;
+            }
+
+            // 以下は「文字の上」を触った場合
+            touchedCharIndex = parseInt(targetChar.dataset.index, 10);
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
+            isLongPressActive = false;
+
+            if (longPressTimer) clearTimeout(longPressTimer);
+
+            // 文字の上で長押しした場合のみ、文字間カーソル移動タイマーを起動（300ms）
+            longPressTimer = setTimeout(() => {
+                isLongPressActive = true;
+                if (navigator.vibrate) {
+                    try { navigator.vibrate(35); } catch(err) {}
+                }
+                // 指の位置（文字の左半分なら前、右半分なら後ろ）にカーソルを移動
+                updateCursorByCoord(e.clientX, e.clientY);
+            }, 300);
+        });
+
+        textEl.addEventListener('pointermove', (e) => {
+            if (isLongPressActive) {
+                e.preventDefault();
+                updateCursorByCoord(e.clientX, e.clientY);
+            } else if (longPressTimer) {
+                const dist = Math.hypot(e.clientX - touchStartX, e.clientY - touchStartY);
+                if (dist > 8) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+        });
+
+        const finishTouch = (e) => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+
+            if (isLongPressActive) {
+                isLongPressActive = false;
+                return;
+            }
+
+            // 短いタップ判定（文字の上をタップした場合）
+            if (touchedCharIndex >= 0) {
+                const dist = Math.hypot(e.clientX - touchStartX, e.clientY - touchStartY);
+                if (dist <= 12) {
+                    selectChar(touchedCharIndex);
+                }
+            }
+            touchedCharIndex = -1;
+        };
+
+        textEl.addEventListener('pointerup', finishTouch);
+        textEl.addEventListener('pointercancel', () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            isLongPressActive = false;
+            touchedCharIndex = -1;
+        });
 
         function loadSettings() {
             const saved = localStorage.getItem('vocaKbSettings');
@@ -475,11 +783,9 @@
                         // ★ e.preventDefault() を復活させて遅延のないサクサク入力を実現
                         btn.addEventListener('pointerdown', (e) => {
                             e.preventDefault();
-                            resetClr();
                             const inputChar = char === "␣" ? "　" : char;
-                            txt += inputChar;
-                            spk(char === "␣" ? "スペース" : char);
-                            update();
+                            const speakName = char === "␣" ? "スペース" : char;
+                            handleInput(inputChar, speakName);
                         });
                     }
                     colDiv.appendChild(btn);
@@ -490,6 +796,7 @@
 
         loadSettings();
         buildKeyboard();
+        update();
     </script>
 </body>
 
