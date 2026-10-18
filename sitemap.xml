@@ -11,17 +11,23 @@
   </url>
 
   <!-- 国語 -->
+  <url><loc>https://watanabe-apps.github.io/apps/hiragana_sagashi/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/hiragana_nazori_utsushi/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/keyboard/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/keyboard_quiz/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/karuta/index.html</loc></url>
+  <url><loc>https://watanabe-apps.github.io/apps/hiragana_zukan/index.html</loc></url>
 
   <!-- 算数 -->
   <url><loc>https://watanabe-apps.github.io/apps/1tai1/index.html</loc></url>
+  <url><loc>https://watanabe-apps.github.io/apps/bunkatsu_puzzle/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/ookii_chiisai/index.html</loc></url>
+  <url><loc>https://watanabe-apps.github.io/apps/category_bunrui/index.html</loc></url>
+  <url><loc>https://watanabe-apps.github.io/apps/ooi_sukunai/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/kazoeyou_kiso/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/suuji_narabe/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/suuji_touch/index.html</loc></url>
+  <url><loc>https://watanabe-apps.github.io/apps/nanbanme/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/ikutsuto_ikutsu/index.html</loc></url>
   <url><loc>https://watanabe-apps.github.io/apps/suuji_narabe_2/index.html</loc></url>
 

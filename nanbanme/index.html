@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4T10JYJ9XC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-4T10JYJ9XC');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="apple-touch-icon" href="img.png">
+    <link rel="icon" href="img.png">
+    <title>なんばんめ？</title>
+    <!-- フォント: UDデジタル教科書体を最優先、フォールバックにKlee One -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vh: 1vh;
+            --primary: #007aff;
+            --font-family: "UD Digi Kyokasho N-R", "UD Digi Kyokasho NK-R", "UD Digi Kyokasho NP-R", "UDデジタル教科書体 N-R", "Klee One", "Hiragino Maru Gothic ProN", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: calc(var(--vh, 1vh) * 100);
+            overflow: hidden;
+            background: #f8fafc;
+            color: #0f172a;
+            font-family: var(--font-family);
+            position: fixed;
+            inset: 0;
+        }
+
+        .screen {
+            display: none;
+            position: absolute;
+            inset: 0;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .screen.active { display: flex; }
+
+        .btn {
+            font-family: var(--font-family);
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s ease;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        /* ====================================================
+           1. ホーム画面
+        ==================================================== */
+        #home-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 28px;
+            padding: 24px;
+            background: #ffffff;
+        }
+        .home-title {
+            font-size: clamp(3rem, 9vw, 5rem);
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #0f172a;
+        }
+        .home-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .btn-start {
+            width: 100%;
+            font-size: clamp(2rem, 5vw, 2.4rem);
+            padding: 16px 0;
+            background: var(--primary);
+            color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 6px 18px rgba(0, 122, 255, 0.3);
+        }
+        .btn-secondary {
+            width: 100%;
+            font-size: 1.2rem;
+            padding: 11px 0;
+            background: #fff;
+            color: #334155;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+        }
+        .hint {
+            font-size: 12px;
+            color: #8e8e93;
+            margin-top: 4px;
+        }
+
+        /* ====================================================
+           2. プレイ画面
+        ==================================================== */
+        .float-back {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            z-index: 50;
+            font-size: 1rem;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.94);
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+        }
+        .float-back:active {
+            transform: scale(0.95);
+            background: #f1f5f9;
+        }
+
+        .float-progress {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            z-index: 50;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #475569;
+            background: rgba(255, 255, 255, 0.94);
+            padding: 6px 14px;
+            border-radius: 12px;
+            border: 1.5px solid #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #play-stage {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        /* ====================================================
+           3. 盤面レイアウト（問題が圧倒的主役！）
+        ==================================================== */
+        .stage-box {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: relative;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* 出題文（「うえから ３ばんめ」） */
+        .question-prompt {
+            font-size: clamp(1.6rem, 3.8vw, 2.4rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #0f172a;
+            text-align: center;
+            line-height: 1.2;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- 【問題エリア】（圧倒的な主役！） --- */
+        .problem-zone {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* --- 表形式のマス目（グリッド） --- */
+        .table-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            gap: 6px;
+        }
+
+        .table-grid {
+            display: flex;
+            background: #ffffff;
+            border: 4px solid #1e293b;
+            border-radius: 14px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .table-grid.vertical { flex-direction: column; }
+        .table-grid.horizontal { flex-direction: row; }
+        .table-grid.vertical .grid-cell { border-bottom: 3px solid #94a3b8; }
+        .table-grid.horizontal .grid-cell { border-right: 3px solid #94a3b8; }
+        .table-grid .grid-cell:last-child { border: none; }
+
+        .grid-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.12s ease;
+        }
+        .grid-cell.tappable {
+            cursor: pointer;
+        }
+        .grid-cell.tappable:active {
+            background: #e2e8f0;
+        }
+        .grid-cell.not-tappable {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .cell-emoji {
+            line-height: 1;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* カウントアップバッジ（1, 2, 3...） */
+        .count-badge {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: #ffffff;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-family: var(--font-family);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+
+        .grid-cell.step { background: #fef3c7 !important; }
+        .grid-cell.correct { background: #bbf7d0 !important; }
+        .grid-cell.shake { animation: cellShake 0.4s ease; background: #fee2e2 !important; }
+
+        @keyframes cellShake {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+        }
+
+        /* 始点マーカー（方向の三角矢印） */
+        .start-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .tri { width: 0; height: 0; }
+
+        /* --- 【回答エリア】（出題文＋手元選択パレット） --- */
+        .answer-zone {
+            background: #f1f5f9;
+            border: 2px dashed #94a3b8;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            flex-shrink: 0;
+            position: relative;
+            box-sizing: border-box;
+            gap: 8px;
+            max-width: 100%;
+        }
+
+        .palette-grid {
+            display: grid;
+            justify-content: center;
+            align-content: center;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* 選択ボタン：大きくて押しやすいサイズ（約95〜105px）、立体感 */
+        .choice-btn {
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+            transition: transform 0.1s ease, background-color 0.15s ease, border-color 0.15s ease;
+            box-sizing: border-box;
+        }
+        .choice-btn:active {
+            transform: scale(0.95);
+            background: #e2e8f0;
+        }
+        .choice-btn.step {
+            border-color: #f59e0b;
+            background: #fef3c7;
+        }
+        .choice-btn.shake {
+            animation: cellShake 0.4s ease;
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+        .choice-btn.correct {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        .choice-emoji {
+            line-height: 1;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .choice-text {
+            font-family: var(--font-family);
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.15;
+            text-align: center;
+            pointer-events: none;
+            letter-spacing: 0;
+            padding: 2px;
+            white-space: nowrap;
+        }
+
+        /* 判定○× */
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            font-size: min(35vw, 35vh);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.15s ease, transform 0.2s ease;
+        }
+        .feedback.circle { color: rgba(16, 185, 129, 0.88); }
+        .feedback.cross { color: rgba(239, 68, 68, 0.88); }
+        .feedback.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        /* ====================================================
+           4. クリア画面
+        ==================================================== */
+        #clear-screen {
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            background: #ffffff;
+        }
+        .clear-icon { font-size: clamp(5rem, 18vh, 9rem); line-height: 1; }
+        .clear-title { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; color: #065f46; }
+        .clear-btns { display: flex; gap: 14px; width: 100%; max-width: 440px; padding: 0 20px; }
+        .clear-btns .btn { flex: 1; font-size: 1.3rem; padding: 14px 0; }
+
+        /* ====================================================
+           5. 履歴画面
+        ==================================================== */
+        .sub-header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background: #fff;
+            border-bottom: 2px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .sub-title { font-size: 1.3rem; font-weight: 700; }
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 8px 14px;
+            font-size: 0.95rem;
+            border-radius: 10px;
+        }
+        .btn-done {
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            padding: 9px 24px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-done:active {
+            transform: scale(0.95);
+            background: #0062cc;
+        }
+        #history-screen { background: #f1f5f9; }
+        .history-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 960px;
+            width: 100%;
+            margin: 0 auto;
+            touch-action: pan-y;
+        }
+        .history-summary-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 600px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .stat-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        .stat-label { font-size: 0.78rem; font-weight: 700; color: #64748b; }
+        .stat-value { font-size: 1.35rem; font-weight: 900; color: #0f172a; margin-top: 2px; }
+        .stat-value.accent { color: var(--primary); }
+        .dir-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 600px) {
+            .dir-stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .dir-stat-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .dir-stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+        }
+        .dir-stat-rate { font-size: 0.95rem; font-weight: 900; color: #0f172a; }
+        .dir-bar-bg {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .dir-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 999px;
+        }
+        .history-filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .history-item {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+        .h-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .h-meta { display: flex; flex-direction: column; gap: 4px; }
+        .h-date-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .h-date { font-size: 0.85rem; color: #64748b; font-weight: 600; }
+        .h-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+        .h-badge.perfect { background: #dcfce7; color: #15803d; }
+        .h-badge.clear { background: #dbeafe; color: #1d4ed8; }
+        .h-badge.abort { background: #f1f5f9; color: #64748b; }
+        .h-detail { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+        .h-score { text-align: right; flex-shrink: 0; }
+        .h-score-main { font-size: 1.35rem; font-weight: 900; color: var(--primary); }
+        .h-score-sub { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+        .h-q-logs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px dashed #e2e8f0;
+        }
+        .q-log-chip {
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .q-log-chip.ok {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+        .q-log-chip.ng {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+        .empty { text-align: center; padding: 40px; color: #94a3b8; font-weight: 600; }
+
+        /* ====================================================
+           6. 全画面設定画面 & サンプルプレビュー
+        ==================================================== */
+        #setting-screen { background: #f2f2f7; }
+        .setting-body {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 16px;
+            padding: 14px;
+        }
+        .setting-controls {
+            flex: 1.1;
+            min-width: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+        }
+        .setting-preview {
+            flex: 0.9;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 760px) {
+            .setting-body { flex-direction: column; overflow-y: auto; touch-action: pan-y; }
+            .setting-controls { overflow: visible; flex: none; }
+            .setting-preview { flex: none; height: 42vh; }
+        }
+        .ios-section-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #64748b;
+            padding: 14px 10px 6px;
+            letter-spacing: 0.03em;
+        }
+        .ios-section-title:first-child {
+            padding-top: 2px;
+        }
+        .ios-list {
+            background: #fff;
+            border-radius: 14px;
+            border: 0.5px solid #c8c7cc;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        .ios-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            border-bottom: 0.5px solid #e5e5ea;
+            gap: 12px;
+            min-height: 52px;
+        }
+        .ios-row:last-child { border-bottom: none; }
+        .ios-row.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .row-label { font-size: 1rem; font-weight: 600; white-space: nowrap; }
+        .row-control {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+        .seg {
+            display: flex;
+            background: #e3e3e8;
+            border-radius: 9px;
+            padding: 2px;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+        .seg-btn {
+            padding: 7px 11px;
+            border: none;
+            background: transparent;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .seg-btn.selected {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .chip {
+            padding: 7px 11px;
+            border: 1.5px solid #cbd5e1;
+            background: #fff;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+        }
+        .chip.checked { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        .range {
+            flex: 1;
+            max-width: 200px;
+            min-width: 110px;
+            accent-color: var(--primary);
+            touch-action: none;
+        }
+        .range-val { font-weight: 700; color: var(--primary); min-width: 48px; text-align: right; }
+        .ios-switch { position: relative; width: 50px; height: 30px; flex-shrink: 0; }
+        .ios-switch input { opacity: 0; width: 0; height: 0; }
+        .ios-slider {
+            position: absolute;
+            inset: 0;
+            background: #e5e5ea;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .ios-slider::before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            left: 2px;
+            top: 2px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            transition: 0.2s;
+        }
+        .ios-switch input:checked + .ios-slider { background: #34c759; }
+        .ios-switch input:checked + .ios-slider::before { transform: translateX(20px); }
+
+        /* ミニプレビュー画面 */
+        .mini-view {
+            background: #f8fafc;
+            border: 1px solid #c8c7cc;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+            pointer-events: none;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+        .mini-stage {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+
+        /* プレビュー内の縮小スタイル */
+        .mini .table-grid { border-width: 2px; border-radius: 6px; }
+        .mini .table-grid.vertical .grid-cell { border-bottom-width: 1px; }
+        .mini .table-grid.horizontal .grid-cell { border-right-width: 1px; }
+        .mini .table-grid .grid-cell:last-child { border: none; }
+        .mini .answer-zone { border-width: 1.5px; border-radius: 8px; padding: 4px; gap: 2px; }
+        .mini .question-prompt { font-size: 10px; margin-bottom: 2px; }
+        .mini .choice-btn { border-width: 1.5px; border-radius: 5px; box-shadow: none; }
+
+        /* 確認アラート */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .alert {
+            background: #fff;
+            border-radius: 14px;
+            width: 280px;
+            text-align: center;
+            overflow: hidden;
+        }
+        .alert-title { padding: 18px 16px 6px; font-size: 17px; font-weight: 700; }
+        .alert-msg { padding: 0 16px 16px; font-size: 14px; color: #475569; }
+        .alert-btns { display: flex; border-top: 0.5px solid #cbd5e1; }
+        .alert-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-family);
+            color: var(--primary);
+        }
+        .alert-btn + .alert-btn { border-left: 0.5px solid #cbd5e1; color: #ef4444; font-weight: 700; }
+
+        #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 150; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <canvas id="confetti"></canvas>
+    <div id="fb-circle" class="feedback circle">○</div>
+    <div id="fb-cross" class="feedback cross">×</div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="alert">
+            <div class="alert-title" id="alert-title">確認</div>
+            <div class="alert-msg" id="alert-msg"></div>
+            <div class="alert-btns">
+                <button class="alert-btn" id="alert-cancel">いいえ</button>
+                <button class="alert-btn" id="alert-ok">はい</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. ホーム画面 -->
+    <div id="home-screen" class="screen active">
+        <h1 class="home-title">なんばんめ？</h1>
+        <div class="home-menu">
+            <button class="btn btn-start" id="btn-start">スタート</button>
+            <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                <button class="btn btn-secondary" id="btn-setting">設定</button>
+                <span class="hint">※トリプルタップ</span>
+            </div>
+            <button class="btn btn-secondary" id="btn-history">履歴</button>
+        </div>
+    </div>
+
+    <!-- 2. プレイ画面 -->
+    <div id="play-screen" class="screen">
+        <button class="btn float-back" id="btn-play-back">もどる</button>
+        <div class="float-progress" id="play-progress"></div>
+        <div id="play-stage"></div>
+    </div>
+
+    <!-- 3. クリア画面 -->
+    <div id="clear-screen" class="screen">
+        <div class="clear-icon">💮</div>
+        <div class="clear-title">たいへんよくできました！</div>
+        <div class="clear-btns" style="justify-content:center;">
+            <button class="btn btn-start" id="btn-clear-home" style="max-width:280px; width:100%;">ホームへ</button>
+        </div>
+    </div>
+
+    <!-- 4. 履歴画面 -->
+    <div id="history-screen" class="screen">
+        <div class="sub-header">
+            <button class="btn btn-back" id="btn-history-back">もどる</button>
+            <span class="sub-title">プレイ履歴・学習記録</span>
+            <button class="btn btn-danger" id="btn-history-clear">履歴を消去</button>
+        </div>
+        <div class="history-container">
+            <div id="history-summary"></div>
+            <div class="history-filter-bar" id="history-filter-bar" style="display:none;">
+                <span style="font-size:0.9rem; font-weight:800; color:#475569;">履歴一覧</span>
+                <div class="seg" id="history-filter">
+                    <button class="seg-btn selected" data-filter="all">すべて</button>
+                    <button class="seg-btn" data-filter="場所をタップ">場所をタップ</button>
+                    <button class="seg-btn" data-filter="絵を選ぶ">絵を選ぶ</button>
+                </div>
+            </div>
+            <div class="history-list" id="history-list"></div>
+        </div>
+    </div>
+
+    <!-- 5. 全画面設定画面 & サンプルプレビュー -->
+    <div id="setting-screen" class="screen">
+        <div class="sub-header" style="height: 64px; padding: 0 20px;">
+            <span style="width:70px;"></span>
+            <span class="sub-title" style="font-size: 1.4rem;">設定</span>
+            <button class="btn btn-done" id="btn-setting-done">完了</button>
+        </div>
+        <div class="setting-body">
+            <div class="setting-controls">
+                <div class="ios-section-title">出題内容</div>
+                <div class="ios-list">
+                    <div class="ios-row">
+                        <span class="row-label">出題パターン</span>
+                        <div class="row-control">
+                            <div class="seg" id="opt-pattern">
+                                <button class="seg-btn" data-value="tap-line">場所をタップ</button>
+                                <button class="seg-btn" data-value="choose-pic">絵を選ぶ</button>
+                                <button class="seg-btn" data-value="random">ランダム</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">向き（複数可）</span>
+                        <div class="row-control" id="opt-directions">
+                            <button class="chip" data-value="top">うえから</button>
+                            <button class="chip" data-value="bottom">したから</button>
+                            <button class="chip" data-value="left">ひだりから</button>
+                            <button class="chip" data-value="right">みぎから</button>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">ならぶ数</span>
+                        <div class="row-control">
+                            <input type="range" class="range" id="opt-count" min="3" max="10" step="1">
+                            <span class="range-val" id="val-count"></span>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">問題数</span>
+                        <div class="row-control">
+                            <input type="range" class="range" id="opt-questions" min="1" max="20" step="1">
+                            <span class="range-val" id="val-questions"></span>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">イラスト</span>
+                        <div class="row-control">
+                            <div class="seg" id="opt-theme">
+                                <button class="seg-btn" data-value="animals">どうぶつ</button>
+                                <button class="seg-btn" data-value="foods">たべもの</button>
+                                <button class="seg-btn" data-value="vehicles">のりもの</button>
+                                <button class="seg-btn" data-value="shapes">かたち</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ios-row" id="row-choice-format">
+                        <span class="row-label">選択肢の文字</span>
+                        <div class="row-control">
+                            <div class="seg" id="opt-choice-format">
+                                <button class="seg-btn" data-value="pic">イラスト</button>
+                                <button class="seg-btn" data-value="text">ひらがな</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ios-section-title">ヒント・カウント演出</div>
+                <div class="ios-list">
+                    <div class="ios-row">
+                        <span class="row-label">始点の目印（▲）</span>
+                        <div class="row-control">
+                            <label class="ios-switch"><input type="checkbox" id="opt-marker"><span class="ios-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">正解時のカウント</span>
+                        <div class="row-control">
+                            <label class="ios-switch"><input type="checkbox" id="opt-anim-correct"><span class="ios-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">不正解時のヒント</span>
+                        <div class="row-control">
+                            <div class="seg" id="opt-wrong-hint">
+                                <button class="seg-btn" data-value="off">なし</button>
+                                <button class="seg-btn" data-value="chosen">選んだ所を数える</button>
+                                <button class="seg-btn" data-value="answer">答えを見せる</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ios-section-title">画面・システム</div>
+                <div class="ios-list">
+                    <div class="ios-row">
+                        <span class="row-label">マスの大きさ</span>
+                        <div class="row-control">
+                            <input type="range" class="range" id="opt-scale" min="60" max="100" step="10">
+                            <span class="range-val" id="val-scale"></span>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">もどるボタン</span>
+                        <div class="row-control">
+                            <label class="ios-switch"><input type="checkbox" id="opt-back-btn"><span class="ios-slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="ios-row">
+                        <span class="row-label">効果音</span>
+                        <div class="row-control">
+                            <label class="ios-switch"><input type="checkbox" id="opt-sound"><span class="ios-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="setting-preview" id="setting-preview">
+                <div class="mini-view" id="mini-view">
+                    <div class="mini-stage" id="mini-stage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+       JavaScript
+    ==================================================== -->
+    <script>
+        // --- 1. イラストセット（各30種以上で重複ゼロ） ---
+        const THEMES = {
+            animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦉','🐴','🦄','🐝','🐛','🦋','🐢','🐙','🐬','🐳','🐘','🦒','🦔'],
+            foods: ['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍈','🍒','🍑','🍍','🥝','🍅','🍆','🥑','🌽','🥕','🍠','🥦','🍄','🥐','🍞','🍙','🍰','🍩','🍪','🍦','🍔','🍕'],
+            vehicles: ['🚗','🚕','🚙','🚌','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🚲','🛴','🚂','🚅','✈️','🚀','🚁','🚢','🚤','🛸','🚃','🚠','🛶','🏍️','🚛','🛻','🚎','🚝','⛵'],
+            shapes: ['⭐','🌙','☀️','☁️','🌸','🍀','💎','❤️','🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','🟥','🟧','🟨','🟩','🟦','🟪','🔶','🔷','🔺','⚡','❄️','🌈','🔔','🎈']
+        };
+
+        const DIR_LABEL = { top: 'うえから', bottom: 'したから', left: 'ひだりから', right: 'みぎから' };
+        const DIR_SHORT = { top: 'うえ', bottom: 'した', left: 'ひだり', right: 'みぎ' };
+        const DIR_ORDER = ['top', 'bottom', 'left', 'right'];
+        const PATTERN_LABEL = { 'tap-line': '場所をタップ', 'choose-pic': '絵を選ぶ', 'random': 'ランダム' };
+        const toZen = n => String(n).replace(/[0-9]/g, d => String.fromCharCode(d.charCodeAt(0) + 0xFEE0));
+
+        const rand = n => Math.floor(Math.random() * n);
+        const pick = arr => arr[rand(arr.length)];
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = rand(i + 1);
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // --- 2. イラストのひらがな辞書（国語・語彙学習対応） ---
+        const EMOJI_NAMES = {
+            // どうぶつ
+            '🐶': 'いぬ', '🐱': 'ねこ', '🐭': 'ねずみ', '🐹': 'はむすたー', '🐰': 'うさぎ',
+            '🦊': 'きつね', '🐻': 'くま', '🐼': 'ぱんだ', '🐨': 'こあら', '🐯': 'とら',
+            '🦁': 'らいおん', '🐮': 'うし', '🐷': 'ぶた', '🐸': 'かえる', '🐵': 'さる',
+            '🐔': 'にわとり', '🐧': 'ぺんぎん', '🐦': 'とり', '🦆': 'かも', '🦉': 'ふくろう',
+            '🐴': 'うま', '🦄': 'ゆにこーん', '🐝': 'はち', '🐛': 'あおむし', '🦋': 'ちょう',
+            '🐢': 'かめ', '🐙': 'たこ', '🐬': 'いるか', '🐳': 'くじら', '🐘': 'ぞう',
+            '🦒': 'きりん', '🦔': 'はりねずみ',
+
+            // たべもの
+            '🍎': 'りんご', '🍐': 'なし', '🍊': 'みかん', '🍋': 'れもん', '🍌': 'ばなな',
+            '🍉': 'すいか', '🍇': 'ぶどう', '🍓': 'いちご', '🍈': 'めろん', '🍒': 'さくらんぼ',
+            '🍑': 'もも', '🍍': 'ぱいなっぷる', '🥝': 'きうい', '🍅': 'とまと', '🍆': 'なす',
+            '🥑': 'あぼかど', '🌽': 'とうもろこし', '🥕': 'にんじん', '🍠': 'さつまいも', '🥦': 'ぶろっこりー',
+            '🍄': 'きのこ', '🥐': 'くろわっさん', '🍞': 'ぱん', '🍙': 'おにぎり', '🍰': 'けーき',
+            '🍩': 'どーなつ', '🍪': 'くっきー', '🍦': 'あいす', '🍔': 'はんばーがー', '🍕': 'ぴざ',
+
+            // のりもの
+            '🚗': 'くるま', '🚕': 'たくしー', '🚙': 'じどうしゃ', '🚌': 'ばす', '🚓': 'ぱとかー',
+            '🚑': 'きゅうきゅうしゃ', '🚒': 'しょうぼうしゃ', '🚐': 'わごん', '🚚': 'とらっく', '🚜': 'とらくたー',
+            '🛵': 'ばいく', '🚲': 'じてんしゃ', '🛴': 'きっくぼーど', '🚂': 'きしゃ', '🚅': 'しんかんせん',
+            '✈️': 'ひこうき', '🚀': 'ろけっと', '🚁': 'へりこぷたー', '🚢': 'ふね', '🚤': 'ぼーと',
+            '🛸': 'ゆーふぉー', '🚃': 'でんしゃ', '🚠': 'ろーぷうぇい', '🛶': 'かぬー', '🏍️': 'おーとばい',
+            '🚛': 'とれーらー', '🛻': 'けいとら', '🚎': 'とろりーばす', '🚝': 'ものれーる', '⛵': 'よっと',
+
+            // かたち
+            '⭐': 'ほし', '🌙': 'つき', '☀️': 'たいよう', '☁️': 'くも', '🌸': 'はな',
+            '🍀': 'くろーばー', '💎': 'だいや', '❤️': 'はーと',
+            '🔴': 'あかまる', '🟠': 'だいだいまる', '🟡': 'きいろまる', '🟢': 'みどりまる',
+            '🔵': 'あおまる', '🟣': 'むらさきまる', '🟤': 'ちゃいろまる', '⚫': 'くろまる',
+            '🟥': 'あかしかく', '🟧': 'だいだいしかく', '🟨': 'きいろしかく', '🟩': 'みどりしかく',
+            '🟦': 'あおしかく', '🟪': 'むらさきしかく', '🔶': 'だいだいだいや', '🔷': 'あおだいや',
+            '🔺': 'あかさんかく', '⚡': 'かみなり', '❄️': 'ゆき', '🌈': 'にじ', '🔔': 'すず', '🎈': 'ふうせん'
+        };
+
+        // --- 3. 設定管理 ---
+        const DEFAULTS = {
+            pattern: 'tap-line',
+            directions: ['top', 'bottom'],
+            itemCount: 5,
+            sizeScale: 100, // 60〜100%
+            questionCount: 5,
+            theme: 'animals',
+            choiceFormat: 'pic', // 'pic' (イラスト) | 'text' (ひらがな)
+            animCorrect: true, // 正解時のカウント表示
+            wrongHint: 'chosen', // 不正解時のヒント: 'off' (なし) | 'chosen' (選んだ所を数える・初期値) | 'answer' (答えを見せる)
+            marker: true,
+            showBackButton: true,
+            sound: true
+        };
+
+        let settings = { ...DEFAULTS };
+
+        function loadSettings() {
+            try {
+                const s = JSON.parse(localStorage.getItem('nanbanme_settings') || '{}');
+                settings = { ...DEFAULTS, ...s };
+            } catch (e) { settings = { ...DEFAULTS }; }
+
+            if (!THEMES[settings.theme]) settings.theme = 'animals';
+            if (!PATTERN_LABEL[settings.pattern]) settings.pattern = 'tap-line';
+            settings.directions = (settings.directions || []).filter(d => DIR_LABEL[d]);
+            if (settings.directions.length === 0) settings.directions = ['top', 'bottom'];
+            settings.itemCount = clamp(parseInt(settings.itemCount, 10) || 5, 3, 10);
+            settings.sizeScale = clamp(Math.round((parseInt(settings.sizeScale, 10) || 100) / 10) * 10, 60, 100);
+            settings.questionCount = clamp(parseInt(settings.questionCount, 10) || 5, 1, 20);
+            if (!['pic', 'text'].includes(settings.choiceFormat)) settings.choiceFormat = 'pic';
+            settings.animCorrect = settings.animCorrect !== false;
+            if (!['off', 'chosen', 'answer'].includes(settings.wrongHint)) {
+                if (settings.wrongHint === 'reset' || settings.wrongHint === 'keep') {
+                    settings.wrongHint = 'answer';
+                } else {
+                    settings.wrongHint = settings.animWrong === false ? 'off' : 'chosen';
+                }
+            }
+            settings.marker = settings.marker !== false;
+            settings.showBackButton = settings.showBackButton !== false;
+            settings.sound = settings.sound !== false;
+        }
+
+        function saveSettings() {
+            try { localStorage.setItem('nanbanme_settings', JSON.stringify(settings)); } catch (e) {}
+        }
+
+        // --- 3. 履歴管理 ---
+        function loadHistory() {
+            try { return JSON.parse(localStorage.getItem('nanbanme_history') || '[]'); } catch (e) { return []; }
+        }
+
+        function addHistory(rec) {
+            const h = loadHistory();
+            h.unshift(rec);
+            if (h.length > 50) h.length = 50;
+            try { localStorage.setItem('nanbanme_history', JSON.stringify(h)); } catch (e) {}
+        }
+
+        // --- 4. Web Audio API 音源（Safari/Chromeの非同期タイマー再生に完全対応） ---
+        let audioCtx = null;
+        let audioUnlocked = false;
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return;
+                    audioCtx = new AC();
+                }
+                if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                    audioCtx.resume();
+                }
+                if (!audioUnlocked && audioCtx) {
+                    const buf = audioCtx.createBuffer(1, 1, 22050);
+                    const src = audioCtx.createBufferSource();
+                    src.buffer = buf;
+                    src.connect(audioCtx.destination);
+                    src.start(0);
+                    audioUnlocked = true;
+                }
+            } catch (e) {}
+        }
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(ev => {
+            window.addEventListener(ev, initAudio, { passive: true, capture: true });
+        });
+
+        function tone(freq, start, dur, type = 'sine', vol = 0.35) {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = type;
+            o.frequency.setValueAtTime(freq, start);
+            g.gain.setValueAtTime(vol, start);
+            g.gain.setValueAtTime(vol, start + Math.min(0.04, dur * 0.3));
+            g.gain.exponentialRampToValueAtTime(0.005, start + dur);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(start);
+            o.stop(start + dur);
+        }
+
+        function triggerSoundNow(type) {
+            if (!audioCtx) return;
+            const t = audioCtx.currentTime;
+            if (type === 'correct') {
+                tone(659.25, t, 0.22, 'sine', 0.38);
+                tone(880, t + 0.14, 0.48, 'sine', 0.42);
+            } else if (type === 'wrong') {
+                tone(155, t, 0.32, 'sawtooth', 0.26);
+            } else if (type === 'step') {
+                // 番号バッジ表示時の一定の「ポン」音（聞き取りやすい木琴風の丸いアタック音）
+                const o = audioCtx.createOscillator();
+                const g = audioCtx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(680, t);
+                o.frequency.exponentialRampToValueAtTime(587.33, t + 0.025);
+                g.gain.setValueAtTime(0.42, t);
+                g.gain.setValueAtTime(0.38, t + 0.04);
+                g.gain.exponentialRampToValueAtTime(0.005, t + 0.16);
+                o.connect(g);
+                g.connect(audioCtx.destination);
+                o.start(t);
+                o.stop(t + 0.16);
+            } else if (type === 'fanfare') {
+                [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, t + i * 0.11, 0.5, 'triangle', 0.36));
+            }
+        }
+
+        function playSound(type) {
+            if (!settings.sound) return;
+            initAudio();
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+                audioCtx.resume().then(() => triggerSoundNow(type)).catch(() => {});
+            } else {
+                triggerSoundNow(type);
+            }
+        }
+
+        // --- 5. 誤操作防止・ブラウザ制御 ---
+        function setFillHeight() {
+            document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        }
+        setFillHeight();
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 320 && !e.target.closest('input[type="range"]')) {
+                e.preventDefault();
+                const el = e.target.closest('button, .grid-cell, .choice-btn, label');
+                if (el) el.click();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- 6. 盤面描画ロジック（問題が圧倒的主役！） ---
+        function domIndexOf(q) {
+            return (q.dir === 'top' || q.dir === 'left') ? q.num - 1 : q.N - q.num;
+        }
+
+        function questionText(q) {
+            return `${DIR_LABEL[q.dir]} ${toZen(q.num)}ばんめ`;
+        }
+
+        // 始点の三角矢印
+        function buildArrow(dir, cell, M, color) {
+            const box = document.createElement('div');
+            box.className = 'start-arrow';
+            const vertical = dir === 'top' || dir === 'bottom';
+            box.style.width = `${vertical ? cell : M}px`;
+            box.style.height = `${vertical ? M : cell}px`;
+            const t = Math.round(M * 0.7);
+            const half = Math.round(t * 0.65);
+            const tri = document.createElement('div');
+            tri.className = 'tri';
+            if (dir === 'top') {
+                tri.style.borderLeft = `${half}px solid transparent`;
+                tri.style.borderRight = `${half}px solid transparent`;
+                tri.style.borderTop = `${t}px solid ${color}`;
+            } else if (dir === 'bottom') {
+                tri.style.borderLeft = `${half}px solid transparent`;
+                tri.style.borderRight = `${half}px solid transparent`;
+                tri.style.borderBottom = `${t}px solid ${color}`;
+            } else if (dir === 'left') {
+                tri.style.borderTop = `${half}px solid transparent`;
+                tri.style.borderBottom = `${half}px solid transparent`;
+                tri.style.borderLeft = `${t}px solid ${color}`;
+            } else {
+                tri.style.borderTop = `${half}px solid transparent`;
+                tri.style.borderBottom = `${half}px solid transparent`;
+                tri.style.borderRight = `${t}px solid ${color}`;
+            }
+            box.appendChild(tri);
+            return box;
+        }
+
+        // マス目表の生成
+        function buildLine(q, cell, M, opts, cellsOut) {
+            const vertical = q.dir === 'top' || q.dir === 'bottom';
+            const wrap = document.createElement('div');
+            wrap.className = 'table-wrap';
+            wrap.style.flexDirection = vertical ? 'column' : 'row';
+
+            const grid = document.createElement('div');
+            grid.className = `table-grid ${vertical ? 'vertical' : 'horizontal'}`;
+            const emojiSize = Math.round(cell * 0.7);
+            const badgeSize = clamp(Math.round(cell * 0.32), 16, 44);
+
+            // 絵から選ぶモードのときは表のマス目は数える対象（直接タップは廃止）
+            const isTappable = q.pattern === 'tap' && !!opts.onCell;
+
+            for (let i = 0; i < q.N; i++) {
+                const c = document.createElement('div');
+                c.className = `grid-cell ${isTappable ? 'tappable' : 'not-tappable'}`;
+                c.style.width = `${cell}px`;
+                c.style.height = `${cell}px`;
+                const em = document.createElement('span');
+                em.className = 'cell-emoji';
+                em.style.fontSize = `${emojiSize}px`;
+                em.textContent = q.items[i];
+                c.appendChild(em);
+
+                if (!opts.mini) {
+                    const b = document.createElement('div');
+                    b.className = 'count-badge';
+                    b.style.width = `${badgeSize}px`;
+                    b.style.height = `${badgeSize}px`;
+                    b.style.fontSize = `${Math.round(badgeSize * 0.62)}px`;
+                    c.appendChild(b);
+                }
+
+                if (isTappable) {
+                    c.addEventListener('click', () => opts.onCell(i, c));
+                }
+                grid.appendChild(c);
+                cellsOut.push(c);
+            }
+
+            const arrow = M > 0 ? buildArrow(q.dir, cell, M, '#2563eb') : null;
+            if (arrow && (q.dir === 'top' || q.dir === 'left')) wrap.appendChild(arrow);
+            wrap.appendChild(grid);
+            if (arrow && (q.dir === 'bottom' || q.dir === 'right')) wrap.appendChild(arrow);
+            return wrap;
+        }
+
+        // 選択肢ボタン群の生成（イラスト／ひらがな両対応）
+        function appendChoices(palGrid, q, btn, mini, opts, result) {
+            const isTextMode = (opts.choiceFormat || settings.choiceFormat) === 'text';
+            const innerW = Math.max(10, btn - (mini ? 4 : 10));
+
+            q.choices.forEach(emoji => {
+                const b = document.createElement('div');
+                b.className = 'choice-btn';
+                b.style.width = `${btn}px`;
+                b.style.height = `${btn}px`;
+                b.dataset.emoji = emoji;
+
+                if (isTextMode) {
+                    const name = EMOJI_NAMES[emoji] || emoji;
+                    const sp = document.createElement('span');
+                    sp.className = 'choice-text';
+                    const len = Math.max(1, name.length);
+                    const maxFsByWidth = Math.floor(innerW / len);
+                    const baseFs = Math.round(btn * (mini ? 0.34 : 0.36));
+                    const fs = Math.max(mini ? 6 : 11, Math.min(baseFs, maxFsByWidth));
+                    sp.style.fontSize = `${fs}px`;
+                    sp.textContent = name;
+                    b.appendChild(sp);
+                } else {
+                    const sp = document.createElement('span');
+                    sp.className = 'choice-emoji';
+                    sp.style.fontSize = `${Math.round(btn * 0.65)}px`;
+                    sp.textContent = emoji;
+                    b.appendChild(sp);
+                }
+
+                if (opts.onChoice) b.addEventListener('click', () => opts.onChoice(emoji, b));
+                palGrid.appendChild(b);
+                result.choiceBtns.push(b);
+            });
+        }
+
+        // =========================================================
+        // 盤面全体の動的精密レイアウト計算
+        // - 縦の時（うえから／したから）：左右分割で上下を最大活用＆中央寄せ
+        // - 横の時（ひだりから／みぎから）：上下分割＆中央寄せ
+        // - 選択肢サイズは約95〜105px（大きくて押しやすい倍サイズ）
+        // - 基本は横に5並ぶように配置
+        // =========================================================
+        function renderBoard(container, q, opts) {
+            container.innerHTML = '';
+            container.classList.toggle('mini', !!opts.mini);
+            const W = container.clientWidth;
+            const H = container.clientHeight;
+            const result = { cells: [], choiceBtns: [] };
+            if (W < 20 || H < 20) return result;
+
+            const mini = !!opts.mini;
+            const vertical = q.dir === 'top' || q.dir === 'bottom';
+            const scale = (opts.scale || 100) / 100;
+            const maxCellCap = mini ? 999 : 180;
+
+            const root = document.createElement('div');
+            root.className = 'stage-box';
+            container.appendChild(root);
+
+            // ==========================================
+            // パターン1：場所をタップ（表と出題文を中央寄せ配置）
+            // ==========================================
+            if (q.pattern === 'tap') {
+                if (vertical) {
+                    // 縦並び（うえから／したから）：「絵を選ぶ」と同様に左に縦の表、右に出題文枠を置いて上下をフル活用
+                    root.style.flexDirection = 'row';
+                    root.style.justifyContent = 'center';
+                    root.style.alignItems = 'center';
+                    root.style.gap = `${clamp(Math.round(W * 0.032), mini ? 8 : 20, 48)}px`;
+
+                    const M = opts.marker ? Math.round(clamp(H * 0.08, mini ? 8 : 20, 40)) : 0;
+                    const availProbH = H - (mini ? 14 : 32) - M;
+                    const cellByH = Math.floor(availProbH / q.N);
+                    const maxCellW = Math.floor(W * (mini ? 0.35 : 0.30));
+                    let cell = Math.min(cellByH, maxCellW, maxCellCap);
+                    cell = Math.max(Math.floor(cell * scale), 20);
+
+                    const probZone = document.createElement('div');
+                    probZone.className = 'problem-zone';
+                    probZone.appendChild(buildLine(q, cell, M, opts, result.cells));
+                    root.appendChild(probZone);
+
+                    const ansZone = document.createElement('div');
+                    ansZone.className = 'answer-zone';
+                    ansZone.style.padding = mini ? '8px 12px' : '20px 32px';
+
+                    const prompt = document.createElement('div');
+                    prompt.className = 'question-prompt';
+                    prompt.textContent = questionText(q);
+                    prompt.style.fontSize = mini
+                        ? `${Math.max(9, Math.round(H * 0.07))}px`
+                        : `${clamp(Math.round(Math.min(W, H) * 0.06), 30, 48)}px`;
+                    ansZone.appendChild(prompt);
+                    root.appendChild(ansZone);
+                } else {
+                    // 横並び（ひだりから／みぎから）：上に横の表、下に出題文枠を近づけて中央配置
+                    root.style.flexDirection = 'column';
+                    root.style.justifyContent = 'center';
+                    root.style.alignItems = 'center';
+                    root.style.gap = `${clamp(Math.round(H * 0.035), mini ? 6 : 18, 36)}px`;
+
+                    const ansH = mini ? 26 : 84;
+                    // 上部フローティングボタン（「もどる」「進捗」）と干渉しないよう上下余白を確保
+                    const availProbH = Math.max(H - ansH - (mini ? 14 : 110), 60);
+                    const availProbW = W - (mini ? 16 : 48);
+
+                    const M = opts.marker ? Math.round(clamp(Math.min(availProbW, availProbH) * 0.08, mini ? 8 : 20, 40)) : 0;
+                    let cell = Math.min((availProbW - 16 - M) / q.N, availProbH - 16, maxCellCap);
+                    cell = Math.max(Math.floor(cell * scale), 20);
+
+                    const probZone = document.createElement('div');
+                    probZone.className = 'problem-zone';
+                    probZone.appendChild(buildLine(q, cell, M, opts, result.cells));
+                    root.appendChild(probZone);
+
+                    const ansZone = document.createElement('div');
+                    ansZone.className = 'answer-zone';
+                    ansZone.style.padding = mini ? '6px 12px' : '16px 32px';
+
+                    const prompt = document.createElement('div');
+                    prompt.className = 'question-prompt';
+                    prompt.textContent = questionText(q);
+                    prompt.style.fontSize = mini
+                        ? `${Math.max(9, Math.round(H * 0.07))}px`
+                        : `${clamp(Math.round(Math.min(W, H) * 0.06), 30, 48)}px`;
+                    ansZone.appendChild(prompt);
+                    root.appendChild(ansZone);
+                }
+                return result;
+            }
+
+            // =========================================================
+            // パターン2：絵を選ぶ
+            // =========================================================
+
+            if (vertical) {
+                // 【問題が縦（うえから／したから）】
+                // 選択肢を横にずらす（左右分割！表と回答枠の間を近づけて中央寄りに配置）
+                root.style.flexDirection = 'row';
+                root.style.justifyContent = 'center';
+                root.style.alignItems = 'center';
+                root.style.gap = `${clamp(Math.round(W * 0.032), mini ? 8 : 20, 48)}px`;
+
+                const gap = mini ? 4 : 8;
+
+                // 左側の表エリア（画面高さをフル活用！）
+                const M = opts.marker ? Math.round(clamp(H * 0.08, mini ? 8 : 20, 40)) : 0;
+                const availProbH = H - (mini ? 14 : 32) - M;
+                const cellByH = Math.floor(availProbH / q.N);
+                const maxCellW = Math.floor(W * (mini ? 0.35 : 0.30));
+                let cell = Math.min(cellByH, maxCellW, maxCellCap);
+                cell = Math.max(Math.floor(cell * scale), 20);
+
+                const probZoneW = cell + 16;
+                const availAnsW = Math.max(W - probZoneW - (mini ? 16 : 48), 80);
+                const availAnsH = H - (mini ? 14 : 32);
+
+                // 右側の回答エリア：横に並べる！
+                // 目標ボタンサイズ：約95〜105px
+                const targetBtn = mini
+                    ? Math.max(12, Math.floor(Math.min(availAnsW, availAnsH) * 0.14))
+                    : clamp(Math.round(Math.min(availAnsW * 0.22, availAnsH * 0.24)), 68, 105);
+
+                // 横に何個並べられるか（基本は横5並び。幅に応じて2〜5列）
+                let cols = Math.min(q.N, Math.max(2, Math.floor((availAnsW - (mini ? 14 : 32) + gap) / (targetBtn + gap))));
+                cols = Math.min(cols, 5); // 最大横5
+                const rows = Math.ceil(q.N / cols);
+
+                const maxBtnW = Math.floor((availAnsW - (mini ? 16 : 36) - (cols - 1) * gap) / cols);
+                const textH = mini ? 14 : 46;
+                const maxBtnH = Math.floor((availAnsH - textH - (mini ? 14 : 32) - (rows - 1) * gap) / rows);
+                const btn = mini ? Math.max(12, Math.min(maxBtnW, maxBtnH)) : clamp(Math.min(maxBtnW, maxBtnH, targetBtn), 48, 105);
+
+                // 左：問題エリア（縦の表）
+                const probZone = document.createElement('div');
+                probZone.className = 'problem-zone';
+                probZone.appendChild(buildLine(q, cell, M, opts, result.cells));
+                root.appendChild(probZone);
+
+                // 右：回答エリア（出題文＋選択肢）
+                const ansZone = document.createElement('div');
+                ansZone.className = 'answer-zone';
+                ansZone.style.padding = mini ? '6px 8px' : '14px 20px';
+
+                const gridW = cols * btn + (cols - 1) * gap;
+                const minTextW = mini ? 80 : 220;
+                const ansW = Math.min(availAnsW, Math.max(gridW + (mini ? 12 : 36), minTextW));
+                ansZone.style.width = `${ansW}px`;
+
+                const prompt = document.createElement('div');
+                prompt.className = 'question-prompt';
+                prompt.textContent = questionText(q);
+                prompt.style.fontSize = mini
+                    ? `${Math.max(9, Math.round(H * 0.065))}px`
+                    : `${clamp(Math.round(btn * 0.44), 26, 48)}px`;
+                prompt.style.marginBottom = mini ? '2px' : '8px';
+                ansZone.appendChild(prompt);
+
+                const palGrid = document.createElement('div');
+                palGrid.className = 'palette-grid';
+                palGrid.style.gridTemplateColumns = `repeat(${cols}, ${btn}px)`;
+                palGrid.style.gap = `${gap}px`;
+
+                appendChoices(palGrid, q, btn, mini, opts, result);
+                ansZone.appendChild(palGrid);
+                root.appendChild(ansZone);
+
+            } else {
+                // 【問題が横（ひだりから／みぎから）】
+                // 上下に並べる（上下分割、間隔を適度に近づけて中央配置）
+                root.style.flexDirection = 'column';
+                root.style.justifyContent = 'center';
+                root.style.alignItems = 'center';
+                root.style.gap = `${clamp(Math.round(H * 0.028), mini ? 6 : 14, 32)}px`;
+
+                const cols = Math.min(q.N, 5);
+                const rows = Math.ceil(q.N / cols);
+                const gap = mini ? 4 : 8;
+
+                // ボタンサイズ計算（約95〜105px）
+                const maxByW = Math.floor((W - (mini ? 16 : 36) - (cols - 1) * gap) / cols);
+                const maxAnsH = Math.floor(H * (mini ? 0.48 : 0.44));
+                const textH = mini ? 14 : 46;
+                const maxByH = Math.floor((maxAnsH - textH - (mini ? 10 : 22) - (rows - 1) * gap) / rows);
+                const btn = mini ? Math.max(12, Math.min(maxByW, maxByH)) : clamp(Math.min(maxByW, maxByH), 48, 105);
+
+                const ansH = textH + rows * btn + (rows - 1) * gap + (mini ? 10 : 24);
+
+                // 上側の問題エリア（横並びの表：上部フローティングボタンと重ならないよう余白を確保）
+                const availProbH = Math.max(H - ansH - (mini ? 12 : 88), 60);
+                const availProbW = W - (mini ? 16 : 48);
+
+                const M = opts.marker ? Math.round(clamp(Math.min(availProbW, availProbH) * 0.08, mini ? 8 : 18, 36)) : 0;
+                let cell = Math.min((availProbW - 16 - M) / q.N, availProbH - 16, maxCellCap);
+                cell = Math.max(Math.floor(cell * scale), 20);
+
+                // 上：問題エリア
+                const probZone = document.createElement('div');
+                probZone.className = 'problem-zone';
+                probZone.appendChild(buildLine(q, cell, M, opts, result.cells));
+                root.appendChild(probZone);
+
+                // 下：回答エリア
+                const ansZone = document.createElement('div');
+                ansZone.className = 'answer-zone';
+                ansZone.style.padding = mini ? '6px 8px' : '12px 18px';
+
+                const prompt = document.createElement('div');
+                prompt.className = 'question-prompt';
+                prompt.textContent = questionText(q);
+                prompt.style.fontSize = mini
+                    ? `${Math.max(9, Math.round(H * 0.065))}px`
+                    : `${clamp(Math.round(btn * 0.44), 26, 48)}px`;
+                prompt.style.marginBottom = mini ? '2px' : '8px';
+                ansZone.appendChild(prompt);
+
+                const palGrid = document.createElement('div');
+                palGrid.className = 'palette-grid';
+                palGrid.style.gridTemplateColumns = `repeat(${cols}, ${btn}px)`;
+                palGrid.style.gap = `${gap}px`;
+
+                appendChoices(palGrid, q, btn, mini, opts, result);
+                ansZone.appendChild(palGrid);
+                root.appendChild(ansZone);
+            }
+
+            return result;
+        }
+
+        // --- 7. 問題の生成 ---
+        function makeQuestion() {
+            const N = settings.itemCount;
+            const dir = pick(settings.directions);
+            const num = rand(N) + 1;
+
+            const pattern = settings.pattern === 'random'
+                ? (Math.random() < 0.5 ? 'tap' : 'choose')
+                : (settings.pattern === 'choose-pic' ? 'choose' : 'tap');
+
+            const theme = THEMES[settings.theme];
+            let items, choices = [];
+            if (pattern === 'tap') {
+                items = Array(N).fill(pick(theme));
+            } else {
+                items = shuffle(theme).slice(0, N);
+                choices = shuffle(items);
+            }
+            return { dir, num, N, pattern, items, choices };
+        }
+
+        // --- 8. ゲーム進行 ---
+        const gs = {
+            token: 0, q: null, board: null,
+            index: 0, total: 0, firstTry: 0, misses: 0,
+            missedThis: false, answering: false, startTime: 0,
+            questionLogs: [], currentMistakes: [], recorded: false
+        };
+
+        function later(fn, ms) {
+            const t = gs.token;
+            setTimeout(() => { if (t === gs.token) fn(); }, ms);
+        }
+
+        function startGame() {
+            initAudio();
+            loadSettings();
+            gs.token++;
+            gs.index = 0;
+            gs.total = settings.questionCount;
+            gs.firstTry = 0;
+            gs.misses = 0;
+            gs.startTime = Date.now();
+            gs.questionLogs = [];
+            gs.currentMistakes = [];
+            gs.recorded = false;
+            document.getElementById('btn-play-back').style.display = settings.showBackButton ? 'block' : 'none';
+            showScreen('play-screen');
+            nextQuestion();
+        }
+
+        function saveSessionHistory(completed) {
+            if (gs.recorded) return;
+            if (!completed && gs.questionLogs.length === 0 && gs.currentMistakes.length === 0) return;
+            gs.recorded = true;
+
+            // 中断時に現在回答中の問題でミスがあった場合は記録に含める
+            const logs = [...gs.questionLogs];
+            if (!completed && gs.q && gs.currentMistakes.length > 0) {
+                logs.push({
+                    qIndex: gs.index,
+                    dir: gs.q.dir,
+                    num: gs.q.num,
+                    N: gs.q.N,
+                    pattern: gs.q.pattern,
+                    firstTry: false,
+                    completed: false,
+                    mistakes: [...gs.currentMistakes]
+                });
+            }
+
+            const hintLabelMap = { off: 'ヒントなし', chosen: '選んだ所を数える', answer: '答えを見せる' };
+            addHistory({
+                date: new Date().toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                completed,
+                pattern: PATTERN_LABEL[settings.pattern],
+                choiceFormat: settings.pattern === 'tap-line' ? null : (settings.choiceFormat === 'text' ? 'ひらがな' : 'イラスト'),
+                wrongHint: hintLabelMap[settings.wrongHint] || '',
+                dirs: DIR_ORDER.filter(d => settings.directions.includes(d)).map(d => DIR_SHORT[d]).join('・'),
+                itemCount: settings.itemCount,
+                firstTry: gs.firstTry,
+                answered: gs.questionLogs.length,
+                total: gs.total,
+                misses: gs.misses,
+                duration: Math.max(1, Math.round((Date.now() - gs.startTime) / 1000)),
+                logs
+            });
+        }
+
+        function exitToHome() {
+            if (document.getElementById('play-screen').classList.contains('active')) {
+                saveSessionHistory(false);
+            }
+            gs.token++;
+            gs.answering = false;
+            showScreen('home-screen');
+        }
+
+        function nextQuestion() {
+            if (gs.index >= gs.total) { finishGame(); return; }
+            gs.index++;
+            gs.q = makeQuestion();
+            gs.missedThis = false;
+            gs.currentMistakes = [];
+            gs.answering = false;
+
+            document.getElementById('play-progress').textContent = `${gs.index} / ${gs.total}`;
+            renderPlay();
+        }
+
+        function renderPlay() {
+            if (!gs.q) return;
+            document.getElementById('btn-play-back').style.display = settings.showBackButton ? 'block' : 'none';
+            gs.board = renderBoard(document.getElementById('play-stage'), gs.q, {
+                scale: settings.sizeScale,
+                marker: settings.marker,
+                choiceFormat: settings.choiceFormat,
+                onCell: onCellTap,
+                onChoice: onChoiceTap
+            });
+        }
+
+        // DOM上のインデックス(0〜N-1)が始点から何番目(1〜N)かを返す
+        function chosenNumOfDom(q, domIdx) {
+            return (q.dir === 'top' || q.dir === 'left') ? domIdx + 1 : q.N - domIdx;
+        }
+
+        // 表のマス目を直接タップした時の処理（「場所をタップ」モードのみ作動）
+        function onCellTap(i, el) {
+            initAudio();
+            if (gs.answering) return;
+            const targetIdx = domIndexOf(gs.q);
+            if (i === targetIdx) {
+                handleCorrect(el, null);
+            } else {
+                handleWrong(el, chosenNumOfDom(gs.q, i));
+            }
+        }
+
+        // 下の選択肢ボタンをタップした時の処理（「絵を選ぶ」モードのみ作動）
+        function onChoiceTap(emoji, el) {
+            initAudio();
+            if (gs.answering) return;
+            const targetIdx = domIndexOf(gs.q);
+            if (emoji === gs.q.items[targetIdx]) {
+                handleCorrect(el, gs.board.cells[targetIdx]);
+            } else {
+                const wrongDomIdx = gs.q.items.indexOf(emoji);
+                const chosenNum = wrongDomIdx >= 0 ? chosenNumOfDom(gs.q, wrongDomIdx) : 1;
+                handleWrong(el, chosenNum);
+            }
+        }
+
+        function clearBoardHighlights() {
+            if (!gs.board) return;
+            gs.board.cells.forEach(c => {
+                c.classList.remove('step', 'correct', 'shake');
+                const b = c.querySelector('.count-badge');
+                if (b) { b.style.display = 'none'; b.textContent = ''; }
+            });
+            gs.board.choiceBtns.forEach(btn => {
+                btn.classList.remove('step', 'correct', 'shake');
+            });
+        }
+
+        function handleCorrect(el, linkedEl) {
+            gs.answering = true;
+            if (!gs.missedThis) gs.firstTry++;
+            gs.questionLogs.push({
+                qIndex: gs.index,
+                dir: gs.q.dir,
+                num: gs.q.num,
+                N: gs.q.N,
+                pattern: gs.q.pattern,
+                firstTry: !gs.missedThis,
+                completed: true,
+                mistakes: [...gs.currentMistakes]
+            });
+            clearBoardHighlights();
+
+            if (settings.animCorrect) {
+                // 始点から 1, 2, 3... と「ポン」音とともに数え、完了後にピンポン音＋大きな◯を表示
+                el.classList.add('step');
+                const cells = gs.board.cells;
+                const ordered = (gs.q.dir === 'top' || gs.q.dir === 'left') ? cells : [...cells].reverse();
+                let step = 0;
+                const tick = () => {
+                    const c = ordered[step];
+                    c.classList.add('step');
+                    const b = c.querySelector('.count-badge');
+                    if (b) { b.textContent = step + 1; b.style.display = 'flex'; }
+                    playSound('step');
+
+                    if (step < gs.q.num - 1) {
+                        step++;
+                        later(tick, 260);
+                    } else {
+                        // 最後の「ポン」の直後に緑色ハイライト＋ピンポン音＋大きな◯を出し、1.5秒表示して次へ
+                        later(() => {
+                            c.classList.remove('step');
+                            c.classList.add('correct');
+                            el.classList.remove('step');
+                            el.classList.add('correct');
+                            if (linkedEl) {
+                                linkedEl.classList.remove('step');
+                                linkedEl.classList.add('correct');
+                            }
+                            playSound('correct');
+                            showFeedback('fb-circle');
+                            later(nextQuestion, 1500);
+                        }, 220);
+                    }
+                };
+                later(tick, 150);
+            } else {
+                // カウント表示OFFの場合は即座にピンポン音＋大きな◯を出し、1.5秒表示して次へ
+                el.classList.add('correct');
+                if (linkedEl) linkedEl.classList.add('correct');
+                playSound('correct');
+                showFeedback('fb-circle');
+                later(nextQuestion, 1500);
+            }
+        }
+
+        function handleWrong(el, chosenNum) {
+            gs.answering = true;
+            gs.missedThis = true;
+            gs.misses++;
+
+            // 間違い傾向の記録（逆方向から数えたか／±1の数えズレか）
+            const isOpposite = (chosenNum === gs.q.N - gs.q.num + 1) && (chosenNum !== gs.q.num);
+            const isOffByOne = Math.abs(chosenNum - gs.q.num) === 1;
+            gs.currentMistakes.push({
+                chosenNum,
+                reason: isOpposite ? '逆向き' : (isOffByOne ? '±1ズレ' : '')
+            });
+
+            const cells = gs.board.cells;
+            const ordered = (gs.q.dir === 'top' || gs.q.dir === 'left') ? cells : [...cells].reverse();
+
+            if (settings.wrongHint === 'chosen') {
+                // 「選んだ所を数える」（初期値）：
+                // 始点から選んだ選択肢の場所まで「ポン」と数え、到達後にブッ音＋✕を出して「自分が選んだのは○番目」と示す
+                clearBoardHighlights();
+                el.classList.add('step');
+                let step = 0;
+
+                const tick = () => {
+                    const c = ordered[step];
+                    c.classList.add('step');
+                    const b = c.querySelector('.count-badge');
+                    if (b) { b.textContent = step + 1; b.style.display = 'flex'; }
+                    playSound('step');
+
+                    if (step < chosenNum - 1) {
+                        step++;
+                        later(tick, 260);
+                    } else {
+                        // 選んだマスの番号が出た直後に赤色揺れ＋ブッ音＋大きな✕を出し、1.5秒見せてから戻す
+                        later(() => {
+                            c.classList.remove('step');
+                            c.classList.add('shake');
+                            el.classList.remove('step');
+                            el.classList.add('shake');
+                            playSound('wrong');
+                            showFeedback('fb-cross');
+                            later(() => {
+                                clearBoardHighlights();
+                                gs.answering = false;
+                            }, 1500);
+                        }, 220);
+                    }
+                };
+                later(tick, 150);
+
+            } else if (settings.wrongHint === 'answer') {
+                // 「答えを見せる」：
+                // ブッ音＋✕のあと、正解の場所まで「ポン」と数えて1.5秒見せ、元に戻して自分で正解をタップさせる
+                playSound('wrong');
+                showFeedback('fb-cross');
+                el.classList.remove('shake');
+                void el.offsetWidth;
+                el.classList.add('shake');
+                setTimeout(() => el.classList.remove('shake'), 400);
+
+                const targetIdx = domIndexOf(gs.q);
+                let step = 0;
+
+                const tick = () => {
+                    if (step === 0) clearBoardHighlights();
+                    const c = ordered[step];
+                    const b = c.querySelector('.count-badge');
+                    if (b) { b.textContent = step + 1; b.style.display = 'flex'; }
+                    playSound('step');
+
+                    if (step < gs.q.num - 1) {
+                        c.classList.add('step');
+                        step++;
+                        later(tick, 260);
+                    } else {
+                        c.classList.add('correct');
+                        const choiceBtn = gs.board.choiceBtns.find(btn => btn.dataset.emoji === gs.q.items[targetIdx]);
+                        if (choiceBtn) choiceBtn.classList.add('correct');
+                        later(() => {
+                            clearBoardHighlights();
+                            gs.answering = false;
+                        }, 1500);
+                    }
+                };
+                later(tick, 450);
+
+            } else {
+                // 「なし」（'off'）：揺れとブッ音＋✕のみで、すぐに選び直せるようにする
+                playSound('wrong');
+                showFeedback('fb-cross');
+                el.classList.remove('shake');
+                void el.offsetWidth;
+                el.classList.add('shake');
+                later(() => {
+                    el.classList.remove('shake');
+                    gs.answering = false;
+                }, 400);
+            }
+        }
+
+        function showFeedback(id) {
+            const el = document.getElementById(id);
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 380);
+        }
+
+        function finishGame() {
+            saveSessionHistory(true);
+            playSound('fanfare');
+            showScreen('clear-screen');
+            startConfetti();
+        }
+
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+            const ps = Array.from({ length: 70 }, () => ({
+                x: Math.random() * canvas.width,
+                y: -Math.random() * canvas.height,
+                s: Math.random() * 8 + 5,
+                c: pick(colors),
+                vy: Math.random() * 3 + 2,
+                vx: Math.random() * 2 - 1,
+                r: Math.random() * 360,
+                vr: Math.random() * 6 - 3
+            }));
+            let frame = 0;
+            (function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ps.forEach(p => {
+                    p.y += p.vy; p.x += p.vx; p.r += p.vr;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.r * Math.PI / 180);
+                    ctx.fillStyle = p.c;
+                    ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s);
+                    ctx.restore();
+                });
+                if (++frame < 150) requestAnimationFrame(draw);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            })();
+        }
+
+        // --- 9. 履歴画面（学習サマリー・向き別定着度・問題別エラー分析） ---
+        let currentHistoryFilter = 'all';
+
+        function openHistory() {
+            renderHistoryView();
+            showScreen('history-screen');
+        }
+
+        function renderHistoryView() {
+            const summaryEl = document.getElementById('history-summary');
+            const filterBar = document.getElementById('history-filter-bar');
+            const list = document.getElementById('history-list');
+            summaryEl.innerHTML = '';
+            list.innerHTML = '';
+
+            const recs = loadHistory();
+            if (recs.length === 0) {
+                filterBar.style.display = 'none';
+                list.innerHTML = '<div class="empty">まだ履歴がありません</div>';
+                return;
+            }
+
+            filterBar.style.display = 'flex';
+
+            // 1. 全体統計と向き別定着度の計算
+            const totalPlays = recs.length;
+            let totalAnswered = 0;
+            let totalFirstTry = 0;
+            let totalDuration = 0;
+            const dirStats = {
+                top: { ok: 0, total: 0 },
+                bottom: { ok: 0, total: 0 },
+                left: { ok: 0, total: 0 },
+                right: { ok: 0, total: 0 }
+            };
+
+            recs.forEach(r => {
+                const ans = r.answered ?? r.total ?? 0;
+                const first = r.firstTry ?? r.correct ?? 0;
+                totalAnswered += ans;
+                totalFirstTry += first;
+                if (r.duration) totalDuration += r.duration;
+
+                if (Array.isArray(r.logs)) {
+                    r.logs.forEach(lg => {
+                        if (dirStats[lg.dir]) {
+                            dirStats[lg.dir].total++;
+                            if (lg.firstTry) dirStats[lg.dir].ok++;
+                        }
+                    });
+                }
+            });
+
+            const overallRate = totalAnswered > 0 ? Math.round((totalFirstTry / totalAnswered) * 100) : 0;
+            const avgSec = totalAnswered > 0 ? (totalDuration / totalAnswered).toFixed(1) : '—';
+
+            const dirCardsHtml = DIR_ORDER.map(d => {
+                const st = dirStats[d];
+                const rate = st.total > 0 ? Math.round((st.ok / st.total) * 100) : null;
+                const barColor = rate === null ? '#cbd5e1' : (rate >= 80 ? '#10b981' : (rate >= 50 ? '#3b82f6' : '#f59e0b'));
+                return `
+                    <div class="dir-stat-item">
+                        <div class="dir-stat-top">
+                            <span>${DIR_LABEL[d]}</span>
+                            <span class="dir-stat-rate">${rate !== null ? `${rate}%` : '—'}</span>
+                        </div>
+                        <div class="dir-bar-bg">
+                            <div class="dir-bar-fill" style="width:${rate ?? 0}%; background:${barColor};"></div>
+                        </div>
+                        <div style="font-size:0.72rem; color:#64748b; text-align:right;">
+                            ${st.total > 0 ? `${st.ok} / ${st.total}問` : '未出題'}
+                        </div>
+                    </div>`;
+            }).join('');
+
+            summaryEl.innerHTML = `
+                <div class="history-summary-card">
+                    <div class="summary-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">累計プレイ</div>
+                            <div class="stat-value">${totalPlays}回</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">解いた問題数</div>
+                            <div class="stat-value">${totalAnswered}問</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">一発正答率</div>
+                            <div class="stat-value accent">${overallRate}%</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">1問あたり平均</div>
+                            <div class="stat-value">${avgSec}秒</div>
+                        </div>
+                    </div>
+                    <div style="font-size:0.8rem; font-weight:800; color:#475569; margin-top:2px;">向き別の定着度（一発正解率）</div>
+                    <div class="dir-stats-grid">${dirCardsHtml}</div>
+                </div>`;
+
+            // 2. フィルタリングして履歴リストを描画
+            const filtered = currentHistoryFilter === 'all'
+                ? recs
+                : recs.filter(r => r.pattern === currentHistoryFilter);
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty">該当する履歴がありません</div>';
+                return;
+            }
+
+            filtered.forEach(r => {
+                const first = r.firstTry ?? r.correct ?? 0;
+                const ans = r.answered ?? r.total ?? 0;
+                const isCompleted = r.completed !== false;
+                const rate = ans > 0 ? Math.round((first / ans) * 100) : 0;
+
+                let statusBadge = '';
+                if (!isCompleted) {
+                    statusBadge = `<span class="h-badge abort">中断（${ans}/${r.total}問）</span>`;
+                } else if ((r.misses || 0) === 0 && first === r.total) {
+                    statusBadge = `<span class="h-badge perfect">💮 パーフェクト！</span>`;
+                } else {
+                    statusBadge = `<span class="h-badge clear">クリア</span>`;
+                }
+
+                const patStr = r.choiceFormat ? `${r.pattern}（${r.choiceFormat}）` : r.pattern;
+                const detail = [patStr, r.dirs, r.itemCount ? `${r.itemCount}こ` : '', r.wrongHint].filter(Boolean).join(' / ');
+                const sub = [`正答率 ${rate}%`, r.misses != null ? `ミス ${r.misses}回` : '', r.duration != null ? `${r.duration}秒` : ''].filter(Boolean).join('・');
+
+                let logsHtml = '';
+                if (Array.isArray(r.logs) && r.logs.length > 0) {
+                    const chips = r.logs.map(lg => {
+                        const qLabel = `${DIR_SHORT[lg.dir] || ''}${lg.num}`;
+                        if (lg.firstTry) {
+                            return `<span class="q-log-chip ok">⭕ 問${lg.qIndex}: ${qLabel}ばんめ</span>`;
+                        } else {
+                            const mList = Array.isArray(lg.mistakes) ? lg.mistakes.map(m => {
+                                const rsn = m.reason ? `［${m.reason}］` : '';
+                                return `${m.chosenNum}ばんめ${rsn}`;
+                            }).join('、') : '';
+                            const mText = mList ? `（選択: ${mList}）` : '';
+                            return `<span class="q-log-chip ng">❌ 問${lg.qIndex}: ${qLabel}ばんめ${mText}</span>`;
+                        }
+                    }).join('');
+                    logsHtml = `<div class="h-q-logs">${chips}</div>`;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="h-top-row">
+                        <div class="h-meta">
+                            <div class="h-date-row">
+                                <span class="h-date">${r.date || ''}</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="h-detail">${detail}</div>
+                        </div>
+                        <div class="h-score">
+                            <div class="h-score-main">${first} / ${r.total}問</div>
+                            <div class="h-score-sub">${sub}</div>
+                        </div>
+                    </div>
+                    ${logsHtml}`;
+                list.appendChild(item);
+            });
+        }
+
+        // --- 10. 全画面設定画面 & リアルタイムプレビュー ---
+        function syncSettingUI() {
+            document.querySelectorAll('#opt-pattern .seg-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === settings.pattern));
+            document.querySelectorAll('#opt-theme .seg-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === settings.theme));
+            document.querySelectorAll('#opt-directions .chip').forEach(b => b.classList.toggle('checked', settings.directions.includes(b.dataset.value)));
+            document.querySelectorAll('#opt-choice-format .seg-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === settings.choiceFormat));
+            document.querySelectorAll('#opt-wrong-hint .seg-btn').forEach(b => b.classList.toggle('selected', b.dataset.value === settings.wrongHint));
+            const rowChoiceFormat = document.getElementById('row-choice-format');
+            if (rowChoiceFormat) rowChoiceFormat.classList.toggle('disabled', settings.pattern === 'tap-line');
+            document.getElementById('opt-count').value = settings.itemCount;
+            document.getElementById('val-count').textContent = `${settings.itemCount}こ`;
+            document.getElementById('opt-scale').value = settings.sizeScale;
+            document.getElementById('val-scale').textContent = `${settings.sizeScale}%`;
+            document.getElementById('opt-questions').value = settings.questionCount;
+            document.getElementById('val-questions').textContent = `${settings.questionCount}問`;
+            document.getElementById('opt-anim-correct').checked = settings.animCorrect;
+            document.getElementById('opt-marker').checked = settings.marker;
+            document.getElementById('opt-back-btn').checked = !!settings.showBackButton;
+            document.getElementById('opt-sound').checked = settings.sound;
+        }
+
+        function openSetting() {
+            loadSettings();
+            syncSettingUI();
+            showScreen('setting-screen');
+            setTimeout(updatePreview, 30);
+        }
+
+        function updatePreview() {
+            const pane = document.getElementById('setting-preview');
+            const view = document.getElementById('mini-view');
+            const stage = document.getElementById('mini-stage');
+
+            const aspect = window.innerWidth / window.innerHeight;
+            const availW = pane.clientWidth - 10;
+            const availH = pane.clientHeight - 10;
+            let w = availW;
+            let h = w / aspect;
+            if (h > availH) { h = availH; w = h * aspect; }
+            view.style.width = `${Math.floor(w)}px`;
+            view.style.height = `${Math.floor(h)}px`;
+
+            const dir = DIR_ORDER.find(d => settings.directions.includes(d)) || 'top';
+            const N = settings.itemCount;
+            const theme = THEMES[settings.theme];
+            // 「ランダム」または「絵を選ぶ」のときは選択肢も含めてプレビュー表示
+            const pattern = settings.pattern === 'tap-line' ? 'tap' : 'choose';
+            const items = pattern === 'tap' ? Array(N).fill(theme[0]) : theme.slice(0, N);
+            const choices = pattern === 'tap' ? [] : items.slice();
+            const q = { dir, num: Math.min(2, N), N, pattern, items, choices };
+
+            renderBoard(stage, q, {
+                mini: true,
+                scale: settings.sizeScale,
+                marker: settings.marker,
+                choiceFormat: settings.choiceFormat
+            });
+        }
+
+        // --- 11. 確認ダイアログ ---
+        let confirmAction = null;
+        function showConfirm(title, msg, okLabel, onOk) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-msg').textContent = msg;
+            document.getElementById('alert-ok').textContent = okLabel;
+            confirmAction = onOk;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+        document.getElementById('alert-cancel').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.remove('active');
+            confirmAction = null;
+        });
+        document.getElementById('alert-ok').addEventListener('click', () => {
+            document.getElementById('confirm-modal').classList.remove('active');
+            const fn = confirmAction;
+            confirmAction = null;
+            if (fn) fn();
+        });
+
+        // --- 12. イベントリスナー登録 ---
+        loadSettings();
+
+        document.getElementById('btn-start').addEventListener('click', startGame);
+        document.getElementById('btn-history').addEventListener('click', openHistory);
+
+        let tapCount = 0, tapTimer = null;
+        document.getElementById('btn-setting').addEventListener('click', () => {
+            tapCount++;
+            clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 500);
+            if (tapCount >= 3) {
+                tapCount = 0;
+                openSetting();
+            }
+        });
+
+        // 戻るボタン押下時の確認ダイアログは不要（即ホームへ）
+        document.getElementById('btn-play-back').addEventListener('click', exitToHome);
+        document.getElementById('btn-clear-home').addEventListener('click', exitToHome);
+        document.getElementById('btn-history-back').addEventListener('click', exitToHome);
+        document.getElementById('btn-history-clear').addEventListener('click', () => {
+            showConfirm('履歴の消去', 'すべての履歴を消去しますか？', '消去', () => {
+                try { localStorage.removeItem('nanbanme_history'); } catch (e) {}
+                openHistory();
+            });
+        });
+
+        document.querySelectorAll('#history-filter .seg-btn').forEach(b => b.addEventListener('click', () => {
+            currentHistoryFilter = b.dataset.filter;
+            document.querySelectorAll('#history-filter .seg-btn').forEach(btn => btn.classList.toggle('selected', btn === b));
+            renderHistoryView();
+        }));
+
+        document.getElementById('btn-setting-done').addEventListener('click', () => {
+            saveSettings();
+            showScreen('home-screen');
+        });
+
+        document.querySelectorAll('#opt-pattern .seg-btn').forEach(b => b.addEventListener('click', () => {
+            settings.pattern = b.dataset.value;
+            syncSettingUI();
+            updatePreview();
+        }));
+        document.querySelectorAll('#opt-theme .seg-btn').forEach(b => b.addEventListener('click', () => {
+            settings.theme = b.dataset.value;
+            syncSettingUI();
+            updatePreview();
+        }));
+        document.querySelectorAll('#opt-choice-format .seg-btn').forEach(b => b.addEventListener('click', () => {
+            settings.choiceFormat = b.dataset.value;
+            syncSettingUI();
+            updatePreview();
+        }));
+        document.querySelectorAll('#opt-wrong-hint .seg-btn').forEach(b => b.addEventListener('click', () => {
+            settings.wrongHint = b.dataset.value;
+            syncSettingUI();
+        }));
+        document.querySelectorAll('#opt-directions .chip').forEach(b => b.addEventListener('click', () => {
+            const d = b.dataset.value;
+            if (settings.directions.includes(d)) {
+                if (settings.directions.length <= 1) return;
+                settings.directions = settings.directions.filter(x => x !== d);
+            } else {
+                settings.directions = DIR_ORDER.filter(x => x === d || settings.directions.includes(x));
+            }
+            syncSettingUI();
+            updatePreview();
+        }));
+
+        [['opt-count', 'itemCount'], ['opt-scale', 'sizeScale'], ['opt-questions', 'questionCount']].forEach(([id, key]) => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                settings[key] = parseInt(e.target.value, 10);
+                syncSettingUI();
+                if (key !== 'questionCount') updatePreview();
+            });
+        });
+
+        document.getElementById('opt-anim-correct').addEventListener('change', (e) => {
+            settings.animCorrect = e.target.checked;
+        });
+        document.getElementById('opt-marker').addEventListener('change', (e) => {
+            settings.marker = e.target.checked;
+            updatePreview();
+        });
+        document.getElementById('opt-back-btn').addEventListener('change', (e) => {
+            settings.showBackButton = e.target.checked;
+        });
+        document.getElementById('opt-sound').addEventListener('change', (e) => {
+            settings.sound = e.target.checked;
+            if (settings.sound) playSound('step');
+        });
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            setFillHeight();
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (document.getElementById('play-screen').classList.contains('active') && !gs.answering) renderPlay();
+                if (document.getElementById('setting-screen').classList.contains('active')) updatePreview();
+            }, 120);
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('play') === '1') {
+            startGame();
+        }
+    </script>
+</body>
+</html>

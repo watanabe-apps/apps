@@ -1,0 +1,512 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    touch-action: none;
+    background-color: #ffffff;
+    font-family: 'Klee One', sans-serif;
+    color: #0f172a;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+/* 画面共通コンテナ */
+.screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ====================================================
+   1. ホーム画面
+==================================================== */
+#home-screen {
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+}
+
+.btn-start {
+    width: 100%;
+    max-width: 260px;
+    font-size: 2.2rem;
+    padding: 16px 0;
+    background: #007aff;
+    color: #ffffff;
+    border-radius: 24px;
+    border: none;
+    font-family: 'Klee One', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-start:active {
+    transform: scale(0.96);
+    background: #0062cc;
+}
+
+.setting-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 260px;
+}
+
+.btn-secondary {
+    width: 100%;
+    font-size: 1.2rem;
+    padding: 12px 0;
+    background: #ffffff;
+    color: #334155;
+    border: 2px solid #cbd5e1;
+    border-radius: 16px;
+    font-family: 'Klee One', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary:active {
+    background: #f1f5f9;
+}
+
+.setting-note {
+    font-size: 13px;
+    color: #8e8e93;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+/* ====================================================
+   2. プレイ画面
+==================================================== */
+#play-screen {
+    /* position: relative は削除！.screenのabsoluteとinset:0に従う */
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+}
+
+.btn-back {
+    position: absolute;
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    z-index: 100;
+    font-size: 1.1rem;
+    font-family: 'Klee One', sans-serif;
+    color: #475569;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.btn-back:active {
+    background: #f1f5f9;
+}
+
+.btn-back.hidden {
+    display: none !important;
+}
+
+.clear-count {
+    position: absolute;
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    right: calc(20px + env(safe-area-inset-right, 0px));
+    z-index: 100;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #0f172a;
+    pointer-events: none;
+}
+
+.puzzle-stage {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+/* ピース */
+.puzzle-piece {
+    position: absolute;
+    cursor: grab;
+    touch-action: none;
+    border: 1px solid #000000;
+    background-color: #ffffff;
+    box-sizing: border-box;
+    transform-origin: center center;
+    will-change: transform, left, top;
+}
+
+.puzzle-piece.dragging {
+    cursor: grabbing;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.puzzle-piece-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* つぎへボタン (黄色い楕円) */
+.next-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+
+.next-overlay.hidden {
+    display: none;
+}
+
+.btn-next {
+    font-family: 'Klee One', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: #000000;
+    background-color: #ffd600;
+    border: none;
+    border-radius: 60px;
+    padding: 20px 64px;
+    cursor: pointer;
+}
+
+.btn-next:active {
+    opacity: 0.7;
+}
+
+/* ====================================================
+   3. 設定画面（レスポンシブ2カラム配置）
+==================================================== */
+#setting-screen {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.setting-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.setting-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* 横画面・大画面では2カラム、縦画面・スマホでは1カラム */
+.setting-main-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .setting-main-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.setting-left-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-right-col {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 20px;
+}
+
+.setting-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.section-title, .sample-view-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 10px;
+}
+
+.setting-row {
+    margin-bottom: 12px;
+}
+
+.setting-row:last-child {
+    margin-bottom: 0;
+}
+
+.setting-row label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
+}
+
+.setting-row input[type="range"] {
+    width: 100%;
+    height: 6px;
+    accent-color: #007aff;
+    cursor: pointer;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.15rem;
+    padding: 4px 0;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    accent-color: #007aff;
+    cursor: pointer;
+}
+
+/* サンプルビュー（プレイ画面再現プレビュー） */
+.preview-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-box {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    min-height: 280px;
+    max-height: 480px;
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-stage {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.preview-btn-back {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    z-index: 10;
+    font-size: 0.85rem;
+    font-family: 'Klee One', sans-serif;
+    color: #475569;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 3px 10px;
+    pointer-events: none;
+}
+
+.preview-btn-back.hidden {
+    display: none !important;
+}
+
+.preview-clear-count {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 10;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #0f172a;
+    pointer-events: none;
+}
+
+/* プレビュー内のミニチュアピース */
+.preview-piece {
+    position: absolute;
+    border: 1px solid #000000;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    transform-origin: center center;
+    pointer-events: none;
+}
+
+.preview-piece canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.preview-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* 写真一覧 */
+.photo-upload-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.btn-add-photo {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #007aff;
+    border: 2px solid #007aff;
+    border-radius: 14px;
+    padding: 10px 24px;
+    cursor: pointer;
+}
+
+.btn-add-photo:active {
+    background-color: #f0f7ff;
+}
+
+.photo-list {
+    max-height: 180px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.photo-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.photo-row:last-child {
+    border-bottom: none;
+}
+
+.photo-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.photo-name {
+    margin-left: 12px;
+    flex: 1;
+    font-size: 0.95rem;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-delete-photo {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 6px 10px;
+}
+
+.photo-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.btn-text-danger {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.95rem;
+    font-family: 'Klee One', sans-serif;
+    cursor: pointer;
+}
+
+.btn-text-subtle {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 0.95rem;
+    font-family: 'Klee One', sans-serif;
+    cursor: pointer;
+}
+
+/* 完了ボタン */
+.btn-done {
+    width: 100%;
+    font-size: 1.3rem;
+    padding: 14px 0;
+    background: #007aff;
+    color: #ffffff;
+    border-radius: 18px;
+    border: none;
+    font-family: 'Klee One', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-bottom: 24px;
+}
+
+.btn-done:active {
+    background: #0062cc;
+}

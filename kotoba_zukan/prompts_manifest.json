@@ -1,0 +1,686 @@
+[
+  {
+    "id": "d_inu",
+    "name": "いぬ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_inu.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of friendly Shiba Inu dog standing (いぬ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (floppy-perky ears, warm eyes, curled tail, golden-brown and white fur). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_neko",
+    "name": "ねこ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_neko.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of calico or tabby domestic cat sitting (ねこ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (pointed ears, gentle whiskers, soft paws, curled tail, gentle green eyes). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_zou",
+    "name": "ぞう",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_zou.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of African or Asian elephant standing in side view (ぞう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (long curving trunk, large gentle ears, sturdy wrinkled legs, short tail). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_kirin",
+    "name": "きりん",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_kirin.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of tall giraffe in side view (きりん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (long elegant neck, distinct brown patch pattern, gentle face with small ossicones (horns)). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_raion",
+    "name": "らいおん",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_raion.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of majestic male lion sitting proudly (らいおん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (full fluffy mane, warm golden-amber fur, calm and gentle expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_panda",
+    "name": "ぱんだ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_panda.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of giant panda sitting comfortably (ぱんだ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (distinctive black eye patches, round black ears, black and white fur, cute posture). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_usagi",
+    "name": "うさぎ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_usagi.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of white bunny rabbit sitting upright (うさぎ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (long upright ears with soft pink inside, twitching nose, round fluffy tail, soft white fur). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_kuma",
+    "name": "くま",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_kuma.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of gentle brown bear sitting (くま). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (round ears, sturdy furry body, warm brown coat, friendly and calm expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_saru",
+    "name": "さる",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_saru.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of Japanese macaque monkey sitting (さる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (light brown fur, pinkish friendly face, lively eyes, expressive hands and feet). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_pengin",
+    "name": "ぺんぎん",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_pengin.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of Emperor or Gentoo penguin standing upright (ぺんぎん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (black back, crisp white belly, yellow-orange neck patch, flippers and webbed feet). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_koara",
+    "name": "こあら",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_koara.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of cute koala clinging to a gentle branch or sitting (こあら). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (large fluffy round ears, smooth dark oval nose, soft grey fur). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_tora",
+    "name": "とら",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_tora.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of handsome tiger standing in side view (とら). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (vibrant orange coat with bold black stripes, white belly, graceful feline form). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_uma",
+    "name": "うま",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_uma.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of handsome brown horse standing gracefully (うま). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (flowing dark mane and tail, slender muscular legs, gentle muzzle and eyes). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_buta",
+    "name": "ぶた",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_buta.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of pink piglet standing in side view (ぶた). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (curly tail, cute snout nose, floppy ears, soft pink skin). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_kaeru",
+    "name": "かえる",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_kaeru.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of green tree frog sitting calmly (かえる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (smooth bright green skin, big gentle round eyes, webbed toes). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_hiyoko",
+    "name": "ひよこ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_hiyoko.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of fluffy yellow chick standing (ひよこ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (soft bright yellow down feathers, tiny orange beak, little wings, cute small feet). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_wani",
+    "name": "わに",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_wani.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of crocodile lying in side view (わに). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (textured scales, long snout with teeth, strong tail, gentle non-threatening educational style). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "d_kame",
+    "name": "かめ",
+    "category": "doubutsu",
+    "categoryName": "どうぶつ",
+    "imageFile": "d_kame.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of land turtle or tortoise crawling slowly (かめ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (textured domed shell, wrinkled neck and legs, friendly wise expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_ringo",
+    "name": "りんご",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_ringo.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of fresh shiny red apple (りんご). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (bright red skin with subtle yellow speckles, green leaf on a short brown stem). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_banana",
+    "name": "ばなな",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_banana.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of bunch of two or three ripe yellow bananas (ばなな). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (bright yellow peel with subtle green tips, gentle curve). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_ichigo",
+    "name": "いちご",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_ichigo.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of fresh ripe red strawberry (いちご). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (vibrant red berry covered with tiny yellow seeds, fresh green calyx on top). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_mikan",
+    "name": "みかん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_mikan.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of juicy Japanese Satsuma mandarin orange (mikan) (みかん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (bright orange textured peel, fresh green leaf on stem). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_suika",
+    "name": "すいか",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_suika.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of large round Japanese watermelon, whole or with a clean slice (すいか). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (bold green and black striped rind, crisp red flesh with black seeds). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_budou",
+    "name": "ぶどう",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_budou.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of cluster of juicy purple grapes (ぶどう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (rich deep purple-blue berries with natural gentle bloom, green vine leaf). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_onigiri",
+    "name": "おにぎり",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_onigiri.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of traditional Japanese triangular rice ball (onigiri) (おにぎり). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (fluffy white rice grains, wrapped neatly with a dark green nori seaweed sheet). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_pan",
+    "name": "ぱん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_pan.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of freshly baked loaf of sliced white bread (shokupan) (ぱん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (golden brown crust, soft pillowy white center slice). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_kare-",
+    "name": "かれー",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_kare-.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of plate of Japanese curry and rice (curry rice) (かれー). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (rich brown sauce with chunks of potato and carrot, fluffy white rice on an oval dish). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_ra-men",
+    "name": "らーめん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_ra-men.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of steaming bowl of ramen noodle soup (らーめん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (yellow curly noodles in clear soy broth, topped with chashu pork, boiled egg slice, nori, scallions). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_udon",
+    "name": "うどん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_udon.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of bowl of hot Japanese udon noodle soup (うどん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (thick white udon noodles in golden dashi broth, topped with green scallions and kamaboko fish cake). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_ke-ki",
+    "name": "けーき",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_ke-ki.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of slice of Japanese strawberry shortcake (けーき). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (soft fluffy sponge cake, layers of white fresh whipped cream, crowned with a bright red strawberry). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_aisu",
+    "name": "あいす",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_aisu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of soft serve or scooped ice cream in a crisp wafer cone (あいす). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (swirled creamy vanilla ice cream with delicious texture). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_purin",
+    "name": "ぷりん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_purin.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of traditional Japanese custard pudding (purin) (ぷりん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (glossy caramel sauce dripping over smooth yellow egg custard on a small plate, topped with a cherry). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_tamago",
+    "name": "たまご",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_tamago.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of fresh whole egg and a clean cracked egg showing golden yolk (たまご). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (smooth beige shell, bright round orange yolk and clear egg white). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_tomato",
+    "name": "とまと",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_tomato.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of ripe plump red tomato (とまと). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (vibrant glossy red skin, green star-shaped calyx on top, succulent appearance). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "t_ninjin",
+    "name": "にんじん",
+    "category": "tabemono",
+    "categoryName": "たべもの",
+    "imageFile": "t_ninjin.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of fresh crisp orange carrot (にんじん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (tapered vibrant orange root with natural horizontal ridges, feathery green leafy top). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_kuruma",
+    "name": "くるま",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_kuruma.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of compact red passenger car (くるま). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean smooth body, transparent windows, two black wheels, headlights). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_basu",
+    "name": "ばす",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_basu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of friendly city bus in yellow or green (ばす). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (rectangular body, multiple passenger windows, destination display, front windshield). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_shinkansen",
+    "name": "しんかんせん",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_shinkansen.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of Japanese Shinkansen bullet train (E5 or N700 style) (しんかんせん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (aerodynamic nose, sleek white and teal body, speed lines, driver windshield). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_densha",
+    "name": "でんしゃ",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_densha.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of classic commuter train car (densha) (でんしゃ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (silver metal body with colorful stripe, passenger doors and large windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_hikouki",
+    "name": "ひこうき",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_hikouki.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of passenger jet airplane flying smoothly (ひこうき). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (white fuselage, swept-back wings, jet engines underneath, tail fin, passenger windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_fune",
+    "name": "ふね",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_fune.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of cruising ship / ferry boat on gentle water (ふね). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean white hull, passenger deck, smoke stack, observation windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_roketto",
+    "name": "ろけっと",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_roketto.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of sleek space rocket blasting off (ろけっと). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (white cylindrical body, red nose cone, triangular stabilizer fins, gentle fire exhaust plumes). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_patoka-",
+    "name": "ぱとかー",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_patoka-.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of Japanese police patrol car (patrol car / patocar) (ぱとかー). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (black and lower-white body, bright red revolving warning light bar on roof, Japanese police crest). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_kyuukyuusha",
+    "name": "きゅうきゅうしゃ",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_kyuukyuusha.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of Japanese ambulance vehicle (kyuukyuusha) (きゅうきゅうしゃ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean white body with red horizontal stripe, flashing red beacon lights, red cross or Star of Life symbol). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_shoubousha",
+    "name": "しょうぼうしゃ",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_shoubousha.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of bright red fire engine truck (shoubousha) (しょうぼうしゃ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (vibrant red body, chrome ladder on roof, coiled water hoses, flashing lights and chrome siren). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_jitensha",
+    "name": "じてんしゃ",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_jitensha.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of cheerful bicycle with basket (じてんしゃ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (two spoked wheels, handlebars with bell, comfortable seat, front wire basket, chain pedals). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_baiku",
+    "name": "ばいく",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_baiku.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of friendly motorcycle / scooter (ばいく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (two wheels, handlebars, headlight, comfortable seat and mirror). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_torakku",
+    "name": "とらっく",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_torakku.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of sturdy delivery cargo truck (とらっく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (cab in front, boxy cargo container in back, large wheels, mudflaps). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "n_herikoputa-",
+    "name": "へりこぷたー",
+    "category": "norimono",
+    "categoryName": "のりもの",
+    "imageFile": "n_herikoputa-.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of rescue or passenger helicopter (へりこぷたー). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (spinning main rotor blades, tail rotor, cockpit bubble windows, landing skids). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_enpitsu",
+    "name": "えんぴつ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_enpitsu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of classic wooden HB pencil (えんぴつ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (yellow or natural wood hexagonal shaft, sharpened tip showing grey graphite lead, pink eraser on end). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_hasami",
+    "name": "はさみ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_hasami.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of pair of children safety scissors (はさみ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (blue or red plastic handles, blunt stainless steel blades open slightly). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_hon",
+    "name": "ほん",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_hon.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of open picture book with colorful pages (ほん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean open binding, gentle blank illustrated storybook pages, colorful cover spine). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_tokei",
+    "name": "とけい",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_tokei.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of round analog wall clock / alarm clock (とけい). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clear white clock face, bold numbers 1 to 12, distinct hour and minute hands showing 3:00). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_kasa",
+    "name": "かさ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_kasa.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of bright yellow opened umbrella (かさ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (smooth dome-shaped canopy, curved J-handle, ferrule tip on top). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_kutsu",
+    "name": "くつ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_kutsu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of pair of colorful children sneakers / shoes (くつ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (bright blue or red canvas, white rubber soles and toe caps, easy velcro strap). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_boushi",
+    "name": "ぼうし",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_boushi.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of blue or red baseball cap with visor (ぼうし). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (curved brim visor, rounded crown with button on top, eyelet stitching). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_kaban",
+    "name": "かばん",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_kaban.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of traditional Japanese school backpack (randoseru) (かばん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (glossy red or black leather, large flap cover, shoulder straps and metal buckle). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_koppu",
+    "name": "こっぷ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_koppu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of transparent or light blue drinking cup / glass (こっぷ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (smooth cylindrical tumbler filled with clear sparkling water). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_haburashi",
+    "name": "はぶらし",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_haburashi.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of colorful children toothbrush (はぶらし). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (ergonomic colored handle, neat white bristles, gentle curve). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_terebi",
+    "name": "てれび",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_terebi.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of modern flat-screen television monitor (てれび). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (slim dark bezel, sleek stand base, widescreen display showing a gentle colorful screen). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_denwa",
+    "name": "でんわ",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_denwa.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of retro red telephone or modern smartphone (でんわ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clear recognizable shape, numeric keypad or touch screen, friendly style). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_fuusen",
+    "name": "ふうせん",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_fuusen.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of cluster of three colorful helium balloons (ふうせん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (red, yellow, and blue shiny balloons floating on strings tied together). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_bo-ru",
+    "name": "ぼーる",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_bo-ru.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of classic soccer ball / colorful play ball (ぼーる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (iconic black and white pentagon patchwork pattern, round 3D volume). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "m_isu",
+    "name": "いす",
+    "category": "midikanamono",
+    "categoryName": "みぢかなもの",
+    "imageFile": "m_isu.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of sturdy wooden children chair (いす). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (four round wooden legs, smooth wooden seat, supportive backrest). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_aruku",
+    "name": "あるく",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_aruku.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of cheerful young boy walking happily with good posture (あるく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (walking forward, swinging arms naturally, friendly smile). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_hashiru",
+    "name": "はしる",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_hashiru.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of energetic child running forward with vigor (はしる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (leaning forward dynamically, bent knees and pumping elbows, happy smiling expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_taberu",
+    "name": "たべる",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_taberu.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of happy child sitting at a table eating delicious food with a spoon (たべる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (spoon raised near mouth, cheerful contented expression, clean small bowl). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_nomu",
+    "name": "のむ",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_nomu.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of happy child holding a cup with both hands drinking water or milk (のむ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (cup tilted gently to mouth, eyes smiling, peaceful expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_neru",
+    "name": "ねる",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_neru.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of peaceful child fast asleep under a warm cozy blanket (ねる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (head resting on a soft fluffy pillow, closed calm eyes, gentle smiling in sleep). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_okiru",
+    "name": "おきる",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_okiru.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of child waking up in the morning stretching arms happily (おきる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (sitting up in bed, big refreshing morning stretch, wide awake friendly smile, sunshine mood). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_warau",
+    "name": "わらう",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_warau.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of child laughing joyfully with bright smiling face (わらう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (happy curved eyes, open mouth with cheerful laughter, rosy cheeks, full of joy). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_utau",
+    "name": "うたう",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_utau.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of child singing happily with open mouth (うたう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (holding hand near chest or singing with music notes floating gently around, happy expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_odoru",
+    "name": "おどる",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_odoru.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of child dancing happily with playful dynamic pose (おどる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (arms raised rhythmically, one foot lifted in dance, joyful happy energy). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_arau",
+    "name": "あらう",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_arau.png",
+    "status": "pending",
+    "prompt": "A realistic-leaning educational picture book illustration of child carefully washing both hands with fluffy soap bubbles at a sink (あらう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (lathering palms with white soap suds, shiny water droplets, clean hygiene demonstration). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_tobu",
+    "name": "とぶ",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_tobu.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of child jumping high in the air with joyful expression (とぶ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (both feet off the ground, arms thrown up happily, clothes swaying with motion). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  },
+  {
+    "id": "v_oyogu",
+    "name": "およぐ",
+    "category": "doushi",
+    "categoryName": "どうし",
+    "imageFile": "v_oyogu.png",
+    "status": "generated",
+    "prompt": "A realistic-leaning educational picture book illustration of child swimming happily in clear water wearing swim cap and goggles (およぐ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (flutter kicking in water, friendly smile, water ripples around). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration."
+  }
+]

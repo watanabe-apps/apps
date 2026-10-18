@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>発達支援 3Dモデル</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background: #060913;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #f1f5f9;
+    }
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      cursor: grab;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    /* ミニマル上部コントロールHUD */
+    #hud {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 6px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      z-index: 20;
+      white-space: nowrap;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      padding: 7px 13px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .btn.active {
+      background: #16a34a;
+      border-color: #4ade80;
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.45);
+    }
+    .btn.btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #f87171;
+    }
+    .btn.btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #ffffff;
+    }
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.14);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* ステルス配置：バルス（Bキーでも発動） */
+    #btn-balse {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #64748b;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0.08;
+      transition: all 0.25s ease;
+      margin-left: -2px;
+    }
+    #btn-balse:hover {
+      opacity: 0.85;
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #bae6fd;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    /* バルス発動時の閃光オーバーレイ */
+    #flash-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #e0f2fe 45%, #0284c7 90%, #0369a1 100%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 0.06s ease-out;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="flash-overlay"></div>
+
+  <!-- 上部ミニマルHUD -->
+  <div id="hud">
+    <button id="btn-camera" class="btn active">👁️ カメラ</button>
+    <button id="btn-bottomup" class="btn">⛰️ ボトムアップ</button>
+    <button id="btn-island" class="btn">☁️ 浮島</button>
+    <div class="divider"></div>
+    <button id="btn-reset" class="btn btn-danger">🔄 リセット</button>
+    <button id="btn-sound" class="btn">🔊</button>
+    <!-- ステルス配置：バルス（Bキーでも発動） -->
+    <button id="btn-balse" title="ショートカット: B">◇バルス</button>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    // --- Web Audio API（自律型シンセ効果音） ---
+    let audioCtx = null;
+    let isSoundMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) audioCtx = new AudioClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    const sound = {
+      pop: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(360, now);
+        osc.frequency.exponentialRampToValueAtTime(780, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.13);
+      },
+      sculpt: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(95, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.08);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      },
+      attract: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(180, now);
+        osc1.frequency.exponentialRampToValueAtTime(360, now + 0.5);
+        osc2.frequency.setValueAtTime(90, now);
+        osc2.frequency.linearRampToValueAtTime(140, now + 0.5);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.55);
+        osc2.stop(now + 0.55);
+      },
+      merge: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.16, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.45);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.48);
+        });
+      },
+      flash: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(55, now + 0.7);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.75);
+      },
+      crash: () => {
+        if (!audioCtx || isSoundMuted) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.32);
+      }
+    };
+
+    // --- DOM Elements ---
+    const container = document.getElementById('canvas-container');
+    const flashOverlay = document.getElementById('flash-overlay');
+
+    // --- Three.js Setup ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x070b14);
+    scene.fog = new THREE.FogExp2(0x070b14, 0.015);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(24, 22, 26);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.04;
+    controls.minDistance = 8;
+    controls.maxDistance = 65;
+    controls.target.set(0, 0, 0);
+
+    // --- Lighting ---
+    const hemiLight = new THREE.HemisphereLight(0xf0fdf4, 0x0f172a, 0.7);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.0);
+    dirLight.position.set(18, 28, 16);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 90;
+    const d = 18;
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+    scene.add(dirLight);
+
+    const ambientLight = new THREE.AmbientLight(0x1e293b, 0.4);
+    scene.add(ambientLight);
+
+    // --- Groups ---
+    const terrainGroup = new THREE.Group();
+    const islandsGroup = new THREE.Group();
+    const debrisGroup = new THREE.Group();
+    scene.add(terrainGroup);
+    scene.add(islandsGroup);
+    scene.add(debrisGroup);
+
+    // --- 大地（地形）と緑のグラデーション ---
+    const COLOR_VALLEY  = new THREE.Color(0x4ade80); // 明るい若草・ライム
+    const COLOR_LOWLAND = new THREE.Color(0x22c55e); // 豊かな草原グリーン
+    const COLOR_MIDLAND = new THREE.Color(0x16a34a); // エメラルド・フォレスト
+    const COLOR_HIGHLAND= new THREE.Color(0x15803d); // 深い森林グリーン
+    const COLOR_PEAK    = new THREE.Color(0x14532d); // 高山・荘厳な濃緑
+
+    function getTerrainColor(height) {
+      const col = new THREE.Color();
+      if (height < 0.3) {
+        const t = Math.max(0, height / 0.3);
+        col.copy(COLOR_VALLEY).lerp(COLOR_LOWLAND, t);
+      } else if (height < 1.6) {
+        const t = (height - 0.3) / 1.3;
+        col.copy(COLOR_LOWLAND).lerp(COLOR_MIDLAND, t);
+      } else if (height < 3.4) {
+        const t = (height - 1.6) / 1.8;
+        col.copy(COLOR_MIDLAND).lerp(COLOR_HIGHLAND, t);
+      } else {
+        const t = Math.min(1.0, (height - 3.4) / 3.2);
+        col.copy(COLOR_HIGHLAND).lerp(COLOR_PEAK, t);
+      }
+      return col;
+    }
+
+    const GRID_SIZE = 28;
+    const GRID_SEGS = 58;
+    const terrainGeo = new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE, GRID_SEGS, GRID_SEGS);
+    terrainGeo.rotateX(-Math.PI / 2);
+
+    const posAttr = terrainGeo.attributes.position;
+    const count = posAttr.count;
+    const colors = new Float32Array(count * 3);
+    const initialPositions = new Float32Array(posAttr.array);
+
+    // 自然な起伏
+    for (let i = 0; i < count; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      const h = Math.sin(vx * 0.26) * Math.cos(vz * 0.26) * 0.24 +
+                Math.sin(vx * 0.52 + 1.2) * Math.cos(vz * 0.52) * 0.12;
+      posAttr.setY(i, h);
+      initialPositions[i * 3 + 1] = h;
+    }
+    terrainGeo.computeVertexNormals();
+
+    function updateTerrainColors() {
+      const colAttr = terrainGeo.attributes.color;
+      for (let i = 0; i < count; i++) {
+        const y = posAttr.getY(i);
+        const c = getTerrainColor(y);
+        colAttr.setXYZ(i, c.r, c.g, c.b);
+      }
+      colAttr.needsUpdate = true;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const c = getTerrainColor(posAttr.getY(i));
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+    terrainGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      flatShading: true,
+      roughness: 0.85,
+      metalness: 0.05
+    });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.receiveShadow = true;
+    terrainGroup.add(terrain);
+
+    // --- 状態管理 ---
+    let currentMode = 'camera';
+    let isMouseDown = false;
+    let balseState = null;
+    let debrisParticles = [];
+    const islands = [];
+
+    const SCULPT_RADIUS = 7.5;
+    const DRAG_SCULPT_POWER = 0.045;
+    const CLICK_SCULPT_POWER = 0.12;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function getTerrainHeightAt(x, z) {
+      let closestDist = Infinity;
+      let closestHeight = 0;
+      for (let i = 0; i < count; i++) {
+        const dist = Math.hypot(posAttr.getX(i) - x, posAttr.getZ(i) - z);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestHeight = posAttr.getY(i);
+        }
+      }
+      return closestHeight;
+    }
+
+    function sculptTerrain(centerPoint, power, updateColor = true) {
+      for (let i = 0; i < count; i++) {
+        const vx = posAttr.getX(i);
+        const vz = posAttr.getZ(i);
+        const dist = Math.hypot(vx - centerPoint.x, vz - centerPoint.z);
+
+        if (dist < SCULPT_RADIUS) {
+          const falloff = 0.5 * (1 + Math.cos((dist / SCULPT_RADIUS) * Math.PI));
+          const currentY = posAttr.getY(i);
+          posAttr.setY(i, currentY + power * falloff);
+        }
+      }
+      posAttr.needsUpdate = true;
+      terrainGeo.computeVertexNormals();
+      if (updateColor) updateTerrainColors();
+    }
+
+    // --- 自然な山形（立体的な峰と岩盤底面）の浮島ジオメトリ ---
+    function createMountainIslandMesh() {
+      const radius = 1.6 + Math.random() * 0.3;
+      const topHeight = 1.35 + Math.random() * 0.35;    // 山頂の高さ
+      const bottomDepth = 0.85 + Math.random() * 0.25;  // 岩盤底面の深さ
+      const radialSegs = 20;
+      const heightSegs = 14;
+
+      const geo = new THREE.SphereGeometry(radius, radialSegs, heightSegs);
+      const pos = geo.attributes.position;
+      const pCount = pos.count;
+      const colors = new Float32Array(pCount * 3);
+
+      const seed = Math.random() * 100;
+
+      for (let i = 0; i < pCount; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+
+        const r = Math.hypot(x, z);
+        const normR = Math.min(1.0, r / radius);
+
+        // 自然な尾根・岩肌の起伏ノイズ
+        const noise = (Math.sin(x * 3.4 + seed) + Math.cos(z * 3.4 + seed) + Math.sin(y * 4.2)) * 0.12;
+
+        if (y >= 0) {
+          // 上部：山頂（ピーク）を持つ立体的な山形
+          const hCurve = Math.cos(normR * Math.PI * 0.5); // 中心で1、裾野で0
+          y = (hCurve ** 1.35) * topHeight + noise * (1.0 - normR * 0.35);
+          x += noise * 0.45;
+          z += noise * 0.45;
+
+          // 標高に応じた美しい緑のグラデーション
+          const t = Math.max(0, Math.min(1.0, y / topHeight));
+          const col = COLOR_LOWLAND.clone().lerp(COLOR_HIGHLAND, t);
+          colors[i * 3] = col.r;
+          colors[i * 3 + 1] = col.g;
+          colors[i * 3 + 2] = col.b;
+        } else {
+          // 下部：下に向かってすぼまる有機的な岩盤
+          const bCurve = Math.cos(normR * Math.PI * 0.5);
+          y = -(bCurve ** 1.1) * bottomDepth + noise * 0.8;
+          x += noise * 0.6;
+          z += noise * 0.6;
+
+          const t = Math.max(0, Math.min(1.0, (y + bottomDepth) / bottomDepth));
+          const earthColor = new THREE.Color(0x352b20).lerp(new THREE.Color(0x1f3319), t);
+          colors[i * 3] = earthColor.r;
+          colors[i * 3 + 1] = earthColor.g;
+          colors[i * 3 + 2] = earthColor.b;
+        }
+
+        pos.setXYZ(i, x, y, z);
+      }
+
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.computeVertexNormals();
+
+      const mat = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        flatShading: true,
+        roughness: 0.85,
+        metalness: 0.05
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      return { mesh, height: topHeight + bottomDepth, bottomDepth };
+    }
+
+    // --- ☁️ 浮島の追加 ---
+    function spawnIsland(pos) {
+      initAudio();
+      sound.pop();
+
+      const islandGroup = new THREE.Group();
+      const groundY = getTerrainHeightAt(pos.x, pos.z);
+      const targetY = groundY + 2.8;
+
+      const { mesh, height, bottomDepth } = createMountainIslandMesh();
+      islandGroup.add(mesh);
+      islandGroup.position.set(pos.x, targetY, pos.z);
+      islandsGroup.add(islandGroup);
+
+      const islandData = {
+        group: islandGroup,
+        mesh: mesh,
+        baseX: pos.x,
+        baseY: targetY,
+        baseZ: pos.z,
+        phase: Math.random() * Math.PI * 2,
+        state: 'floating',
+        attractProgress: 0,
+        height: height,
+        bottomDepth: bottomDepth
+      };
+      mesh.userData = { islandData };
+      islands.push(islandData);
+    }
+
+    // --- 浮島タップ：陸と引き合う ---
+    function triggerAttract(islandData) {
+      if (islandData.state !== 'floating') return;
+      initAudio();
+      sound.attract();
+
+      islandData.state = 'attracting';
+      islandData.attractProgress = 0;
+      spawnAttractParticles(islandData.group.position);
+    }
+
+    function spawnAttractParticles(origin) {
+      for (let i = 0; i < 20; i++) {
+        const geo = new THREE.TetrahedronGeometry(0.1, 0);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.9 });
+        const p = new THREE.Mesh(geo, mat);
+        p.position.set(
+          origin.x + (Math.random() - 0.5) * 1.5,
+          origin.y - Math.random() * 1.5,
+          origin.z + (Math.random() - 0.5) * 1.5
+        );
+        debrisGroup.add(p);
+        debrisParticles.push({
+          mesh: p,
+          vx: (Math.random() - 0.5) * 0.04,
+          vy: -0.06 - Math.random() * 0.06,
+          vz: (Math.random() - 0.5) * 0.04,
+          rx: 0.1, ry: 0.1, rz: 0.1,
+          isSpark: true,
+          life: 0.8
+        });
+      }
+    }
+
+    // --- ◇ バルス（崩壊の試練） ---
+    function triggerBalse() {
+      initAudio();
+      if (islands.length === 0) return;
+
+      sound.flash();
+      triggerFlash();
+
+      for (let i = islands.length - 1; i >= 0; i--) {
+        const isl = islands[i];
+        if (isl.state === 'merged') {
+          // 一体化している山は崩れずそのまま残る
+          continue;
+        } else {
+          // 宙に浮いている島は墜落・崩壊
+          balseCollapseIsland(isl, i);
+        }
+      }
+    }
+
+    function balseCollapseIsland(isl, index) {
+      balseState = balseState || [];
+      balseState.push({
+        islandData: isl,
+        index: index,
+        phase: 'shake',
+        timer: 0,
+        vy: 0
+      });
+    }
+
+    function triggerFlash() {
+      flashOverlay.style.transition = 'none';
+      flashOverlay.style.opacity = '0.98';
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          flashOverlay.style.transition = 'opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1)';
+          flashOverlay.style.opacity = '0';
+        }, 60);
+      });
+    }
+
+    function spawnShatterDebris(origin, countNum, colorHex) {
+      for (let i = 0; i < countNum; i++) {
+        const radius = 0.18 + Math.random() * 0.3;
+        const geo = new THREE.DodecahedronGeometry(radius, 0);
+        const mat = new THREE.MeshStandardMaterial({
+          color: colorHex || 0x223e1d,
+          flatShading: true,
+          roughness: 0.8
+        });
+        const frag = new THREE.Mesh(geo, mat);
+        frag.position.set(
+          origin.x + (Math.random() - 0.5) * 1.5,
+          origin.y + Math.random() * 0.8,
+          origin.z + (Math.random() - 0.5) * 1.5
+        );
+        const angle = Math.random() * Math.PI * 2;
+        const hSpeed = 0.08 + Math.random() * 0.25;
+
+        debrisGroup.add(frag);
+        debrisParticles.push({
+          mesh: frag,
+          vx: Math.cos(angle) * hSpeed,
+          vy: 0.12 + Math.random() * 0.28,
+          vz: Math.sin(angle) * hSpeed,
+          rx: (Math.random() - 0.5) * 0.3,
+          ry: (Math.random() - 0.5) * 0.3,
+          rz: (Math.random() - 0.5) * 0.3,
+          bounces: 0
+        });
+      }
+    }
+
+    function clearGroup(group) {
+      while (group.children.length > 0) {
+        group.remove(group.children[0]);
+      }
+    }
+
+    // --- リセット ---
+    function resetSimulation() {
+      initAudio();
+      balseState = null;
+      debrisParticles = [];
+      islands.length = 0;
+
+      for (let i = 0; i < count; i++) {
+        posAttr.setY(i, initialPositions[i * 3 + 1]);
+      }
+      posAttr.needsUpdate = true;
+      terrainGeo.computeVertexNormals();
+      updateTerrainColors();
+
+      clearGroup(islandsGroup);
+      clearGroup(debrisGroup);
+    }
+
+    // --- UI コントロール ---
+    const buttons = {
+      camera: document.getElementById('btn-camera'),
+      bottomup: document.getElementById('btn-bottomup'),
+      island: document.getElementById('btn-island')
+    };
+
+    function setMode(mode) {
+      initAudio();
+      currentMode = mode;
+      Object.keys(buttons).forEach(key => {
+        buttons[key].classList.toggle('active', key === mode);
+      });
+      controls.enabled = (mode === 'camera');
+    }
+
+    buttons.camera.addEventListener('click', () => setMode('camera'));
+    buttons.bottomup.addEventListener('click', () => setMode('bottomup'));
+    buttons.island.addEventListener('click', () => setMode('island'));
+
+    document.getElementById('btn-reset').addEventListener('click', resetSimulation);
+    document.getElementById('btn-balse').addEventListener('click', triggerBalse);
+
+    const btnSound = document.getElementById('btn-sound');
+    btnSound.addEventListener('click', () => {
+      initAudio();
+      isSoundMuted = !isSoundMuted;
+      btnSound.textContent = isSoundMuted ? '🔇' : '🔊';
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'b' || e.key === 'B') triggerBalse();
+    });
+
+    // --- レイキャスト判定 ---
+    function handlePointer(event, isClick) {
+      initAudio();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      // 浮島タップ判定
+      if (isClick && islands.length > 0) {
+        const islandMeshes = islands.map(isl => isl.mesh);
+        const islandHits = raycaster.intersectObjects(islandMeshes, true);
+        if (islandHits.length > 0) {
+          let hitObj = islandHits[0].object;
+          while (hitObj && !hitObj.userData.islandData && hitObj.parent) {
+            hitObj = hitObj.parent;
+          }
+          if (hitObj && hitObj.userData.islandData) {
+            triggerAttract(hitObj.userData.islandData);
+            return;
+          }
+        }
+      }
+
+      // 地面判定
+      const intersects = raycaster.intersectObject(terrain);
+      if (intersects.length > 0) {
+        const p = intersects[0].point;
+        if (currentMode === 'bottomup') {
+          sound.sculpt();
+          sculptTerrain(p, isClick ? CLICK_SCULPT_POWER : DRAG_SCULPT_POWER, true);
+        } else if (isClick && currentMode === 'island') {
+          spawnIsland(p);
+        }
+      }
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('#hud')) return;
+      isMouseDown = true;
+      handlePointer(e, true);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (isMouseDown && currentMode === 'bottomup') {
+        handlePointer(e, false);
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      isMouseDown = false;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- メインレンダーループ ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.1);
+      const t = clock.getElapsedTime();
+
+      // 各浮島の更新
+      islands.forEach(isl => {
+        if (isl.state === 'floating') {
+          isl.group.position.y = isl.baseY + Math.sin(t * 2.0 + isl.phase) * 0.08;
+        } else if (isl.state === 'attracting') {
+          isl.attractProgress += dt * 0.85;
+
+          // 浮島が少し下へ引き寄せられる
+          isl.group.position.y = THREE.MathUtils.lerp(isl.baseY, isl.baseY - 0.4, Math.min(1.0, isl.attractProgress));
+
+          // 真下の大地がググッと隆起
+          const liftAmount = Math.sin(Math.min(1.0, isl.attractProgress) * Math.PI * 0.5) * 0.085;
+          sculptTerrain(new THREE.Vector3(isl.baseX, 0, isl.baseZ), liftAmount, true);
+
+          const groundNow = getTerrainHeightAt(isl.baseX, isl.baseZ);
+          const islandBottomY = isl.group.position.y - isl.bottomDepth * 0.6;
+          if (groundNow >= islandBottomY || isl.attractProgress >= 1.0) {
+            isl.state = 'merged';
+            sound.merge();
+          }
+        }
+      });
+
+      // バルス崩壊アニメーション
+      if (balseState && balseState.length > 0) {
+        for (let i = balseState.length - 1; i >= 0; i--) {
+          const bs = balseState[i];
+          const isl = bs.islandData;
+          bs.timer += dt;
+
+          if (bs.phase === 'shake') {
+            isl.group.position.x = isl.baseX + (Math.random() - 0.5) * 0.4;
+            isl.group.position.z = isl.baseZ + (Math.random() - 0.5) * 0.4;
+            isl.group.rotation.z = (Math.random() - 0.5) * 0.2;
+            if (bs.timer > 0.5) {
+              bs.phase = 'fall';
+            }
+          } else if (bs.phase === 'fall') {
+            bs.vy += 0.026;
+            isl.group.position.y -= bs.vy;
+            isl.group.rotation.x += 0.1;
+            isl.group.rotation.z += 0.12;
+
+            const groundY = getTerrainHeightAt(isl.group.position.x, isl.group.position.z);
+            if (isl.group.position.y <= groundY + 0.4) {
+              sound.crash();
+              spawnShatterDebris(
+                new THREE.Vector3(isl.group.position.x, groundY + 0.3, isl.group.position.z),
+                32
+              );
+              islandsGroup.remove(isl.group);
+              const idx = islands.indexOf(isl);
+              if (idx !== -1) islands.splice(idx, 1);
+              balseState.splice(i, 1);
+            }
+          }
+        }
+      }
+
+      // 破片パーティクル処理
+      for (let i = debrisParticles.length - 1; i >= 0; i--) {
+        const p = debrisParticles[i];
+        if (p.isSpark) {
+          p.mesh.position.x += p.vx;
+          p.mesh.position.y += p.vy;
+          p.mesh.position.z += p.vz;
+          p.life -= dt * 0.8;
+          p.mesh.material.opacity = Math.max(0, p.life);
+          if (p.life <= 0) {
+            debrisGroup.remove(p.mesh);
+            debrisParticles.splice(i, 1);
+          }
+          continue;
+        }
+
+        p.vy -= 0.013;
+        p.mesh.position.x += p.vx;
+        p.mesh.position.y += p.vy;
+        p.mesh.position.z += p.vz;
+        p.mesh.rotation.x += p.rx;
+        p.mesh.rotation.y += p.ry;
+        p.mesh.rotation.z += p.rz;
+
+        const gY = getTerrainHeightAt(p.mesh.position.x, p.mesh.position.z);
+        if (p.mesh.position.y <= gY + 0.15) {
+          p.mesh.position.y = gY + 0.15;
+          p.vy = -p.vy * 0.42;
+          p.vx *= 0.65;
+          p.vz *= 0.65;
+          p.bounces++;
+          if (p.bounces > 4) {
+            debrisParticles.splice(i, 1);
+          }
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.onload = function () {
+      animate();
+    };
+  </script>
+</body>
+</html>
+</html>
