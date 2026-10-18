@@ -24,7 +24,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #f2f2f7; /* SwiftUIの標準背景色（グレー） */
+            background-color: #ffffff; /* SwiftUIの標準背景色（グレー） */
             font-family: 'Klee One', sans-serif;
             user-select: none;
             -webkit-user-select: none;
@@ -267,6 +267,9 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
+        }
+        .modal-overlay.hidden {
+            display: none !important;
         }
         .history-modal-container {
             background: #f2f2f7;
@@ -574,6 +577,12 @@
             document.getElementById('history-modal').classList.add('hidden');
         });
 
+        document.getElementById('history-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'history-modal') {
+                document.getElementById('history-modal').classList.add('hidden');
+            }
+        });
+
         document.getElementById('btn-clear-history').addEventListener('click', () => {
             if (confirm('履歴をすべて消去しますか？')) {
                 localStorage.removeItem('suuji_touch_history');
@@ -604,17 +613,18 @@
             list.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'history-card-item';
-                const misses = item.missCount || 0;
-                const missText = misses === 0 ? 'ノーミス' : `ミス: ${misses}回`;
+                const misses = item.miss != null ? item.miss : (item.missCount || 0);
+                const maxVal = item.targetMax || item.maxValue || '';
+                const timeStr = item.time ? (String(item.time).includes('秒') ? item.time : `${item.time}秒`) : '0.00秒';
                 card.innerHTML = `
                     <div class="history-card-top">
                         <span class="history-card-date">${item.date || ''}</span>
-                        <span class="history-card-score">${item.time || '0.00'}秒</span>
+                        <span class="history-card-score">${timeStr}</span>
                     </div>
                     <div class="history-card-tags">
-                        <span class="history-tag">1〜${item.maxValue || ''}</span>
-                        <span class="history-tag">${item.grid || ''}</span>
-                        <span class="history-tag">${missText}</span>
+                        ${maxVal ? `<span class="history-tag">1〜${maxVal}</span>` : ''}
+                        ${item.grid ? `<span class="history-tag">${item.grid}</span>` : ''}
+                        ${misses > 0 ? `<span class="history-tag">❌ ${misses}回</span>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);

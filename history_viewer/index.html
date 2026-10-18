@@ -736,8 +736,12 @@
         function parseOoiSukunai(raw) {
             if (!Array.isArray(raw)) return [];
             return raw.map((item, idx) => {
+                const totalMistakes = item.details && Array.isArray(item.details)
+                    ? item.details.reduce((sum, d) => sum + (d.mistakes != null ? d.mistakes : (d.missCount || 0)), 0)
+                    : 0;
                 const scoreParts = (item.score || '').split('/');
-                const isPerfect = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                const scoreIsAll = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                const isPerfect = totalMistakes === 0 && (scoreIsAll || !item.score);
                 return {
                     id: `ooi_${item.id || idx}`,
                     appName: 'おおいすくない',
@@ -748,11 +752,18 @@
                     tags: [
                         item.step ? `設定: ${item.step}` : '',
                         item.pairs ? `${item.pairs}組ペア` : '',
-                        item.time || ''
+                        totalMistakes > 0 ? `❌ ${totalMistakes}回` : '',
+                        item.time ? `${item.time}` : ''
                     ].filter(Boolean),
-                    details: item.details ? item.details.map(d => 
-                        `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
-                    ).join('<br>') : null
+                    details: item.details && item.details.length > 0 ? item.details.map(d => {
+                        const qNum = d.index || d.questionNum || '';
+                        const emojis = d.emojis && Array.isArray(d.emojis) ? ` [${d.emojis.join(' ')}]` : '';
+                        const mode = d.modeText || d.targetType || '';
+                        const mCount = d.mistakes != null ? d.mistakes : (d.missCount || 0);
+                        const timeStr = d.time ? ` (${d.time})` : '';
+                        const mistakeText = mCount > 0 ? `<span class="error-tag">❌ ${mCount}回</span>` : '⭕️ 正解';
+                        return `第${qNum}問${emojis} ${mode}${timeStr} → ${mistakeText}`;
+                    }).join('<br>') : null
                 };
             });
         }
@@ -761,8 +772,12 @@
         function parseOokiiChiisai(raw) {
             if (!Array.isArray(raw)) return [];
             return raw.map((item, idx) => {
+                const totalMistakes = item.details && Array.isArray(item.details)
+                    ? item.details.reduce((sum, d) => sum + (d.mistakes != null ? d.mistakes : (d.missCount || 0)), 0)
+                    : 0;
                 const scoreParts = (item.score || '').split('/');
-                const isPerfect = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                const scoreIsAll = scoreParts.length === 2 && scoreParts[0].trim() === scoreParts[1].trim();
+                const isPerfect = totalMistakes === 0 && (scoreIsAll || !item.score);
                 return {
                     id: `ookii_${item.id || idx}`,
                     appName: 'おおきいちいさい',
@@ -773,11 +788,18 @@
                     tags: [
                         item.step ? `設定: ${item.step}` : '',
                         item.pairs ? `${item.pairs}組` : '',
-                        item.time || ''
+                        totalMistakes > 0 ? `❌ ${totalMistakes}回` : '',
+                        item.time ? `${item.time}` : ''
                     ].filter(Boolean),
-                    details: item.details ? item.details.map(d => 
-                        `第${d.questionNum}問 (${d.targetType}) → ${d.result} ${d.missCount ? `[ミス:${d.missCount}]` : ''}`
-                    ).join('<br>') : null
+                    details: item.details && item.details.length > 0 ? item.details.map(d => {
+                        const qNum = d.index || d.questionNum || '';
+                        const emojis = d.emojis && Array.isArray(d.emojis) ? ` [${d.emojis.join(' ')}]` : '';
+                        const mode = d.modeText || d.targetType || '';
+                        const mCount = d.mistakes != null ? d.mistakes : (d.missCount || 0);
+                        const timeStr = d.time ? ` (${d.time})` : '';
+                        const mistakeText = mCount > 0 ? `<span class="error-tag">❌ ${mCount}回</span>` : '⭕️ 正解';
+                        return `第${qNum}問${emojis} ${mode}${timeStr} → ${mistakeText}`;
+                    }).join('<br>') : null
                 };
             });
         }
@@ -798,11 +820,11 @@
                     scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
                     isPerfect: wrongs === 0 && corrects > 0,
                     tags: [
-                        `ミス: ${wrongs}回`,
+                        wrongs > 0 ? `❌ ${wrongs}回` : '',
                         item.time ? `所要時間: ${item.time}` : ''
                     ].filter(Boolean),
                     details: item.wrongWords && item.wrongWords.length > 0 ? 
-                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : 'ミスした言葉なし 💮'
+                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : null
                 };
             });
         }
@@ -823,12 +845,12 @@
                     scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
                     isPerfect: wrongs === 0 && corrects > 0,
                     tags: [
+                        wrongs > 0 ? `❌ ${wrongs}回` : '',
                         item.mode ? `モード: ${item.mode}` : '',
-                        item.candidateCount ? `候補: ${item.candidateCount}` : '',
-                        wrongs > 0 ? `ミス: ${wrongs}回` : 'ノーミス'
+                        item.candidateCount ? `候補: ${item.candidateCount}` : ''
                     ].filter(Boolean),
                     details: item.mistakes && item.mistakes.length > 0 ? 
-                        `<span class="error-tag">間違い履歴:</span> ${item.mistakes.map(m => typeof m === 'object' ? `${m.target || ''}を探すところで「${m.chosen || ''}」を選択` : m).join('<br>')}` : 'ノーミスクリア 💮'
+                        `<span class="error-tag">間違い履歴:</span> ${item.mistakes.map(m => typeof m === 'object' ? `${m.target || ''}を探すところで「${m.chosen || ''}」を選択` : m).join('<br>')}` : null
                 };
             });
         }
@@ -849,9 +871,9 @@
                     scoreText: `正解: ${clear}/${total}問 (${rate}%)`,
                     isPerfect: wrong === 0 && clear > 0,
                     tags: [
+                        wrong > 0 ? `❌ ${wrong}回` : '',
                         item.mode ? `モード: ${item.mode}` : '',
-                        item.targetNum ? `数の範囲: ${item.targetNum}` : '',
-                        wrong > 0 ? `ミス: ${wrong}回` : 'ノーミス'
+                        item.targetNum ? `数の範囲: ${item.targetNum}` : ''
                     ].filter(Boolean),
                     details: item.details ? item.details.map((d, i) => 
                         typeof d === 'object' ? `第${i+1}問: ${d.q || ''} → ${d.isCorrect ? '○' : '✕ (選んだ値: ' + (d.userAns || '') + ')'}` : d
@@ -876,8 +898,8 @@
                     scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
                     isPerfect: wrongs === 0 && corrects > 0,
                     tags: [
-                        total ? `全${total}問` : '',
-                        wrongs > 0 ? `ミス: ${wrongs}回` : 'ノーミス'
+                        wrongs > 0 ? `❌ ${wrongs}回` : '',
+                        total ? `全${total}問` : ''
                     ].filter(Boolean),
                     details: item.logs ? item.logs.map(l => `${l.word}: ${l.correct ? '○' : '✕ (入力: ' + (l.input || '') + ')'}`).join(', ') : null
                 };
@@ -892,11 +914,12 @@
                 appName: '数字タッチ',
                 appId: 'suuji_touch',
                 date: item.date || '日時不明',
-                scoreText: `タイム: ${item.time || ''} (1〜${item.targetMax})`,
+                scoreText: `タイム: ${item.time || ''}`,
                 isPerfect: item.isPerfect === true || item.miss === 0,
                 tags: [
+                    item.targetMax ? `1〜${item.targetMax}` : '',
                     item.grid ? `マス: ${item.grid}` : '',
-                    item.miss != null ? (item.miss > 0 ? `ミス ${item.miss}回` : 'ノーミス') : ''
+                    item.miss > 0 ? `❌ ${item.miss}回` : ''
                 ].filter(Boolean),
                 details: null
             }));
@@ -905,37 +928,52 @@
         // 9. 一つずつ配ろう
         function parse1tai1(raw) {
             if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `1tai1_${item.id || idx}`,
-                appName: '一つずつ配ろう',
-                appId: '1tai1',
-                date: item.date || '日時不明',
-                scoreText: item.score || `${item.totalRounds || 0}問クリア`,
-                isPerfect: true,
-                tags: [
-                    item.plateCount ? `お皿: ${item.plateCount}枚` : '',
-                    item.plateStyle ? `表示: ${item.plateStyle}` : ''
-                ].filter(Boolean),
-                details: null
-            }));
+            return raw.map((item, idx) => {
+                const miss = item.miss != null ? item.miss : 0;
+                const isPerfect = item.isPerfect != null ? item.isPerfect : (miss === 0);
+                const scoreStr = item.score || `${item.totalRounds || 0}問クリア`;
+                return {
+                    id: `1tai1_${item.id || idx}`,
+                    appName: '一つずつ配ろう',
+                    appId: '1tai1',
+                    date: item.date || '日時不明',
+                    scoreText: scoreStr,
+                    isPerfect: isPerfect,
+                    tags: [
+                        item.time || '',
+                        miss > 0 ? `❌ ${miss}回` : '',
+                        item.plateCount ? `お皿: ${item.plateCount}枚` : '',
+                        item.plateStyle ? `${item.plateStyle}` : '',
+                        item.orderMode ? `配り方: ${item.orderMode}` : ''
+                    ].filter(Boolean),
+                    details: null
+                };
+            });
         }
 
         // 10. 数字ならべ
         function parseSuujiNarabe(raw) {
             if (!Array.isArray(raw)) return [];
-            return raw.map((item, idx) => ({
-                id: `narabe_${item.id || idx}`,
-                appName: '数字ならべ',
-                appId: 'suuji_narabe',
-                date: item.date || '日時不明',
-                scoreText: item.score || `${item.totalQuestions || 0}問クリア`,
-                isPerfect: true,
-                tags: [
-                    item.range ? `範囲: ${item.range}` : '',
-                    item.mode ? `モード: ${item.mode}` : ''
-                ].filter(Boolean),
-                details: null
-            }));
+            return raw.map((item, idx) => {
+                const miss = item.miss != null ? item.miss : 0;
+                const isPerfect = item.isPerfect != null ? item.isPerfect : (miss === 0);
+                const scoreStr = item.score || `${item.totalQuestions || 0}問クリア`;
+                return {
+                    id: `narabe_${item.id || idx}`,
+                    appName: '数字ならべ',
+                    appId: 'suuji_narabe',
+                    date: item.date || '日時不明',
+                    scoreText: scoreStr,
+                    isPerfect: isPerfect,
+                    tags: [
+                        item.time || '',
+                        miss > 0 ? `❌ ${miss}回` : '',
+                        item.range ? `範囲: ${item.range}` : '',
+                        item.mode ? `${item.mode}` : ''
+                    ].filter(Boolean),
+                    details: null
+                };
+            });
         }
 
         // 11. 分割パズル
@@ -967,11 +1005,11 @@
                     appName: 'カテゴリー分類',
                     appId: 'category_bunrui',
                     date: item.date || '日時不明',
-                    scoreText: `${item.questionsCompleted || 0}問クリア (ミス ${mistakes}回)`,
+                    scoreText: `${item.questionsCompleted || 0}問クリア`,
                     isPerfect: mistakes === 0,
                     tags: [
-                        item.totalImagesPlaced ? `配置数: ${item.totalImagesPlaced}個` : '',
-                        mistakes === 0 ? 'ノーミス' : `ミス: ${mistakes}回`
+                        mistakes > 0 ? `❌ ${mistakes}回` : '',
+                        item.totalImagesPlaced ? `配置数: ${item.totalImagesPlaced}個` : ''
                     ].filter(Boolean),
                     details: null
                 };
@@ -988,14 +1026,14 @@
                     appName: '数えよう基礎',
                     appId: 'kazoeyou_kiso',
                     date: item.date || '日時不明',
-                    scoreText: `${item.cleared || item.total || 0}問クリア (ミス ${misses}回)`,
+                    scoreText: `${item.cleared || item.total || 0}問クリア`,
                     isPerfect: misses === 0,
                     tags: [
+                        item.duration ? `時間: ${item.duration}秒` : '',
+                        misses > 0 ? `❌ ${misses}回` : '',
                         item.mode ? `モード: ${item.mode}` : '',
                         item.range ? `範囲: ${item.range}` : '',
-                        item.pieces ? `円の数: ${item.pieces}` : '',
-                        misses === 0 ? 'ノーミス' : `ミス: ${misses}回`,
-                        item.duration ? `時間: ${item.duration}秒` : ''
+                        item.pieces ? `円の数: ${item.pieces}` : ''
                     ].filter(Boolean),
                     details: null
                 };

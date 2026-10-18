@@ -490,7 +490,7 @@
     </div>
 
     <!-- 履歴モーダル -->
-    <div id="history-modal" class="modal-overlay hidden">
+    <div id="history-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeHistoryModal()">
         <div class="history-modal-container">
             <div class="history-modal-header">
                 <span class="history-modal-title">プレイ履歴</span>
@@ -765,14 +765,18 @@
             list.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'history-card-item';
+                const misses = item.miss != null ? item.miss : 0;
+                const timeText = item.time ? (String(item.time).includes('秒') ? item.time : `${item.time}秒`) : '';
                 card.innerHTML = `
                     <div class="history-card-top">
                         <span class="history-card-date">${item.date || ''}</span>
                         <span class="history-card-score">${item.score || `${item.totalQuestions || 0}問クリア`}</span>
                     </div>
                     <div class="history-card-tags">
+                        ${timeText ? `<span class="history-tag">${timeText}</span>` : ''}
+                        ${misses > 0 ? `<span class="history-tag">❌ ${misses}回</span>` : ''}
                         ${item.range ? `<span class="history-tag">範囲: ${item.range}</span>` : ''}
-                        ${item.mode ? `<span class="history-tag">モード: ${item.mode}</span>` : ''}
+                        ${item.mode ? `<span class="history-tag">${item.mode}</span>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
@@ -787,10 +791,14 @@
         let zIndexCounter = 10;
         const SIDE_PADDING = 24;
         let isCleared = false; // クリア状態を管理するフラグ
+        let gameStartTime = 0;
+        let totalMistakes = 0;
 
         function startGame() {
             initAudio();
             currentQuestion = 1;
+            totalMistakes = 0;
+            gameStartTime = Date.now();
             saveSettings();
             showScreen('play-screen');
             prepareQuestion();
@@ -885,14 +893,19 @@
                 const dateStr = now.toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 const historyList = JSON.parse(localStorage.getItem('suuji_narabe_history') || '[]');
                 const modeLabel = settings.mode === 'all' ? 'ぜんぶ並べる' : (settings.mode === 'random' ? 'ランダム空き' : '一部固定');
+                const elapsedSec = gameStartTime > 0 ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : null;
+                const timeStr = elapsedSec ? `${elapsedSec}秒` : '';
+
                 historyList.unshift({
                     id: Date.now(),
                     date: dateStr,
                     totalQuestions: settings.maxQuestions,
                     range: `${settings.min}〜${settings.max}`,
                     mode: modeLabel,
-                    score: `${settings.maxQuestions}/${settings.maxQuestions}問クリア`,
-                    isPerfect: true
+                    time: timeStr,
+                    miss: totalMistakes,
+                    score: `${settings.maxQuestions}問クリア`,
+                    isPerfect: totalMistakes === 0
                 });
                 if (historyList.length > 50) historyList.length = 50;
                 localStorage.setItem('suuji_narabe_history', JSON.stringify(historyList));
@@ -1108,6 +1121,7 @@
             const allFilled = panels.every(p => p.answer !== null);
             if (!allFilled) return;
             let allCorrect = true;
+            let wrongCount = 0;
             panels.forEach(panel => {
                 const block = blocks.find(b => b.num === panel.answer);
                 if (!block) return;
@@ -1120,8 +1134,12 @@
                     block.el.classList.remove('correct');
                     moveBlockTo(block, block.startX, block.startY);
                     allCorrect = false;
+                    wrongCount++;
                 }
             });
+            if (wrongCount > 0) {
+                totalMistakes += wrongCount;
+            }
             if (allCorrect) {
                 isCleared = true; // すべて正解したらクリア状態にする
                 playCorrectSound();

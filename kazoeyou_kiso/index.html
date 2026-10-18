@@ -808,7 +808,6 @@
                 const card = document.createElement('div');
                 card.className = 'history-card-item';
                 const misses = item.misses || 0;
-                const missText = misses === 0 ? 'ノーミス' : `ミス: ${misses}回`;
                 const secText = item.duration ? `${item.duration}秒` : '';
                 card.innerHTML = `
                     <div class="history-card-top">
@@ -816,10 +815,10 @@
                         <span class="history-card-score">${item.cleared || item.total || 0}問クリア</span>
                     </div>
                     <div class="history-card-tags">
+                        ${secText ? `<span class="history-tag">${secText}</span>` : ''}
+                        ${misses > 0 ? `<span class="history-tag">❌ ${misses}回</span>` : ''}
                         ${item.mode ? `<span class="history-tag">${item.mode}</span>` : ''}
                         ${item.range ? `<span class="history-tag">範囲: ${item.range}</span>` : ''}
-                        <span class="history-tag">${missText}</span>
-                        ${secText ? `<span class="history-tag">${secText}</span>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
