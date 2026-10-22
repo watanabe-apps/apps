@@ -217,6 +217,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
+            line-height: 1;
             color: #1a202c;
             border-radius: 12px;
             transition: transform 0.15s ease;
@@ -268,19 +269,19 @@
             border: none;
         }
 
-        /* ドラッグする文字（不透明度90%、常に最前面 z-index: 1000） */
+        /* ドラッグする文字（ドロップ先と100%同寸法・不透明度90%、常に最前面 z-index: 1000） */
         #draggable-char-node {
             position: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            border-radius: 16px;
+            line-height: 1;
+            border-radius: 12px;
             cursor: grab;
             touch-action: none;
             z-index: 1000;
             opacity: 0.9; /* うっすら下の文字が見えるように不透明度90% */
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
             box-sizing: border-box;
             user-select: none;
         }
@@ -297,14 +298,14 @@
         #draggable-char-node.with-border {
             color: #0f172a;
             background-color: #ffffff;
-            border: 3px solid var(--primary);
+            border: 2px solid var(--primary);
             box-shadow: 0 4px 14px rgba(0, 122, 255, 0.2);
         }
 
         #draggable-char-node:active,
         #draggable-char-node.dragging {
             cursor: grabbing;
-            transform: scale(1.06);
+            transform: none; /* 拡大させず、ドロップ先と等倍でピッタリ重ねる */
             z-index: 1001;
         }
 
@@ -314,7 +315,7 @@
 
         /* 判定エフェクト（マル・バツ） */
         .feedback-overlay {
-            position: absolute;
+            position: fixed;
             pointer-events: none;
             display: flex;
             align-items: center;
@@ -379,6 +380,27 @@
         #settings-screen {
             background-color: #f8fafc;
             z-index: 2000;
+            overflow: hidden;
+        }
+
+        /* 設定画面内の縦スクロールを完全に許可（iOS/iPad/タッチ対応） */
+        #settings-screen,
+        #settings-screen .settings-body-split,
+        #settings-screen .settings-left-pane,
+        #settings-screen .setting-group,
+        #settings-screen .ios-setting-card,
+        #settings-screen .gojuon-scroll-box,
+        #settings-screen .bottom-kana-wrapper,
+        #settings-screen .gojuon-board,
+        #settings-screen .youon-block,
+        #history-modal,
+        #history-modal .history-dialog-list {
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #settings-screen input[type="range"] {
+            touch-action: pan-x !important;
         }
 
         .settings-header-bar {
@@ -444,17 +466,20 @@
 
         .settings-body-split {
             flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: row;
             overflow: hidden;
             width: 100%;
         }
 
-        /* 左側ペイン */
+        /* 左側ペイン：最下部まで余裕を持ってスクロール可能に */
         .settings-left-pane {
             flex: 1.2;
+            min-height: 0;
             overflow-y: auto;
-            padding: 24px 28px;
+            -webkit-overflow-scrolling: touch;
+            padding: 24px 28px 100px 28px;
             display: flex;
             flex-direction: column;
             gap: 22px;
@@ -465,6 +490,7 @@
         /* 右側ペイン */
         .settings-right-pane {
             flex: 1;
+            min-height: 0;
             background-color: #f1f5f9;
             padding: 24px;
             display: flex;
@@ -478,10 +504,16 @@
         @media (max-width: 860px) {
             .settings-body-split {
                 flex-direction: column;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .settings-left-pane {
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
+                flex: none;
+                min-height: auto;
+                overflow-y: visible;
+                padding: 20px 18px 90px 18px;
             }
             .settings-right-pane {
                 display: none;
@@ -657,8 +689,8 @@
         }
 
         .gojuon-scroll-box {
-            max-height: 380px;
-            overflow-y: auto;
+            max-height: none;
+            overflow: visible;
             border: 1px solid var(--border-color);
             border-radius: 14px;
             padding: 14px;
@@ -932,7 +964,10 @@
 
         .history-dialog-list {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y !important;
             padding: 14px 18px;
             display: flex;
             flex-direction: column;
@@ -1230,6 +1265,7 @@
         ];
 
         const YOUON_CHARS = ['っ', 'ゃ', 'ゅ', 'ょ'];
+        const YOUON_COL = { name: '拗音', chars: ['っ', 'ゃ', 'ゅ', 'ょ', null] };
 
         const SEION_CHARS = SEION_COLS.flatMap(c => c.chars.filter(x => x !== null));
 
@@ -1422,8 +1458,10 @@
 
         let isDragging = false;
         let dragPointerId = null;
-        let dragStartPointerX = 0;
-        let dragStartPointerY = 0;
+        let dragTouchOffsetX = 0;
+        let dragTouchOffsetY = 0;
+        let initialDownX = 0;
+        let initialDownY = 0;
         let currentElemX = 0;
         let currentElemY = 0;
 
@@ -1532,12 +1570,14 @@
             const availH = stageH - topMargin - 8;
 
             if (appSettings.placementMode === 'gojuon') {
-                // 【50音配置】：清音（11列）＋ 選択されている濁音列（左側に追加）
+                // 【50音配置】：清音（11列）＋ 選択されている濁音列（左側に追加）＋ 選択されている拗音列（左端に追加）
                 const activeDakuonCols = DAKUON_COLS.filter(col => 
                     col.chars.some(c => c !== null && appSettings.selectedChars.includes(c))
                 );
+                const isYouonActive = YOUON_CHARS.some(c => appSettings.selectedChars.includes(c));
+                const activeYouonCols = isYouonActive ? [YOUON_COL] : [];
 
-                const totalColsList = [...SEION_COLS, ...activeDakuonCols];
+                const totalColsList = [...SEION_COLS, ...activeDakuonCols, ...activeYouonCols];
                 const cols = totalColsList.length;
                 const rows = 5;
 
@@ -1658,11 +1698,11 @@
             candidateLayer.appendChild(node);
         }
 
-        // 下部ドラッグ文字のセットアップ（枠線なし台座）
+        // 下部ドラッグ文字のセットアップ（候補文字と完全に同じ寸法・フォントサイズで生成）
         function setupDraggableSource() {
             const hasBorder = appSettings.hasBorder;
-            const sourceSize = Math.max(currentNodeSize, 56);
-            const sourceFontSize = Math.floor(sourceSize * (hasBorder ? 0.62 : 0.78));
+            const sourceSize = currentNodeSize;
+            const sourceFontSize = currentFontSize;
 
             dragSourceSlot.style.width = `${sourceSize}px`;
             dragSourceSlot.style.height = `${sourceSize}px`;
@@ -1681,19 +1721,20 @@
                 draggableNode.classList.remove('with-border');
             }
 
+            draggableNode.style.transition = 'none';
+            draggableNode.style.transform = 'none';
+
             const updatedSlotRect = dragSourceSlot.getBoundingClientRect();
             currentElemX = updatedSlotRect.left;
             currentElemY = updatedSlotRect.top;
 
             draggableNode.style.left = `${currentElemX}px`;
             draggableNode.style.top = `${currentElemY}px`;
-            draggableNode.style.transform = 'none';
-            draggableNode.style.transition = 'none';
             draggableNode.style.display = 'flex';
         }
 
         // ==========================================================================
-        // ドラッグ＆ドロップ インタラクション（間違い時もフィット）
+        // ドラッグ＆ドロップ インタラクション（位置ズレ・左上飛び完全防止版）
         // ==========================================================================
         draggableNode.addEventListener('pointerdown', onPointerDown);
 
@@ -1703,31 +1744,42 @@
 
             isDragging = true;
             dragPointerId = e.pointerId;
-            draggableNode.setPointerCapture(e.pointerId);
+            try {
+                draggableNode.setPointerCapture(e.pointerId);
+            } catch (err) {}
 
-            dragStartPointerX = e.clientX;
-            dragStartPointerY = e.clientY;
+            initialDownX = e.clientX;
+            initialDownY = e.clientY;
+
+            // draggableNode の現在の絶対矩形を取得
+            const nodeRect = draggableNode.getBoundingClientRect();
+            currentElemX = nodeRect.left;
+            currentElemY = nodeRect.top;
+
+            // タップ位置と文字要素左上のオフセット（ズレ）を正確に保持
+            dragTouchOffsetX = e.clientX - currentElemX;
+            dragTouchOffsetY = e.clientY - currentElemY;
 
             draggableNode.classList.add('dragging');
             draggableNode.style.transition = 'none';
 
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
-            window.addEventListener('pointercancel', onPointerUp);
+            window.addEventListener('pointermove', onPointerMove, { passive: false });
+            window.addEventListener('pointerup', onPointerUp, { passive: false });
+            window.addEventListener('pointercancel', onPointerUp, { passive: false });
         }
 
         function onPointerMove(e) {
             if (!isDragging || e.pointerId !== dragPointerId) return;
             e.preventDefault();
 
-            const deltaX = e.clientX - dragStartPointerX;
-            const deltaY = e.clientY - dragStartPointerY;
+            // iOS Safari等の異常座標（画面外・終了時の0,0）をガード
+            if (e.clientX <= 0 && e.clientY <= 0) return;
 
-            const nextX = currentElemX + deltaX;
-            const nextY = currentElemY + deltaY;
+            currentElemX = e.clientX - dragTouchOffsetX;
+            currentElemY = e.clientY - dragTouchOffsetY;
 
-            draggableNode.style.left = `${nextX}px`;
-            draggableNode.style.top = `${nextY}px`;
+            draggableNode.style.left = `${currentElemX}px`;
+            draggableNode.style.top = `${currentElemY}px`;
         }
 
         function onPointerUp(e) {
@@ -1745,18 +1797,27 @@
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerUp);
 
-            const deltaX = e.clientX - dragStartPointerX;
-            const deltaY = e.clientY - dragStartPointerY;
-
-            // 移動量がほとんどない場合（静止タップ）は文字を発音
-            if (Math.hypot(deltaX, deltaY) < 6) {
-                speakChar(currentTargetChar);
-                return;
+            // 有効な座標が取得できている場合は最終更新
+            if (e.clientX > 0 || e.clientY > 0) {
+                const moveDist = Math.hypot(e.clientX - initialDownX, e.clientY - initialDownY);
+                // 移動量がごくわずかな場合（タップ）は発音して終了
+                if (moveDist < 8) {
+                    speakChar(currentTargetChar);
+                    return;
+                }
+                currentElemX = e.clientX - dragTouchOffsetX;
+                currentElemY = e.clientY - dragTouchOffsetY;
+            } else {
+                // clientX/Y が 0 の場合（iOS等の終了時異常値）は、直前の pointermove 位置からタップ判定
+                const dragRect = draggableNode.getBoundingClientRect();
+                const startSlotRect = dragSourceSlot.getBoundingClientRect();
+                if (Math.hypot(dragRect.left - startSlotRect.left, dragRect.top - startSlotRect.top) < 8) {
+                    speakChar(currentTargetChar);
+                    return;
+                }
             }
 
-            currentElemX = currentElemX + deltaX;
-            currentElemY = currentElemY + deltaY;
-
+            // 直前の追従位置を確定（絶対に左上に飛ばない）
             draggableNode.style.left = `${currentElemX}px`;
             draggableNode.style.top = `${currentElemY}px`;
 
@@ -1814,12 +1875,14 @@
             currentElemX = targetRect.left;
             currentElemY = targetRect.top;
 
-            draggableNode.style.transition = 'all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2)';
+            // アニメーションを明示的プロパティに限定し、ドロップ先と100%同じ位置・寸法・文字サイズにピッタリ一致
+            draggableNode.style.transition = 'left 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), top 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), width 0.18s ease, height 0.18s ease, font-size 0.18s ease';
             draggableNode.style.width = `${targetRect.width}px`;
             draggableNode.style.height = `${targetRect.height}px`;
+            draggableNode.style.fontSize = targetCandidateNode.style.fontSize;
             draggableNode.style.left = `${currentElemX}px`;
             draggableNode.style.top = `${currentElemY}px`;
-            draggableNode.style.transform = 'scale(1.04)';
+            draggableNode.style.transform = 'none';
 
             const maruSize = Math.max(targetRect.width * 1.2, 60);
             const maruOverlay = document.createElement('div');
@@ -1856,12 +1919,13 @@
             currentElemY = targetRect.top;
 
             // 間違えた文字の位置にピッタリフィット
-            draggableNode.style.transition = 'all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2)';
+            draggableNode.style.transition = 'left 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), top 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2), width 0.18s ease, height 0.18s ease, font-size 0.18s ease';
             draggableNode.style.width = `${targetRect.width}px`;
             draggableNode.style.height = `${targetRect.height}px`;
+            draggableNode.style.fontSize = targetCandidateNode.style.fontSize;
             draggableNode.style.left = `${currentElemX}px`;
             draggableNode.style.top = `${currentElemY}px`;
-            draggableNode.style.transform = 'scale(1.04)';
+            draggableNode.style.transform = 'none';
 
             const batsuSize = Math.max(targetRect.width * 1.1, 50);
             const batsuOverlay = document.createElement('div');
@@ -2266,7 +2330,10 @@
                 const activeDakuonCols = DAKUON_COLS.filter(col => 
                     col.chars.some(c => c !== null && appSettings.selectedChars.includes(c))
                 );
-                const totalColsList = [...SEION_COLS, ...activeDakuonCols];
+                const isYouonActive = YOUON_CHARS.some(c => appSettings.selectedChars.includes(c));
+                const activeYouonCols = isYouonActive ? [YOUON_COL] : [];
+
+                const totalColsList = [...SEION_COLS, ...activeDakuonCols, ...activeYouonCols];
                 const cols = totalColsList.length;
                 const rows = 5;
 

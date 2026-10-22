@@ -972,6 +972,65 @@
             line-height: 1.4;
         }
 
+        .history-details-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 6px;
+            padding-top: 8px;
+            border-top: 1px dashed #e2e2e8;
+        }
+
+        .history-detail-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            flex-wrap: wrap;
+        }
+
+        .history-detail-num {
+            font-size: 0.75rem;
+            color: #8e8e93;
+            min-width: 18px;
+            flex-shrink: 0;
+        }
+
+        .history-detail-word {
+            font-weight: 700;
+            color: #1c1c1e;
+            min-width: 48px;
+            flex-shrink: 0;
+        }
+
+        .history-detail-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .history-detail-status.correct {
+            color: #34c759;
+            font-weight: 700;
+        }
+
+        .history-detail-status.wrong {
+            color: #ff3b30;
+            font-weight: 700;
+        }
+
+        .history-detail-wrong-picks {
+            font-size: 0.78rem;
+            color: #c93400;
+            font-weight: 500;
+            background: #fff0e6;
+            padding: 2px 7px;
+            border-radius: 6px;
+            border: 1px solid #ffd8c2;
+        }
+
         /* ローディング＆トースト＆ダイアログ */
         .loading-overlay {
             display: none;
@@ -1492,7 +1551,19 @@
         let clearedCount = 0;
         let totalQuestionsInCurrentGame = 0;
         let currentGameWrongWords = [];
+        let currentGameDetails = [];
+        let currentQuestionWrongPicks = [];
         let ableToTap = true;
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
         let audioCtx = null;
         let currentUtterance = null;
 
@@ -1805,18 +1876,40 @@
                     const card = document.createElement('div');
                     card.className = 'history-card-item';
 
-                    const filteredWrongs = (item.wrongWords || []).filter(w => w !== 'もぐら');
-                    const hasWrong = filteredWrongs.length > 0;
-                    const wrongText = hasWrong ? `間違えた単語: ${[...new Set(filteredWrongs)].join('、')}` : '全問正解！🎉';
+                    let detailsHtml = '';
+                    if (item.details && Array.isArray(item.details) && item.details.length > 0) {
+                        const rows = item.details.map((d, idx) => {
+                            const isFirst = d.firstTry;
+                            const wrongPicks = (d.wrongPicks && d.wrongPicks.length > 0) ? d.wrongPicks : [];
+                            const statusHtml = isFirst
+                                ? '<span class="history-detail-status correct">◯</span>'
+                                : `<span class="history-detail-status wrong">❌ <span class="history-detail-wrong-picks">${escapeHtml(wrongPicks.join('、'))}</span></span>`;
+                            return `
+                                <div class="history-detail-row">
+                                    <span class="history-detail-num">${idx + 1}.</span>
+                                    <span class="history-detail-word">${escapeHtml(d.word || '')}</span>
+                                    ${statusHtml}
+                                </div>
+                            `;
+                        }).join('');
+                        detailsHtml = `<div class="history-details-list">${rows}</div>`;
+                    } else {
+                        const filteredWrongs = (item.wrongWords || []).filter(w => w !== 'もぐら');
+                        const hasWrong = filteredWrongs.length > 0;
+                        const wrongText = hasWrong ? `間違えた単語: ${[...new Set(filteredWrongs)].join('、')}` : '全問正解！🎉';
+                        detailsHtml = `
+                            <div class="history-wrong-words-text" style="${hasWrong ? '' : 'color:#34c759;'}">
+                                ${wrongText}
+                            </div>
+                        `;
+                    }
 
                     card.innerHTML = `
                         <div class="history-header-line">
                             <span>${item.date}</span>
                             <span class="history-score-badge">○: ${item.corrects} / ${item.totalQuestions} (×: ${item.wrongs})</span>
                         </div>
-                        <div class="history-wrong-words-text" style="${hasWrong ? '' : 'color:#34c759;'}">
-                            ${wrongText}
-                        </div>
+                        ${detailsHtml}
                     `;
                     historyContainer.appendChild(card);
                 });
@@ -2294,6 +2387,8 @@
             wrongs = 0;
             clearedCount = 0;
             currentGameWrongWords = [];
+            currentGameDetails = [];
+            currentQuestionWrongPicks = [];
             updateScoreUI();
 
             const backBtn = document.getElementById('btn-play-back');
@@ -2357,7 +2452,8 @@
                     totalQuestions: totalQuestionsInCurrentGame,
                     corrects: corrects,
                     wrongs: wrongs,
-                    wrongWords: [...currentGameWrongWords]
+                    wrongWords: [...currentGameWrongWords],
+                    details: [...currentGameDetails]
                 };
                 historyList.unshift(record);
                 if (historyList.length > 50) historyList.pop();
@@ -2367,6 +2463,7 @@
                 return;
             }
 
+            currentQuestionWrongPicks = [];
             document.getElementById('btn-replay-inline').style.display = 'flex';
             const randSlot = activeSlots[Math.floor(Math.random() * activeSlots.length)];
             targetCard = randSlot.card;
@@ -2403,6 +2500,14 @@
                 corrects++;
                 clearedCount++;
                 slot.isDone = true;
+
+                if (targetCard && targetCard.name) {
+                    currentGameDetails.push({
+                        word: targetCard.name,
+                        firstTry: currentQuestionWrongPicks.length === 0,
+                        wrongPicks: [...currentQuestionWrongPicks]
+                    });
+                }
 
                 const mark = document.createElement('div');
                 mark.className = 'mark-correct';
@@ -2442,6 +2547,9 @@
                 wrongs++;
                 if (targetCard && targetCard.name) {
                     currentGameWrongWords.push(targetCard.name);
+                }
+                if (slot.card && slot.card.name) {
+                    currentQuestionWrongPicks.push(slot.card.name);
                 }
 
                 const mark = document.createElement('div');

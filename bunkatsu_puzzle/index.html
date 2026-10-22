@@ -65,12 +65,14 @@
         <div id="setting-screen" class="screen">
             <div class="setting-container">
                 <div class="setting-header">
+                    <div class="setting-header-space"></div>
                     <span class="setting-title">設定</span>
+                    <button id="btn-done" class="btn-done-header">完了</button>
                 </div>
 
-                <!-- 2カラム配置エリア -->
+                <!-- 上部2カラム：設定とサンプルビュー / 下部全幅：写真管理 -->
                 <div class="setting-main-layout">
-                    <!-- 左カラム：各種設定・写真管理 -->
+                    <!-- 左カラム：各種設定 -->
                     <div class="setting-left-col">
                         <!-- 分割設定 -->
                         <div class="setting-section">
@@ -100,30 +102,18 @@
                                 <span>「もどる」ボタンを表示</span>
                                 <input type="checkbox" id="toggle-back-btn" checked>
                             </div>
-                        </div>
-
-                        <!-- 写真の登録・管理 -->
-                        <div class="setting-section">
-                            <div class="section-title">写真の登録・管理</div>
-                            <div class="photo-upload-row">
-                                <label for="file-input" class="btn-add-photo">写真を追加する</label>
-                                <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
-                            </div>
-                            <div id="photo-list" class="photo-list"></div>
-                            <div class="photo-actions">
-                                <button id="btn-clear-custom" class="btn-text-danger">追加した写真をすべて削除</button>
-                                <button id="btn-reset-presets" class="btn-text-subtle">サンプル写真に戻す</button>
+                            <div class="setting-row checkbox-row">
+                                <span>ドラッグ中にもくっつく</span>
+                                <input type="checkbox" id="toggle-live-snap">
                             </div>
                         </div>
-
-                        <button id="btn-done" class="btn-done">完了</button>
                     </div>
 
                     <!-- 右カラム：プレイ画面を忠実に再現したサンプルビュー -->
                     <div class="setting-right-col">
                         <div class="setting-section preview-section">
                             <div class="sample-view-title">サンプルビュー（プレイ画面）</div>
-                            <div class="preview-box">
+                            <div id="preview-box" class="preview-box">
                                 <div id="preview-btn-back" class="preview-btn-back">＜ もどる</div>
                                 <div class="preview-clear-count">0</div>
                                 <div id="preview-stage" class="preview-stage">
@@ -132,6 +122,20 @@
                             </div>
                             <div class="preview-hint">※設定した行数・列数・回転でピースが散らばる様子です</div>
                         </div>
+                    </div>
+
+                    <!-- 下部全幅：写真の登録・管理 -->
+                    <div class="setting-section photo-management-section">
+                        <div class="photo-management-header">
+                            <div class="section-title">写真の登録・管理</div>
+                            <div class="photo-actions">
+                                <label for="file-input" class="btn-add-photo">写真を追加する</label>
+                                <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
+                                <button id="btn-clear-custom" class="btn-text-danger">追加した写真をすべて削除</button>
+                                <button id="btn-reset-presets" class="btn-text-subtle">サンプル写真に戻す</button>
+                            </div>
+                        </div>
+                        <div id="photo-list" class="photo-list"></div>
                     </div>
                 </div>
             </div>

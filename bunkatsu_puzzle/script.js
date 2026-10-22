@@ -214,6 +214,7 @@ class PhotoPuzzleApp {
         this.questions = parseInt(localStorage.getItem('puzzle_questions') || '10', 10);
         this.allowRotation = localStorage.getItem('puzzle_allow_rotation') !== 'false';
         this.showBackButton = localStorage.getItem('puzzle_show_back_btn') !== 'false';
+        this.liveSnap = localStorage.getItem('puzzle_live_snap') === 'true'; // ドラッグ中にも吸着する設定（デフォルトOFF）
 
         // 状態
         this.numOfClear = 0;
@@ -248,6 +249,7 @@ class PhotoPuzzleApp {
             labelRows: document.getElementById('label-rows'),
             sliderCols: document.getElementById('slider-cols'),
             labelCols: document.getElementById('label-cols'),
+            previewBox: document.getElementById('preview-box'),
             previewStage: document.getElementById('preview-stage'),
             previewBtnBack: document.getElementById('preview-btn-back'),
 
@@ -255,6 +257,7 @@ class PhotoPuzzleApp {
             labelQuestions: document.getElementById('label-questions'),
             toggleRotation: document.getElementById('toggle-rotation'),
             toggleBackBtn: document.getElementById('toggle-back-btn'),
+            toggleLiveSnap: document.getElementById('toggle-live-snap'),
 
             fileInput: document.getElementById('file-input'),
             photoList: document.getElementById('photo-list'),
@@ -369,15 +372,40 @@ class PhotoPuzzleApp {
         // 戻るボタン
         this.dom.btnBackHome.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            // プレイ途中で戻る場合も、1問以上解いていれば履歴に中断記録として保存
+            if (this.numOfClear > 0 && !this.clear) {
+                this.saveHistory(false);
+            }
+            this.destroyPuzzle();
             this.showScreen('home');
+        });
+
+        // 画面リサイズ時にサンプルビューの比率と配置を再同期
+        window.addEventListener('resize', () => {
+            if (this.dom.settingScreen.classList.contains('active')) {
+                this.updateSampleView();
+            }
         });
 
         // 次へボタン
         this.dom.btnNext.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             this.dom.nextOverlay.classList.add('hidden');
+            this.destroyPuzzle();
             this.shuffleImages();
             this.loadCurrentPuzzle();
+        });
+
+        // グローバルなポインターキャンセル・解放のセーフティネット（ピースの操作不能バグを防止）
+        window.addEventListener('pointerup', (e) => {
+            if (this.activePointers && this.activePointers.has(e.pointerId)) {
+                this.endPointerSession(e.pointerId);
+            }
+        });
+        window.addEventListener('pointercancel', (e) => {
+            if (this.activePointers && this.activePointers.has(e.pointerId)) {
+                this.endPointerSession(e.pointerId);
+            }
         });
 
         // スライダー連動（サンプルビュー即時更新）
@@ -409,12 +437,14 @@ class PhotoPuzzleApp {
             this.questions = parseInt(this.dom.sliderQuestions.value, 10);
             this.allowRotation = this.dom.toggleRotation.checked;
             this.showBackButton = this.dom.toggleBackBtn.checked;
+            this.liveSnap = this.dom.toggleLiveSnap.checked;
 
             localStorage.setItem('puzzle_row', this.row);
             localStorage.setItem('puzzle_col', this.column);
             localStorage.setItem('puzzle_questions', this.questions);
             localStorage.setItem('puzzle_allow_rotation', this.allowRotation);
             localStorage.setItem('puzzle_show_back_btn', this.showBackButton);
+            localStorage.setItem('puzzle_live_snap', this.liveSnap);
 
             this.showScreen('home');
         });
@@ -476,6 +506,7 @@ class PhotoPuzzleApp {
         this.dom.labelQuestions.textContent = this.questions;
         this.dom.toggleRotation.checked = this.allowRotation;
         this.dom.toggleBackBtn.checked = this.showBackButton;
+        this.dom.toggleLiveSnap.checked = this.liveSnap;
     }
 
     // --- 写真データ管理 ---
@@ -560,15 +591,22 @@ class PhotoPuzzleApp {
     // --- サンプルビュー（プレイ画面を忠実に再現したリアルタイムプレビュー） ---
     updateSampleView() {
         const stage = this.dom.previewStage;
-        if (!stage) return;
+        const box = this.dom.previewBox;
+        if (!stage || !box) return;
         stage.innerHTML = '';
+
+        // プレイ画面（画面表示領域全体）と同じ縦横比を動的に維持
+        const vpW = window.innerWidth || 1024;
+        const vpH = window.innerHeight || 768;
+        box.style.aspectRatio = `${vpW} / ${vpH}`;
 
         const rows = parseInt(this.dom.sliderRows.value, 10);
         const cols = parseInt(this.dom.sliderCols.value, 10);
         const allowRot = this.dom.toggleRotation.checked;
+        const showBack = this.dom.toggleBackBtn.checked;
 
         if (this.dom.previewBtnBack) {
-            this.dom.previewBtnBack.classList.toggle('hidden', !this.dom.toggleBackBtn.checked);
+            this.dom.previewBtnBack.classList.toggle('hidden', !showBack);
         }
 
         if (this.images.length === 0) return;
@@ -576,29 +614,48 @@ class PhotoPuzzleApp {
 
         const img = new Image();
         img.onload = () => {
-            const stageW = stage.clientWidth || 360;
-            const stageH = stage.clientHeight || 270;
+            const stageW = stage.clientWidth || 320;
+            const stageH = stage.clientHeight || 240;
 
             const naturalW = img.naturalWidth || 800;
             const naturalH = img.naturalHeight || 800;
 
-            let pWidth = stageW * 0.72;
+            // プレイ画面の上部UI領域（戻るボタン・クリア数）を考慮した配置可能エリア
+            const topHeaderPad = showBack ? Math.max(28, Math.round(stageH * 0.16)) : 8;
+            const availW = Math.max(60, stageW - 16);
+            const availH = Math.max(60, stageH - topHeaderPad - 12);
+
+            let pWidth = availW * 0.675;
             let pHeight = (pWidth * naturalH) / naturalW;
-            if (pHeight > stageH * 0.72) {
-                pHeight = stageH * 0.72;
+            if (pHeight > availH * 0.675) {
+                pHeight = availH * 0.675;
                 pWidth = (pHeight * naturalW) / naturalH;
             }
 
-            const pieceW = Math.floor(pWidth / cols);
-            const pieceH = Math.floor(pHeight / rows);
+            let pieceW = Math.max(1, Math.floor(pWidth / cols));
+            let pieceH = Math.max(1, Math.floor(pHeight / rows));
+
+            // 回転時にピースが枠を絶対にはみ出さないよう、最大寸法に対して安全スケールを適用
+            const maxPieceVisW = allowRot ? Math.max(pieceW, pieceH) : pieceW;
+            const maxPieceVisH = allowRot ? Math.max(pieceW, pieceH) : pieceH;
+            let scaleDown = 1;
+            if (maxPieceVisW > availW * 0.95) {
+                scaleDown = Math.min(scaleDown, (availW * 0.95) / maxPieceVisW);
+            }
+            if (maxPieceVisH > availH * 0.95) {
+                scaleDown = Math.min(scaleDown, (availH * 0.95) / maxPieceVisH);
+            }
+            if (scaleDown < 1) {
+                pieceW = Math.max(1, Math.floor(pieceW * scaleDown));
+                pieceH = Math.max(1, Math.floor(pieceH * scaleDown));
+            }
+
             const srcPieceW = naturalW / cols;
             const srcPieceH = naturalH / rows;
 
+            const previewPieces = [];
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
-                    const offsetX = (((cols - 1) / 2) - c) * -pieceW;
-                    const offsetY = (((rows - 1) / 2) - r) * -pieceH;
-
                     const pCanvas = document.createElement('canvas');
                     pCanvas.width = pieceW;
                     pCanvas.height = pieceH;
@@ -610,20 +667,91 @@ class PhotoPuzzleApp {
                     );
 
                     const rot = allowRot ? ((r * 3 + c + 1) % 4) : 0;
+                    const visW = (rot % 2 === 1) ? pieceH : pieceW;
+                    const visH = (rot % 2 === 1) ? pieceW : pieceH;
 
-                    // プレビュー用に散らばり配置（決定論的配置でプレビューが安定）
-                    const minX = pieceW / 2 - offsetX;
-                    const maxX = Math.max(minX + 10, stageW - pieceW / 2 - offsetX);
-                    const minY = pieceH / 2 - offsetY;
-                    const maxY = Math.max(minY + 10, stageH - pieceH / 2 - offsetY);
+                    // ピースが枠を絶対にはみ出さない安全な中心座標範囲
+                    const margin = 4;
+                    let minStageX = margin + visW / 2;
+                    let maxStageX = stageW - margin - visW / 2;
+                    if (maxStageX < minStageX) {
+                        minStageX = maxStageX = stageW / 2;
+                    }
 
-                    const ratioX = ((c * 17 + r * 31) % 100) / 100;
-                    const ratioY = ((r * 23 + c * 47) % 100) / 100;
-                    const posX = minX + ratioX * (maxX - minX);
-                    const posY = minY + ratioY * (maxY - minY);
+                    let minStageY = topHeaderPad + visH / 2;
+                    let maxStageY = stageH - margin - visH / 2;
+                    if (maxStageY < minStageY) {
+                        minStageY = maxStageY = (topHeaderPad + stageH) / 2;
+                    }
 
-                    const left = posX + offsetX - pieceW / 2;
-                    const top = posY + offsetY - pieceH / 2;
+                    // グリッド分散候補
+                    const candidates = [];
+                    const gridCols = Math.max(3, cols + 1);
+                    const gridRows = Math.max(3, rows + 1);
+                    for (let gy = 0; gy < gridRows; gy++) {
+                        for (let gx = 0; gx < gridCols; gx++) {
+                            const u = (gx + 0.5) / gridCols;
+                            const v = (gy + 0.5) / gridRows;
+                            candidates.push({
+                                stageX: minStageX + u * (maxStageX - minStageX),
+                                stageY: minStageY + v * (maxStageY - minStageY)
+                            });
+                        }
+                    }
+
+                    let bestCand = candidates[0];
+                    let minOverlap = Infinity;
+                    let maxZeroDistSq = -1;
+
+                    for (const cand of candidates) {
+                        let totalOverlap = 0;
+                        let minDistSq = Infinity;
+
+                        for (const other of previewPieces) {
+                            const dx = Math.abs(cand.stageX - other.stageX);
+                            const dy = Math.abs(cand.stageY - other.stageY);
+                            const reqX = (visW + other.visW) / 2 + 4;
+                            const reqY = (visH + other.visH) / 2 + 4;
+
+                            if (dx < reqX && dy < reqY) {
+                                totalOverlap += (reqX - dx) * (reqY - dy);
+                            }
+                            const d2 = dx * dx + dy * dy;
+                            if (d2 < minDistSq) minDistSq = d2;
+                        }
+
+                        if (previewPieces.length === 0) {
+                            bestCand = cand;
+                            break;
+                        }
+
+                        if (totalOverlap === 0) {
+                            if (minDistSq > maxZeroDistSq) {
+                                maxZeroDistSq = minDistSq;
+                                bestCand = cand;
+                                minOverlap = 0;
+                            }
+                        } else if (minOverlap > 0) {
+                            if (totalOverlap < minOverlap) {
+                                minOverlap = totalOverlap;
+                                bestCand = cand;
+                            }
+                        }
+                    }
+
+                    // 厳格な境界クランプ（1ピクセルたりとも枠外にはみ出させない）
+                    const clampedCenterX = Math.max(visW / 2 + margin, Math.min(stageW - visW / 2 - margin, bestCand.stageX));
+                    const clampedCenterY = Math.max(visH / 2 + topHeaderPad, Math.min(stageH - visH / 2 - margin, bestCand.stageY));
+
+                    previewPieces.push({
+                        stageX: clampedCenterX,
+                        stageY: clampedCenterY,
+                        visW: visW,
+                        visH: visH
+                    });
+
+                    const left = clampedCenterX - pieceW / 2;
+                    const top = clampedCenterY - pieceH / 2;
 
                     const pieceElem = document.createElement('div');
                     pieceElem.className = 'preview-piece';
@@ -642,8 +770,24 @@ class PhotoPuzzleApp {
     }
 
     // --- ゲームプレイ ---
+    destroyPuzzle() {
+        if (this.dom.puzzleStage) {
+            this.dom.puzzleStage.innerHTML = '';
+        }
+        this.pieces = [];
+        this.activePointers.clear();
+        this.currentImage = null;
+        this.clear = false;
+        if (this.dom.nextOverlay) {
+            this.dom.nextOverlay.classList.add('hidden');
+        }
+    }
+
     startPlay() {
+        this.destroyPuzzle();
         this.startTime = Date.now();
+        this.currentQuestionStartTime = Date.now();
+        this.questionLogs = [];
         this.numOfClear = 0;
         this.dom.clearCount.textContent = String(this.numOfClear);
         this.dom.nextOverlay.classList.add('hidden');
@@ -672,6 +816,9 @@ class PhotoPuzzleApp {
         }
 
         const currentData = this.images[0];
+        this.currentPhotoName = currentData.name || '写真';
+        this.currentQuestionStartTime = Date.now();
+
         const img = new Image();
         img.onload = () => {
             this.currentImage = img;
@@ -690,9 +837,10 @@ class PhotoPuzzleApp {
 
     setupPuzzle() {
         const stage = this.dom.puzzleStage;
-        if (!stage) return;
+        if (!stage || !this.currentImage) return;
         stage.innerHTML = '';
         this.pieces = [];
+        this.activePointers.clear();
         this.maxZIndex = 10;
 
         // ステージサイズの確実な取得
@@ -702,11 +850,12 @@ class PhotoPuzzleApp {
         const naturalWidth = this.currentImage.naturalWidth || 800;
         const naturalHeight = this.currentImage.naturalHeight || 800;
 
-        let puzzleWidth = stageWidth * 0.75;
+        // ピースサイズを以前（0.75）の90%に設定 (0.75 * 0.9 = 0.675)
+        let puzzleWidth = stageWidth * 0.675;
         let puzzleHeight = (puzzleWidth * naturalHeight) / naturalWidth;
 
-        if (puzzleHeight > stageHeight * 0.75) {
-            puzzleHeight = stageHeight * 0.75;
+        if (puzzleHeight > stageHeight * 0.675) {
+            puzzleHeight = stageHeight * 0.675;
             puzzleWidth = (puzzleHeight * naturalWidth) / naturalHeight;
         }
 
@@ -735,43 +884,98 @@ class PhotoPuzzleApp {
                 );
 
                 const randomRot = this.allowRotation ? Math.floor(Math.random() * 4) : 0;
+                const visW = (randomRot % 2 === 1) ? pieceHeight : pieceWidth;
+                const visH = (randomRot % 2 === 1) ? pieceWidth : pieceHeight;
 
-                const minX = pieceWidth / 2 - offsetX;
-                const maxX = Math.max(minX + 10, stageWidth - pieceWidth / 2 - offsetX);
-                const minY = pieceHeight / 2 - offsetY;
-                const maxY = Math.max(minY + 10, stageHeight - pieceHeight / 2 - offsetY);
+                // ステージ内の安全な配置領域（UI要素との被り防止と端の余白）
+                const padX = Math.max(16, visW / 2 + 12);
+                const padY = Math.max(16, visH / 2 + 12);
+                const minStageX = padX;
+                const maxStageX = Math.max(minStageX + 20, stageWidth - padX);
+                let minStageY = 65 + visH / 2; // もどるボタンやクリア回数のヘッダー領域を避ける
+                let maxStageY = stageHeight - padY;
+                if (maxStageY - minStageY < 60) {
+                    minStageY = padY;
+                    maxStageY = Math.max(minStageY + 20, stageHeight - padY);
+                }
 
-                let position = { x: 0, y: 0 };
-                let success = false;
-
-                for (let attempt = 0; attempt < 100; attempt++) {
-                    const candidate = {
-                        x: minX + Math.random() * (maxX - minX),
-                        y: minY + Math.random() * (maxY - minY)
-                    };
-
-                    const overlap = this.pieces.some(other => {
-                        const p1 = { x: other.position.x + other.offset.width, y: other.position.y + other.offset.height };
-                        const p2 = { x: candidate.x + offsetX, y: candidate.y + offsetY };
-                        const size1 = (other.rotation % 2 === 1) ? { width: pieceHeight, height: pieceWidth } : { width: pieceWidth, height: pieceHeight };
-                        const size2 = (randomRot % 2 === 1) ? { width: pieceHeight, height: pieceWidth } : { width: pieceWidth, height: pieceHeight };
-                        return Math.abs(p1.x - p2.x) < (size1.width + size2.width) * 0.45 &&
-                               Math.abs(p1.y - p2.y) < (size1.height + size2.height) * 0.45;
+                // 候補座標の生成（グリッド分散候補 + ランダム候補）
+                const candidates = [];
+                const gridCols = 6;
+                const gridRows = 5;
+                for (let gy = 0; gy < gridRows; gy++) {
+                    for (let gx = 0; gx < gridCols; gx++) {
+                        const u = (gx + 0.15 + Math.random() * 0.7) / gridCols;
+                        const v = (gy + 0.15 + Math.random() * 0.7) / gridRows;
+                        candidates.push({
+                            stageX: minStageX + u * (maxStageX - minStageX),
+                            stageY: minStageY + v * (maxStageY - minStageY)
+                        });
+                    }
+                }
+                for (let k = 0; k < 30; k++) {
+                    candidates.push({
+                        stageX: minStageX + Math.random() * (maxStageX - minStageX),
+                        stageY: minStageY + Math.random() * (maxStageY - minStageY)
                     });
+                }
 
-                    if (!overlap) {
-                        position = candidate;
-                        success = true;
+                // 既存の配置済みピースとの重なり・距離評価
+                let bestCand = candidates[0];
+                let minOverlap = Infinity;
+                let maxZeroDistSq = -1;
+
+                for (const cand of candidates) {
+                    let totalOverlap = 0;
+                    let minDistSq = Infinity;
+
+                    for (const other of this.pieces) {
+                        const otherStageX = other.position.x + other.offset.width;
+                        const otherStageY = other.position.y + other.offset.height;
+                        const otherVisW = (other.rotation % 2 === 1) ? other.height : other.width;
+                        const otherVisH = (other.rotation % 2 === 1) ? other.width : other.height;
+
+                        const dx = Math.abs(cand.stageX - otherStageX);
+                        const dy = Math.abs(cand.stageY - otherStageY);
+                        const reqX = (visW + otherVisW) / 2 + 10;
+                        const reqY = (visH + otherVisH) / 2 + 10;
+
+                        if (dx < reqX && dy < reqY) {
+                            totalOverlap += (reqX - dx) * (reqY - dy);
+                        }
+
+                        const d2 = dx * dx + dy * dy;
+                        if (d2 < minDistSq) {
+                            minDistSq = d2;
+                        }
+                    }
+
+                    if (this.pieces.length === 0) {
+                        minOverlap = 0;
+                        bestCand = cand;
                         break;
+                    }
+
+                    if (totalOverlap === 0) {
+                        // 重なりゼロ：他ピースとの距離が最も離れている（散らばる）候補を優先
+                        if (minDistSq > maxZeroDistSq) {
+                            maxZeroDistSq = minDistSq;
+                            bestCand = cand;
+                            minOverlap = 0;
+                        }
+                    } else if (minOverlap > 0) {
+                        // 重なりが避けられない場合：重なり面積が最小の候補を選択
+                        if (totalOverlap < minOverlap) {
+                            minOverlap = totalOverlap;
+                            bestCand = cand;
+                        }
                     }
                 }
 
-                if (!success) {
-                    position = {
-                        x: minX + Math.random() * (maxX - minX),
-                        y: minY + Math.random() * (maxY - minY)
-                    };
-                }
+                const position = {
+                    x: bestCand.stageX - offsetX,
+                    y: bestCand.stageY - offsetY
+                };
 
                 const piece = new Piece({
                     row: r,
@@ -824,16 +1028,72 @@ class PhotoPuzzleApp {
         }
     }
 
+    endPointerSession(pointerId) {
+        const session = this.activePointers.get(pointerId);
+        if (!session) return;
+        this.activePointers.delete(pointerId);
+
+        const targetPiece = this.pieces[session.pieceIndex];
+
+        if (targetPiece && targetPiece.groupID) {
+            this.pieces.forEach(p => {
+                if (p.groupID === targetPiece.groupID && p.element) {
+                    p.element.classList.remove('dragging');
+                }
+            });
+        } else if (session.elem) {
+            session.elem.classList.remove('dragging');
+        }
+
+        try { session.elem.releasePointerCapture(pointerId); } catch (err) {}
+
+        if (!session.isDragging) {
+            // タップ判定：回転のロックをはずした（回転OFFの）ときは回転しない！
+            if (this.allowRotation && targetPiece) {
+                if (targetPiece.groupID) {
+                    targetPiece.rotation = 0;
+                } else {
+                    targetPiece.rotation = (targetPiece.rotation + 1) % 4;
+                }
+                this.renderAllPieces();
+            }
+        } else {
+            // ドラッグ終了：吸着判定
+            if (targetPiece) {
+                this.checkSnap(session.pieceIndex, false);
+                targetPiece.startPosition = { ...targetPiece.position };
+                if (targetPiece.groupID) {
+                    this.pieces.forEach(p => {
+                        if (p.groupID === targetPiece.groupID) {
+                            p.startPosition = { ...targetPiece.startPosition };
+                        }
+                    });
+                }
+                this.renderAllPieces();
+            }
+        }
+    }
+
     bindPiecePointerEvents(elem, pieceIndex) {
         elem.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             this.soundPlayer.init();
 
             const targetPiece = this.pieces[pieceIndex];
+            if (!targetPiece) return;
 
-            // 既にこのピースまたは同じグループが別の指でドラッグ中なら重複操作を防ぐ
+            // 既存のセッションがあればクリーンアップ
+            if (this.activePointers.has(e.pointerId)) {
+                this.activePointers.delete(e.pointerId);
+            }
+
+            // このピースまたは同じグループが別の有効な指で操作中かチェック
             for (const [pId, sess] of this.activePointers.entries()) {
                 const sessPiece = this.pieces[sess.pieceIndex];
+                if (!sessPiece) {
+                    this.activePointers.delete(pId);
+                    continue;
+                }
                 if (sess.pieceIndex === pieceIndex ||
                     (targetPiece.groupID && sessPiece.groupID && targetPiece.groupID === sessPiece.groupID)) {
                     return;
@@ -864,6 +1124,7 @@ class PhotoPuzzleApp {
             const dy = e.clientY - session.startY;
 
             const targetPiece = this.pieces[session.pieceIndex];
+            if (!targetPiece) return;
 
             if (!session.isDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
                 session.isDragging = true;
@@ -911,55 +1172,33 @@ class PhotoPuzzleApp {
                     });
                 }
                 this.renderAllPieces();
+
+                // ドラッグ中の吸着判定（設定がONの場合）
+                if (this.liveSnap && !this.clear) {
+                    const snapped = this.checkSnap(session.pieceIndex, true);
+                    if (snapped) {
+                        session.startX = e.clientX;
+                        session.startY = e.clientY;
+                        session.pieceStartPos = { ...targetPiece.position };
+                        if (targetPiece.groupID) {
+                            this.pieces.forEach(p => {
+                                if (p.groupID === targetPiece.groupID && p.element) {
+                                    p.element.classList.add('dragging');
+                                }
+                            });
+                        }
+                        this.renderAllPieces();
+                        if (this.clear) {
+                            this.endPointerSession(e.pointerId);
+                        }
+                    }
+                }
             }
         });
 
-        const handlePointerEnd = (e) => {
-            const session = this.activePointers.get(e.pointerId);
-            if (!session) return;
-            this.activePointers.delete(e.pointerId);
-
-            const targetPiece = this.pieces[session.pieceIndex];
-
-            if (targetPiece && targetPiece.groupID) {
-                this.pieces.forEach(p => {
-                    if (p.groupID === targetPiece.groupID && p.element) {
-                        p.element.classList.remove('dragging');
-                    }
-                });
-            } else {
-                elem.classList.remove('dragging');
-            }
-
-            try { elem.releasePointerCapture(e.pointerId); } catch (err) {}
-
-            if (!session.isDragging) {
-                // タップ判定：回転のロックをはずした（回転OFFの）ときは回転しない！
-                if (this.allowRotation) {
-                    if (targetPiece.groupID) {
-                        targetPiece.rotation = 0;
-                    } else {
-                        targetPiece.rotation = (targetPiece.rotation + 1) % 4;
-                    }
-                    this.renderAllPieces();
-                }
-            } else {
-                // ドラッグ終了：吸着判定
-                this.checkSnap(session.pieceIndex);
-                targetPiece.startPosition = { ...targetPiece.position };
-                if (targetPiece.groupID) {
-                    this.pieces.forEach(p => {
-                        if (p.groupID === targetPiece.groupID) {
-                            p.startPosition = { ...targetPiece.startPosition };
-                        }
-                    });
-                }
-                this.renderAllPieces();
-            }
-        };
-
-        elem.addEventListener('pointerup', handlePointerEnd);
-        elem.addEventListener('pointercancel', handlePointerEnd);
+        elem.addEventListener('pointerup', (e) => this.endPointerSession(e.pointerId));
+        elem.addEventListener('pointercancel', (e) => this.endPointerSession(e.pointerId));
+        elem.addEventListener('lostpointercapture', (e) => this.endPointerSession(e.pointerId));
     }
 
     renderAllPieces() {
@@ -977,11 +1216,14 @@ class PhotoPuzzleApp {
     }
 
     // --- 吸着判定 ---
-    checkSnap(offset) {
+    checkSnap(offset, isLive = false) {
         const piece = this.pieces[offset];
-        if (piece.rotation !== 0) return;
+        if (!piece || piece.rotation !== 0) return false;
 
-        const snapThreshold = 2500;
+        // 通常ドロップ時は判定半径50px (2500)、ドラッグ吸着時は1.5倍の判定半径75px (5625)
+        const isLiveSnapMode = isLive || this.liveSnap;
+        const snapRadius = isLiveSnapMode ? 75 : 50;
+        const snapThreshold = snapRadius * snapRadius;
         let anyConnected = false;
 
         let loopCount = 0;
@@ -1074,6 +1316,7 @@ class PhotoPuzzleApp {
         if (anyConnected) {
             this.soundPlayer.playTik();
             this.bringPieceToFront(offset);
+            this.renderAllPieces();
         }
 
         // クリア判定
@@ -1085,9 +1328,17 @@ class PhotoPuzzleApp {
                 this.soundPlayer.playPinpon();
                 this.dom.clearCount.textContent = String(this.numOfClear);
 
+                const qDur = Math.max(1, Math.round((Date.now() - (this.currentQuestionStartTime || this.startTime)) / 1000));
+                this.questionLogs.push({
+                    index: this.numOfClear,
+                    photoName: this.currentPhotoName || `第${this.numOfClear}問`,
+                    duration: qDur
+                });
+
                 if (this.numOfClear >= this.questions) {
-                    this.saveHistory();
+                    this.saveHistory(true);
                     setTimeout(() => {
+                        this.destroyPuzzle();
                         this.showScreen('home');
                     }, 1000);
                 } else {
@@ -1097,22 +1348,43 @@ class PhotoPuzzleApp {
                 }
             }
         }
+
+        return anyConnected;
     }
 
-    saveHistory() {
+    formatDuration(sec) {
+        if (!sec || sec <= 0) return '0秒';
+        if (sec < 60) return `${sec}秒`;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}分${s}秒`;
+    }
+
+    saveHistory(completed = true) {
         try {
             const now = new Date();
-            const dateStr = now.toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleString('ja-JP', {
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const totalDur = this.startTime ? Math.max(1, Math.round((Date.now() - this.startTime) / 1000)) : 0;
+            const avgDur = this.numOfClear > 0 ? (totalDur / this.numOfClear).toFixed(1) : '0';
+
             const item = {
                 date: dateStr,
                 total: this.questions,
                 cleared: this.numOfClear,
+                completed: completed,
                 rows: this.row,
                 cols: this.column,
                 piecesCount: this.row * this.column,
                 rotation: this.allowRotation,
-                duration: this.startTime ? Math.round((Date.now() - this.startTime) / 1000) : 0,
-                completed: true
+                liveSnap: this.liveSnap,
+                duration: totalDur,
+                avgDuration: avgDur,
+                questions: [...(this.questionLogs || [])]
             };
             const list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
             list.unshift(item);
@@ -1139,26 +1411,87 @@ class PhotoPuzzleApp {
         } catch (e) {}
 
         if (list.length === 0) {
-            listEl.innerHTML = '<div style="text-align:center; padding: 30px; color:#8e8e93; font-weight:700;">履歴がありません</div>';
+            listEl.innerHTML = '<div style="text-align:center; padding: 40px; color:#8e8e93; font-weight:700;">履歴はありません</div>';
             return;
         }
 
         list.forEach(item => {
             const card = document.createElement('div');
             card.className = 'history-card-item';
-            const rotText = item.rotation ? '回転あり' : '回転なし';
-            const secText = item.duration ? `${item.duration}秒` : '';
+
+            const isCompleted = item.completed !== false && item.cleared >= item.total;
+            const badgeClass = isCompleted ? 'success' : 'partial';
+            const badgeText = isCompleted ? `${item.cleared}/${item.total}問 クリア` : `${item.cleared}/${item.total}問 (中断)`;
+
+            const rotText = item.rotation ? '🔄 回転あり' : '🔄 回転なし';
+            const snapText = item.liveSnap ? '🧲 ドラッグ吸着' : '🧲 ドロップ吸着';
+            const timeText = `⏱️ ${this.formatDuration(item.duration)}`;
+            const pieces = item.piecesCount || (item.rows * item.cols);
+            const splitText = `🧩 ${item.rows}×${item.cols} (${pieces}ピース)`;
+
+            let qListHTML = '';
+            if (item.questions && item.questions.length > 0) {
+                qListHTML = `
+                    <div class="history-q-section-title">設問ごとの記録</div>
+                    <div class="history-q-list">
+                        ${item.questions.map(q => `
+                            <div class="history-q-row">
+                                <span class="history-q-idx">第${q.index}問</span>
+                                <span class="history-q-name">${q.photoName || '写真'}</span>
+                                <span class="history-q-time">${this.formatDuration(q.duration)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                qListHTML = `<div style="color:#94a3b8; font-size:0.75rem; text-align:center; padding:4px 0;">設問詳細ログはありません</div>`;
+            }
+
+            const avgSec = item.avgDuration ? `約${item.avgDuration}秒 / 問` : (item.duration && item.cleared ? `約${Math.round(item.duration / item.cleared)}秒 / 問` : '-');
+
             card.innerHTML = `
-                <div class="history-card-top">
-                    <span class="history-card-date">${item.date || ''}</span>
-                    <span class="history-card-score">${item.cleared || item.total || 0}問クリア</span>
+                <div class="history-card-header">
+                    <div class="history-card-top">
+                        <span class="history-card-date">${item.date || ''}</span>
+                        <span class="history-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="history-card-tags">
+                        <span class="history-tag">${splitText}</span>
+                        <span class="history-tag">${rotText}</span>
+                        <span class="history-tag">${snapText}</span>
+                        <span class="history-tag time">${timeText}</span>
+                    </div>
+                    <div class="history-card-toggle">詳細 <span>▼</span></div>
                 </div>
-                <div class="history-card-tags">
-                    <span class="history-tag">ピース: ${item.piecesCount || (item.rows * item.cols)} (${item.rows}×${item.cols})</span>
-                    <span class="history-tag">${rotText}</span>
-                    ${secText ? `<span class="history-tag">${secText}</span>` : ''}
+                <div class="history-card-details">
+                    <div class="history-stats-grid">
+                        <div class="history-stat-item">
+                            <span class="history-stat-label">クリア達成</span>
+                            <span class="history-stat-val">${item.cleared} / ${item.total}問</span>
+                        </div>
+                        <div class="history-stat-item">
+                            <span class="history-stat-label">総所要時間</span>
+                            <span class="history-stat-val">${this.formatDuration(item.duration)}</span>
+                        </div>
+                        <div class="history-stat-item">
+                            <span class="history-stat-label">平均解答時間</span>
+                            <span class="history-stat-val">${avgSec}</span>
+                        </div>
+                        <div class="history-stat-item">
+                            <span class="history-stat-label">ピース数</span>
+                            <span class="history-stat-val">${pieces}ピース (${item.rows}×${item.cols})</span>
+                        </div>
+                    </div>
+                    ${qListHTML}
                 </div>
             `;
+
+            const headerEl = card.querySelector('.history-card-header');
+            headerEl.addEventListener('click', (e) => {
+                e.preventDefault();
+                card.classList.toggle('expanded');
+            });
+
             listEl.appendChild(card);
         });
     }

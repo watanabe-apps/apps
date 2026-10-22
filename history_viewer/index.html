@@ -812,6 +812,19 @@
                 const wrongs = item.wrongs != null ? item.wrongs : (item.miss || 0);
                 const total = item.totalQuestions || (corrects + wrongs);
                 const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+
+                let detailsHtml = null;
+                if (item.details && Array.isArray(item.details) && item.details.length > 0) {
+                    detailsHtml = item.details.map((d, i) => {
+                        const mark = d.firstTry 
+                            ? '<span style="color:var(--success); font-weight:700;">⭕️ 一発正解</span>' 
+                            : `<span class="error-tag">❌ 間違えた札: ${(d.wrongPicks || []).join(', ')}</span>`;
+                        return `第${i + 1}問 [${d.word || ''}] → ${mark}`;
+                    }).join('<br>');
+                } else if (item.wrongWords && item.wrongWords.length > 0) {
+                    detailsHtml = `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}`;
+                }
+
                 return {
                     id: `karuta_${item.id || idx}`,
                     appName: 'カルタ',
@@ -823,8 +836,7 @@
                         wrongs > 0 ? `❌ ${wrongs}回` : '',
                         item.time ? `所要時間: ${item.time}` : ''
                     ].filter(Boolean),
-                    details: item.wrongWords && item.wrongWords.length > 0 ? 
-                        `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}` : null
+                    details: detailsHtml
                 };
             });
         }
