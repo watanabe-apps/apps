@@ -684,28 +684,42 @@ class PhotoPuzzleApp {
                         minStageY = maxStageY = (topHeaderPad + stageH) / 2;
                     }
 
-                    // グリッド分散候補
+                    // 相方ピースが外側に入ってこられる余白を確保（少分割時に端で詰むのを防ぐ）
+                    const leftExtra = (c > 0) ? pieceW : 0;
+                    const rightExtra = (c < cols - 1) ? pieceW : 0;
+                    const topExtra = (r > 0) ? pieceH : 0;
+                    const bottomExtra = (r < rows - 1) ? pieceH : 0;
+
+                    let effMinX = minStageX + leftExtra;
+                    let effMaxX = maxStageX - rightExtra;
+                    if (effMaxX < effMinX) {
+                        const midX = (minStageX + leftExtra + maxStageX - rightExtra) / 2;
+                        effMinX = Math.max(minStageX, Math.min(maxStageX, midX - 6));
+                        effMaxX = Math.max(effMinX, Math.min(maxStageX, midX + 6));
+                    }
+
+                    let effMinY = minStageY + topExtra;
+                    let effMaxY = maxStageY - bottomExtra;
+                    if (effMaxY < effMinY) {
+                        const midY = (minStageY + topExtra + maxStageY - bottomExtra) / 2;
+                        effMinY = Math.max(minStageY, Math.min(maxStageY, midY - 6));
+                        effMaxY = Math.max(effMinY, Math.min(maxStageY, midY + 6));
+                    }
+
+                    // ランダム候補を生成（重ならない位置へ自然に散らばらせる）
                     const candidates = [];
-                    const gridCols = Math.max(3, cols + 1);
-                    const gridRows = Math.max(3, rows + 1);
-                    for (let gy = 0; gy < gridRows; gy++) {
-                        for (let gx = 0; gx < gridCols; gx++) {
-                            const u = (gx + 0.5) / gridCols;
-                            const v = (gy + 0.5) / gridRows;
-                            candidates.push({
-                                stageX: minStageX + u * (maxStageX - minStageX),
-                                stageY: minStageY + v * (maxStageY - minStageY)
-                            });
-                        }
+                    for (let k = 0; k < 60; k++) {
+                        candidates.push({
+                            stageX: effMinX + Math.random() * (effMaxX - effMinX),
+                            stageY: effMinY + Math.random() * (effMaxY - effMinY)
+                        });
                     }
 
                     let bestCand = candidates[0];
                     let minOverlap = Infinity;
-                    let maxZeroDistSq = -1;
 
                     for (const cand of candidates) {
                         let totalOverlap = 0;
-                        let minDistSq = Infinity;
 
                         for (const other of previewPieces) {
                             const dx = Math.abs(cand.stageX - other.stageX);
@@ -716,26 +730,16 @@ class PhotoPuzzleApp {
                             if (dx < reqX && dy < reqY) {
                                 totalOverlap += (reqX - dx) * (reqY - dy);
                             }
-                            const d2 = dx * dx + dy * dy;
-                            if (d2 < minDistSq) minDistSq = d2;
                         }
 
-                        if (previewPieces.length === 0) {
+                        if (totalOverlap === 0) {
                             bestCand = cand;
                             break;
                         }
 
-                        if (totalOverlap === 0) {
-                            if (minDistSq > maxZeroDistSq) {
-                                maxZeroDistSq = minDistSq;
-                                bestCand = cand;
-                                minOverlap = 0;
-                            }
-                        } else if (minOverlap > 0) {
-                            if (totalOverlap < minOverlap) {
-                                minOverlap = totalOverlap;
-                                bestCand = cand;
-                            }
+                        if (totalOverlap < minOverlap) {
+                            minOverlap = totalOverlap;
+                            bestCand = cand;
                         }
                     }
 
@@ -899,35 +903,43 @@ class PhotoPuzzleApp {
                     maxStageY = Math.max(minStageY + 20, stageHeight - padY);
                 }
 
-                // 候補座標の生成（グリッド分散候補 + ランダム候補）
-                const candidates = [];
-                const gridCols = 6;
-                const gridRows = 5;
-                for (let gy = 0; gy < gridRows; gy++) {
-                    for (let gx = 0; gx < gridCols; gx++) {
-                        const u = (gx + 0.15 + Math.random() * 0.7) / gridCols;
-                        const v = (gy + 0.15 + Math.random() * 0.7) / gridRows;
-                        candidates.push({
-                            stageX: minStageX + u * (maxStageX - minStageX),
-                            stageY: minStageY + v * (maxStageY - minStageY)
-                        });
-                    }
+                // 相方ピースが外側に入ってこられる余白を確保（右ピースが左端に寄って左ピースが入れなくなる等を防ぐ）
+                const leftExtra = (c > 0) ? pieceWidth : 0;
+                const rightExtra = (c < this.column - 1) ? pieceWidth : 0;
+                const topExtra = (r > 0) ? pieceHeight : 0;
+                const bottomExtra = (r < this.row - 1) ? pieceHeight : 0;
+
+                let effMinX = minStageX + leftExtra;
+                let effMaxX = maxStageX - rightExtra;
+                if (effMaxX < effMinX) {
+                    const midX = (minStageX + leftExtra + maxStageX - rightExtra) / 2;
+                    effMinX = Math.max(minStageX, Math.min(maxStageX, midX - 20));
+                    effMaxX = Math.max(effMinX, Math.min(maxStageX, midX + 20));
                 }
-                for (let k = 0; k < 30; k++) {
+
+                let effMinY = minStageY + topExtra;
+                let effMaxY = maxStageY - bottomExtra;
+                if (effMaxY < effMinY) {
+                    const midY = (minStageY + topExtra + maxStageY - bottomExtra) / 2;
+                    effMinY = Math.max(minStageY, Math.min(maxStageY, midY - 20));
+                    effMaxY = Math.max(effMinY, Math.min(maxStageY, midY + 20));
+                }
+
+                // ランダムな候補座標を生成（1ピース目から毎回異なるランダムな位置になり、かつ重なりを避ける）
+                const candidates = [];
+                for (let k = 0; k < 80; k++) {
                     candidates.push({
-                        stageX: minStageX + Math.random() * (maxStageX - minStageX),
-                        stageY: minStageY + Math.random() * (maxStageY - minStageY)
+                        stageX: effMinX + Math.random() * (effMaxX - effMinX),
+                        stageY: effMinY + Math.random() * (effMaxY - effMinY)
                     });
                 }
 
-                // 既存の配置済みピースとの重なり・距離評価
+                // 既存の配置済みピースとの重なり評価
                 let bestCand = candidates[0];
                 let minOverlap = Infinity;
-                let maxZeroDistSq = -1;
 
                 for (const cand of candidates) {
                     let totalOverlap = 0;
-                    let minDistSq = Infinity;
 
                     for (const other of this.pieces) {
                         const otherStageX = other.position.x + other.offset.width;
@@ -937,38 +949,35 @@ class PhotoPuzzleApp {
 
                         const dx = Math.abs(cand.stageX - otherStageX);
                         const dy = Math.abs(cand.stageY - otherStageY);
-                        const reqX = (visW + otherVisW) / 2 + 10;
-                        const reqY = (visH + otherVisH) / 2 + 10;
+                        const reqX = (visW + otherVisW) / 2 + 12;
+                        const reqY = (visH + otherVisH) / 2 + 12;
 
                         if (dx < reqX && dy < reqY) {
                             totalOverlap += (reqX - dx) * (reqY - dy);
                         }
 
-                        const d2 = dx * dx + dy * dy;
-                        if (d2 < minDistSq) {
-                            minDistSq = d2;
+                        // 隣り合うピースが最初から正解位置のすぐ近くに配置されるのを防ぐ
+                        if (Math.abs(r - other.row) + Math.abs(c - other.column) === 1) {
+                            const candPosX = cand.stageX - offsetX;
+                            const candPosY = cand.stageY - offsetY;
+                            const pdx = candPosX - other.position.x;
+                            const pdy = candPosY - other.position.y;
+                            if (pdx * pdx + pdy * pdy < 10000) {
+                                totalOverlap += 50000;
+                            }
                         }
                     }
 
-                    if (this.pieces.length === 0) {
-                        minOverlap = 0;
+                    // 重なりゼロのランダム候補が見つかり次第それを採用（四隅への偏りをなくし自然なランダム配置を実現）
+                    if (totalOverlap === 0) {
                         bestCand = cand;
                         break;
                     }
 
-                    if (totalOverlap === 0) {
-                        // 重なりゼロ：他ピースとの距離が最も離れている（散らばる）候補を優先
-                        if (minDistSq > maxZeroDistSq) {
-                            maxZeroDistSq = minDistSq;
-                            bestCand = cand;
-                            minOverlap = 0;
-                        }
-                    } else if (minOverlap > 0) {
-                        // 重なりが避けられない場合：重なり面積が最小の候補を選択
-                        if (totalOverlap < minOverlap) {
-                            minOverlap = totalOverlap;
-                            bestCand = cand;
-                        }
+                    // すべて重なる場合は、重なり面積が最小の候補を選択
+                    if (totalOverlap < minOverlap) {
+                        minOverlap = totalOverlap;
+                        bestCand = cand;
                     }
                 }
 
