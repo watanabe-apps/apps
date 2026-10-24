@@ -805,16 +805,21 @@ async function renderHistoryUI() {
   const listEl = document.getElementById('history-list');
   listEl.innerHTML = '';
 
-  if (!histories || histories.length === 0) {
+  let list = Array.isArray(histories) && histories.length > 0 ? histories.slice().reverse() : [];
+  if (list.length === 0 && window.AppHistory) {
+    list = AppHistory.load('category_bunrui');
+  }
+
+  if (!list || list.length === 0) {
     listEl.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">まだ履歴がありません。</p>';
     return;
   }
 
-  histories.reverse().forEach(h => {
+  list.forEach(h => {
     const isV1 = Number(h.v) >= 1;
     const dateStr = (isV1 && h.ts && window.AppHistory) ? AppHistory.formatDate(h.ts) : (h.date || '');
     const qCount = isV1 ? (h.result ? h.result.total : 0) : (h.questionsCompleted || 0);
-    const placed = isV1 ? (h.extra?.totalImagesPlaced ?? '') : (h.totalImagesPlaced ?? '');
+    const placed = isV1 ? (h.extra?.totalImagesPlaced ?? (h.settings?.['配置数'] ? h.settings['配置数'].replace('個', '') : '')) : (h.totalImagesPlaced ?? '');
     const mistakes = isV1 ? (h.result ? h.result.miss : 0) : (h.mistakes || 0);
 
     const card = document.createElement('div');

@@ -1444,6 +1444,26 @@
         };
 
         // --- 消去処理 ---
+        function clearAppRecords(cfg) {
+            if (!cfg || cfg.isSpecial) return;
+            if (window.AppHistory && typeof AppHistory.clear === 'function') {
+                AppHistory.clear(cfg.id, { key: cfg.key });
+            } else if (cfg.key) {
+                localStorage.removeItem(cfg.key);
+            }
+            if (cfg.legacyKey) {
+                if (cfg.legacyKey === 'hiraganaAppConfig') {
+                    try {
+                        const conf = JSON.parse(localStorage.getItem(cfg.legacyKey) || '{}');
+                        conf.playHistory = [];
+                        localStorage.setItem(cfg.legacyKey, JSON.stringify(conf));
+                    } catch (e) {}
+                } else {
+                    localStorage.removeItem(cfg.legacyKey);
+                }
+            }
+        }
+
         // 1. 選択中アプリの消去
         document.getElementById('btn-clear-current').onclick = () => {
             const cfg = APPS_CONFIG.find(c => c.id === currentAppId);
@@ -1452,7 +1472,7 @@
                 `「${cfg.name}」の履歴消去`,
                 `この端末に保存されている「${cfg.name}」の学習履歴をすべて消去しますか？（設定値は残ります）`,
                 () => {
-                    localStorage.removeItem(cfg.key);
+                    clearAppRecords(cfg);
                     renderTabs();
                     renderView();
                 }
@@ -1466,17 +1486,7 @@
                 'この端末に保存されているすべてのアプリの学習履歴を完全に消去しますか？この操作は元に戻せません。',
                 () => {
                     APPS_CONFIG.forEach(cfg => {
-                        if (!cfg.isSpecial && cfg.key) {
-                            if (cfg.key === 'hiraganaAppConfig') {
-                                try {
-                                    const conf = JSON.parse(localStorage.getItem(cfg.key) || '{}');
-                                    conf.playHistory = [];
-                                    localStorage.setItem(cfg.key, JSON.stringify(conf));
-                                } catch (e) {}
-                            } else {
-                                localStorage.removeItem(cfg.key);
-                            }
-                        }
+                        clearAppRecords(cfg);
                     });
                     renderTabs();
                     renderView();
@@ -1538,7 +1548,23 @@
             APPS_CONFIG.forEach(cfg => {
                 if (!cfg.isSpecial && cfg.key) {
                     const val = localStorage.getItem(cfg.key);
-                    if (val) backup[cfg.key] = JSON.parse(val);
+                    if (val) {
+                        try {
+                            backup[cfg.key] = JSON.parse(val);
+                        } catch (e) {
+                            backup[cfg.key] = val;
+                        }
+                    }
+                }
+                if (!cfg.isSpecial && cfg.legacyKey) {
+                    const legacyVal = localStorage.getItem(cfg.legacyKey);
+                    if (legacyVal) {
+                        try {
+                            backup[cfg.legacyKey] = JSON.parse(legacyVal);
+                        } catch (e) {
+                            backup[cfg.legacyKey] = legacyVal;
+                        }
+                    }
                 }
             });
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
