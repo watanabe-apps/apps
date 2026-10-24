@@ -2315,7 +2315,11 @@
         document.getElementById('btn-history-back').addEventListener('click', exitToHome);
         document.getElementById('btn-history-clear').addEventListener('click', () => {
             showConfirm('履歴の消去', 'すべての履歴を消去しますか？', '消去', () => {
-                try { localStorage.removeItem('nanbanme_history'); } catch (e) {}
+                if (window.AppHistory) {
+                    AppHistory.clear('nanbanme');
+                } else {
+                    try { localStorage.removeItem('nanbanme_history'); } catch (e) {}
+                }
                 openHistory();
             });
         });
