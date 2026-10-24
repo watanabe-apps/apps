@@ -69,6 +69,25 @@
         .header-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .app-header {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .header-title {
+                font-size: 1.1rem;
+            }
+            .header-actions {
+                gap: 6px;
+            }
+            .btn {
+                font-size: 12px;
+                padding: 6px 9px;
+            }
         }
 
         .btn {
@@ -466,9 +485,11 @@
         <div class="header-actions">
             <button class="btn btn-sub" id="btn-refresh">🔄 更新</button>
             <button class="btn btn-sub" id="btn-export">💾 保存</button>
+            <button class="btn btn-sub" id="btn-import">📥 復元</button>
             <button class="btn btn-danger" id="btn-clear-all">🗑️ 全消去</button>
         </div>
     </header>
+    <input type="file" id="file-import" accept=".json,application/json" style="display:none;">
 
     <main class="main-container">
         <!-- 保存容量メーター -->
@@ -532,6 +553,27 @@
             <div class="alert-buttons">
                 <button class="alert-btn cancel" id="modal-btn-cancel">キャンセル</button>
                 <button class="alert-btn destructive" id="modal-btn-confirm">消去する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 復元モーダル -->
+    <div class="modal-overlay" id="import-modal">
+        <div class="ios-alert" style="width: 320px; max-width: 90vw;">
+            <div class="alert-body">
+                <div class="alert-title">学習履歴の復元</div>
+                <div class="alert-text" id="import-modal-msg" style="text-align: left; margin-top: 8px;"></div>
+            </div>
+            <div class="alert-buttons" style="flex-direction: column;">
+                <button class="alert-btn" id="import-btn-merge" style="color: var(--primary); font-weight: 700; border-top: 0.5px solid var(--border-color); padding: 13px;">
+                    ➕ 既存の履歴に追加（マージ）
+                </button>
+                <button class="alert-btn" id="import-btn-overwrite" style="color: var(--danger); border-top: 0.5px solid var(--border-color); padding: 13px;">
+                    🔄 すべて上書きして復元
+                </button>
+                <button class="alert-btn cancel" id="import-btn-cancel" style="border-top: 0.5px solid var(--border-color); padding: 13px;">
+                    キャンセル
+                </button>
             </div>
         </div>
     </div>
@@ -1542,32 +1584,71 @@
             }
         });
 
-        // --- JSONエクスポート ---
+        // --- JSONエクスポート（履歴データのみ） ---
         document.getElementById('btn-export').onclick = () => {
             const backup = {};
+            let totalRecords = 0;
+
             APPS_CONFIG.forEach(cfg => {
-                if (!cfg.isSpecial && cfg.key) {
+                if (cfg.isSpecial) return;
+
+                // 1. 各アプリの学習履歴キー（配列のみ取得）
+                if (cfg.key) {
                     const val = localStorage.getItem(cfg.key);
                     if (val) {
                         try {
-                            backup[cfg.key] = JSON.parse(val);
-                        } catch (e) {
-                            backup[cfg.key] = val;
-                        }
+                            const arr = JSON.parse(val);
+                            if (Array.isArray(arr) && arr.length > 0) {
+                                backup[cfg.key] = arr;
+                                totalRecords += arr.length;
+                            }
+                        } catch (e) {}
                     }
                 }
-                if (!cfg.isSpecial && cfg.legacyKey) {
+
+                // 2. keyboard_quiz の旧キーから学習履歴（playHistory）のみ抽出（設定値は除外）
+                if (cfg.id === 'keyboard_quiz' && !backup[cfg.key] && cfg.legacyKey) {
                     const legacyVal = localStorage.getItem(cfg.legacyKey);
                     if (legacyVal) {
                         try {
-                            backup[cfg.legacyKey] = JSON.parse(legacyVal);
-                        } catch (e) {
-                            backup[cfg.legacyKey] = legacyVal;
-                        }
+                            const conf = JSON.parse(legacyVal);
+                            if (conf && Array.isArray(conf.playHistory) && conf.playHistory.length > 0) {
+                                backup[cfg.key] = conf.playHistory;
+                                totalRecords += conf.playHistory.length;
+                            }
+                        } catch (e) {}
                     }
                 }
             });
-            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+
+            // 3. その他の動的履歴キー（配列のみ）
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.endsWith('_history') || k.endsWith('History')) && !backup[k]) {
+                    try {
+                        const val = JSON.parse(localStorage.getItem(k));
+                        if (Array.isArray(val) && val.length > 0) {
+                            backup[k] = val;
+                            totalRecords += val.length;
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            if (totalRecords === 0) {
+                alert('保存する学習履歴がまだありません。');
+                return;
+            }
+
+            const exportPayload = {
+                version: 1,
+                type: 'special_education_history_backup',
+                exportedAt: new Date().toISOString(),
+                totalRecords: totalRecords,
+                data: backup
+            };
+
+            const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1575,6 +1656,178 @@
             a.click();
             URL.revokeObjectURL(url);
         };
+
+        // --- 学習履歴の復元（インポート） ---
+        const btnImport = document.getElementById('btn-import');
+        const fileImport = document.getElementById('file-import');
+        const importModal = document.getElementById('import-modal');
+        let pendingImportData = null;
+
+        if (btnImport && fileImport) {
+            btnImport.onclick = () => {
+                fileImport.value = '';
+                fileImport.click();
+            };
+
+            fileImport.onchange = (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(event.target.result);
+                    } catch (err) {
+                        alert('JSONファイルの読み込みに失敗しました。正しいバックアップファイルを選択してください。');
+                        return;
+                    }
+
+                    // dataプロパティのラップがあるか、フラットなオブジェクトか
+                    const payload = (parsed && typeof parsed === 'object' && parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data))
+                        ? parsed.data
+                        : parsed;
+
+                    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+                        alert('ファイル内に有効な学習履歴データが見つかりませんでした。');
+                        return;
+                    }
+
+                    // 履歴キーのみを抽出し、設定キー（xxx_settings等）は完全に排除
+                    const cleanHistoryData = {};
+                    let totalRecords = 0;
+                    const appsWithHistory = [];
+
+                    Object.keys(payload).forEach(key => {
+                        // keyboard_quiz の legacy key (hiraganaAppConfig) から playHistory のみ抽出
+                        if (key === 'hiraganaAppConfig') {
+                            const conf = payload[key];
+                            if (conf && Array.isArray(conf.playHistory) && conf.playHistory.length > 0) {
+                                cleanHistoryData['keyboard_quiz_history'] = (cleanHistoryData['keyboard_quiz_history'] || []).concat(conf.playHistory);
+                                totalRecords += conf.playHistory.length;
+                                if (!appsWithHistory.includes('平仮名キーボードクイズ')) appsWithHistory.push('平仮名キーボードクイズ');
+                            }
+                            return;
+                        }
+
+                        // 配列かつ履歴キーであるもののみ対象（設定オブジェクトは除外）
+                        if (Array.isArray(payload[key])) {
+                            const arr = payload[key].filter(item => item && typeof item === 'object');
+                            if (arr.length > 0) {
+                                cleanHistoryData[key] = arr;
+                                totalRecords += arr.length;
+                                const matchedApp = APPS_CONFIG.find(c => c.key === key);
+                                const appLabel = matchedApp ? matchedApp.name : key.replace(/_?history/i, '');
+                                if (!appsWithHistory.includes(appLabel)) appsWithHistory.push(appLabel);
+                            }
+                        }
+                    });
+
+                    if (totalRecords === 0) {
+                        alert('ファイル内に学習履歴の記録が見つかりませんでした。\n（設定データのみ、または空のファイルです）');
+                        return;
+                    }
+
+                    pendingImportData = cleanHistoryData;
+                    const msgEl = document.getElementById('import-modal-msg');
+                    const appSummary = appsWithHistory.slice(0, 4).join('、') + (appsWithHistory.length > 4 ? ` ほか計${appsWithHistory.length}アプリ` : '');
+                    msgEl.innerHTML = `
+                        <strong>計 ${totalRecords} 件</strong>の学習履歴が見つかりました。<br>
+                        <span style="font-size:11px; color:var(--text-sub);">(${appSummary})</span><br><br>
+                        復元方法を選択してください：<br>
+                        <span style="font-size:11px; color:var(--text-sub);">
+                        ・<strong>追加（マージ）</strong>：現在の履歴を残し、重複しない記録のみを追加します。<br>
+                        ・<strong>上書き</strong>：現在の履歴を消去し、ファイルの内容で置き換えます。
+                        </span>
+                    `;
+                    importModal.classList.add('active');
+                };
+                reader.readAsText(file);
+            };
+        }
+
+        function hideImportModal() {
+            if (importModal) importModal.classList.remove('active');
+            pendingImportData = null;
+        }
+
+        const btnImportCancel = document.getElementById('import-btn-cancel');
+        if (btnImportCancel) btnImportCancel.onclick = hideImportModal;
+
+        // レコードの一意識別シグネチャ（重複判定用）
+        function getRecordSignature(item) {
+            if (!item) return '';
+            if (item.id) return `id_${item.id}`;
+            if (item.ts) return `ts_${item.ts}`;
+            const dateStr = item.date || item.timestamp || '';
+            const scoreStr = item.score || (item.result ? JSON.stringify(item.result) : '');
+            return `ds_${dateStr}_${scoreStr}`;
+        }
+
+        // マージ（追加）実行
+        const btnImportMerge = document.getElementById('import-btn-merge');
+        if (btnImportMerge) {
+            btnImportMerge.onclick = () => {
+                if (!pendingImportData) return;
+                let addedTotal = 0;
+
+                Object.keys(pendingImportData).forEach(key => {
+                    const newItems = pendingImportData[key];
+                    let current = [];
+                    try {
+                        const raw = localStorage.getItem(key);
+                        if (raw) current = JSON.parse(raw);
+                    } catch (e) {
+                        current = [];
+                    }
+                    if (!Array.isArray(current)) current = [];
+
+                    const signatures = new Set(current.map(getRecordSignature));
+                    newItems.forEach(item => {
+                        const sig = getRecordSignature(item);
+                        if (!signatures.has(sig)) {
+                            signatures.add(sig);
+                            current.push(item);
+                            addedTotal++;
+                        }
+                    });
+
+                    // 新しい順にソート
+                    current.sort((a, b) => {
+                        const tsA = Number(a.ts) || (window.AppHistory && a.date ? AppHistory.parseDate(a.date, a.id) : 0);
+                        const tsB = Number(b.ts) || (window.AppHistory && b.date ? AppHistory.parseDate(b.date, b.id) : 0);
+                        return tsB - tsA;
+                    });
+
+                    localStorage.setItem(key, JSON.stringify(current));
+                });
+
+                hideImportModal();
+                renderTabs();
+                renderView();
+                alert(`学習履歴の復元（追加）が完了しました！\n新しく ${addedTotal} 件の記録が追加されました。`);
+            };
+        }
+
+        // 上書き実行
+        const btnImportOverwrite = document.getElementById('import-btn-overwrite');
+        if (btnImportOverwrite) {
+            btnImportOverwrite.onclick = () => {
+                if (!pendingImportData) return;
+                let replacedTotal = 0;
+
+                Object.keys(pendingImportData).forEach(key => {
+                    const items = pendingImportData[key];
+                    localStorage.setItem(key, JSON.stringify(items));
+                    replacedTotal += items.length;
+                });
+
+                hideImportModal();
+                renderTabs();
+                renderView();
+                alert(`学習履歴の上書き復元が完了しました！\n計 ${replacedTotal} 件の記録に置き換えられました。`);
+            };
+        }
 
         // 初期化実行
         renderTabs();
