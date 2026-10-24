@@ -1134,7 +1134,8 @@
                         'ヒント': rec.wrongHint || undefined
                     },
                     details: (rec.logs || []).map(lg => {
-                        const qLabel = `${DIR_LABEL[lg.dir] || DIR_SHORT[lg.dir] || ''}から${lg.num}番目`;
+                        const dirText = DIR_SHORT[lg.dir] ? `${DIR_SHORT[lg.dir]}から` : (DIR_LABEL[lg.dir] || '');
+                        const qLabel = `${dirText}${lg.num}番目`;
                         const mList = Array.isArray(lg.mistakes) ? lg.mistakes.map(m => {
                             const rsn = m.reason ? `［${m.reason}］` : '';
                             return `${m.chosenNum}番目${rsn}`;
