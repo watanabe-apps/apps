@@ -364,7 +364,11 @@ class PhotoPuzzleApp {
             btnClearHistory.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 if (confirm('履歴をすべて消去しますか？')) {
-                    localStorage.removeItem('bunkatsu_puzzle_history');
+                    if (window.AppHistory) {
+                        AppHistory.clear('bunkatsu_puzzle');
+                    } else {
+                        localStorage.removeItem('bunkatsu_puzzle_history');
+                    }
                     this.renderHistoryUI();
                 }
             });
@@ -1571,25 +1575,66 @@ class PhotoPuzzleApp {
             });
             const totalDur = this.startTime ? Math.max(1, Math.round((Date.now() - this.startTime) / 1000)) : 0;
             const avgDur = this.numOfClear > 0 ? (totalDur / this.numOfClear).toFixed(1) : '0';
+            const pieces = this.row * this.column;
 
-            const item = {
-                date: dateStr,
-                total: this.questions,
-                cleared: this.numOfClear,
-                completed: completed,
-                rows: this.row,
-                cols: this.column,
-                piecesCount: this.row * this.column,
-                rotation: this.allowRotation,
-                liveSnap: this.liveSnap,
-                duration: totalDur,
-                avgDuration: avgDur,
-                questions: [...(this.questionLogs || [])]
-            };
-            const list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
-            list.unshift(item);
-            if (list.length > 100) list.pop();
-            localStorage.setItem('bunkatsu_puzzle_history', JSON.stringify(list));
+            const questions = [...(this.questionLogs || [])];
+            const details = questions.map(q => ({
+                q: `第${q.index}問 (${q.photoName || '写真'})`,
+                ok: true,
+                durationSec: q.duration,
+                index: q.index,
+                photoName: q.photoName
+            }));
+
+            if (window.AppHistory) {
+                AppHistory.save('bunkatsu_puzzle', {
+                    result: {
+                        total: this.questions,
+                        correct: this.numOfClear,
+                        miss: 0,
+                        perfect: completed && this.numOfClear >= this.questions,
+                        durationSec: totalDur
+                    },
+                    settings: {
+                        'ピース数': `${pieces}ピース (${this.row}×${this.column})`,
+                        '回転': this.allowRotation ? 'あり' : 'なし',
+                        '吸着': this.liveSnap ? 'ドラッグ吸着' : 'ドロップ吸着'
+                    },
+                    details: details,
+                    extra: {
+                        total: this.questions,
+                        cleared: this.numOfClear,
+                        completed: completed,
+                        rows: this.row,
+                        cols: this.column,
+                        piecesCount: pieces,
+                        rotation: this.allowRotation,
+                        liveSnap: this.liveSnap,
+                        duration: totalDur,
+                        avgDuration: avgDur,
+                        questions: questions
+                    }
+                });
+            } else {
+                const item = {
+                    date: dateStr,
+                    total: this.questions,
+                    cleared: this.numOfClear,
+                    completed: completed,
+                    rows: this.row,
+                    cols: this.column,
+                    piecesCount: pieces,
+                    rotation: this.allowRotation,
+                    liveSnap: this.liveSnap,
+                    duration: totalDur,
+                    avgDuration: avgDur,
+                    questions: questions
+                };
+                const list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
+                list.unshift(item);
+                if (list.length > 100) list.pop();
+                localStorage.setItem('bunkatsu_puzzle_history', JSON.stringify(list));
+            }
         } catch (e) {
             console.warn('Failed to save history', e);
         }
@@ -1606,11 +1651,15 @@ class PhotoPuzzleApp {
         listEl.innerHTML = '';
 
         let list = [];
-        try {
-            list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
-        } catch (e) {}
+        if (window.AppHistory) {
+            list = AppHistory.load('bunkatsu_puzzle');
+        } else {
+            try {
+                list = JSON.parse(localStorage.getItem('bunkatsu_puzzle_history') || '[]');
+            } catch (e) {}
+        }
 
-        if (list.length === 0) {
+        if (!list || list.length === 0) {
             listEl.innerHTML = '<div style="text-align:center; padding: 40px; color:#8e8e93; font-weight:700;">履歴はありません</div>';
             return;
         }
@@ -1619,40 +1668,60 @@ class PhotoPuzzleApp {
             const card = document.createElement('div');
             card.className = 'history-card-item';
 
-            const isCompleted = item.completed !== false && item.cleared >= item.total;
-            const badgeClass = isCompleted ? 'success' : 'partial';
-            const badgeText = isCompleted ? `${item.cleared}/${item.total}問 クリア` : `${item.cleared}/${item.total}問 (中断)`;
+            const isV1 = Number(item.v) >= 1;
+            const dateStr = (isV1 && item.ts && window.AppHistory) ? AppHistory.formatDate(item.ts) : (item.date || '');
+            const cleared = isV1 ? (item.result ? item.result.correct : 0) : (item.cleared || 0);
+            const total = isV1 ? (item.result ? item.result.total : 0) : (item.total || 0);
+            const isCompleted = isV1 ? (item.result?.perfect || (item.extra && item.extra.completed !== false && cleared >= total)) : (item.completed !== false && cleared >= total);
 
-            const rotText = item.rotation ? '🔄 回転あり' : '🔄 回転なし';
-            const snapText = item.liveSnap ? '🧲 ドラッグ吸着' : '🧲 ドロップ吸着';
-            const timeText = `⏱️ ${this.formatDuration(item.duration)}`;
-            const pieces = item.piecesCount || (item.rows * item.cols);
-            const splitText = `🧩 ${item.rows}×${item.cols} (${pieces}ピース)`;
+            const badgeClass = isCompleted ? 'success' : 'partial';
+            const badgeText = isCompleted ? `${cleared}/${total}問 クリア` : `${cleared}/${total}問 (中断)`;
+
+            const rotVal = isV1 ? (item.settings?.['回転'] === 'あり' || (item.extra && item.extra.rotation)) : item.rotation;
+            const rotText = rotVal ? '🔄 回転あり' : '🔄 回転なし';
+
+            const snapVal = isV1 ? (item.settings?.['吸着'] === 'ドラッグ吸着' || (item.extra && item.extra.liveSnap)) : item.liveSnap;
+            const snapText = snapVal ? '🧲 ドラッグ吸着' : '🧲 ドロップ吸着';
+
+            const dur = isV1 ? (item.result?.durationSec ?? (item.extra?.duration || 0)) : (item.duration || 0);
+            const timeText = `⏱️ ${this.formatDuration(dur)}`;
+
+            const rows = isV1 ? (item.extra?.rows || 2) : (item.rows || 2);
+            const cols = isV1 ? (item.extra?.cols || 2) : (item.cols || 2);
+            const pieces = isV1 ? (item.extra?.piecesCount || (rows * cols)) : (item.piecesCount || (rows * cols));
+            const splitText = `🧩 ${rows}×${cols} (${pieces}ピース)`;
+
+            const qLogs = isV1 ? (item.extra?.questions || item.details || []) : (item.questions || []);
 
             let qListHTML = '';
-            if (item.questions && item.questions.length > 0) {
+            if (qLogs && qLogs.length > 0) {
                 qListHTML = `
                     <div class="history-q-section-title">設問ごとの記録</div>
                     <div class="history-q-list">
-                        ${item.questions.map(q => `
-                            <div class="history-q-row">
-                                <span class="history-q-idx">第${q.index}問</span>
-                                <span class="history-q-name">${q.photoName || '写真'}</span>
-                                <span class="history-q-time">${this.formatDuration(q.duration)}</span>
-                            </div>
-                        `).join('')}
+                        ${qLogs.map(q => {
+                            const idx = q.index != null ? q.index : '';
+                            const name = q.photoName || q.q || '写真';
+                            const dSec = q.durationSec != null ? q.durationSec : (q.duration || 0);
+                            return `
+                                <div class="history-q-row">
+                                    <span class="history-q-idx">第${idx}問</span>
+                                    <span class="history-q-name">${name}</span>
+                                    <span class="history-q-time">${this.formatDuration(dSec)}</span>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
             } else {
                 qListHTML = `<div style="color:#94a3b8; font-size:0.75rem; text-align:center; padding:4px 0;">設問詳細ログはありません</div>`;
             }
 
-            const avgSec = item.avgDuration ? `約${item.avgDuration}秒 / 問` : (item.duration && item.cleared ? `約${Math.round(item.duration / item.cleared)}秒 / 問` : '-');
+            const avgSec = (isV1 && item.extra?.avgDuration) ? `約${item.extra.avgDuration}秒 / 問` : (dur && cleared ? `約${Math.round(dur / cleared)}秒 / 問` : '-');
 
             card.innerHTML = `
                 <div class="history-card-header">
                     <div class="history-card-top">
-                        <span class="history-card-date">${item.date || ''}</span>
+                        <span class="history-card-date">${dateStr}</span>
                         <span class="history-badge ${badgeClass}">${badgeText}</span>
                     </div>
                     <div class="history-card-tags">
@@ -1667,11 +1736,11 @@ class PhotoPuzzleApp {
                     <div class="history-stats-grid">
                         <div class="history-stat-item">
                             <span class="history-stat-label">クリア達成</span>
-                            <span class="history-stat-val">${item.cleared} / ${item.total}問</span>
+                            <span class="history-stat-val">${cleared} / ${total}問</span>
                         </div>
                         <div class="history-stat-item">
                             <span class="history-stat-label">総所要時間</span>
-                            <span class="history-stat-val">${this.formatDuration(item.duration)}</span>
+                            <span class="history-stat-val">${this.formatDuration(dur)}</span>
                         </div>
                         <div class="history-stat-item">
                             <span class="history-stat-label">平均解答時間</span>
@@ -1679,7 +1748,7 @@ class PhotoPuzzleApp {
                         </div>
                         <div class="history-stat-item">
                             <span class="history-stat-label">ピース数</span>
-                            <span class="history-stat-val">${pieces}ピース (${item.rows}×${item.cols})</span>
+                            <span class="history-stat-val">${pieces}ピース (${rows}×${cols})</span>
                         </div>
                     </div>
                     ${qListHTML}

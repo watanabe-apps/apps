@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+    <script src="../common/history.js"></script>
     <style>
         :root {
             --vh: 1vh;
@@ -1109,14 +1110,57 @@
 
         // --- 3. 履歴管理 ---
         function loadHistory() {
+            if (window.AppHistory) {
+                return AppHistory.load('nanbanme');
+            }
             try { return JSON.parse(localStorage.getItem('nanbanme_history') || '[]'); } catch (e) { return []; }
         }
 
         function addHistory(rec) {
-            const h = loadHistory();
-            h.unshift(rec);
-            if (h.length > 50) h.length = 50;
-            try { localStorage.setItem('nanbanme_history', JSON.stringify(h)); } catch (e) {}
+            if (window.AppHistory) {
+                AppHistory.save('nanbanme', {
+                    result: {
+                        total: rec.total,
+                        correct: rec.firstTry,
+                        miss: rec.misses,
+                        perfect: rec.completed && (rec.misses || 0) === 0 && rec.firstTry === rec.total,
+                        durationSec: rec.duration
+                    },
+                    settings: {
+                        '問題パターン': rec.pattern,
+                        '向き': rec.dirs,
+                        '個数': rec.itemCount ? `${rec.itemCount}こ` : undefined,
+                        '回答形式': rec.choiceFormat || undefined,
+                        'ヒント': rec.wrongHint || undefined
+                    },
+                    details: (rec.logs || []).map(lg => {
+                        const qLabel = `${DIR_LABEL[lg.dir] || DIR_SHORT[lg.dir] || ''}から${lg.num}番目`;
+                        const mList = Array.isArray(lg.mistakes) ? lg.mistakes.map(m => {
+                            const rsn = m.reason ? `［${m.reason}］` : '';
+                            return `${m.chosenNum}番目${rsn}`;
+                        }) : [];
+                        return {
+                            q: qLabel,
+                            ok: !!lg.firstTry,
+                            miss: mList,
+                            qIndex: lg.qIndex,
+                            dir: lg.dir,
+                            num: lg.num,
+                            N: lg.N,
+                            pattern: lg.pattern,
+                            firstTry: lg.firstTry,
+                            completed: lg.completed,
+                            mistakes: lg.mistakes
+                        };
+                    }),
+                    extra: rec
+                });
+            } else {
+                const h = loadHistory();
+                h.unshift(rec);
+                if (h.length > 50) h.length = 50;
+                try { localStorage.setItem('nanbanme_history', JSON.stringify(h)); } catch (e) {}
+            }
         }
 
         // --- 4. Web Audio API 音源（Safari/Chromeの非同期タイマー再生に完全対応） ---
@@ -1997,17 +2041,21 @@
             };
 
             recs.forEach(r => {
-                const ans = r.answered ?? r.total ?? 0;
-                const first = r.firstTry ?? r.correct ?? 0;
+                const isV1 = Number(r.v) >= 1;
+                const ans = isV1 ? (r.result ? r.result.total : (r.extra?.answered || 0)) : (r.answered ?? r.total ?? 0);
+                const first = isV1 ? (r.result ? r.result.correct : 0) : (r.firstTry ?? r.correct ?? 0);
+                const dur = isV1 ? (r.result ? r.result.durationSec : (r.extra?.duration || 0)) : (r.duration || 0);
+
                 totalAnswered += ans;
                 totalFirstTry += first;
-                if (r.duration) totalDuration += r.duration;
+                if (dur) totalDuration += dur;
 
-                if (Array.isArray(r.logs)) {
-                    r.logs.forEach(lg => {
+                const logs = (isV1 && r.extra?.logs) ? r.extra.logs : (r.logs || r.details || []);
+                if (Array.isArray(logs)) {
+                    logs.forEach(lg => {
                         if (dirStats[lg.dir]) {
                             dirStats[lg.dir].total++;
-                            if (lg.firstTry) dirStats[lg.dir].ok++;
+                            if (lg.firstTry || lg.ok) dirStats[lg.dir].ok++;
                         }
                     });
                 }
@@ -2062,7 +2110,12 @@
             // 2. フィルタリングして履歴リストを描画
             const filtered = currentHistoryFilter === 'all'
                 ? recs
-                : recs.filter(r => r.pattern === currentHistoryFilter);
+                : recs.filter(r => {
+                    const pat = Number(r.v) >= 1
+                        ? (r.settings?.['問題パターン'] || r.extra?.pattern || '')
+                        : r.pattern;
+                    return pat === currentHistoryFilter;
+                });
 
             if (filtered.length === 0) {
                 list.innerHTML = '<div class="empty">該当する履歴がありません</div>';
@@ -2070,37 +2123,60 @@
             }
 
             filtered.forEach(r => {
-                const first = r.firstTry ?? r.correct ?? 0;
-                const ans = r.answered ?? r.total ?? 0;
-                const isCompleted = r.completed !== false;
+                const isV1 = Number(r.v) >= 1;
+                const first = isV1 ? (r.result ? r.result.correct : 0) : (r.firstTry ?? r.correct ?? 0);
+                const total = isV1 ? (r.result ? r.result.total : 0) : (r.total || 0);
+                const ans = isV1 ? (r.result ? r.result.total : (r.extra?.answered || total)) : (r.answered ?? r.total ?? 0);
+                const isCompleted = isV1 ? (r.extra ? r.extra.completed !== false : true) : (r.completed !== false);
+                const misses = isV1 ? (r.result ? r.result.miss : 0) : (r.misses || 0);
+                const dur = isV1 ? (r.result ? r.result.durationSec : (r.extra?.duration || 0)) : (r.duration || 0);
+
                 const rate = ans > 0 ? Math.round((first / ans) * 100) : 0;
 
                 let statusBadge = '';
                 if (!isCompleted) {
-                    statusBadge = `<span class="h-badge abort">中断（${ans}/${r.total}問）</span>`;
-                } else if ((r.misses || 0) === 0 && first === r.total) {
+                    statusBadge = `<span class="h-badge abort">中断（${ans}/${total}問）</span>`;
+                } else if (misses === 0 && first === total && total > 0) {
                     statusBadge = `<span class="h-badge perfect">💮 パーフェクト！</span>`;
                 } else {
                     statusBadge = `<span class="h-badge clear">クリア</span>`;
                 }
 
-                const patStr = r.choiceFormat ? `${r.pattern}（${r.choiceFormat}）` : r.pattern;
-                const detail = [patStr, r.dirs, r.itemCount ? `${r.itemCount}こ` : '', r.wrongHint].filter(Boolean).join(' / ');
-                const sub = [`正答率 ${rate}%`, r.misses != null ? `ミス ${r.misses}回` : '', r.duration != null ? `${r.duration}秒` : ''].filter(Boolean).join('・');
+                const patStr = isV1
+                    ? (r.settings?.['問題パターン'] || r.extra?.pattern || '')
+                    : (r.choiceFormat ? `${r.pattern}（${r.choiceFormat}）` : r.pattern);
+                const dirsStr = isV1 ? (r.settings?.['向き'] || r.extra?.dirs || '') : (r.dirs || '');
+                const countStr = isV1 ? (r.settings?.['個数'] || (r.extra?.itemCount ? `${r.extra.itemCount}こ` : '')) : (r.itemCount ? `${r.itemCount}こ` : '');
+                const hintStr = isV1 ? (r.settings?.['ヒント'] || r.extra?.wrongHint || '') : (r.wrongHint || '');
+
+                const detail = [patStr, dirsStr, countStr, hintStr].filter(Boolean).join(' / ');
+                const sub = [`正答率 ${rate}%`, misses != null ? `ミス ${misses}回` : '', dur != null ? `${dur}秒` : ''].filter(Boolean).join('・');
+
+                const dateStr = (isV1 && r.ts && window.AppHistory) ? AppHistory.formatDate(r.ts) : (r.date || '');
 
                 let logsHtml = '';
-                if (Array.isArray(r.logs) && r.logs.length > 0) {
-                    const chips = r.logs.map(lg => {
-                        const qLabel = `${DIR_SHORT[lg.dir] || ''}${lg.num}`;
-                        if (lg.firstTry) {
-                            return `<span class="q-log-chip ok">⭕ 問${lg.qIndex}: ${qLabel}ばんめ</span>`;
+                const logs = (isV1 && r.extra?.logs) ? r.extra.logs : (r.logs || r.details || []);
+                if (Array.isArray(logs) && logs.length > 0) {
+                    const chips = logs.map(lg => {
+                        const qLabel = `${DIR_SHORT[lg.dir] || ''}${lg.num != null ? lg.num : ''}`;
+                        const isOk = lg.firstTry !== undefined ? !!lg.firstTry : !!lg.ok;
+                        const idx = lg.qIndex != null ? lg.qIndex : '';
+                        if (isOk) {
+                            return `<span class="q-log-chip ok">⭕ 問${idx}: ${qLabel}ばんめ</span>`;
                         } else {
-                            const mList = Array.isArray(lg.mistakes) ? lg.mistakes.map(m => {
-                                const rsn = m.reason ? `［${m.reason}］` : '';
-                                return `${m.chosenNum}ばんめ${rsn}`;
-                            }).join('、') : '';
-                            const mText = mList ? `（選択: ${mList}）` : '';
-                            return `<span class="q-log-chip ng">❌ 問${lg.qIndex}: ${qLabel}ばんめ${mText}</span>`;
+                            const rawMiss = lg.mistakes || lg.miss;
+                            let mText = '';
+                            if (Array.isArray(rawMiss)) {
+                                const mList = rawMiss.map(m => {
+                                    if (typeof m === 'object' && m !== null) {
+                                        const rsn = m.reason ? `［${m.reason}］` : '';
+                                        return `${m.chosenNum}ばんめ${rsn}`;
+                                    }
+                                    return String(m);
+                                }).join('、');
+                                if (mList) mText = `（選択: ${mList}）`;
+                            }
+                            return `<span class="q-log-chip ng">❌ 問${idx}: ${qLabel}ばんめ${mText}</span>`;
                         }
                     }).join('');
                     logsHtml = `<div class="h-q-logs">${chips}</div>`;
@@ -2112,13 +2188,13 @@
                     <div class="h-top-row">
                         <div class="h-meta">
                             <div class="h-date-row">
-                                <span class="h-date">${r.date || ''}</span>
+                                <span class="h-date">${dateStr}</span>
                                 ${statusBadge}
                             </div>
                             <div class="h-detail">${detail}</div>
                         </div>
                         <div class="h-score">
-                            <div class="h-score-main">${first} / ${r.total}問</div>
+                            <div class="h-score-main">${first} / ${total}問</div>
                             <div class="h-score-sub">${sub}</div>
                         </div>
                     </div>

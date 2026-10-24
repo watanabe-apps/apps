@@ -18,6 +18,7 @@
     <!-- アイコン設定 -->
     <link rel="apple-touch-icon" href="img.png">
     <link rel="icon" href="img.png">
+    <script src="../common/history.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
 
@@ -1223,7 +1224,34 @@
             if (currentSessionLogs.length > 0) {
                 const now = new Date();
                 const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
-                playHistory.unshift({ date: dateStr, records: currentSessionLogs });
+                const correctCount = currentSessionLogs.filter(r => r.correct).length;
+                const wrongCount = currentSessionLogs.length - correctCount;
+
+                if (window.AppHistory) {
+                    AppHistory.save('keyboard_quiz', {
+                        result: {
+                            total: currentSessionLogs.length,
+                            correct: correctCount,
+                            miss: wrongCount,
+                            perfect: wrongCount === 0 && correctCount > 0
+                        },
+                        settings: {
+                            '問題数': `${appSettings.questionCount}問`,
+                            '順序': appSettings.questionOrder === 'random' ? 'ランダム' : '順番通り'
+                        },
+                        details: currentSessionLogs.map(r => ({
+                            q: r.word,
+                            ok: !!r.correct,
+                            miss: !r.correct ? [r.input || '未入力'] : [],
+                            input: r.input
+                        })),
+                        extra: {
+                            records: [...currentSessionLogs]
+                        }
+                    });
+                }
+
+                playHistory.unshift({ date: dateStr, records: [...currentSessionLogs], correctCount, wrongCount, total: currentSessionLogs.length });
                 if (playHistory.length > 30) playHistory.pop();
                 saveSettingsLocal();
             }
@@ -1421,23 +1449,39 @@
             const container = document.getElementById('history-container');
             container.innerHTML = '';
 
-            if (playHistory.length === 0) {
+            let list = [];
+            if (window.AppHistory) {
+                list = AppHistory.load('keyboard_quiz');
+            }
+            if (!list || list.length === 0) {
+                list = playHistory || [];
+            }
+
+            if (!list || list.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#888; margin-top:5vh;">まだプレイりれきがありません</p>';
             } else {
-                playHistory.forEach(session => {
+                list.forEach(session => {
                     const sessionDiv = document.createElement('div');
                     sessionDiv.className = 'session-log';
 
+                    const isV1 = Number(session.v) >= 1;
+                    const dateStr = (isV1 && session.ts && window.AppHistory) ? AppHistory.formatDate(session.ts) : (session.date || '');
+
                     const dateHeader = document.createElement('div');
                     dateHeader.className = 'session-date';
-                    dateHeader.innerText = session.date;
+                    dateHeader.innerText = dateStr;
                     sessionDiv.appendChild(dateHeader);
 
-                    session.records.forEach(rec => {
+                    const records = (isV1 && session.extra?.records) ? session.extra.records : (session.records || session.details || []);
+
+                    records.forEach(rec => {
                         const row = document.createElement('div');
                         row.className = 'session-record';
-                        const mark = rec.correct ? '<span class="mark-ok">〇</span>' : '<span class="mark-ng">×</span>';
-                        row.innerHTML = `${mark} ${rec.word} ➔ ${rec.input}`;
+                        const isOk = rec.correct !== undefined ? !!rec.correct : !!rec.ok;
+                        const wordText = rec.word || rec.q || '';
+                        const inputText = rec.input !== undefined ? rec.input : ((rec.miss && rec.miss[0]) || '');
+                        const mark = isOk ? '<span class="mark-ok">〇</span>' : '<span class="mark-ng">×</span>';
+                        row.innerHTML = `${mark} ${wordText} ➔ ${inputText || '未入力'}`;
                         sessionDiv.appendChild(row);
                     });
                     container.appendChild(sessionDiv);

@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
-
+    <script src="../common/history.js"></script>
     <style>
         /* アプリ固有のスタイル */
         :root {
@@ -816,9 +816,18 @@
         function renderDetailedHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
-            const historyData = JSON.parse(localStorage.getItem('mathDetailedHistory')) || [];
+            let historyData = [];
+            if (window.AppHistory) {
+                historyData = AppHistory.load('ikutsuto_ikutsu', { key: 'mathDetailedHistory' });
+            } else {
+                try {
+                    historyData = JSON.parse(localStorage.getItem('mathDetailedHistory')) || [];
+                } catch (e) {
+                    historyData = [];
+                }
+            }
             
-            if (historyData.length === 0) {
+            if (!historyData || historyData.length === 0) {
                 list.innerHTML = '<div style="text-align:center; padding:20px; font-size:1.3rem; color:#64748b;">プレイ履歴はありません</div>';
                 return;
             }
@@ -827,14 +836,23 @@
                 const item = document.createElement('div');
                 item.className = 'history-item';
                 
+                const isV1 = Number(h.v) >= 1;
+                const dateStr = (isV1 && h.ts && window.AppHistory) ? AppHistory.formatDate(h.ts) : (h.date || '');
+                const modeStr = isV1 ? (h.settings?.['モード'] || h.extra?.mode || '') : (h.mode || '');
+                const clearCount = isV1 ? (h.result ? h.result.correct : 0) : (h.clear || 0);
+                const wrongCount = isV1 ? (h.result ? h.result.miss : 0) : (h.wrong || 0);
+                
+                const logList = (isV1 && h.extra?.details) ? h.extra.details : (h.details || []);
+
                 let detailsLogHtml = '';
-                if (h.details && h.details.length > 0) {
-                    h.details.forEach(d => {
+                if (logList && logList.length > 0) {
+                    logList.forEach(d => {
                         const icon = d.ok ? '⭕️' : '❌';
+                        const textContent = d.rawText || d.text || d.q || '';
                         detailsLogHtml += `
                         <div style="display:flex; justify-content: flex-start; align-items:center; padding: 6px 0; border-bottom: 1px solid #e2e8f0; gap: 8px;">
                             <span style="font-size: 1.2rem;">${icon}</span>
-                            <span style="font-size: 1.2rem;">${d.text}</span>
+                            <span style="font-size: 1.2rem;">${textContent}</span>
                         </div>`;
                     });
                 } else {
@@ -842,8 +860,8 @@
                 }
                 
                 item.innerHTML = `
-                    <div class="history-date">${h.date}</div>
-                    <div class="history-result">【${h.mode}】 ⭕️正解: ${h.clear}回 / ❌不正解: ${h.wrong}回</div>
+                    <div class="history-date">${dateStr}</div>
+                    <div class="history-result">【${modeStr}】 ⭕️正解: ${clearCount}回 / ❌不正解: ${wrongCount}回</div>
                     <div class="history-details-box">${detailsLogHtml}</div>
                 `;
                 list.appendChild(item);
@@ -851,21 +869,50 @@
         }
 
         function saveSessionToHistory() {
-            const historyData = JSON.parse(localStorage.getItem('mathDetailedHistory')) || [];
             const now = new Date();
             const dateStr = `${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
             const modeStr = gameState.mode === 'decomposition' ? '分解' : '合成';
-            
-            historyData.unshift({
-                date: dateStr,
-                mode: modeStr,
-                clear: gameState.numOfClear,
-                wrong: gameState.numOfWrong,
-                details: gameState.sessionLog
-            });
-            
-            if (historyData.length > 30) historyData.pop();
-            localStorage.setItem('mathDetailedHistory', JSON.stringify(historyData));
+            const total = gameState.numOfClear + gameState.numOfWrong;
+
+            const details = (gameState.sessionLog || []).map(d => ({
+                q: d.text ? d.text.replace(/<[^>]*>/g, '') : '',
+                ok: !!d.ok,
+                miss: !d.ok ? ['不正解'] : [],
+                rawText: d.text
+            }));
+
+            if (window.AppHistory) {
+                AppHistory.save('ikutsuto_ikutsu', {
+                    result: {
+                        total: total,
+                        correct: gameState.numOfClear,
+                        miss: gameState.numOfWrong,
+                        perfect: gameState.numOfWrong === 0 && gameState.numOfClear > 0
+                    },
+                    settings: {
+                        'モード': modeStr,
+                        '数の範囲': config.targetNumber ? `${config.targetNumber}` : undefined
+                    },
+                    details: details,
+                    extra: {
+                        mode: modeStr,
+                        clear: gameState.numOfClear,
+                        wrong: gameState.numOfWrong,
+                        details: gameState.sessionLog
+                    }
+                }, { key: 'mathDetailedHistory' });
+            } else {
+                const historyData = JSON.parse(localStorage.getItem('mathDetailedHistory')) || [];
+                historyData.unshift({
+                    date: dateStr,
+                    mode: modeStr,
+                    clear: gameState.numOfClear,
+                    wrong: gameState.numOfWrong,
+                    details: gameState.sessionLog
+                });
+                if (historyData.length > 30) historyData.pop();
+                localStorage.setItem('mathDetailedHistory', JSON.stringify(historyData));
+            }
         }
 
         // ==================== イベント割り当て ====================

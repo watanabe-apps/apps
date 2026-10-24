@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+    <script src="../common/history.js"></script>
     <style>
         :root {
             --primary: #007aff;
@@ -1979,31 +1980,66 @@
         }
 
         function recordGameHistory() {
-            const historyItem = {
-                id: Date.now(),
-                date: formatCurrentDateTime(),
-                correctCount: correctCount,
-                wrongCount: wrongCount,
-                totalRounds: appSettings.totalRounds,
-                mode: appSettings.placementMode === 'gojuon' ? '50音配置' : (appSettings.placementMode === 'clean' ? 'きれいに並べる' : 'ランダム配置'),
-                candidateCount: appSettings.placementMode === 'gojuon' ? '50音' : `${appSettings.candidateCount}文字`,
-                mistakes: [...currentSessionMistakes]
-            };
+            const modeLabel = appSettings.placementMode === 'gojuon' ? '50音配置' : (appSettings.placementMode === 'clean' ? 'きれいに並べる' : 'ランダム配置');
+            const candidateCountLabel = appSettings.placementMode === 'gojuon' ? '50音' : `${appSettings.candidateCount}文字`;
 
-            let historyList = [];
-            try {
-                const saved = localStorage.getItem('hiragana_sagashi_history');
-                if (saved) historyList = JSON.parse(saved);
-            } catch (e) {
-                historyList = [];
+            const details = (currentSessionMistakes || []).map(m => ({
+                q: `「${m.target}」を探す`,
+                ok: false,
+                miss: [`「${m.chosen}」を選択`],
+                target: m.target,
+                chosen: m.chosen
+            }));
+
+            if (window.AppHistory) {
+                AppHistory.save('hiragana_sagashi', {
+                    result: {
+                        total: appSettings.totalRounds,
+                        correct: correctCount,
+                        miss: wrongCount,
+                        perfect: wrongCount === 0 && correctCount > 0
+                    },
+                    settings: {
+                        'モード': modeLabel,
+                        '候補数': candidateCountLabel
+                    },
+                    details: details,
+                    extra: {
+                        mistakes: [...currentSessionMistakes],
+                        mode: modeLabel,
+                        candidateCount: candidateCountLabel,
+                        totalRounds: appSettings.totalRounds,
+                        correctCount: correctCount,
+                        wrongCount: wrongCount
+                    }
+                });
+            } else {
+                const historyItem = {
+                    id: Date.now(),
+                    date: formatCurrentDateTime(),
+                    correctCount: correctCount,
+                    wrongCount: wrongCount,
+                    totalRounds: appSettings.totalRounds,
+                    mode: modeLabel,
+                    candidateCount: candidateCountLabel,
+                    mistakes: [...currentSessionMistakes]
+                };
+
+                let historyList = [];
+                try {
+                    const saved = localStorage.getItem('hiragana_sagashi_history');
+                    if (saved) historyList = JSON.parse(saved);
+                } catch (e) {
+                    historyList = [];
+                }
+
+                historyList.unshift(historyItem);
+                if (historyList.length > 50) historyList = historyList.slice(0, 50);
+
+                try {
+                    localStorage.setItem('hiragana_sagashi_history', JSON.stringify(historyList));
+                } catch (e) {}
             }
-
-            historyList.unshift(historyItem);
-            if (historyList.length > 50) historyList = historyList.slice(0, 50);
-
-            try {
-                localStorage.setItem('hiragana_sagashi_history', JSON.stringify(historyList));
-            } catch (e) {}
 
             currentSessionMistakes = [];
         }
@@ -2022,7 +2058,11 @@
 
         btnClearHistory.onclick = () => {
             if (confirm('すべてのプレイ履歴を消去しますか？')) {
-                localStorage.removeItem('hiragana_sagashi_history');
+                if (window.AppHistory) {
+                    AppHistory.clear('hiragana_sagashi');
+                } else {
+                    localStorage.removeItem('hiragana_sagashi_history');
+                }
                 renderHistoryList();
             }
         };
@@ -2030,23 +2070,33 @@
         function renderHistoryList() {
             historyItemsList.innerHTML = '';
             let historyList = [];
-            try {
-                const saved = localStorage.getItem('hiragana_sagashi_history');
-                if (saved) historyList = JSON.parse(saved);
-            } catch (e) {
-                historyList = [];
+            if (window.AppHistory) {
+                historyList = AppHistory.load('hiragana_sagashi');
+            } else {
+                try {
+                    const saved = localStorage.getItem('hiragana_sagashi_history');
+                    if (saved) historyList = JSON.parse(saved);
+                } catch (e) {
+                    historyList = [];
+                }
             }
 
-            if (historyList.length === 0) {
+            if (!historyList || historyList.length === 0) {
                 historyStatsBar.innerHTML = '<span>累計プレイ: 0回</span><span>正解率: —</span>';
                 historyItemsList.innerHTML = '<div style="text-align:center; padding:30px; font-size:0.9rem; color:#8e8e93;">まだプレイ履歴がありません。</div>';
                 return;
             }
 
-            // 統計計算
+            // 統計計算（新旧混在対応）
             const totalPlays = historyList.length;
-            const totalCorrect = historyList.reduce((sum, h) => sum + (h.correctCount || 0), 0);
-            const totalWrong = historyList.reduce((sum, h) => sum + (h.wrongCount || 0), 0);
+            const totalCorrect = historyList.reduce((sum, h) => {
+                const c = Number(h.v) >= 1 ? (h.result ? h.result.correct : 0) : (h.correctCount || 0);
+                return sum + (Number(c) || 0);
+            }, 0);
+            const totalWrong = historyList.reduce((sum, h) => {
+                const w = Number(h.v) >= 1 ? (h.result ? h.result.miss : 0) : (h.wrongCount || 0);
+                return sum + (Number(w) || 0);
+            }, 0);
             const totalAttempts = totalCorrect + totalWrong;
             const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
 
@@ -2056,9 +2106,27 @@
                 const card = document.createElement('div');
                 card.className = 'history-item-card';
 
+                const isV1 = Number(item.v) >= 1;
+                const dateStr = (isV1 && item.ts && window.AppHistory) ? AppHistory.formatDate(item.ts) : (item.date || '日時不明');
+                const cCount = isV1 ? (item.result ? item.result.correct : 0) : (item.correctCount || 0);
+                const wCount = isV1 ? (item.result ? item.result.miss : 0) : (item.wrongCount || 0);
+                const tRounds = isV1 ? (item.result ? item.result.total : 0) : (item.totalRounds || 0);
+                const modeStr = (item.settings && item.settings['モード']) || (item.extra && item.extra.mode) || item.mode || '';
+                const candStr = (item.settings && item.settings['候補数']) || (item.extra && item.extra.candidateCount) || item.candidateCount || '';
+                const metaSub = candStr ? `（${candStr}）` : '';
+
+                const mistakesList = (item.extra && item.extra.mistakes) || (item.mistakes) || (item.details) || [];
                 let mistakeHtml = '';
-                if (item.mistakes && item.mistakes.length > 0) {
-                    const mistakeStrs = item.mistakes.map(m => `「${m.target}」➔「${m.chosen}」`).join(', ');
+                if (mistakesList && mistakesList.length > 0) {
+                    const mistakeStrs = mistakesList.map(m => {
+                        if (m && m.target && m.chosen) {
+                            return `「${m.target}」➔「${m.chosen}」`;
+                        }
+                        if (m && m.q && m.miss && m.miss.length > 0) {
+                            return `${m.q} (${m.miss.join(', ')})`;
+                        }
+                        return typeof m === 'string' ? m : JSON.stringify(m);
+                    }).join(', ');
                     mistakeHtml = `<div class="history-mistakes-text">間違えた文字: ${mistakeStrs}</div>`;
                 } else {
                     mistakeHtml = `<div style="font-size:0.8rem; color:#059669; font-weight:600;">パーフェクト！</div>`;
@@ -2066,13 +2134,13 @@
 
                 card.innerHTML = `
                     <div class="history-item-top">
-                        <span>${item.date}</span>
+                        <span>${dateStr}</span>
                         <div class="history-score-tag">
-                            <span class="history-score-correct">○: ${item.correctCount}</span>
-                            <span class="history-score-wrong">×: ${item.wrongCount}</span>
+                            <span class="history-score-correct">○: ${cCount}</span>
+                            <span class="history-score-wrong">×: ${wCount}</span>
                         </div>
                     </div>
-                    <div class="history-meta-text">${item.mode}（${item.candidateCount}） / 全${item.totalRounds}問</div>
+                    <div class="history-meta-text">${modeStr}${metaSub} / 全${tRounds}問</div>
                     ${mistakeHtml}
                 `;
 

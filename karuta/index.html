@@ -1393,6 +1393,7 @@
 
     <div id="toast" class="toast-notification"></div>
 
+    <script src="../common/history.js"></script>
     <script>
         const DEFAULT_CARDS = [
             { id: "1", name: "あり", emoji: "🐜", imageData: null, audioData: null, isActive: true },
@@ -1803,8 +1804,48 @@
             renderSamplePreviewScreen();
         }
 
-        // --- 履歴データの管理 ---
+        // --- 履歴データの管理（AppHistory v1 対応） ---
+        function convertLegacyKarutaRecord(item) {
+            if (!item || typeof item !== 'object') return null;
+            const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
+            const hasScore = item.corrects != null || item.correct != null || item.wrongs != null || item.miss != null || item.totalQuestions != null;
+            if (!hasDate && !hasScore) return null;
+
+            const correct = Number(item.corrects != null ? item.corrects : item.correct) || 0;
+            const miss = Number(item.wrongs != null ? item.wrongs : item.miss) || 0;
+            const total = Number(item.totalQuestions) || (correct + miss) || 0;
+            const ts = (window.AppHistory ? AppHistory.parseDate(item.date, item.id) : 0) || Date.now();
+
+            const details = Array.isArray(item.details)
+                ? item.details.filter(d => d && typeof d === 'object').map(d => ({
+                    q: d.q != null ? d.q : (d.word || ''),
+                    ok: d.ok != null ? !!d.ok : !!d.firstTry,
+                    miss: Array.isArray(d.miss) ? d.miss : (Array.isArray(d.wrongPicks) ? d.wrongPicks : (d.wrongPicks ? [String(d.wrongPicks)] : []))
+                }))
+                : [];
+
+            const wrongWords = Array.isArray(item.wrongWords)
+                ? item.wrongWords
+                : (typeof item.wrongWords === 'string' ? [item.wrongWords] : []);
+
+            return {
+                id: item.id,
+                ts: ts,
+                result: { total, correct, miss },
+                settings: item.settings || {},
+                details: details,
+                extra: {
+                    wrongWords: wrongWords,
+                    legacyDate: typeof item.date === 'string' ? item.date : ''
+                }
+            };
+        }
+
         function loadHistoryData() {
+            if (window.AppHistory) {
+                historyList = AppHistory.load('karuta', { legacy: convertLegacyKarutaRecord });
+                return;
+            }
             const saved = localStorage.getItem('karuta_history');
             if (saved) {
                 try {
@@ -1819,24 +1860,48 @@
         }
 
         function saveHistoryData() {
-            localStorage.setItem('karuta_history', JSON.stringify(historyList));
+            if (window.AppHistory) {
+                AppHistory.replaceAll('karuta', historyList, { legacy: convertLegacyKarutaRecord });
+                loadHistoryData();
+            } else {
+                localStorage.setItem('karuta_history', JSON.stringify(historyList));
+            }
             renderHistoryUI();
         }
 
         function clearHistory() {
             if (historyList.length === 0) return;
             historyList = [];
-            saveHistoryData();
+            if (window.AppHistory) {
+                AppHistory.clear('karuta');
+            } else {
+                localStorage.removeItem('karuta_history');
+            }
+            renderHistoryUI();
             showToast("学習履歴をクリアしました");
         }
 
         function getWeakWordsStats() {
             const map = {};
             historyList.forEach(item => {
-                if (item && item.wrongWords && Array.isArray(item.wrongWords)) {
-                    item.wrongWords.forEach(w => {
+                if (!item || typeof item !== 'object') return;
+                const wrongWords = (item.extra && Array.isArray(item.extra.wrongWords))
+                    ? item.extra.wrongWords
+                    : (Array.isArray(item.wrongWords) ? item.wrongWords : []);
+                if (wrongWords.length > 0) {
+                    wrongWords.forEach(w => {
                         if (typeof w === 'string' && w !== 'もぐら') {
                             map[w] = (map[w] || 0) + 1;
+                        }
+                    });
+                } else if (Array.isArray(item.details)) {
+                    item.details.forEach(d => {
+                        if (!d || typeof d !== 'object') return;
+                        const q = d.q != null ? d.q : d.word;
+                        const ok = d.ok != null ? !!d.ok : !!d.firstTry;
+                        const missCount = Array.isArray(d.miss) ? d.miss.length : (Array.isArray(d.wrongPicks) ? d.wrongPicks.length : 1);
+                        if (typeof q === 'string' && q !== 'もぐら' && !ok) {
+                            map[q] = (map[q] || 0) + Math.max(1, missCount);
                         }
                     });
                 }
@@ -1877,10 +1942,12 @@
                     try {
                         if (!item || typeof item !== 'object') return;
 
-                        // 日時もスコア情報も持たない破損レコードはスキップ
-                        const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
-                        const hasScore = item.corrects != null || item.correct != null || item.wrongs != null || item.miss != null || item.totalQuestions != null;
-                        if (!hasDate && !hasScore) return;
+                        const isV1 = item.v >= 1 && item.result && typeof item.result === 'object';
+                        if (!isV1) {
+                            const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
+                            const hasScore = item.corrects != null || item.correct != null || item.wrongs != null || item.miss != null || item.totalQuestions != null;
+                            if (!hasDate && !hasScore) return;
+                        }
 
                         const card = document.createElement('div');
                         card.className = 'history-card-item';
@@ -1889,26 +1956,29 @@
                         if (item.details && Array.isArray(item.details) && item.details.length > 0) {
                             const validDetails = item.details.filter(d => d && typeof d === 'object');
                             const rows = validDetails.map((d, idx) => {
-                                const isFirst = !!d.firstTry;
-                                const wrongPicks = Array.isArray(d.wrongPicks) 
-                                    ? d.wrongPicks 
-                                    : (d.wrongPicks ? [String(d.wrongPicks)] : []);
+                                const word = d.q != null ? d.q : (d.word || '（単語不明）');
+                                const isFirst = d.ok != null ? !!d.ok : !!d.firstTry;
+                                const rawPicks = d.miss !== undefined ? d.miss : d.wrongPicks;
+                                const wrongPicks = Array.isArray(rawPicks) 
+                                    ? rawPicks 
+                                    : (rawPicks ? [String(rawPicks)] : []);
                                 const statusHtml = isFirst
                                     ? '<span class="history-detail-status correct">◯</span>'
                                     : `<span class="history-detail-status wrong">❌ <span class="history-detail-wrong-picks">${escapeHtml(wrongPicks.join('、') || 'ミスあり')}</span></span>`;
                                 return `
                                     <div class="history-detail-row">
                                         <span class="history-detail-num">${idx + 1}.</span>
-                                        <span class="history-detail-word">${escapeHtml(d.word || '（単語不明）')}</span>
+                                        <span class="history-detail-word">${escapeHtml(word)}</span>
                                         ${statusHtml}
                                     </div>
                                 `;
                             }).join('');
                             detailsHtml = `<div class="history-details-list">${rows}</div>`;
                         } else {
-                            const wrongList = Array.isArray(item.wrongWords) 
-                                ? item.wrongWords 
-                                : (typeof item.wrongWords === 'string' ? [item.wrongWords] : []);
+                            const rawWrongs = (item.extra && item.extra.wrongWords !== undefined) ? item.extra.wrongWords : item.wrongWords;
+                            const wrongList = Array.isArray(rawWrongs) 
+                                ? rawWrongs 
+                                : (typeof rawWrongs === 'string' ? [rawWrongs] : []);
                             const filteredWrongs = wrongList.filter(w => typeof w === 'string' && w !== 'もぐら');
                             const hasWrong = filteredWrongs.length > 0;
                             const wrongText = hasWrong ? `間違えた単語: ${[...new Set(filteredWrongs)].join('、')}` : '全問正解！🎉';
@@ -1919,10 +1989,18 @@
                             `;
                         }
 
-                        const correctsCount = Number(item.corrects != null ? item.corrects : item.correct) || 0;
-                        const wrongsCount = Number(item.wrongs != null ? item.wrongs : item.miss) || 0;
-                        const totalCount = Number(item.totalQuestions) || (correctsCount + wrongsCount) || 0;
-                        const dateStr = (typeof item.date === 'string' && item.date.trim()) ? item.date : '日時不明';
+                        const correctsCount = isV1
+                            ? (Number(item.result.correct) || 0)
+                            : (Number(item.corrects != null ? item.corrects : item.correct) || 0);
+                        const wrongsCount = isV1
+                            ? (Number(item.result.miss) || 0)
+                            : (Number(item.wrongs != null ? item.wrongs : item.miss) || 0);
+                        const totalCount = isV1
+                            ? (Number(item.result.total) || (correctsCount + wrongsCount) || 0)
+                            : (Number(item.totalQuestions) || (correctsCount + wrongsCount) || 0);
+                        const dateStr = (isV1 && window.AppHistory)
+                            ? AppHistory.formatDate(item.ts)
+                            : ((typeof item.date === 'string' && item.date.trim()) ? item.date : '日時不明');
 
                         card.innerHTML = `
                             <div class="history-header-line">
@@ -2469,18 +2547,43 @@
                 document.getElementById('btn-replay-inline').style.display = 'none';
                 playSound('finish');
 
-                const record = {
-                    id: Date.now().toString(),
-                    date: new Date().toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                    totalQuestions: totalQuestionsInCurrentGame,
-                    corrects: corrects,
-                    wrongs: wrongs,
-                    wrongWords: [...currentGameWrongWords],
-                    details: [...currentGameDetails]
-                };
-                historyList.unshift(record);
-                if (historyList.length > 50) historyList.pop();
-                saveHistoryData();
+                const v1Details = currentGameDetails.map(d => ({
+                    q: d.word || '',
+                    ok: !!d.firstTry,
+                    miss: Array.isArray(d.wrongPicks) ? [...d.wrongPicks] : []
+                }));
+                if (window.AppHistory) {
+                    AppHistory.save('karuta', {
+                        result: {
+                            total: totalQuestionsInCurrentGame,
+                            correct: corrects,
+                            miss: wrongs
+                        },
+                        settings: {
+                            '問題数': totalQuestionsInCurrentGame,
+                            '札の配置': `${setting.rows}×${setting.columns}`
+                        },
+                        details: v1Details,
+                        extra: {
+                            wrongWords: [...currentGameWrongWords]
+                        }
+                    });
+                    loadHistoryData();
+                    renderHistoryUI();
+                } else {
+                    const record = {
+                        id: Date.now().toString(),
+                        date: new Date().toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                        totalQuestions: totalQuestionsInCurrentGame,
+                        corrects: corrects,
+                        wrongs: wrongs,
+                        wrongWords: [...currentGameWrongWords],
+                        details: [...currentGameDetails]
+                    };
+                    historyList.unshift(record);
+                    if (historyList.length > 50) historyList.pop();
+                    saveHistoryData();
+                }
 
                 setTimeout(() => stopGame(), 2800);
                 return;

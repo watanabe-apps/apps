@@ -7,6 +7,7 @@
     <link class="apple-touch-icon" rel="apple-touch-icon" href="img.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script src="../common/history.js"></script>
     <style>
         /* 誤操作防止と画面フィットの共通設計 */
         *, *::before, *::after {
@@ -1404,9 +1405,13 @@
             if (saved) {
                 try { settings = { ...settings, ...JSON.parse(saved) }; } catch(e) {}
             }
-            const savedHistory = localStorage.getItem('ooi_sukunai_history');
-            if (savedHistory) {
-                try { gameState.history = JSON.parse(savedHistory); } catch(e) {}
+            if (window.AppHistory) {
+                gameState.history = AppHistory.load('ooi_sukunai');
+            } else {
+                const savedHistory = localStorage.getItem('ooi_sukunai_history');
+                if (savedHistory) {
+                    try { gameState.history = JSON.parse(savedHistory); } catch(e) {}
+                }
             }
 
             setupButtonGroup('opt-step', 'step');
@@ -1489,26 +1494,66 @@
             else if (settings.step === 'both') stepLabel = '両方';
             else if (settings.step === 'random') stepLabel = 'ランダム';
 
-            const newItem = {
-                id: Date.now(),
-                date: new Date().toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                step: stepLabel,
-                pairs: settings.pairs,
-                score: `${gameState.correctCount} / ${settings.questions}`,
-                time: `${elapsedSec}秒`,
-                details: JSON.parse(JSON.stringify(gameState.detailedLog))
-            };
+            const totalMistakes = (gameState.detailedLog || []).reduce((acc, q) => acc + (Number(q.mistakes) || 0), 0);
+            const details = (gameState.detailedLog || []).map(q => {
+                const emojisStr = Array.isArray(q.emojis) ? q.emojis.join(', ') : '';
+                const m = Number(q.mistakes) || 0;
+                return {
+                    q: `第${q.index}問 [${emojisStr}] (${q.modeText})`,
+                    ok: m === 0,
+                    miss: m > 0 ? [`ミス${m}回`] : [],
+                    index: q.index,
+                    emojis: q.emojis,
+                    modeText: q.modeText,
+                    time: q.time,
+                    mistakes: m
+                };
+            });
 
-            gameState.history.unshift(newItem);
-            if (gameState.history.length > 20) gameState.history.pop();
-            localStorage.setItem('ooi_sukunai_history', JSON.stringify(gameState.history));
+            if (window.AppHistory) {
+                AppHistory.save('ooi_sukunai', {
+                    result: {
+                        total: settings.questions,
+                        correct: gameState.correctCount,
+                        miss: totalMistakes,
+                        perfect: totalMistakes === 0 && gameState.correctCount === settings.questions,
+                        durationSec: elapsedSec
+                    },
+                    settings: {
+                        'モード': stepLabel,
+                        'ペア数': `${settings.pairs}組ペア`
+                    },
+                    details: details,
+                    extra: {
+                        detailedLog: gameState.detailedLog,
+                        step: stepLabel,
+                        pairs: settings.pairs,
+                        score: `${gameState.correctCount} / ${settings.questions}`,
+                        time: `${elapsedSec}秒`
+                    }
+                });
+                gameState.history = AppHistory.load('ooi_sukunai');
+            } else {
+                const newItem = {
+                    id: Date.now(),
+                    date: new Date().toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    step: stepLabel,
+                    pairs: settings.pairs,
+                    score: `${gameState.correctCount} / ${settings.questions}`,
+                    time: `${elapsedSec}秒`,
+                    details: JSON.parse(JSON.stringify(gameState.detailedLog))
+                };
+                gameState.history.unshift(newItem);
+                if (gameState.history.length > 20) gameState.history.pop();
+                localStorage.setItem('ooi_sukunai_history', JSON.stringify(gameState.history));
+            }
         }
 
         function renderHistory() {
             const container = document.getElementById('history-list-container');
             container.innerHTML = '';
             
-            if (gameState.history.length === 0) {
+            if (!gameState.history || gameState.history.length === 0) {
                 container.innerHTML = '<div class="history-empty">プレイデータがありません</div>';
                 return;
             }
@@ -1517,17 +1562,37 @@
                 const wrapper = document.createElement('div');
                 wrapper.className = 'history-item-container';
                 
+                // 新フォーマット(v1)と旧フォーマットの両方に対応
+                let dateStr = item.date || '日時不明';
+                if (Number(item.v) >= 1 && item.ts) {
+                    dateStr = window.AppHistory ? AppHistory.formatDate(item.ts) : new Date(item.ts).toLocaleString('ja-JP');
+                }
+                const stepLabel = (item.settings && item.settings['モード']) || (item.extra && item.extra.step) || item.step || '';
+                const pairsLabel = (item.settings && item.settings['ペア数']) || (item.extra && item.extra.pairs ? `${item.extra.pairs}組ペア` : '') || (item.pairs ? `${item.pairs}組ペア` : '');
+                
+                let scoreText = item.score || '';
+                if (Number(item.v) >= 1 && item.result) {
+                    scoreText = `${item.result.correct ?? 0} / ${item.result.total ?? 0}`;
+                }
+
+                let timeText = item.time || '';
+                if (Number(item.v) >= 1 && item.result && item.result.durationSec !== undefined) {
+                    timeText = `${item.result.durationSec}秒`;
+                }
+
+                const subInfo = [stepLabel, pairsLabel].filter(Boolean).join(' / ');
+
                 const header = document.createElement('div');
                 header.className = 'history-item-header';
                 header.innerHTML = `
                     <div>
-                        <strong style="color:#000000; font-size: 16px;">${item.date}</strong><br>
-                        <span style="color:#8e8e93; font-size:13px;">${item.step} (${item.pairs}組ペア)</span>
+                        <strong style="color:#000000; font-size: 16px;">${dateStr}</strong><br>
+                        <span style="color:#8e8e93; font-size:13px;">${subInfo}</span>
                     </div>
                     <div style="text-align:right; display:flex; align-items:center; gap:10px;">
                         <div>
-                            <span style="font-weight:bold; color:#ff9500; font-size: 18px;">${item.score}</span><br>
-                            <span style="color:#8e8e93; font-size:12px;">${item.time}</span>
+                            <span style="font-weight:bold; color:#ff9500; font-size: 18px;">${scoreText}</span><br>
+                            <span style="color:#8e8e93; font-size:12px;">${timeText}</span>
                         </div>
                         <span style="font-size:12px; color:#c7c7cc;">▼</span>
                     </div>
@@ -1537,12 +1602,18 @@
                 details.className = 'history-item-details';
                 
                 let detailsHTML = `<div style="font-weight:bold; margin-bottom:8px; color:#007aff;">📄 設問ごとの詳細記録</div>`;
-                if (item.details && item.details.length > 0) {
-                    item.details.forEach(q => {
+                const detailsList = (item.extra && item.extra.detailedLog) || item.details || [];
+                if (Array.isArray(detailsList) && detailsList.length > 0) {
+                    detailsList.forEach(q => {
+                        const emojisStr = Array.isArray(q.emojis) ? `[${q.emojis.join(', ')}]` : '';
+                        const modeStr = q.modeText ? `(${q.modeText})` : '';
+                        const qTitle = q.index ? `第${q.index}問 ${emojisStr} ${modeStr}`.trim() : (q.q || '問題');
+                        const mistakes = q.mistakes != null ? Number(q.mistakes) : (q.ok ? 0 : 1);
+                        const timeStr = q.time ? `解答時間: <strong>${q.time}</strong> / ` : '';
                         detailsHTML += `
                             <div class="details-row">
-                                <span>第${q.index}問 [${q.emojis.join(', ')}] (${q.modeText})</span>
-                                <span>解答時間: <strong>${q.time}</strong> / 誤答: <strong style="color:${q.mistakes > 0 ? '#ff3b30':'#34c759'};">${q.mistakes}回</strong></span>
+                                <span>${qTitle}</span>
+                                <span>${timeStr}誤答: <strong style="color:${mistakes > 0 ? '#ff3b30':'#34c759'};">${mistakes}回</strong></span>
                             </div>
                         `;
                     });
@@ -1973,7 +2044,11 @@
             const clearHistoryAction = (e) => {
                 e.preventDefault();
                 gameState.history = [];
-                localStorage.removeItem('ooi_sukunai_history');
+                if (window.AppHistory) {
+                    AppHistory.clear('ooi_sukunai');
+                } else {
+                    localStorage.removeItem('ooi_sukunai_history');
+                }
                 renderHistory();
                 hideConfirmModal();
                 

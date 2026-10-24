@@ -536,6 +536,7 @@
         </div>
     </div>
 
+    <script src="../common/history.js"></script>
     <script>
         // --- 既知の履歴対応アプリ定義 ---
         const APPS_CONFIG = [
@@ -597,7 +598,8 @@
                 id: 'keyboard_quiz',
                 name: '平仮名キーボードクイズ',
                 icon: '⌨️',
-                key: 'hiraganaAppConfig',
+                key: 'keyboard_quiz_history',
+                legacyKey: 'hiraganaAppConfig',
                 dir: '../keyboard_quiz/',
                 parser: parseKeyboardQuiz
             },
@@ -697,12 +699,107 @@
                               currentDateFilter;
 
             return items.filter(item => {
+                if (typeof item.ts === 'number' && item.ts > 0) {
+                    const d = new Date(item.ts);
+                    if (!isNaN(d.getTime())) {
+                        const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        return ymd === targetYMD;
+                    }
+                }
                 const ymd = parseToYMD(item.date);
                 return ymd === targetYMD;
             });
         }
 
-        // --- パーサー群（各アプリのデータ構造を共通フォーマットに正規化） ---
+        // --- 共通フォーマット（v1）パーサー ---
+        function parseV1Record(item, appConfig, idx) {
+            try {
+                if (!item || typeof item !== 'object' || !(Number(item.v) >= 1) || !item.result || typeof item.result !== 'object') {
+                    return null;
+                }
+                const r = item.result;
+                const total = Math.max(0, Number(r.total) || 0);
+                const correct = Math.max(0, Number(r.correct) || 0);
+                const miss = Math.max(0, Number(r.miss) || 0);
+                const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
+                const isPerfect = typeof r.perfect === 'boolean'
+                    ? r.perfect
+                    : (miss === 0 && correct > 0 && (total === 0 || correct >= total));
+
+                let scoreText = '';
+                if (total > 0) {
+                    scoreText = `正解: ${correct}/${total}問 (${rate}%)`;
+                } else if (r.durationSec !== undefined && correct === 0) {
+                    scoreText = `タイム: ${r.durationSec}秒`;
+                } else {
+                    scoreText = `${correct}問クリア`;
+                }
+
+                const tags = [];
+                if (miss > 0) tags.push(`❌ ${miss}回`);
+                if (r.durationSec !== undefined) tags.push(`所要時間: ${r.durationSec}秒`);
+                if (item.settings && typeof item.settings === 'object' && !Array.isArray(item.settings)) {
+                    Object.keys(item.settings).forEach(label => {
+                        const val = item.settings[label];
+                        if (val !== null && val !== undefined && val !== '') {
+                            tags.push(`${label}: ${val}`);
+                        }
+                    });
+                }
+
+                let detailsHtml = null;
+                if (Array.isArray(item.details) && item.details.length > 0) {
+                    const validDetails = item.details.filter(d => d && typeof d === 'object');
+                    if (validDetails.length > 0) {
+                        detailsHtml = validDetails.map((d, i) => {
+                            const word = d.q != null ? d.q : (d.word || '（不明）');
+                            const ok = d.ok !== undefined ? !!d.ok : !!d.firstTry;
+                            const rawMiss = d.miss !== undefined ? d.miss : d.wrongPicks;
+                            const picks = Array.isArray(rawMiss)
+                                ? rawMiss
+                                : (rawMiss ? [String(rawMiss)] : []);
+                            const missLabel = (appConfig && appConfig.id === 'karuta') ? '間違えた札' : 'ミス';
+                            const missText = picks.length > 0 ? `${missLabel}: ${picks.join(', ')}` : 'ミスあり';
+                            const mark = ok
+                                ? '<span style="color:var(--success); font-weight:700;">⭕️ 一発正解</span>'
+                                : `<span class="error-tag">❌ ${missText}</span>`;
+                            return `第${i + 1}問 [${word}] → ${mark}`;
+                        }).join('<br>');
+                    }
+                } else if (item.extra && item.extra.wrongWords) {
+                    const wrongList = Array.isArray(item.extra.wrongWords)
+                        ? item.extra.wrongWords
+                        : (typeof item.extra.wrongWords === 'string' ? [item.extra.wrongWords] : []);
+                    if (wrongList.length > 0) {
+                        detailsHtml = `<span class="error-tag">つまずいた言葉:</span> ${wrongList.join(', ')}`;
+                    }
+                }
+
+                const ts = Number(item.ts) || 0;
+                const dateStr = (window.AppHistory && ts > 0)
+                    ? AppHistory.formatDate(ts)
+                    : (typeof item.date === 'string' && item.date.trim() ? item.date : '日時不明');
+                const appId = (appConfig && appConfig.id) || item.app || 'unknown';
+                const appName = (appConfig && appConfig.name) || item.app || '不明なアプリ';
+
+                return {
+                    id: `${appId}_${item.id || idx}`,
+                    appName: appName,
+                    appId: appId,
+                    ts: ts,
+                    date: dateStr,
+                    scoreText: scoreText,
+                    isPerfect: isPerfect,
+                    tags: tags,
+                    details: detailsHtml
+                };
+            } catch (err) {
+                console.warn('[v1 Parser] 履歴アイテムのパースをスキップしました:', err, item);
+                return null;
+            }
+        }
+
+        // --- パーサー群（各アプリの旧データ構造を共通フォーマットに正規化） ---
         // 1. なんばんめ
         function parseNanbanme(raw) {
             if (!Array.isArray(raw)) return [];
@@ -811,6 +908,11 @@
                 try {
                     // 非オブジェクト・null は nil として除外
                     if (!item || typeof item !== 'object') return null;
+
+                    // v1 共通フォーマットの場合は共通パーサーで変換
+                    if (Number(item.v) >= 1) {
+                        return parseV1Record(item, { id: 'karuta', name: 'カルタ' }, idx);
+                    }
 
                     // 日時もスコア情報も持たない破損レコードは nil として除外
                     const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
@@ -1098,11 +1200,50 @@
         function getAppHistory(appConfig) {
             if (appConfig.isSpecial) return [];
             try {
-                const rawStr = localStorage.getItem(appConfig.key);
-                if (!rawStr) return [];
-                const raw = JSON.parse(rawStr);
-                const list = appConfig.parser ? appConfig.parser(raw) : parseGeneric(raw, appConfig.name);
-                return Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
+                const keys = [appConfig.key];
+                if (appConfig.legacyKey && !keys.includes(appConfig.legacyKey)) {
+                    keys.push(appConfig.legacyKey);
+                }
+
+                let list = [];
+                keys.forEach(k => {
+                    const rawStr = localStorage.getItem(k);
+                    if (!rawStr) return;
+                    try {
+                        const raw = JSON.parse(rawStr);
+                        if (Array.isArray(raw)) {
+                            const legacyParser = appConfig.parser ? appConfig.parser : (arr => parseGeneric(arr, appConfig.name));
+                            raw.forEach((item, idx) => {
+                                try {
+                                    if (!item || typeof item !== 'object') return;
+                                    if (Number(item.v) >= 1) {
+                                        const parsed = parseV1Record(item, appConfig, idx);
+                                        if (parsed) list.push(parsed);
+                                    } else {
+                                        const parsedArr = legacyParser([item]);
+                                        if (Array.isArray(parsedArr) && parsedArr[0]) {
+                                            list.push(parsedArr[0]);
+                                        }
+                                    }
+                                } catch (itemErr) {
+                                    console.warn(`Skipped invalid item in ${appConfig.name}`, itemErr, item);
+                                }
+                            });
+                        } else {
+                            const parsedArr = appConfig.parser ? appConfig.parser(raw) : parseGeneric(raw, appConfig.name);
+                            if (Array.isArray(parsedArr)) list = list.concat(parsedArr);
+                        }
+                    } catch (pe) {
+                        console.warn(`Failed to parse key ${k}`, pe);
+                    }
+                });
+
+                return list.filter(item => item && typeof item === 'object').map(item => {
+                    if (typeof item.ts !== 'number' || !(item.ts > 0)) {
+                        item.ts = window.AppHistory ? AppHistory.parseDate(item.date, item.id) : 0;
+                    }
+                    return item;
+                });
             } catch (e) {
                 console.warn(`Failed to parse history for ${appConfig.name}`, e);
                 return [];
@@ -1134,8 +1275,13 @@
                     all = all.concat(list);
                 }
             });
-            // 日時順に降順ソート（新しい順）
-            return all.sort((a, b) => (b.date > a.date ? 1 : -1));
+            // 日時順に降順ソート（新しい順・ts 数値優先）
+            return all.sort((a, b) => {
+                const ta = Number(a.ts) || 0;
+                const tb = Number(b.ts) || 0;
+                if (ta !== tb) return tb - ta;
+                return (b.date > a.date ? 1 : -1);
+            });
         }
 
         // --- ストレージ使用量の計算 ---

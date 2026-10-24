@@ -7,6 +7,7 @@
     <!-- ホーム画面追加用アイコン設定 -->
     <link rel="apple-touch-icon" href="img.png">
     <link rel="icon" href="img.png">
+    <script src="../common/history.js"></script>
     <style>
         :root {
             --primary: #007AFF;
@@ -1388,28 +1389,58 @@
             try {
                 const now = new Date();
                 const dateStr = now.toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const historyList = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
                 const styleName = settings.plateStyle === 'normal' ? '標準の皿' : (settings.plateStyle === 'dot' ? '目印の点' : '数字付き');
                 const orderLabel = settings.orderMode === 'sequential' ? 'じゅんばん' : 'じゆう';
                 const posLabel = settings.itemPosMode === 'random' ? 'ランダム' : 'せいれつ';
-                const elapsedSec = gameStartTime > 0 ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : null;
+                const elapsedSec = gameStartTime > 0 ? parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)) : null;
                 const timeStr = elapsedSec ? `${elapsedSec}秒` : '';
 
-                historyList.unshift({
-                    id: Date.now(),
-                    date: dateStr,
-                    totalRounds: settings.totalRounds,
-                    plateCount: settings.plateCount,
-                    plateStyle: styleName,
-                    orderMode: orderLabel,
-                    itemPosMode: posLabel,
-                    time: timeStr,
-                    miss: missCount,
-                    score: `${settings.totalRounds}/${settings.totalRounds}問クリア`,
-                    isPerfect: missCount === 0
-                });
-                if (historyList.length > 50) historyList.length = 50;
-                localStorage.setItem('1tai1_history', JSON.stringify(historyList));
+                if (window.AppHistory) {
+                    AppHistory.save('1tai1', {
+                        result: {
+                            total: settings.totalRounds,
+                            correct: settings.totalRounds,
+                            miss: missCount,
+                            perfect: missCount === 0,
+                            durationSec: elapsedSec !== null ? Math.round(elapsedSec) : undefined
+                        },
+                        settings: {
+                            'お皿の数': `${settings.plateCount}枚`,
+                            'お皿の見た目': styleName,
+                            '配り方': orderLabel,
+                            '並び': posLabel
+                        },
+                        details: [],
+                        extra: {
+                            totalRounds: settings.totalRounds,
+                            plateCount: settings.plateCount,
+                            plateStyle: styleName,
+                            orderMode: orderLabel,
+                            itemPosMode: posLabel,
+                            time: timeStr,
+                            miss: missCount,
+                            score: `${settings.totalRounds}/${settings.totalRounds}問クリア`,
+                            isPerfect: missCount === 0
+                        }
+                    });
+                } else {
+                    const historyList = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
+                    historyList.unshift({
+                        id: Date.now(),
+                        date: dateStr,
+                        totalRounds: settings.totalRounds,
+                        plateCount: settings.plateCount,
+                        plateStyle: styleName,
+                        orderMode: orderLabel,
+                        itemPosMode: posLabel,
+                        time: timeStr,
+                        miss: missCount,
+                        score: `${settings.totalRounds}/${settings.totalRounds}問クリア`,
+                        isPerfect: missCount === 0
+                    });
+                    if (historyList.length > 50) historyList.length = 50;
+                    localStorage.setItem('1tai1_history', JSON.stringify(historyList));
+                }
             } catch (e) {}
         }
 
@@ -1450,7 +1481,11 @@
 
         document.getElementById('btn-clear-history').addEventListener('click', () => {
             if (confirm('履歴をすべて消去しますか？')) {
-                localStorage.removeItem('1tai1_history');
+                if (window.AppHistory) {
+                    AppHistory.clear('1tai1');
+                } else {
+                    localStorage.removeItem('1tai1_history');
+                }
                 renderHistoryUI();
             }
         });
@@ -1466,11 +1501,15 @@
             listEl.innerHTML = '';
 
             let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
-            } catch (e) {}
+            if (window.AppHistory) {
+                list = AppHistory.load('1tai1');
+            } else {
+                try {
+                    list = JSON.parse(localStorage.getItem('1tai1_history') || '[]');
+                } catch (e) {}
+            }
 
-            if (list.length === 0) {
+            if (!list || list.length === 0) {
                 listEl.innerHTML = '<div style="text-align:center; padding: 30px; color:#8e8e93; font-weight:700;">履歴がありません</div>';
                 return;
             }
@@ -1478,19 +1517,32 @@
             list.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'history-card-item';
-                const misses = item.miss != null ? item.miss : 0;
-                const timeText = item.time ? (String(item.time).includes('秒') ? item.time : `${item.time}秒`) : '';
+                
+                const isV1 = Number(item.v) >= 1;
+                const dateStr = (isV1 && item.ts && window.AppHistory) ? AppHistory.formatDate(item.ts) : (item.date || '');
+                const misses = isV1 ? (item.result ? item.result.miss : 0) : (item.miss != null ? item.miss : 0);
+                const scoreStr = isV1 ? `${item.result?.correct ?? 0}/${item.result?.total ?? 0}問クリア` : (item.score || `${item.totalRounds || 0}問クリア`);
+                
+                let durationSec = isV1 ? item.result?.durationSec : null;
+                const timeText = durationSec !== null && durationSec !== undefined
+                    ? `${durationSec}秒`
+                    : (item.time ? (String(item.time).includes('秒') ? item.time : `${item.time}秒`) : '');
+
+                const plateCount = isV1 ? (item.settings?.['お皿の数'] || (item.extra?.plateCount ? `${item.extra.plateCount}枚` : '')) : (item.plateCount ? `${item.plateCount}枚` : '');
+                const plateStyle = isV1 ? (item.settings?.['お皿の見た目'] || item.extra?.plateStyle || '標準の皿') : (item.plateStyle || '標準の皿');
+                const orderMode = isV1 ? (item.settings?.['配り方'] || item.extra?.orderMode || '') : (item.orderMode || '');
+
                 card.innerHTML = `
                     <div class="history-card-top">
-                        <span class="history-card-date">${item.date || ''}</span>
-                        <span class="history-card-score">${item.score || `${item.totalRounds || 0}問クリア`}</span>
+                        <span class="history-card-date">${dateStr}</span>
+                        <span class="history-card-score">${scoreStr}</span>
                     </div>
                     <div class="history-card-tags">
                         ${timeText ? `<span class="history-tag">${timeText}</span>` : ''}
                         ${misses > 0 ? `<span class="history-tag">❌ ${misses}回</span>` : ''}
-                        <span class="history-tag">お皿: ${item.plateCount || 0}枚</span>
-                        <span class="history-tag">${item.plateStyle || '標準の皿'}</span>
-                        ${item.orderMode ? `<span class="history-tag">配り方: ${item.orderMode}</span>` : ''}
+                        ${plateCount ? `<span class="history-tag">お皿: ${plateCount}</span>` : ''}
+                        <span class="history-tag">${plateStyle}</span>
+                        ${orderMode ? `<span class="history-tag">配り方: ${orderMode}</span>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);

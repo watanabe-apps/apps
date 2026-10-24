@@ -741,12 +741,32 @@ async function recordHistory() {
 
   await dbAddHistory(historyEntry);
 
-  try {
-    const localHist = JSON.parse(localStorage.getItem('category_bunrui_history') || '[]');
-    localHist.unshift(historyEntry);
-    if (localHist.length > 100) localHist.pop();
-    localStorage.setItem('category_bunrui_history', JSON.stringify(localHist));
-  } catch (e) {}
+  if (window.AppHistory) {
+    AppHistory.save('category_bunrui', {
+      result: {
+        total: currentGame.totalQuestions,
+        correct: currentGame.totalQuestions,
+        miss: currentGame.sessionMistakes,
+        perfect: currentGame.sessionMistakes === 0
+      },
+      settings: {
+        '配置数': `${currentGame.sessionTotalPlaced}個`
+      },
+      details: [],
+      extra: {
+        questionsCompleted: currentGame.totalQuestions,
+        totalImagesPlaced: currentGame.sessionTotalPlaced,
+        mistakes: currentGame.sessionMistakes
+      }
+    });
+  } else {
+    try {
+      const localHist = JSON.parse(localStorage.getItem('category_bunrui_history') || '[]');
+      localHist.unshift(historyEntry);
+      if (localHist.length > 100) localHist.pop();
+      localStorage.setItem('category_bunrui_history', JSON.stringify(localHist));
+    } catch (e) {}
+  }
 }
 
 // 履歴トリプルタップ処理
@@ -771,7 +791,11 @@ document.getElementById('btn-close-history').addEventListener('click', () => {
 document.getElementById('btn-clear-history').addEventListener('click', async () => {
   if (confirm("履歴をすべて削除しますか？")) {
     await dbClearHistory();
-    try { localStorage.removeItem('category_bunrui_history'); } catch (e) {}
+    if (window.AppHistory) {
+      AppHistory.clear('category_bunrui');
+    } else {
+      try { localStorage.removeItem('category_bunrui_history'); } catch (e) {}
+    }
     await renderHistoryUI();
   }
 });
@@ -781,19 +805,25 @@ async function renderHistoryUI() {
   const listEl = document.getElementById('history-list');
   listEl.innerHTML = '';
 
-  if (histories.length === 0) {
+  if (!histories || histories.length === 0) {
     listEl.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">まだ履歴がありません。</p>';
     return;
   }
 
   histories.reverse().forEach(h => {
+    const isV1 = Number(h.v) >= 1;
+    const dateStr = (isV1 && h.ts && window.AppHistory) ? AppHistory.formatDate(h.ts) : (h.date || '');
+    const qCount = isV1 ? (h.result ? h.result.total : 0) : (h.questionsCompleted || 0);
+    const placed = isV1 ? (h.extra?.totalImagesPlaced ?? '') : (h.totalImagesPlaced ?? '');
+    const mistakes = isV1 ? (h.result ? h.result.miss : 0) : (h.mistakes || 0);
+
     const card = document.createElement('div');
     card.className = 'history-card';
     card.innerHTML = `
-      <div class="history-date">${h.date}</div>
-      <div class="history-stats">解いた問題数: ${h.questionsCompleted} 問</div>
+      <div class="history-date">${dateStr}</div>
+      <div class="history-stats">解いた問題数: ${qCount} 問</div>
       <div class="history-detail">
-        分けたイラスト数: <strong>${h.totalImagesPlaced}</strong> 個 / 間違えた回数: <strong style="color:${h.mistakes > 0 ? '#e03131' : '#495057'}">${h.mistakes}</strong> 回
+        ${placed !== '' ? `分けたイラスト数: <strong>${placed}</strong> 個 / ` : ''}間違えた回数: <strong style="color:${mistakes > 0 ? '#e03131' : '#495057'}">${mistakes}</strong> 回
       </div>
     `;
     listEl.appendChild(card);
