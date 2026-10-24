@@ -1808,7 +1808,8 @@
             const saved = localStorage.getItem('karuta_history');
             if (saved) {
                 try {
-                    historyList = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    historyList = Array.isArray(parsed) ? parsed.filter(item => item && typeof item === 'object') : [];
                 } catch(e) {
                     historyList = [];
                 }
@@ -1832,9 +1833,9 @@
         function getWeakWordsStats() {
             const map = {};
             historyList.forEach(item => {
-                if (item.wrongWords && Array.isArray(item.wrongWords)) {
+                if (item && item.wrongWords && Array.isArray(item.wrongWords)) {
                     item.wrongWords.forEach(w => {
-                        if (w !== 'もぐら') {
+                        if (typeof w === 'string' && w !== 'もぐら') {
                             map[w] = (map[w] || 0) + 1;
                         }
                     });
@@ -1873,45 +1874,67 @@
                 historyContainer.innerHTML = '<div style="text-align:center; padding:20px; font-size:0.85rem; color:#8e8e93;">履歴はありません。</div>';
             } else {
                 historyList.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'history-card-item';
+                    try {
+                        if (!item || typeof item !== 'object') return;
 
-                    let detailsHtml = '';
-                    if (item.details && Array.isArray(item.details) && item.details.length > 0) {
-                        const rows = item.details.map((d, idx) => {
-                            const isFirst = d.firstTry;
-                            const wrongPicks = (d.wrongPicks && d.wrongPicks.length > 0) ? d.wrongPicks : [];
-                            const statusHtml = isFirst
-                                ? '<span class="history-detail-status correct">◯</span>'
-                                : `<span class="history-detail-status wrong">❌ <span class="history-detail-wrong-picks">${escapeHtml(wrongPicks.join('、'))}</span></span>`;
-                            return `
-                                <div class="history-detail-row">
-                                    <span class="history-detail-num">${idx + 1}.</span>
-                                    <span class="history-detail-word">${escapeHtml(d.word || '')}</span>
-                                    ${statusHtml}
+                        // 日時もスコア情報も持たない破損レコードはスキップ
+                        const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
+                        const hasScore = item.corrects != null || item.correct != null || item.wrongs != null || item.miss != null || item.totalQuestions != null;
+                        if (!hasDate && !hasScore) return;
+
+                        const card = document.createElement('div');
+                        card.className = 'history-card-item';
+
+                        let detailsHtml = '';
+                        if (item.details && Array.isArray(item.details) && item.details.length > 0) {
+                            const validDetails = item.details.filter(d => d && typeof d === 'object');
+                            const rows = validDetails.map((d, idx) => {
+                                const isFirst = !!d.firstTry;
+                                const wrongPicks = Array.isArray(d.wrongPicks) 
+                                    ? d.wrongPicks 
+                                    : (d.wrongPicks ? [String(d.wrongPicks)] : []);
+                                const statusHtml = isFirst
+                                    ? '<span class="history-detail-status correct">◯</span>'
+                                    : `<span class="history-detail-status wrong">❌ <span class="history-detail-wrong-picks">${escapeHtml(wrongPicks.join('、') || 'ミスあり')}</span></span>`;
+                                return `
+                                    <div class="history-detail-row">
+                                        <span class="history-detail-num">${idx + 1}.</span>
+                                        <span class="history-detail-word">${escapeHtml(d.word || '（単語不明）')}</span>
+                                        ${statusHtml}
+                                    </div>
+                                `;
+                            }).join('');
+                            detailsHtml = `<div class="history-details-list">${rows}</div>`;
+                        } else {
+                            const wrongList = Array.isArray(item.wrongWords) 
+                                ? item.wrongWords 
+                                : (typeof item.wrongWords === 'string' ? [item.wrongWords] : []);
+                            const filteredWrongs = wrongList.filter(w => typeof w === 'string' && w !== 'もぐら');
+                            const hasWrong = filteredWrongs.length > 0;
+                            const wrongText = hasWrong ? `間違えた単語: ${[...new Set(filteredWrongs)].join('、')}` : '全問正解！🎉';
+                            detailsHtml = `
+                                <div class="history-wrong-words-text" style="${hasWrong ? '' : 'color:#34c759;'}">
+                                    ${wrongText}
                                 </div>
                             `;
-                        }).join('');
-                        detailsHtml = `<div class="history-details-list">${rows}</div>`;
-                    } else {
-                        const filteredWrongs = (item.wrongWords || []).filter(w => w !== 'もぐら');
-                        const hasWrong = filteredWrongs.length > 0;
-                        const wrongText = hasWrong ? `間違えた単語: ${[...new Set(filteredWrongs)].join('、')}` : '全問正解！🎉';
-                        detailsHtml = `
-                            <div class="history-wrong-words-text" style="${hasWrong ? '' : 'color:#34c759;'}">
-                                ${wrongText}
-                            </div>
-                        `;
-                    }
+                        }
 
-                    card.innerHTML = `
-                        <div class="history-header-line">
-                            <span>${item.date}</span>
-                            <span class="history-score-badge">○: ${item.corrects} / ${item.totalQuestions} (×: ${item.wrongs})</span>
-                        </div>
-                        ${detailsHtml}
-                    `;
-                    historyContainer.appendChild(card);
+                        const correctsCount = Number(item.corrects != null ? item.corrects : item.correct) || 0;
+                        const wrongsCount = Number(item.wrongs != null ? item.wrongs : item.miss) || 0;
+                        const totalCount = Number(item.totalQuestions) || (correctsCount + wrongsCount) || 0;
+                        const dateStr = (typeof item.date === 'string' && item.date.trim()) ? item.date : '日時不明';
+
+                        card.innerHTML = `
+                            <div class="history-header-line">
+                                <span>${escapeHtml(dateStr)}</span>
+                                <span class="history-score-badge">○: ${correctsCount} / ${totalCount} (×: ${wrongsCount})</span>
+                            </div>
+                            ${detailsHtml}
+                        `;
+                        historyContainer.appendChild(card);
+                    } catch (err) {
+                        console.warn("履歴アイテムの描画をスキップしました", err, item);
+                    }
                 });
             }
         }
@@ -2448,7 +2471,7 @@
 
                 const record = {
                     id: Date.now().toString(),
-                    date: new Date().toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    date: new Date().toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                     totalQuestions: totalQuestionsInCurrentGame,
                     corrects: corrects,
                     wrongs: wrongs,

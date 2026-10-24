@@ -198,6 +198,7 @@ class Piece {
         this.canvas = options.canvas;
         this.width = options.width;
         this.height = options.height;
+        this.isBlank = Boolean(options.isBlank);
         this.element = null;
     }
 }
@@ -625,10 +626,12 @@ class PhotoPuzzleApp {
             const availW = Math.max(60, stageW - 16);
             const availH = Math.max(60, stageH - topHeaderPad - 12);
 
-            let pWidth = availW * 0.675;
+            const isSmallSplit = (rows * cols) <= 4;
+            const puzzleScale = isSmallSplit ? 0.46 : 0.675;
+            let pWidth = availW * puzzleScale;
             let pHeight = (pWidth * naturalH) / naturalW;
-            if (pHeight > availH * 0.675) {
-                pHeight = availH * 0.675;
+            if (pHeight > availH * puzzleScale) {
+                pHeight = availH * puzzleScale;
                 pWidth = (pHeight * naturalW) / naturalH;
             }
 
@@ -684,11 +687,12 @@ class PhotoPuzzleApp {
                         minStageY = maxStageY = (topHeaderPad + stageH) / 2;
                     }
 
-                    // 相方ピースが外側に入ってこられる余白を確保（少分割時に端で詰むのを防ぐ）
-                    const leftExtra = (c > 0) ? pieceW : 0;
-                    const rightExtra = (c < cols - 1) ? pieceW : 0;
-                    const topExtra = (r > 0) ? pieceH : 0;
-                    const bottomExtra = (r < rows - 1) ? pieceH : 0;
+                    // 4分割以下のときは、相方ピースが外側に入ってこられる余白（0.8ピース分）を確保（端で詰むのを防ぎつつ上下・左右の入れ替わりも許容）
+                    const marginRatio = 0.8;
+                    const leftExtra = (isSmallSplit && c > 0) ? pieceW * marginRatio : 0;
+                    const rightExtra = (isSmallSplit && c < cols - 1) ? pieceW * marginRatio : 0;
+                    const topExtra = (isSmallSplit && r > 0) ? pieceH * marginRatio : 0;
+                    const bottomExtra = (isSmallSplit && r < rows - 1) ? pieceH * marginRatio : 0;
 
                     let effMinX = minStageX + leftExtra;
                     let effMaxX = maxStageX - rightExtra;
@@ -854,12 +858,14 @@ class PhotoPuzzleApp {
         const naturalWidth = this.currentImage.naturalWidth || 800;
         const naturalHeight = this.currentImage.naturalHeight || 800;
 
-        // ピースサイズを以前（0.75）の90%に設定 (0.75 * 0.9 = 0.675)
-        let puzzleWidth = stageWidth * 0.675;
+        // 4分割以下のときは上下・左右の入れ替わりと0.8ピース余白が両立するよう少し小さめ（0.46）、5分割以上は0.675
+        const isSmallSplit = (this.row * this.column) <= 4;
+        const puzzleScale = isSmallSplit ? 0.46 : 0.675;
+        let puzzleWidth = stageWidth * puzzleScale;
         let puzzleHeight = (puzzleWidth * naturalHeight) / naturalWidth;
 
-        if (puzzleHeight > stageHeight * 0.675) {
-            puzzleHeight = stageHeight * 0.675;
+        if (puzzleHeight > stageHeight * puzzleScale) {
+            puzzleHeight = stageHeight * puzzleScale;
             puzzleWidth = (puzzleHeight * naturalWidth) / naturalHeight;
         }
 
@@ -887,6 +893,9 @@ class PhotoPuzzleApp {
                     0, 0, pieceWidth, pieceHeight
                 );
 
+                // 画像の余白などでピースが真っ白（または透明）かどうかを判定
+                const isBlank = this.isPieceBlank(pCtx, pieceWidth, pieceHeight);
+
                 const randomRot = this.allowRotation ? Math.floor(Math.random() * 4) : 0;
                 const visW = (randomRot % 2 === 1) ? pieceHeight : pieceWidth;
                 const visH = (randomRot % 2 === 1) ? pieceWidth : pieceHeight;
@@ -903,11 +912,12 @@ class PhotoPuzzleApp {
                     maxStageY = Math.max(minStageY + 20, stageHeight - padY);
                 }
 
-                // 相方ピースが外側に入ってこられる余白を確保（右ピースが左端に寄って左ピースが入れなくなる等を防ぐ）
-                const leftExtra = (c > 0) ? pieceWidth : 0;
-                const rightExtra = (c < this.column - 1) ? pieceWidth : 0;
-                const topExtra = (r > 0) ? pieceHeight : 0;
-                const bottomExtra = (r < this.row - 1) ? pieceHeight : 0;
+                // 4分割以下のときは、相方ピースが外側に入ってこられる余白（0.8ピース分）を確保（端で詰むのを防ぎつつ上下・左右の入れ替わりも許容）
+                const marginRatio = 0.8;
+                const leftExtra = (isSmallSplit && c > 0) ? pieceWidth * marginRatio : 0;
+                const rightExtra = (isSmallSplit && c < this.column - 1) ? pieceWidth * marginRatio : 0;
+                const topExtra = (isSmallSplit && r > 0) ? pieceHeight * marginRatio : 0;
+                const bottomExtra = (isSmallSplit && r < this.row - 1) ? pieceHeight * marginRatio : 0;
 
                 let effMinX = minStageX + leftExtra;
                 let effMaxX = maxStageX - rightExtra;
@@ -995,7 +1005,8 @@ class PhotoPuzzleApp {
                     zIndex: 10,
                     canvas: pCanvas,
                     width: pieceWidth,
-                    height: pieceHeight
+                    height: pieceHeight,
+                    isBlank: isBlank
                 });
 
                 this.createPieceElement(piece, pieceIndex);
@@ -1005,6 +1016,65 @@ class PhotoPuzzleApp {
         }
 
         this.renderAllPieces();
+    }
+
+    // ピースが画像の余白等で真っ白（または透明）かどうかを判定
+    isPieceBlank(ctx, width, height) {
+        if (width <= 0 || height <= 0) return false;
+        try {
+            const imgData = ctx.getImageData(0, 0, width, height).data;
+            const stepX = Math.max(1, Math.floor(width / 20));
+            const stepY = Math.max(1, Math.floor(height / 20));
+            const marginX = Math.min(2, Math.floor(width / 6));
+            const marginY = Math.min(2, Math.floor(height / 6));
+
+            let sampleCount = 0;
+            let blankCount = 0;
+
+            for (let y = marginY; y < height - marginY; y += stepY) {
+                for (let x = marginX; x < width - marginX; x += stepX) {
+                    const idx = (y * width + x) * 4;
+                    const r = imgData[idx];
+                    const g = imgData[idx + 1];
+                    const b = imgData[idx + 2];
+                    const a = imgData[idx + 3];
+                    sampleCount++;
+                    // 透明（a < 20）またはほぼ真っ白（RGBすべて245以上）
+                    if (a < 20 || (r >= 245 && g >= 245 && b >= 245)) {
+                        blankCount++;
+                    }
+                }
+            }
+            return sampleCount > 0 && (blankCount / sampleCount) >= 0.98;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 2つの白ピース間で画面上の見た目位置を維持したままグリッド上の割り当て（row, column, offset）を入れ替える
+    swapBlankPieceSlots(p1, p2) {
+        if (!p1 || !p2 || p1 === p2) return;
+        const stageX1 = p1.position.x + p1.offset.width;
+        const stageY1 = p1.position.y + p1.offset.height;
+        const stageX2 = p2.position.x + p2.offset.width;
+        const stageY2 = p2.position.y + p2.offset.height;
+
+        const tmpRow = p1.row;
+        const tmpCol = p1.column;
+        const tmpOff = { ...p1.offset };
+
+        p1.row = p2.row;
+        p1.column = p2.column;
+        p1.offset = { ...p2.offset };
+
+        p2.row = tmpRow;
+        p2.column = tmpCol;
+        p2.offset = tmpOff;
+
+        p1.position = { x: stageX1 - p1.offset.width, y: stageY1 - p1.offset.height };
+        p1.startPosition = { ...p1.position };
+        p2.position = { x: stageX2 - p2.offset.width, y: stageY2 - p2.offset.height };
+        p2.startPosition = { ...p2.position };
     }
 
     createPieceElement(piece, index) {
@@ -1159,9 +1229,9 @@ class PhotoPuzzleApp {
                 const stageW = this.dom.puzzleStage.clientWidth || window.innerWidth;
                 const stageH = this.dom.puzzleStage.clientHeight || window.innerHeight;
 
-                // 画面外への飛び出し防止（ピースの一部が必ず画面内に残る）
-                const clampMarginX = targetPiece.width * 0.4;
-                const clampMarginY = targetPiece.height * 0.4;
+                // 画面外への飛び出し防止（ピースの一部が必ず画面内に残る・端付近でも吸着できるよう0.25）
+                const clampMarginX = targetPiece.width * 0.25;
+                const clampMarginY = targetPiece.height * 0.25;
                 const minPosX = clampMarginX - targetPiece.offset.width;
                 const maxPosX = stageW - clampMarginX - targetPiece.offset.width;
                 const minPosY = clampMarginY - targetPiece.offset.height;
@@ -1227,7 +1297,8 @@ class PhotoPuzzleApp {
     // --- 吸着判定 ---
     checkSnap(offset, isLive = false) {
         const piece = this.pieces[offset];
-        if (!piece || piece.rotation !== 0) return false;
+        // 白ピース（isBlank）はどの回転向きでも吸着可能とする
+        if (!piece || (piece.rotation !== 0 && !piece.isBlank)) return false;
 
         // 通常ドロップ時は判定半径50px (2500)、ドラッグ吸着時は1.5倍の判定半径75px (5625)
         const isLiveSnapMode = isLive || this.liveSnap;
@@ -1239,13 +1310,133 @@ class PhotoPuzzleApp {
         while (loopCount < 10) {
             loopCount++;
             let connectedInLoop = false;
+
+            // 未結合の白ピース一覧（どの白ピースの位置・スロットとも相互に入れ替え可能）
+            const freeBlanks = this.pieces.filter(p => p.isBlank && !p.groupID);
+
+            // 1. 操作中のピース自身が未結合の白ピースの場合：隣接できる最適な白ピーススロットを探索
+            if (piece.isBlank && !piece.groupID) {
+                const pieceStageX = piece.position.x + piece.offset.width;
+                const pieceStageY = piece.position.y + piece.offset.height;
+                let bestDistSq = snapThreshold;
+                let bestMatch = null;
+
+                for (const other of this.pieces) {
+                    if (other === piece) continue;
+                    const otherIsFreeBlank = other.isBlank && !other.groupID;
+                    if (other.rotation !== 0 && !otherIsFreeBlank) continue;
+
+                    if (!otherIsFreeBlank) {
+                        for (const slotA of freeBlanks) {
+                            if (Math.abs(slotA.row - other.row) + Math.abs(slotA.column - other.column) === 1) {
+                                const candX = pieceStageX - slotA.offset.width;
+                                const candY = pieceStageY - slotA.offset.height;
+                                const dx = candX - other.position.x;
+                                const dy = candY - other.position.y;
+                                const dSq = dx * dx + dy * dy;
+                                if (dSq < bestDistSq) {
+                                    bestDistSq = dSq;
+                                    bestMatch = {
+                                        targetRowA: slotA.row,
+                                        targetColA: slotA.column,
+                                        other: null
+                                    };
+                                }
+                            }
+                        }
+                    } else {
+                        const otherStageX = other.position.x + other.offset.width;
+                        const otherStageY = other.position.y + other.offset.height;
+                        for (const slotA of freeBlanks) {
+                            for (const slotB of freeBlanks) {
+                                if (slotA === slotB) continue;
+                                if (Math.abs(slotA.row - slotB.row) + Math.abs(slotA.column - slotB.column) === 1) {
+                                    const candX = pieceStageX - slotA.offset.width;
+                                    const candY = pieceStageY - slotA.offset.height;
+                                    const otherCandX = otherStageX - slotB.offset.width;
+                                    const otherCandY = otherStageY - slotB.offset.height;
+                                    const dx = candX - otherCandX;
+                                    const dy = candY - otherCandY;
+                                    const dSq = dx * dx + dy * dy;
+                                    if (dSq < bestDistSq) {
+                                        bestDistSq = dSq;
+                                        bestMatch = {
+                                            targetRowA: slotA.row,
+                                            targetColA: slotA.column,
+                                            other: other,
+                                            targetRowB: slotB.row,
+                                            targetColB: slotB.column
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (bestMatch) {
+                    const holderA = freeBlanks.find(p => p.row === bestMatch.targetRowA && p.column === bestMatch.targetColA);
+                    if (holderA) this.swapBlankPieceSlots(piece, holderA);
+                    piece.rotation = 0;
+
+                    if (bestMatch.other) {
+                        const holderB = freeBlanks.find(p => p.row === bestMatch.targetRowB && p.column === bestMatch.targetColB);
+                        if (holderB) this.swapBlankPieceSlots(bestMatch.other, holderB);
+                        bestMatch.other.rotation = 0;
+                    }
+                }
+            }
+
+            // 回転が0でない場合（吸着対象が見つからなかった回転状態の白ピースなど）は終了
+            if (piece.rotation !== 0) break;
+
+            // 2. 周囲にある未結合の白ピースが、操作中のピース（またはグループ）に吸着できる場合のスロット入れ替え＆回転リセット
+            if (freeBlanks.length > 0) {
+                const groupA = piece.groupID ? this.pieces.filter(p => p.groupID === piece.groupID) : [piece];
+                for (const otherBlank of freeBlanks) {
+                    if (otherBlank === piece || groupA.includes(otherBlank)) continue;
+                    const otherStageX = otherBlank.position.x + otherBlank.offset.width;
+                    const otherStageY = otherBlank.position.y + otherBlank.offset.height;
+                    let bestDistSq = snapThreshold;
+                    let bestTargetSlot = null;
+
+                    for (const slotHolder of freeBlanks) {
+                        const isAdj = groupA.some(pA => Math.abs(slotHolder.row - pA.row) + Math.abs(slotHolder.column - pA.column) === 1);
+                        if (!isAdj) continue;
+                        const candX = otherStageX - slotHolder.offset.width;
+                        const candY = otherStageY - slotHolder.offset.height;
+                        const dx = candX - piece.position.x;
+                        const dy = candY - piece.position.y;
+                        const dSq = dx * dx + dy * dy;
+                        if (dSq < bestDistSq) {
+                            bestDistSq = dSq;
+                            bestTargetSlot = { row: slotHolder.row, col: slotHolder.column };
+                        }
+                    }
+
+                    if (bestTargetSlot) {
+                        const holder = freeBlanks.find(p => p.row === bestTargetSlot.row && p.column === bestTargetSlot.col);
+                        if (holder) this.swapBlankPieceSlots(otherBlank, holder);
+                        otherBlank.rotation = 0;
+                    }
+                }
+            }
+
             const position = piece.position;
+            const activeGroup = piece.groupID ? this.pieces.filter(p => p.groupID === piece.groupID) : [piece];
 
             const distances = this.pieces.map((other, idx) => {
                 if (idx === offset) return 999999999;
+                if (other.rotation !== 0) return 999999999;
                 if (piece.groupID && other.groupID && piece.groupID === other.groupID) {
                     return 999999999;
                 }
+                const otherGroup = other.groupID ? this.pieces.filter(p => p.groupID === other.groupID) : [other];
+                const isAdjacent = activeGroup.some(pA =>
+                    otherGroup.some(pB => Math.abs(pA.row - pB.row) + Math.abs(pA.column - pB.column) === 1)
+                );
+                if (!isAdjacent) return 999999999;
+
                 const dx = position.x - other.position.x;
                 const dy = position.y - other.position.y;
                 return dx * dx + dy * dy;

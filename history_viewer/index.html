@@ -808,37 +808,62 @@
         function parseKaruta(raw) {
             if (!Array.isArray(raw)) return [];
             return raw.map((item, idx) => {
-                const corrects = item.corrects != null ? item.corrects : (item.correct || 0);
-                const wrongs = item.wrongs != null ? item.wrongs : (item.miss || 0);
-                const total = item.totalQuestions || (corrects + wrongs);
-                const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+                try {
+                    // 非オブジェクト・null は nil として除外
+                    if (!item || typeof item !== 'object') return null;
 
-                let detailsHtml = null;
-                if (item.details && Array.isArray(item.details) && item.details.length > 0) {
-                    detailsHtml = item.details.map((d, i) => {
-                        const mark = d.firstTry 
-                            ? '<span style="color:var(--success); font-weight:700;">⭕️ 一発正解</span>' 
-                            : `<span class="error-tag">❌ 間違えた札: ${(d.wrongPicks || []).join(', ')}</span>`;
-                        return `第${i + 1}問 [${d.word || ''}] → ${mark}`;
-                    }).join('<br>');
-                } else if (item.wrongWords && item.wrongWords.length > 0) {
-                    detailsHtml = `<span class="error-tag">つまずいた言葉:</span> ${item.wrongWords.join(', ')}`;
+                    // 日時もスコア情報も持たない破損レコードは nil として除外
+                    const hasDate = typeof item.date === 'string' && item.date.trim().length > 0;
+                    const hasScore = item.corrects != null || item.correct != null || item.wrongs != null || item.miss != null || item.totalQuestions != null;
+                    if (!hasDate && !hasScore) return null;
+
+                    const corrects = Number(item.corrects != null ? item.corrects : item.correct) || 0;
+                    const wrongs = Number(item.wrongs != null ? item.wrongs : item.miss) || 0;
+                    const total = Number(item.totalQuestions) || (corrects + wrongs) || 0;
+                    const rate = total > 0 ? Math.round((corrects / total) * 100) : 0;
+
+                    let detailsHtml = null;
+                    if (item.details && Array.isArray(item.details) && item.details.length > 0) {
+                        const validDetails = item.details.filter(d => d && typeof d === 'object');
+                        if (validDetails.length > 0) {
+                            detailsHtml = validDetails.map((d, i) => {
+                                const word = d.word || '（単語不明）';
+                                const picks = Array.isArray(d.wrongPicks) 
+                                    ? d.wrongPicks 
+                                    : (d.wrongPicks ? [String(d.wrongPicks)] : []);
+                                const mark = d.firstTry 
+                                    ? '<span style="color:var(--success); font-weight:700;">⭕️ 一発正解</span>' 
+                                    : `<span class="error-tag">❌ 間違えた札: ${picks.join(', ') || 'ミスあり'}</span>`;
+                                return `第${i + 1}問 [${word}] → ${mark}`;
+                            }).join('<br>');
+                        }
+                    } else if (item.wrongWords) {
+                        const wrongList = Array.isArray(item.wrongWords) 
+                            ? item.wrongWords 
+                            : (typeof item.wrongWords === 'string' ? [item.wrongWords] : []);
+                        if (wrongList.length > 0) {
+                            detailsHtml = `<span class="error-tag">つまずいた言葉:</span> ${wrongList.join(', ')}`;
+                        }
+                    }
+
+                    return {
+                        id: `karuta_${item.id || idx}`,
+                        appName: 'カルタ',
+                        appId: 'karuta',
+                        date: (typeof item.date === 'string' && item.date.trim()) ? item.date : '日時不明',
+                        scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
+                        isPerfect: wrongs === 0 && corrects > 0,
+                        tags: [
+                            wrongs > 0 ? `❌ ${wrongs}回` : '',
+                            item.time ? `所要時間: ${item.time}` : ''
+                        ].filter(Boolean),
+                        details: detailsHtml
+                    };
+                } catch (err) {
+                    console.warn(`[Karuta] 履歴アイテム(index: ${idx})のパースをスキップしました:`, err, item);
+                    return null; // 非対応データは nil として安全に除外
                 }
-
-                return {
-                    id: `karuta_${item.id || idx}`,
-                    appName: 'カルタ',
-                    appId: 'karuta',
-                    date: item.date || '日時不明',
-                    scoreText: `正解: ${corrects}/${total}問 (${rate}%)`,
-                    isPerfect: wrongs === 0 && corrects > 0,
-                    tags: [
-                        wrongs > 0 ? `❌ ${wrongs}回` : '',
-                        item.time ? `所要時間: ${item.time}` : ''
-                    ].filter(Boolean),
-                    details: detailsHtml
-                };
-            });
+            }).filter(Boolean);
         }
 
         // 5. ひらがなさがし
@@ -1076,7 +1101,8 @@
                 const rawStr = localStorage.getItem(appConfig.key);
                 if (!rawStr) return [];
                 const raw = JSON.parse(rawStr);
-                return appConfig.parser ? appConfig.parser(raw) : parseGeneric(raw, appConfig.name);
+                const list = appConfig.parser ? appConfig.parser(raw) : parseGeneric(raw, appConfig.name);
+                return Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
             } catch (e) {
                 console.warn(`Failed to parse history for ${appConfig.name}`, e);
                 return [];
