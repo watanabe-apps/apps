@@ -1009,14 +1009,13 @@
         async function handleUserSpeechCompleted(text) {
             currentTranscript = "";
             clearTimeout(silenceTimer);
+            if (liveBubble) liveBubble.style.display = "none";
 
             // 音声認識を一旦一時停止（自分の読み上げやノイズを拾わないようにする）
             stopRecognitionSafely();
 
             playSendBeep();
             setState("thinking");
-            liveText.textContent = `「${text}」`;
-            liveText.className = "live-text";
 
             // 会話履歴に追加
             addUiLog("user", text);
@@ -1062,7 +1061,7 @@
                 }
 
                 setState("error", friendlyMsg);
-                liveText.textContent = friendlyMsg;
+                addUiLog("model", `⚠️ ${friendlyMsg}`);
 
                 // 音声で案内
                 speakReply(friendlyMsg, true);
@@ -1157,7 +1156,6 @@
                 .trim();
 
             setState("speaking");
-            liveText.textContent = cleanText;
 
             window.speechSynthesis.cancel();
             speechChunks = splitTextIntoSentences(cleanText);
@@ -1230,7 +1228,6 @@
             mainActionBtn.innerHTML = "<span>⏹ 運転モード終了</span>";
 
             setState("listening");
-            liveText.textContent = "どうぞお話しください";
             playListenBeep();
             startRecognitionSafely();
         }
@@ -1244,18 +1241,47 @@
             }
             releaseWakeLock();
             setState("idle");
-            liveText.textContent = "「運転開始」を押してください";
         }
 
         // --- 会話ログ管理 ---
         function addUiLog(role, text) {
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             uiLog.push({ role, text, time });
+            renderChatMessages();
             renderHistory();
+        }
+
+        function renderChatMessages() {
+            if (!chatMessages) return;
+
+            if (uiLog.length === 0) {
+                if (emptyChat) emptyChat.style.display = "block";
+                chatMessages.innerHTML = "";
+                return;
+            }
+
+            if (emptyChat) emptyChat.style.display = "none";
+
+            chatMessages.innerHTML = uiLog.map(item => `
+                <div class="chat-bubble ${item.role}">
+                    <div class="bubble-meta">
+                        <span>${item.role === 'user' ? '🚗 あなた' : '✨ Gemini'}</span>
+                        <span>•</span>
+                        <span>${item.time}</span>
+                    </div>
+                    <div>${escapeHtml(item.text).replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+
+            // 最下部へスムーズにスクロール
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 50);
         }
 
         function renderHistory() {
             const list = document.getElementById("historyList");
+            if (!list) return;
             if (uiLog.length === 0) {
                 list.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">まだ会話はありません</div>';
                 return;
@@ -1286,15 +1312,28 @@
             }
         });
 
-        // 巨大オーブタップ（一時停止 / 再開のトグル）
-        orbContainer.addEventListener("click", () => {
-            if (!isDrivingMode) {
-                startDrivingMode();
-            } else {
-                // 運転中ならトグル
-                stopDrivingMode();
-            }
-        });
+        // ログ消去ボタン（チャット画面下部）
+        if (clearChatBtn) {
+            clearChatBtn.addEventListener("click", () => {
+                if (confirm("会話を全て消去しますか？")) {
+                    conversationHistory = [];
+                    uiLog = [];
+                    renderChatMessages();
+                    renderHistory();
+                }
+            });
+        }
+
+        // 上部ステータスバータップ（一時停止 / 再開のトグル）
+        if (statusBar) {
+            statusBar.addEventListener("click", () => {
+                if (!isDrivingMode) {
+                    startDrivingMode();
+                } else {
+                    stopDrivingMode();
+                }
+            });
+        }
 
         // 設定モーダル
         const settingsModal = document.getElementById("settingsModal");
