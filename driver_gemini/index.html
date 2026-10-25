@@ -20,6 +20,7 @@
             --error-color: #f87171;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
+            --chat-font-size: 1.25rem;
         }
 
         * {
@@ -286,7 +287,7 @@
             max-width: 88%;
             padding: 14px 18px;
             border-radius: 20px;
-            font-size: 1.15rem;
+            font-size: var(--chat-font-size, 1.25rem);
             line-height: 1.5;
             word-break: break-word;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
@@ -334,7 +335,7 @@
             border-radius: 20px 20px 4px 20px;
             padding: 12px 18px;
             color: #7dd3fc;
-            font-size: 1.15rem;
+            font-size: var(--chat-font-size, 1.25rem);
             line-height: 1.5;
             font-style: italic;
             word-break: break-word;
@@ -574,6 +575,7 @@
             <span class="model-badge" id="displayModelBadge">gemini-3.8-flash (HIGH)</span>
         </div>
         <div class="header-buttons">
+            <button class="icon-btn" id="fontSizeBtn" title="文字サイズ切り替え" style="font-weight: 800; font-size: 1.05rem;">Aa</button>
             <button class="icon-btn" id="historyBtn" title="会話ログ">📜</button>
             <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
         </div>
@@ -701,6 +703,16 @@
                 </div>
             </div>
 
+            <!-- 会話文字サイズ -->
+            <div class="form-group">
+                <label>会話文字サイズ</label>
+                <div class="range-wrap">
+                    <input type="range" id="fontSizeInput" min="1.0" max="2.0" step="0.1" value="1.25">
+                    <span class="range-val" id="fontSizeVal">1.25rem</span>
+                </div>
+                <div class="tip">ヘッダーの「Aa」ボタンでもワンタップで切り替え可能です。</div>
+            </div>
+
             <button class="btn-save" id="saveSettingsBtn">設定を保存</button>
         </div>
     </div>
@@ -730,8 +742,19 @@
             customModel: "",
             thinkingLevel: "HIGH",
             silenceTimeout: 1.6,
-            speechRate: 1.1
+            speechRate: 1.1,
+            fontSize: 1.25
         };
+
+        function applyFontSize(size) {
+            const num = parseFloat(size) || 1.25;
+            config.fontSize = num;
+            document.documentElement.style.setProperty('--chat-font-size', `${num}rem`);
+            const fontSizeVal = document.getElementById("fontSizeVal");
+            const fontSizeInput = document.getElementById("fontSizeInput");
+            if (fontSizeVal) fontSizeVal.textContent = `${num}rem`;
+            if (fontSizeInput) fontSizeInput.value = num;
+        }
 
         function loadConfig() {
             try {
@@ -742,6 +765,7 @@
             } catch (e) {
                 console.error("設定ロード失敗:", e);
             }
+            applyFontSize(config.fontSize || 1.25);
             updateModelBadge();
         }
 
@@ -1127,11 +1151,23 @@
 
                 const data = await response.json();
                 const candidate = data.candidates?.[0];
-                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                if (!candidate || !candidate.content?.parts) {
                     throw new Error("回答が得られませんでした。");
                 }
 
-                return candidate.content.parts[0].text.trim();
+                // 思考型モデル (gemini-3.8-flash等) の思考ログを除去し、純粋な回答テキストを取り出す
+                const parts = candidate.content.parts || [];
+                const answerParts = parts.filter(p => !p.thought && p.text);
+                const finalAnswer = (answerParts.length > 0 ? answerParts : parts)
+                    .map(p => p.text || "")
+                    .join("\n")
+                    .trim();
+
+                if (!finalAnswer) {
+                    throw new Error("回答テキストが空でした。");
+                }
+
+                return finalAnswer;
             } catch (error) {
                 clearTimeout(timeoutId);
                 // 1回だけ自動リトライ
@@ -1147,6 +1183,8 @@
         // --- 音声合成（Text-to-Speech）読み上げ ---
         let speechChunks = [];
         let currentChunkIndex = 0;
+        let speechWatchdogTimer = null;
+        let activeUtterance = null; // iOS SafariのGC消滅防止
 
         function splitTextIntoSentences(text) {
             // iOS Safariの長文停止バグ対策：句点・感嘆符・改行で適切に分割
@@ -1155,7 +1193,7 @@
             const chunks = [];
             let current = "";
             for (const m of matches) {
-                if ((current + m).length > 100) {
+                if ((current + m).length > 80) {
                     if (current) chunks.push(current);
                     current = m;
                 } else {
@@ -1168,7 +1206,6 @@
 
         function speakReply(text, isErrorNotice = false) {
             if (!('speechSynthesis' in window)) {
-                alert("お使いの端末は音声合成に対応していません。");
                 if (isDrivingMode) resumeListening();
                 return;
             }
@@ -1179,20 +1216,34 @@
                 .replace(/https?:\/\/\S+/g, 'URL')
                 .trim();
 
+            if (!cleanText) {
+                if (isDrivingMode) resumeListening();
+                return;
+            }
+
             setState("speaking");
 
-            window.speechSynthesis.cancel();
+            // iOS Safariのcancelバグ対策：cancel後150ms待ってから再生開始
+            try {
+                window.speechSynthesis.cancel();
+            } catch (e) {}
+
             speechChunks = splitTextIntoSentences(cleanText);
             currentChunkIndex = 0;
 
-            playNextSpeechChunk();
+            setTimeout(() => {
+                playNextSpeechChunk();
+            }, 150);
         }
 
         function playNextSpeechChunk() {
+            clearTimeout(speechWatchdogTimer);
+
             if (!isDrivingMode && currentState !== "speaking") return;
 
             // 全チャンク読み上げ完了
             if (currentChunkIndex >= speechChunks.length) {
+                activeUtterance = null;
                 if (isDrivingMode) {
                     resumeListening();
                 }
@@ -1201,6 +1252,11 @@
 
             const chunkText = speechChunks[currentChunkIndex];
             currentChunkIndex++;
+
+            if (!chunkText || chunkText.trim().length === 0) {
+                playNextSpeechChunk();
+                return;
+            }
 
             const utterance = new SpeechSynthesisUtterance(chunkText);
             utterance.lang = 'ja-JP';
@@ -1212,16 +1268,41 @@
                 utterance.voice = jaVoice;
             }
 
-            utterance.onend = () => {
+            // GC回収防止
+            activeUtterance = utterance;
+
+            let hasFinished = false;
+            const finishAndNext = () => {
+                if (hasFinished) return;
+                hasFinished = true;
+                clearTimeout(speechWatchdogTimer);
+                activeUtterance = null;
                 playNextSpeechChunk();
             };
 
+            utterance.onend = finishAndNext;
             utterance.onerror = (e) => {
                 console.warn("読み上げエラー:", e);
-                playNextSpeechChunk();
+                finishAndNext();
             };
 
-            window.speechSynthesis.speak(utterance);
+            // 【超重要】フリーズ完全防止ウォッチドッグ
+            // 万が一Safariでonendが来なくても、文字数に応じた最大秒数で強制的に次の文へ進める
+            const maxWaitMs = Math.max(4000, chunkText.length * 180 + 3000);
+            speechWatchdogTimer = setTimeout(() => {
+                console.warn("読み上げタイムアウト検知。次の文へ進めます。");
+                finishAndNext();
+            }, maxWaitMs);
+
+            try {
+                window.speechSynthesis.speak(utterance);
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+            } catch (e) {
+                console.warn("speak例外:", e);
+                finishAndNext();
+            }
         }
 
         // マイクを聞き取りモードに自動復帰
@@ -1244,6 +1325,15 @@
             // オーディオコンテキストのアクティベート（iOS Safariのサウンド制約解除）
             getAudioContext();
 
+            // iOS Safariの音声合成アンロック
+            if ('speechSynthesis' in window) {
+                try {
+                    const u = new SpeechSynthesisUtterance(' ');
+                    u.volume = 0.001;
+                    window.speechSynthesis.speak(u);
+                } catch (e) {}
+            }
+
             // スリープ防止
             await requestWakeLock();
 
@@ -1259,9 +1349,13 @@
         function stopDrivingMode() {
             isDrivingMode = false;
             speechChunks = [];
+            clearTimeout(speechWatchdogTimer);
+            activeUtterance = null;
             stopRecognitionSafely();
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+                try {
+                    window.speechSynthesis.cancel();
+                } catch (e) {}
             }
             releaseWakeLock();
             setState("idle");
@@ -1373,6 +1467,10 @@
         const silenceVal = document.getElementById("silenceVal");
         const speechRateInput = document.getElementById("speechRateInput");
         const rateVal = document.getElementById("rateVal");
+        const fontSizeInput = document.getElementById("fontSizeInput");
+        const fontSizeVal = document.getElementById("fontSizeVal");
+        const fontSizeBtn = document.getElementById("fontSizeBtn");
+
         function openSettingsModal() {
             apiKeyInput.value = config.apiKey || "";
             modelSelect.value = config.model;
@@ -1383,7 +1481,33 @@
             silenceVal.textContent = config.silenceTimeout + "秒";
             speechRateInput.value = config.speechRate;
             rateVal.textContent = config.speechRate + "x";
+            if (fontSizeInput) fontSizeInput.value = config.fontSize || 1.25;
+            if (fontSizeVal) fontSizeVal.textContent = (config.fontSize || 1.25) + "rem";
             settingsModal.classList.add("open");
+        }
+
+        // ヘッダーのAaボタン（ワンタップで文字サイズトグル）
+        if (fontSizeBtn) {
+            const fontSizes = [1.1, 1.3, 1.55, 1.85];
+            fontSizeBtn.addEventListener("click", () => {
+                const current = parseFloat(config.fontSize) || 1.25;
+                // 次のサイズを決定
+                let next = fontSizes[0];
+                for (let i = 0; i < fontSizes.length; i++) {
+                    if (fontSizes[i] > current + 0.05) {
+                        next = fontSizes[i];
+                        break;
+                    }
+                }
+                applyFontSize(next);
+                saveConfig();
+            });
+        }
+
+        if (fontSizeInput) {
+            fontSizeInput.addEventListener("input", () => {
+                applyFontSize(fontSizeInput.value);
+            });
         }
 
         settingsBtn.addEventListener("click", openSettingsModal);
@@ -1516,7 +1640,9 @@
             if (thinkingLevelSelect) config.thinkingLevel = thinkingLevelSelect.value;
             config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
             config.speechRate = parseFloat(speechRateInput.value);
+            if (fontSizeInput) config.fontSize = parseFloat(fontSizeInput.value);
 
+            applyFontSize(config.fontSize);
             saveConfig();
             settingsModal.classList.remove("open");
         });
