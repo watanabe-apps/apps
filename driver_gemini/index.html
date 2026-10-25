@@ -571,7 +571,7 @@
     <header>
         <div class="app-title">
             <span>🚗 DriveVoice</span>
-            <span class="model-badge" id="displayModelBadge">gemini-1.5-flash</span>
+            <span class="model-badge" id="displayModelBadge">gemini-3.8-flash (HIGH)</span>
         </div>
         <div class="header-buttons">
             <button class="icon-btn" id="historyBtn" title="会話ログ">📜</button>
@@ -648,9 +648,10 @@
                     </button>
                 </div>
                 <select id="modelSelect">
-                    <option value="gemini-1.5-flash">gemini-1.5-flash（公式標準・超安定）</option>
-                    <option value="gemini-2.0-flash">gemini-2.0-flash（次世代超高速）</option>
-                    <option value="gemini-1.5-pro">gemini-1.5-pro（高知能）</option>
+                    <option value="gemini-3.8-flash">Gemini 3.8 Flash（推奨・最新思考型）</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash（超高速）</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash（標準）</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro（高知能）</option>
                     <option value="custom">カスタム手入力</option>
                 </select>
             </div>
@@ -658,7 +659,19 @@
             <!-- カスタムモデル名入力（カスタム時のみ表示） -->
             <div class="form-group" id="customModelGroup" style="display: none;">
                 <label for="customModelInput">カスタムモデル名</label>
-                <input type="text" id="customModelInput" placeholder="例: gemini-1.5-flash">
+                <input type="text" id="customModelInput" placeholder="例: gemini-3.8-flash">
+            </div>
+
+            <!-- 思考レベル設定（3.8 flash high対応） -->
+            <div class="form-group">
+                <label for="thinkingLevelSelect">思考レベル (Thinking Level)</label>
+                <select id="thinkingLevelSelect">
+                    <option value="HIGH">HIGH (最高知能・深い思考)</option>
+                    <option value="MEDIUM">MEDIUM (標準)</option>
+                    <option value="LOW">LOW (高速)</option>
+                    <option value="OFF">OFF (思考なし)</option>
+                </select>
+                <div class="tip">※「3.8 flash high」にするには、モデルを「Gemini 3.8 Flash」、思考レベルを「HIGH」に設定します。</div>
             </div>
 
             <!-- 接続テストボタン -->
@@ -713,8 +726,9 @@
         const SETTINGS_KEY = "drive_gemini_settings";
         let config = {
             apiKey: "",
-            model: "gemini-1.5-flash",
+            model: "gemini-3.8-flash",
             customModel: "",
+            thinkingLevel: "HIGH",
             silenceTimeout: 1.6,
             speechRate: 1.1
         };
@@ -737,13 +751,14 @@
         }
 
         function getActiveModel() {
-            return config.model === "custom" ? (config.customModel || "gemini-1.5-flash") : config.model;
+            return config.model === "custom" ? (config.customModel || "gemini-3.8-flash") : config.model;
         }
 
         function updateModelBadge() {
             const badge = document.getElementById("displayModelBadge");
             const active = getActiveModel();
-            badge.textContent = active;
+            const think = config.thinkingLevel && config.thinkingLevel !== "OFF" ? ` (${config.thinkingLevel})` : "";
+            badge.textContent = active + think;
         }
 
         // --- 会話履歴 (セッション中保持) ---
@@ -1082,6 +1097,15 @@
                 contents: conversationHistory
             };
 
+            // 思考レベル設定 (3.8 flash high対応)
+            if (config.thinkingLevel && config.thinkingLevel !== "OFF") {
+                requestBody.generationConfig = {
+                    thinkingConfig: {
+                        thinkingLevel: config.thinkingLevel
+                    }
+                };
+            }
+
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 12000); // 12秒タイムアウト
 
@@ -1344,6 +1368,7 @@
         const modelSelect = document.getElementById("modelSelect");
         const customModelGroup = document.getElementById("customModelGroup");
         const customModelInput = document.getElementById("customModelInput");
+        const thinkingLevelSelect = document.getElementById("thinkingLevelSelect");
         const silenceTimeoutInput = document.getElementById("silenceTimeoutInput");
         const silenceVal = document.getElementById("silenceVal");
         const speechRateInput = document.getElementById("speechRateInput");
@@ -1353,6 +1378,7 @@
             modelSelect.value = config.model;
             customModelInput.value = config.customModel;
             customModelGroup.style.display = config.model === "custom" ? "block" : "none";
+            if (thinkingLevelSelect) thinkingLevelSelect.value = config.thinkingLevel || "HIGH";
             silenceTimeoutInput.value = config.silenceTimeout;
             silenceVal.textContent = config.silenceTimeout + "秒";
             speechRateInput.value = config.speechRate;
@@ -1414,8 +1440,9 @@
                 ).join('') + '<option value="custom">カスタム手入力</option>';
 
                 // 優先モデルを選択
-                const preferred = availableModels.find(m => m === "gemini-1.5-flash") || 
+                const preferred = availableModels.find(m => m === "gemini-3.8-flash") || 
                                   availableModels.find(m => m === "gemini-2.0-flash") || 
+                                  availableModels.find(m => m === "gemini-1.5-flash") || 
                                   availableModels[0];
                 if (preferred) {
                     modelSelect.value = preferred;
@@ -1436,6 +1463,7 @@
         testApiBtn.addEventListener("click", async () => {
             const key = apiKeyInput.value.trim();
             const selectedModel = modelSelect.value === "custom" ? customModelInput.value.trim() : modelSelect.value;
+            const currentThinking = thinkingLevelSelect ? thinkingLevelSelect.value : (config.thinkingLevel || "HIGH");
 
             if (!key) {
                 testResult.textContent = "❌ 先にAPIキーを入力してください。";
@@ -1443,17 +1471,27 @@
                 return;
             }
 
-            testResult.textContent = `⏳「${selectedModel}」に接続テスト中...`;
+            testResult.textContent = `⏳「${selectedModel}」 (思考: ${currentThinking}) に接続テスト中...`;
             testResult.style.color = "#fbbf24";
 
             try {
                 const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(key)}`;
+                
+                const testBody = {
+                    contents: [{ role: "user", parts: [{ text: "こんにちは" }] }]
+                };
+                if (currentThinking && currentThinking !== "OFF") {
+                    testBody.generationConfig = {
+                        thinkingConfig: {
+                            thinkingLevel: currentThinking
+                        }
+                    };
+                }
+
                 const response = await fetch(endpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ role: "user", parts: [{ text: "こんにちは" }] }]
-                    })
+                    body: JSON.stringify(testBody)
                 });
 
                 if (!response.ok) {
@@ -1475,6 +1513,7 @@
             config.apiKey = apiKeyInput.value.trim();
             config.model = modelSelect.value;
             config.customModel = customModelInput.value.trim();
+            if (thinkingLevelSelect) config.thinkingLevel = thinkingLevelSelect.value;
             config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
             config.speechRate = parseFloat(speechRateInput.value);
 
