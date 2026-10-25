@@ -31,15 +31,20 @@
             user-select: none;
         }
 
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
             color: var(--text-main);
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             position: relative;
         }
 
@@ -103,11 +108,13 @@
 
         /* メインビジュアルエリア（運転中ひと目で状況がわかる大画面） */
         main {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 0;
+            height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 12px 16px calc(env(safe-area-inset-bottom, 16px) + 12px) 16px;
+            padding: 8px 16px calc(env(safe-area-inset-bottom, 16px) + 8px) 16px;
             position: relative;
             z-index: 10;
             overflow: hidden;
@@ -266,14 +273,14 @@
 
         /* 会話タイムライン（全文字表示エリア） */
         .chat-container {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 0;
             width: 100%;
-            overflow-y: auto;
-            padding: 8px 4px 16px 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
+            overflow-y: scroll;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            overscroll-behavior-y: contain;
+            padding: 8px 4px 16px 4px;
         }
 
         .empty-chat {
@@ -317,6 +324,23 @@
             color: var(--text-main);
         }
 
+        /* 読み上げ中の発声文ハイライト */
+        .speech-sentence {
+            transition: all 0.25s ease;
+            border-radius: 6px;
+            padding: 2px 4px;
+            margin: 0 -2px;
+            display: inline;
+        }
+
+        .speech-sentence.active-speaking {
+            background: rgba(74, 222, 128, 0.35);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 0 16px rgba(74, 222, 128, 0.5);
+            border-bottom: 2px solid var(--speak-color);
+        }
+
         .bubble-meta {
             font-size: 0.72rem;
             color: var(--text-sub);
@@ -329,22 +353,23 @@
         /* リアルタイム入力中（認識中）吹き出し */
         .live-bubble {
             align-self: flex-end;
-            max-width: 88%;
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px dashed rgba(56, 189, 248, 0.5);
+            width: 92%;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(2, 132, 199, 0.35) 100%);
+            border: 2px solid #38bdf8;
             border-radius: 20px 20px 4px 20px;
-            padding: 12px 18px;
-            color: #7dd3fc;
+            padding: 14px 18px;
+            color: #ffffff;
             font-size: var(--chat-font-size, 1.25rem);
+            font-weight: 700;
             line-height: 1.5;
-            font-style: italic;
             word-break: break-word;
-            animation: pulse-subtle 1.8s infinite ease-in-out;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+            animation: pulse-live 1.4s infinite alternate ease-in-out;
         }
 
-        @keyframes pulse-subtle {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+        @keyframes pulse-live {
+            0% { border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+            100% { border-color: #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.5); }
         }
 
         /* 操作コントロールバー */
@@ -609,9 +634,11 @@
             <div id="chatMessages" style="display: flex; flex-direction: column; gap: 14px;"></div>
 
             <!-- 現在発話中のリアルタイム表示吹き出し -->
-            <div class="live-bubble" id="liveBubble" style="display: none;">
-                <div class="bubble-meta">ドライバー発話中...</div>
-                <div id="liveText"></div>
+            <div class="live-bubble" id="liveBubble" style="display: none; margin-top: 10px;">
+                <div class="bubble-meta" style="color: #7dd3fc; font-weight: 700; margin-bottom: 6px;">
+                    🎙️ 音声入力中（認識内容）:
+                </div>
+                <div id="liveText" style="min-height: 1.5em;"></div>
             </div>
         </div>
 
@@ -952,27 +979,32 @@
                 }
             };
 
+            recognition.onspeechstart = () => {
+                if (liveBubble && isDrivingMode && currentState === "listening") {
+                    liveBubble.style.display = "block";
+                    liveText.textContent = "（音声を聞き取っています...）";
+                    liveBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            };
+
             recognition.onresult = (event) => {
                 if (!isDrivingMode || currentState === "thinking" || currentState === "speaking") return;
 
-                let interim = "";
-                let final = "";
-
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    const trans = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        final += trans;
-                    } else {
-                        interim += trans;
-                    }
+                let transcript = "";
+                for (let i = 0; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
                 }
 
-                const recognized = final || interim;
-                if (recognized.trim().length > 0) {
-                    currentTranscript = recognized;
-                    if (liveBubble) liveBubble.style.display = "block";
-                    liveText.textContent = currentTranscript;
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                if (transcript.trim().length > 0) {
+                    currentTranscript = transcript;
+                    if (liveBubble) {
+                        liveBubble.style.display = "block";
+                        liveText.textContent = currentTranscript;
+                        liveBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                    if (statusSubtext) {
+                        statusSubtext.textContent = `聞き取り中: 「${currentTranscript.slice(-20)}」`;
+                    }
 
                     // 無音タイマーのリセット（沈黙を検知して自動送信）
                     resetSilenceTimer();
@@ -1087,8 +1119,10 @@
                 let friendlyMsg = "通信エラーが発生しました。";
                 const errStr = (err.message || "").toLowerCase();
 
-                if (errStr.includes("not found") || errStr.includes("404")) {
-                    friendlyMsg = `モデル「${getActiveModel()}」が存在しません。設定で gemini-1.5-flash に変更してください。`;
+                if (errStr.includes("abort") || errStr.includes("timeout")) {
+                    friendlyMsg = "回答がタイムアウトしました。思考型モデルのため生成に時間がかかりました。思考レベルをMEDIUMやLOWにすると高速になります。";
+                } else if (errStr.includes("not found") || errStr.includes("404")) {
+                    friendlyMsg = `モデル「${getActiveModel()}」が存在しません。設定で gemini-3.8-flash または gemini-1.5-flash に変更してください。`;
                 } else if (errStr.includes("api key not valid") || errStr.includes("api_key_invalid") || errStr.includes("400")) {
                     friendlyMsg = "APIキーが無効です。設定でAPIキーをご確認ください。";
                 } else if (errStr.includes("403") || errStr.includes("permission")) {
@@ -1131,7 +1165,7 @@
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000); // 12秒タイムアウト
+            const timeoutId = setTimeout(() => controller.abort(), 45000); // 思考型モデル対応のため45秒タイムアウト
 
             try {
                 const response = await fetch(endpoint, {
@@ -1244,19 +1278,24 @@
             // 全チャンク読み上げ完了
             if (currentChunkIndex >= speechChunks.length) {
                 activeUtterance = null;
+                clearSpeechHighlights();
                 if (isDrivingMode) {
                     resumeListening();
                 }
                 return;
             }
 
-            const chunkText = speechChunks[currentChunkIndex];
+            const chunkIndex = currentChunkIndex;
+            const chunkText = speechChunks[chunkIndex];
             currentChunkIndex++;
 
             if (!chunkText || chunkText.trim().length === 0) {
                 playNextSpeechChunk();
                 return;
             }
+
+            // 現在の発声文をハイライト＆自動スクロール！
+            highlightAndScrollToSentence(chunkIndex);
 
             const utterance = new SpeechSynthesisUtterance(chunkText);
             utterance.lang = 'ja-JP';
@@ -1346,10 +1385,40 @@
             startRecognitionSafely();
         }
 
+        // 発声中の文をハイライト＆自動スクロールする関数
+        function highlightAndScrollToSentence(index) {
+            clearSpeechHighlights();
+            const target = document.getElementById(`speech-sentence-${index}`);
+            if (target) {
+                target.classList.add('active-speaking');
+                // 発声部分が見えるようスムーズにスクロール（画面中央付近へ）
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function clearSpeechHighlights() {
+            document.querySelectorAll('.speech-sentence.active-speaking').forEach(el => {
+                el.classList.remove('active-speaking');
+            });
+        }
+
+        // 最新のGemini回答を文ごとに分割してスパンタグ化
+        function formatModelTextWithSentences(text, isLatest) {
+            if (!isLatest) {
+                return escapeHtml(text).replace(/\n/g, '<br>');
+            }
+            const clean = text.replace(/[*#_~`>]/g, '').trim();
+            const chunks = splitTextIntoSentences(clean);
+            return chunks.map((chunk, idx) => 
+                `<span class="speech-sentence" id="speech-sentence-${idx}">${escapeHtml(chunk).replace(/\n/g, '<br>')}</span>`
+            ).join(' ');
+        }
+
         function stopDrivingMode() {
             isDrivingMode = false;
             speechChunks = [];
             clearTimeout(speechWatchdogTimer);
+            clearSpeechHighlights();
             activeUtterance = null;
             stopRecognitionSafely();
             if ('speechSynthesis' in window) {
@@ -1369,6 +1438,17 @@
             renderHistory();
         }
 
+        // 最下部へスクロールする安全関数
+        function scrollToBottom() {
+            if (!chatContainer) return;
+            requestAnimationFrame(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 80);
+        }
+
         function renderChatMessages() {
             if (!chatMessages) return;
 
@@ -1380,21 +1460,26 @@
 
             if (emptyChat) emptyChat.style.display = "none";
 
-            chatMessages.innerHTML = uiLog.map(item => `
+            chatMessages.innerHTML = uiLog.map((item, index) => {
+                const isLatestModel = (item.role === 'model' && index === uiLog.length - 1);
+                const contentHtml = (item.role === 'model' && isLatestModel)
+                    ? formatModelTextWithSentences(item.text, true)
+                    : escapeHtml(item.text).replace(/\n/g, '<br>');
+
+                return `
                 <div class="chat-bubble ${item.role}">
                     <div class="bubble-meta">
                         <span>${item.role === 'user' ? '🚗 あなた' : '✨ Gemini'}</span>
                         <span>•</span>
                         <span>${item.time}</span>
                     </div>
-                    <div>${escapeHtml(item.text).replace(/\n/g, '<br>')}</div>
+                    <div>${contentHtml}</div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // 最下部へスムーズにスクロール
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 50);
+            // 最下部へ確実にスクロール
+            scrollToBottom();
         }
 
         function renderHistory() {
