@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DriveVoice - 運転用完全ハンズフリーGemini</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(23, 32, 54, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.4);
+            --listen-color: #38bdf8;
+            --think-color: #fbbf24;
+            --speak-color: #4ade80;
+            --error-color: #f87171;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ヘッダー */
+        header {
+            padding: env(safe-area-inset-top, 16px) 20px 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(11, 15, 25, 0.95) 0%, rgba(11, 15, 25, 0.6) 100%);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .app-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .model-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* メインビジュアルエリア（運転中ひと目で状況がわかる大画面） */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px calc(env(safe-area-inset-bottom, 16px) + 16px) 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 巨大ステータスオーブ */
+        .status-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .orb-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .orb {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #475569, #0f172a);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .orb-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            transition: all 0.4s;
+            z-index: 1;
+        }
+
+        .orb-ripple {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ステータス別の発光・アニメーション */
+        /* 1. 待機中 */
+        .state-idle .orb {
+            background: radial-gradient(circle at 35% 35%, #334155, #1e293b);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 2. 聞き取り中（LISTENING） */
+        .state-listening .orb {
+            background: radial-gradient(circle at 35% 35%, #38bdf8, #0284c7);
+            box-shadow: 0 0 50px var(--primary-glow), inset 0 0 20px rgba(255,255,255,0.4);
+            animation: pulse-listen 1.6s infinite ease-in-out;
+        }
+        .state-listening .orb-ring {
+            border-color: rgba(56, 189, 248, 0.4);
+            border-style: solid;
+            animation: rotate-ring 8s linear infinite;
+        }
+        .state-listening .orb-ripple {
+            border: 2px solid var(--listen-color);
+            animation: ripple 2s infinite ease-out;
+        }
+
+        /* 3. 思考中（THINKING） */
+        .state-thinking .orb {
+            background: radial-gradient(circle at 35% 35%, #fbbf24, #d97706);
+            box-shadow: 0 0 50px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(255,255,255,0.5);
+            animation: rotate-think 2s infinite ease-in-out;
+        }
+        .state-thinking .orb-ring {
+            border-color: rgba(251, 191, 36, 0.6);
+            border-width: 3px;
+            animation: rotate-ring 2s linear infinite reverse;
+        }
+
+        /* 4. 回答読み上げ中（SPEAKING） */
+        .state-speaking .orb {
+            background: radial-gradient(circle at 35% 35%, #4ade80, #16a34a);
+            box-shadow: 0 0 60px rgba(74, 222, 128, 0.5), inset 0 0 25px rgba(255,255,255,0.6);
+            animation: bounce-speak 0.8s infinite alternate ease-in-out;
+        }
+        .state-speaking .orb-ring {
+            border-color: rgba(74, 222, 128, 0.7);
+            border-style: solid;
+            animation: rotate-ring 4s linear infinite;
+        }
+
+        /* 5. エラー（ERROR） */
+        .state-error .orb {
+            background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
+            box-shadow: 0 0 40px rgba(248, 113, 113, 0.5);
+        }
+
+        @keyframes pulse-listen {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.08); filter: brightness(1.2); }
+        }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes rotate-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes rotate-think {
+            0% { transform: rotate(0deg) scale(0.98); }
+            50% { transform: rotate(180deg) scale(1.04); }
+            100% { transform: rotate(360deg) scale(0.98); }
+        }
+        @keyframes bounce-speak {
+            0% { transform: scale(0.96); }
+            100% { transform: scale(1.06); }
+        }
+
+        .status-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 8px;
+            min-height: 2.2rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .status-subtext {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            text-align: center;
+        }
+
+        /* リアルタイム発話・回答カード（運転席から見やすい大文字） */
+        .live-card {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            min-height: 110px;
+            max-height: 170px;
+            overflow-y: auto;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .live-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-sub);
+        }
+
+        .live-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.45;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        .live-text.interim {
+            color: #7dd3fc;
+            font-style: italic;
+        }
+
+        /* 操作コントロールバー */
+        .controls {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            gap: 12px;
+            z-index: 20;
+        }
+
+        .main-btn {
+            flex: 1;
+            height: 64px;
+            border-radius: 32px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+        .main-btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: #0b0f19;
+            box-shadow: 0 4px 25px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            box-shadow: 0 4px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        /* 設定モーダル */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 540px;
+            max-height: 85vh;
+            background: #131b2e;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px calc(env(safe-area-inset-bottom, 20px) + 20px) 20px;
+            overflow-y: auto;
+            color: var(--text-main);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #0b0f19;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .range-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .range-wrap input {
+            flex: 1;
+            padding: 0;
+        }
+        .range-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+            width: 48px;
+            text-align: right;
+            color: var(--primary);
+        }
+
+        .btn-save {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: #0b0f19;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .tip {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* 会話ログモーダル */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .history-item {
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        .history-item.user {
+            background: rgba(56, 189, 248, 0.12);
+            border-left: 3px solid var(--primary);
+            margin-left: 20px;
+        }
+        .history-item.model {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--speak-color);
+            margin-right: 20px;
+        }
+        .history-time {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body class="state-idle">
+
+    <!-- ヘッダー -->
+    <header>
+        <div class="app-title">
+            <span>🚗 DriveVoice</span>
+            <span class="model-badge" id="displayModelBadge">gemini-2.5-flash</span>
+        </div>
+        <div class="header-buttons">
+            <button class="icon-btn" id="historyBtn" title="会話ログ">📜</button>
+            <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main>
+        <!-- ステータスオーブエリア（ここをタップしても停止/再開可能） -->
+        <div class="status-container" id="orbContainer">
+            <div class="orb-wrapper">
+                <div class="orb-ripple"></div>
+                <div class="orb-ring"></div>
+                <div class="orb" id="orbIcon">🎙️</div>
+            </div>
+            <div class="status-text" id="statusText">運転モード停止中</div>
+            <div class="status-subtext" id="statusSubtext">「運転開始」を押すと完全ハンズフリーになります</div>
+        </div>
+
+        <!-- リアルタイム表示カード（最新の聞き取り・回答） -->
+        <div class="live-card" id="liveCard">
+            <div class="live-label">
+                <span class="dot" id="liveDot"></span>
+                <span id="liveLabelText">待機中</span>
+            </div>
+            <div class="live-text" id="liveText">「運転開始」を押してください</div>
+        </div>
+
+        <!-- コントロールボタン -->
+        <div class="controls">
+            <button class="main-btn btn-start" id="mainActionBtn">
+                <span>▶ 運転開始（ハンズフリー）</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- 設定モーダル -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ 設定</h2>
+                <button class="icon-btn" id="closeSettingsBtn">✕</button>
+            </div>
+
+            <!-- APIキー入力 -->
+            <div class="form-group">
+                <label for="apiKeyInput">Gemini API Key</label>
+                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+                <div class="tip">※APIキーはこの端末のブラウザ内（LocalStorage）にのみ安全に保存され、外部サーバーへは送信されません。</div>
+            </div>
+
+            <!-- モデル選択 -->
+            <div class="form-group">
+                <label for="modelSelect">使用モデル</label>
+                <select id="modelSelect">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash（超高速・最新推奨）</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro（高知能）</option>
+                    <option value="custom">カスタム手入力（3.8 flash high等）</option>
+                </select>
+            </div>
+
+            <!-- カスタムモデル名入力（カスタム時のみ表示） -->
+            <div class="form-group" id="customModelGroup" style="display: none;">
+                <label for="customModelInput">カスタムモデル名</label>
+                <input type="text" id="customModelInput" placeholder="例: gemini-3.8-flash-high">
+            </div>
+
+            <!-- 無音判定時間（沈黙時間） -->
+            <div class="form-group">
+                <label>話し終わり判定（無音検知）</label>
+                <div class="range-wrap">
+                    <input type="range" id="silenceTimeoutInput" min="1.0" max="3.5" step="0.2" value="1.6">
+                    <span class="range-val" id="silenceVal">1.6秒</span>
+                </div>
+                <div class="tip">発言後、この秒数の沈黙があると自動でGeminiに送信されます。走行音が大きい場合は長めに調整してください。</div>
+            </div>
+
+            <!-- 読み上げ速度 -->
+            <div class="form-group">
+                <label>音声読み上げ速度</label>
+                <div class="range-wrap">
+                    <input type="range" id="speechRateInput" min="0.8" max="1.5" step="0.1" value="1.1">
+                    <span class="range-val" id="rateVal">1.1x</span>
+                </div>
+            </div>
+
+            <!-- システム指示（運転特化プロンプト） -->
+            <div class="form-group">
+                <label for="systemInstructionInput">運転用AI指示（プロンプト）</label>
+                <textarea id="systemInstructionInput" rows="3"></textarea>
+                <div class="tip">※運転中は長文だと危険なため、1〜3文で簡潔に答えるよう設定されています。</div>
+            </div>
+
+            <button class="btn-save" id="saveSettingsBtn">設定を保存</button>
+        </div>
+    </div>
+
+    <!-- 会話ログモーダル -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📜 今回の会話ログ</h2>
+                <div style="display: flex; gap: 8px;">
+                    <button class="icon-btn" id="clearHistoryBtn" title="履歴消去" style="font-size: 1rem;">🗑️</button>
+                    <button class="icon-btn" id="closeHistoryBtn">✕</button>
+                </div>
+            </div>
+            <div class="history-list" id="historyList">
+                <div style="text-align: center; color: var(--text-sub); padding: 20px;">まだ会話はありません</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 設定管理 (LocalStorage) ---
+        const DEFAULT_SYSTEM_PROMPT = "あなたは車の運転中のドライバーと対話する音声アシスタントです。ユーザーは運転中なので、回答は短く簡潔に（原則1〜3文、80文字以内を目安）、要点のみを自然な話し言葉で答えてください。マークダウン記号（*や#、箇条書きハイフンなど）やURL、絵文字は読み上げの邪魔になるので絶対に使わず、スムーズに耳で聞いて理解できる自然な日本語で話してください。";
+
+        const SETTINGS_KEY = "drive_gemini_settings";
+        let config = {
+            apiKey: "",
+            model: "gemini-2.5-flash",
+            customModel: "gemini-3.8-flash-high",
+            silenceTimeout: 1.6,
+            speechRate: 1.1,
+            systemInstruction: DEFAULT_SYSTEM_PROMPT
+        };
+
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem(SETTINGS_KEY);
+                if (saved) {
+                    config = { ...config, ...JSON.parse(saved) };
+                }
+            } catch (e) {
+                console.error("設定ロード失敗:", e);
+            }
+            updateModelBadge();
+        }
+
+        function saveConfig() {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(config));
+            updateModelBadge();
+        }
+
+        function getActiveModel() {
+            return config.model === "custom" ? (config.customModel || "gemini-2.5-flash") : config.model;
+        }
+
+        function updateModelBadge() {
+            const badge = document.getElementById("displayModelBadge");
+            const active = getActiveModel();
+            badge.textContent = active;
+        }
+
+        // --- 会話履歴 (セッション中保持) ---
+        // Gemini API contents format: [{role: 'user', parts: [{text: ''}]}, {role: 'model', parts: [{text: ''}]}]
+        let conversationHistory = [];
+        let uiLog = [];
+
+        // --- 状態管理 ---
+        // 'idle', 'listening', 'thinking', 'speaking', 'error'
+        let currentState = "idle";
+        let isDrivingMode = false;
+        let wakeLock = null;
+
+        // 音声認識オブジェクト
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecognitionActive = false;
+        let speechRecognitionRestartTimer = null;
+        let silenceTimer = null;
+        let currentTranscript = "";
+
+        // Web Audio Context (効果音用)
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // ピッ（効果音）を生成
+        function playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15) {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {
+                console.warn("効果音再生エラー:", e);
+            }
+        }
+
+        function playListenBeep() {
+            // ピッ（聞くよ）
+            playTone(880, 'sine', 0.08, 0.2);
+        }
+
+        function playSendBeep() {
+            // ピロリン（送信）
+            playTone(587, 'sine', 0.06, 0.15);
+            setTimeout(() => playTone(880, 'sine', 0.09, 0.15), 60);
+        }
+
+        function playErrorBeep() {
+            // ブブッ（エラー）
+            playTone(220, 'sawtooth', 0.12, 0.2);
+            setTimeout(() => playTone(180, 'sawtooth', 0.15, 0.2), 120);
+        }
+
+        // --- 画面スリープ防止 (Screen Wake Lock) ---
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released');
+                    });
+                } catch (err) {
+                    console.warn(`Wake Lockエラー: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                });
+            }
+        }
+
+        // --- UI状態の切り替え ---
+        const orbContainer = document.getElementById("orbContainer");
+        const orbIcon = document.getElementById("orbIcon");
+        const statusText = document.getElementById("statusText");
+        const statusSubtext = document.getElementById("statusSubtext");
+        const liveText = document.getElementById("liveText");
+        const liveLabelText = document.getElementById("liveLabelText");
+        const liveDot = document.getElementById("liveDot");
+        const mainActionBtn = document.getElementById("mainActionBtn");
+
+        function setState(state, detail = "") {
+            currentState = state;
+            document.body.className = `state-${state}`;
+
+            switch (state) {
+                case "idle":
+                    orbIcon.textContent = "💤";
+                    statusText.textContent = "運転モード停止中";
+                    statusSubtext.textContent = "「運転開始」を押すと完全ハンズフリーになります";
+                    liveLabelText.textContent = "待機中";
+                    liveDot.style.background = "var(--text-sub)";
+                    mainActionBtn.className = "main-btn btn-start";
+                    mainActionBtn.innerHTML = "<span>▶ 運転開始（ハンズフリー）</span>";
+                    break;
+
+                case "listening":
+                    orbIcon.textContent = "🎙️";
+                    statusText.textContent = "聞いています...";
+                    statusSubtext.textContent = "どうぞお話しください（話し終わると自動送信）";
+                    liveLabelText.textContent = "ドライバー発話中";
+                    liveDot.style.background = "var(--listen-color)";
+                    break;
+
+                case "thinking":
+                    orbIcon.textContent = "💭";
+                    statusText.textContent = "Gemini考え中...";
+                    statusSubtext.textContent = "回答を生成しています";
+                    liveLabelText.textContent = "Gemini思考中";
+                    liveDot.style.background = "var(--think-color)";
+                    break;
+
+                case "speaking":
+                    orbIcon.textContent = "🔊";
+                    statusText.textContent = "回答を読み上げ中";
+                    statusSubtext.textContent = "読み上げが終わると自動でマイクが再開します";
+                    liveLabelText.textContent = "Gemini回答中";
+                    liveDot.style.background = "var(--speak-color)";
+                    break;
+
+                case "error":
+                    orbIcon.textContent = "⚠️";
+                    statusText.textContent = "エラーが発生しました";
+                    statusSubtext.textContent = detail || "再接続しています...";
+                    liveLabelText.textContent = "エラー";
+                    liveDot.style.background = "var(--error-color)";
+                    break;
+            }
+        }
+
+        // --- 音声認識の初期化 ---
+        function initRecognition() {
+            if (!SpeechRecognition) {
+                alert("お使いのブラウザは音声認識に対応していません。iOS SafariまたはGoogle Chromeでお試しください。");
+                return false;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'ja-JP';
+
+            recognition.onstart = () => {
+                isRecognitionActive = true;
+                if (currentState !== "listening" && isDrivingMode) {
+                    setState("listening");
+                    playListenBeep();
+                }
+            };
+
+            recognition.onresult = (event) => {
+                if (!isDrivingMode || currentState === "thinking" || currentState === "speaking") return;
+
+                let interim = "";
+                let final = "";
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const trans = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        final += trans;
+                    } else {
+                        interim += trans;
+                    }
+                }
+
+                const recognized = final || interim;
+                if (recognized.trim().length > 0) {
+                    currentTranscript = recognized;
+                    liveText.textContent = currentTranscript;
+                    liveText.className = final ? "live-text" : "live-text interim";
+
+                    // 無音タイマーのリセット（沈黙を検知して自動送信）
+                    resetSilenceTimer();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.warn("音声認識エラー:", event.error);
+                if (event.error === "no-speech") {
+                    // 単なる沈黙。無視して継続
+                    return;
+                }
+                if (event.error === "not-allowed") {
+                    stopDrivingMode();
+                    alert("マイクの使用が許可されていません。ブラウザ設定でマイクを許可してください。");
+                }
+            };
+
+            recognition.onend = () => {
+                isRecognitionActive = false;
+                // 運転モード中かつ、思考中・読み上げ中でなければマイクを自動再開
+                if (isDrivingMode && currentState === "listening") {
+                    clearTimeout(speechRecognitionRestartTimer);
+                    speechRecognitionRestartTimer = setTimeout(() => {
+                        startRecognitionSafely();
+                    }, 300);
+                }
+            };
+
+            return true;
+        }
+
+        function startRecognitionSafely() {
+            if (!recognition) initRecognition();
+            if (isRecognitionActive) return;
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.warn("Recognition start例外:", e);
+                setTimeout(() => {
+                    if (isDrivingMode && !isRecognitionActive) {
+                        try { recognition.start(); } catch (err) {}
+                    }
+                }, 500);
+            }
+        }
+
+        function stopRecognitionSafely() {
+            clearTimeout(silenceTimer);
+            clearTimeout(speechRecognitionRestartTimer);
+            if (recognition && isRecognitionActive) {
+                try {
+                    recognition.stop();
+                } catch (e) {}
+            }
+            isRecognitionActive = false;
+        }
+
+        // 発話終了（無音検知）のタイマー
+        function resetSilenceTimer() {
+            clearTimeout(silenceTimer);
+            const timeoutMs = (parseFloat(config.silenceTimeout) || 1.6) * 1000;
+
+            silenceTimer = setTimeout(() => {
+                if (currentTranscript.trim().length > 0 && isDrivingMode && currentState === "listening") {
+                    handleUserSpeechCompleted(currentTranscript.trim());
+                }
+            }, timeoutMs);
+        }
+
+        // ユーザーが話し終わったときの処理
+        async function handleUserSpeechCompleted(text) {
+            currentTranscript = "";
+            clearTimeout(silenceTimer);
+
+            // 音声認識を一旦一時停止（自分の読み上げやノイズを拾わないようにする）
+            stopRecognitionSafely();
+
+            playSendBeep();
+            setState("thinking");
+            liveText.textContent = `「${text}」`;
+            liveText.className = "live-text";
+
+            // 会話履歴に追加
+            addUiLog("user", text);
+            conversationHistory.push({
+                role: "user",
+                parts: [{ text: text }]
+            });
+
+            // 履歴が長すぎる場合は直近10往復（20件）に制限してトークン節約＆高速化
+            if (conversationHistory.length > 20) {
+                conversationHistory = conversationHistory.slice(-20);
+            }
+
+            // Gemini API呼び出し
+            try {
+                const replyText = await callGeminiAPI();
+                // 会話履歴に追加
+                addUiLog("model", replyText);
+                conversationHistory.push({
+                    role: "model",
+                    parts: [{ text: replyText }]
+                });
+
+                // 音声読み上げ
+                speakReply(replyText);
+            } catch (err) {
+                console.error("Gemini呼び出し失敗:", err);
+                playErrorBeep();
+                setState("error", err.message);
+
+                // 音声でエラーを案内してマイク復帰
+                speakReply("通信エラーが発生しました。電波を確認してもう一度お話しください。", true);
+            }
+        }
+
+        // --- Gemini API 呼び出し ---
+        async function callGeminiAPI(retryCount = 0) {
+            if (!config.apiKey) {
+                throw new Error("APIキーが未設定です。右上の歯車アイコンから設定してください。");
+            }
+
+            const activeModel = getActiveModel();
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(config.apiKey)}`;
+
+            const requestBody = {
+                contents: conversationHistory,
+                systemInstruction: {
+                    parts: [{ text: config.systemInstruction || DEFAULT_SYSTEM_PROMPT }]
+                },
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 250 // 短く簡潔に答えてもらいレスポンスを最速化
+                }
+            };
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000); // 12秒タイムアウト
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData.error?.message || `HTTP ${response.status} エラー`;
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();
+                const candidate = data.candidates?.[0];
+                if (!candidate || !candidate.content?.parts?.[0]?.text) {
+                    throw new Error("回答が得られませんでした。");
+                }
+
+                return candidate.content.parts[0].text.trim();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                // 1回だけ自動リトライ
+                if (retryCount < 1) {
+                    console.log("通信リトライ中...");
+                    await new Promise(r => setTimeout(r, 1000));
+                    return callGeminiAPI(retryCount + 1);
+                }
+                throw error;
+            }
+        }
+
+        // --- 音声合成（Text-to-Speech）読み上げ ---
+        function speakReply(text, isErrorNotice = false) {
+            if (!('speechSynthesis' in window)) {
+                alert("お使いの端末は音声合成に対応していません。");
+                if (isDrivingMode) resumeListening();
+                return;
+            }
+
+            // マークダウン記号などを除去してクリアな読み上げにする
+            const cleanText = text
+                .replace(/[*#_~`>]/g, '')
+                .replace(/https?:\/\/\S+/g, 'URL')
+                .trim();
+
+            setState("speaking");
+            liveText.textContent = cleanText;
+
+            // iOS Safariでの発話キュークリア
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'ja-JP';
+            utterance.rate = parseFloat(config.speechRate) || 1.1;
+
+            // 日本語ボイスを選択
+            const voices = window.speechSynthesis.getVoices();
+            const jaVoice = voices.find(v => v.lang.startsWith('ja') || v.lang.includes('JP'));
+            if (jaVoice) {
+                utterance.voice = jaVoice;
+            }
+
+            utterance.onend = () => {
+                if (isDrivingMode) {
+                    // 読み上げが終わったら、自動でマイク再開！
+                    resumeListening();
+                }
+            };
+
+            utterance.onerror = (e) => {
+                console.warn("読み上げエラー:", e);
+                if (isDrivingMode) {
+                    resumeListening();
+                }
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // マイクを聞き取りモードに自動復帰
+        function resumeListening() {
+            if (!isDrivingMode) return;
+            setState("listening");
+            liveText.textContent = "（聞いています...）";
+            playListenBeep();
+            startRecognitionSafely();
+        }
+
+        // --- 運転モード開始 / 停止 ---
+        async function startDrivingMode() {
+            if (!config.apiKey) {
+                openSettingsModal();
+                alert("まずはGemini API Keyを設定してください。");
+                return;
+            }
+
+            // オーディオコンテキストのアクティベート（iOS Safariのサウンド制約解除）
+            getAudioContext();
+
+            // スリープ防止
+            await requestWakeLock();
+
+            isDrivingMode = true;
+            mainActionBtn.className = "main-btn btn-stop";
+            mainActionBtn.innerHTML = "<span>⏹ 運転モード終了</span>";
+
+            setState("listening");
+            liveText.textContent = "どうぞお話しください";
+            playListenBeep();
+            startRecognitionSafely();
+        }
+
+        function stopDrivingMode() {
+            isDrivingMode = false;
+            stopRecognitionSafely();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            releaseWakeLock();
+            setState("idle");
+            liveText.textContent = "「運転開始」を押してください";
+        }
+
+        // --- 会話ログ管理 ---
+        function addUiLog(role, text) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            uiLog.push({ role, text, time });
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById("historyList");
+            if (uiLog.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">まだ会話はありません</div>';
+                return;
+            }
+
+            list.innerHTML = uiLog.map(item => `
+                <div class="history-item ${item.role}">
+                    <div class="history-time">${item.role === 'user' ? 'あなた' : 'Gemini'} • ${item.time}</div>
+                    <div>${escapeHtml(item.text)}</div>
+                </div>
+            `).join('');
+
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        // --- UI イベントリスナー ---
+        // メインアクションボタン
+        mainActionBtn.addEventListener("click", () => {
+            if (isDrivingMode) {
+                stopDrivingMode();
+            } else {
+                startDrivingMode();
+            }
+        });
+
+        // 巨大オーブタップ（一時停止 / 再開のトグル）
+        orbContainer.addEventListener("click", () => {
+            if (!isDrivingMode) {
+                startDrivingMode();
+            } else {
+                // 運転中ならトグル
+                stopDrivingMode();
+            }
+        });
+
+        // 設定モーダル
+        const settingsModal = document.getElementById("settingsModal");
+        const settingsBtn = document.getElementById("settingsBtn");
+        const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+        const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+        const apiKeyInput = document.getElementById("apiKeyInput");
+        const modelSelect = document.getElementById("modelSelect");
+        const customModelGroup = document.getElementById("customModelGroup");
+        const customModelInput = document.getElementById("customModelInput");
+        const silenceTimeoutInput = document.getElementById("silenceTimeoutInput");
+        const silenceVal = document.getElementById("silenceVal");
+        const speechRateInput = document.getElementById("speechRateInput");
+        const rateVal = document.getElementById("rateVal");
+        const systemInstructionInput = document.getElementById("systemInstructionInput");
+
+        function openSettingsModal() {
+            apiKeyInput.value = config.apiKey || "";
+            modelSelect.value = config.model;
+            customModelInput.value = config.customModel;
+            customModelGroup.style.display = config.model === "custom" ? "block" : "none";
+            silenceTimeoutInput.value = config.silenceTimeout;
+            silenceVal.textContent = config.silenceTimeout + "秒";
+            speechRateInput.value = config.speechRate;
+            rateVal.textContent = config.speechRate + "x";
+            systemInstructionInput.value = config.systemInstruction;
+            settingsModal.classList.add("open");
+        }
+
+        settingsBtn.addEventListener("click", openSettingsModal);
+        closeSettingsBtn.addEventListener("click", () => settingsModal.classList.remove("open"));
+
+        modelSelect.addEventListener("change", () => {
+            customModelGroup.style.display = modelSelect.value === "custom" ? "block" : "none";
+        });
+
+        silenceTimeoutInput.addEventListener("input", () => {
+            silenceVal.textContent = silenceTimeoutInput.value + "秒";
+        });
+
+        speechRateInput.addEventListener("input", () => {
+            rateVal.textContent = speechRateInput.value + "x";
+        });
+
+        saveSettingsBtn.addEventListener("click", () => {
+            config.apiKey = apiKeyInput.value.trim();
+            config.model = modelSelect.value;
+            config.customModel = customModelInput.value.trim();
+            config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
+            config.speechRate = parseFloat(speechRateInput.value);
+            config.systemInstruction = systemInstructionInput.value.trim() || DEFAULT_SYSTEM_PROMPT;
+
+            saveConfig();
+            settingsModal.classList.remove("open");
+        });
+
+        // 会話ログモーダル
+        const historyModal = document.getElementById("historyModal");
+        const historyBtn = document.getElementById("historyBtn");
+        const closeHistoryBtn = document.getElementById("closeHistoryBtn");
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
+        historyBtn.addEventListener("click", () => {
+            renderHistory();
+            historyModal.classList.add("open");
+        });
+        closeHistoryBtn.addEventListener("click", () => historyModal.classList.remove("open"));
+        clearHistoryBtn.addEventListener("click", () => {
+            if (confirm("会話ログをリセットしますか？")) {
+                conversationHistory = [];
+                uiLog = [];
+                renderHistory();
+            }
+        });
+
+        // ページロード時の初期化
+        window.addEventListener("DOMContentLoaded", () => {
+            loadConfig();
+            initRecognition();
+
+            // 音声一覧のロード（ブラウザキャッシュ用）
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+
+            // 初回でAPIキーが未入力の場合は案内
+            if (!config.apiKey) {
+                setTimeout(() => {
+                    openSettingsModal();
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>
