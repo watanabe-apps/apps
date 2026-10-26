@@ -1095,7 +1095,7 @@
             { id: "m_backpack", category: "みぢかなもの", name: "りゅっく", emoji: "🎒", image: null },
             { id: "m_oni", category: "みぢかなもの", name: "おに", emoji: "👹", image: null },
 
-            // どうし (10) - 生成イラスト（白背景・全平仮名）
+            // どうし (35) - イラスト付き（白背景・全平仮名・ことば図鑑厳選）
             { id: "v_jump", category: "どうし", name: "じゃんぷ", emoji: "🦘", image: "images/jump.png" },
             { id: "v_neru", category: "どうし", name: "ねる", emoji: "🛌", image: "images/neru.png" },
             { id: "v_aruku", category: "どうし", name: "あるく", emoji: "🚶", image: "images/aruku.png" },
@@ -1105,7 +1105,32 @@
             { id: "v_nomu", category: "どうし", name: "のむ", emoji: "🥤", image: "images/nomu.png" },
             { id: "v_warau", category: "どうし", name: "わらう", emoji: "😄", image: "images/warau.png" },
             { id: "v_utau", category: "どうし", name: "うたう", emoji: "🎵", image: "images/utau.png" },
-            { id: "v_odoru", category: "どうし", name: "おどる", emoji: "💃", image: "images/odoru.png" }
+            { id: "v_odoru", category: "どうし", name: "おどる", emoji: "💃", image: "images/odoru.png" },
+            { id: "v_tatsu", category: "どうし", name: "たつ", emoji: "🧍", image: "images/tatsu.png" },
+            { id: "v_suwaru", category: "どうし", name: "すわる", emoji: "🪑", image: "images/suwaru.png" },
+            { id: "v_okiru", category: "どうし", name: "おきる", emoji: "⏰", image: "images/okiru.png" },
+            { id: "v_yomu", category: "どうし", name: "よむ", emoji: "📖", image: "images/yomu.png" },
+            { id: "v_kaku", category: "どうし", name: "かく", emoji: "🖍️", image: "images/kaku.png" },
+            { id: "v_migaku", category: "どうし", name: "みがく", emoji: "🪥", image: "images/migaku.png" },
+            { id: "v_naku", category: "どうし", name: "なく", emoji: "😭", image: "images/naku.png" },
+            { id: "v_okoru", category: "どうし", name: "おこる", emoji: "😡", image: "images/okoru.png" },
+            { id: "v_odoroku", category: "どうし", name: "おどろく", emoji: "😲", image: "images/odoroku.png" },
+            { id: "v_keru", category: "どうし", name: "ける", emoji: "⚽", image: "images/keru.png" },
+            { id: "v_burasagaru", category: "どうし", name: "ぶらさがる", emoji: "🤸", image: "images/burasagaru.png" },
+            { id: "v_kakureru", category: "どうし", name: "かくれる", emoji: "🫣", image: "images/kakureru.png" },
+            { id: "v_teofuru", category: "どうし", name: "てをふる", emoji: "👋", image: "images/teofuru.png" },
+            { id: "v_teotsunagu", category: "どうし", name: "てをつなぐ", emoji: "👫", image: "images/teotsunagu.png" },
+            { id: "v_kiku", category: "どうし", name: "きく", emoji: "👂", image: "images/kiku.png" },
+            { id: "v_akubi", category: "どうし", name: "あくび", emoji: "🥱", image: "images/akubi.png" },
+            { id: "v_naderu", category: "どうし", name: "なでる", emoji: "🐶", image: "images/naderu.png" },
+            { id: "v_dakishimeru", category: "どうし", name: "だきしめる", emoji: "🧸", image: "images/dakishimeru.png" },
+            { id: "v_kaburu", category: "どうし", name: "かぶる", emoji: "🧢", image: "images/kaburu.png" },
+            { id: "v_teoageru", category: "どうし", name: "てをあげる", emoji: "🙋", image: "images/teoageru.png" },
+            { id: "v_kangaeru", category: "どうし", name: "かんがえる", emoji: "💡", image: "images/kangaeru.png" },
+            { id: "v_hipparu", category: "どうし", name: "ひっぱる", emoji: "🪢", image: "images/hipparu.png" },
+            { id: "v_shagamu", category: "どうし", name: "しゃがむ", emoji: "🐜", image: "images/shagamu.png" },
+            { id: "v_oikakeru", category: "どうし", name: "おいかける", emoji: "🦋", image: "images/oikakeru.png" },
+            { id: "v_hirou", category: "どうし", name: "ひろう", emoji: "🌰", image: "images/hirou.png" }
         ];
 
         let words = [];
@@ -1332,7 +1357,7 @@
         }
 
         function resetDefaultWords() {
-            if (confirm("単語リストを初期のマスターデータ（全139語）に戻しますか？")) {
+            if (confirm("単語リストを初期のマスターデータ（全164語）に戻しますか？")) {
                 words = [...DEFAULT_WORDS_MASTER];
                 currentMgmtCategory = 'all';
                 saveWords();
