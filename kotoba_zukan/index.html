@@ -434,6 +434,375 @@
       font-size: 13px;
     }
 
+    /* 単語管理ボタン (図鑑ヘッダー) */
+    .btn-word-manage {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.92rem;
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1.5px solid #cbd5e1;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .btn-word-manage:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .btn-word-manage.has-hidden {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+
+    /* 拡大モーダル内非表示ボタン */
+    .modal-hide-btn {
+      background: #f8fafc;
+      color: #64748b;
+      border: 2px solid #cbd5e1;
+      padding: 10px 20px;
+      font-size: 1.05rem;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .modal-hide-btn:hover {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+
+    /* 設定画面の単語管理オープンボタン */
+    .btn-manage-words-open {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 2px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-manage-words-open:hover {
+      background: #dbeafe;
+    }
+
+    /* 単語管理モーダル */
+    .wm-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 1200;
+    }
+    .wm-modal-overlay.active {
+      display: flex;
+    }
+    .wm-modal-card {
+      background: #ffffff;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 760px;
+      height: 90vh;
+      max-height: 820px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      position: relative;
+      animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .wm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--border-color);
+      background: #ffffff;
+      flex-shrink: 0;
+    }
+    .wm-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wm-close-btn {
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .wm-filter-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 20px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .wm-search-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .wm-search-input {
+      flex: 1;
+      padding: 9px 16px;
+      font-size: 1rem;
+      font-family: var(--font-family);
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      outline: none;
+      background: #ffffff;
+    }
+    .wm-search-input:focus {
+      border-color: #2563eb;
+    }
+    .wm-reset-all-btn {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: var(--font-family);
+      background: #ffffff;
+      color: #475569;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .wm-reset-all-btn:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .wm-cat-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .wm-cat-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .wm-cat-btn {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: var(--font-family);
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #475569;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .wm-cat-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .wm-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #64748b;
+      padding: 0 4px;
+    }
+    .wm-show-filter-toggle {
+      display: flex;
+      gap: 6px;
+    }
+    .wm-subfilter-btn {
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: var(--font-family);
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .wm-subfilter-btn.active {
+      background: #eff6ff;
+      color: #2563eb;
+      border-color: #2563eb;
+    }
+    .wm-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 14px 18px 24px;
+    }
+    .wm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .wm-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 8px 12px;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .wm-item:hover {
+      border-color: #cbd5e1;
+      background: #fcfcfc;
+    }
+    .wm-item:active {
+      transform: scale(0.97);
+    }
+    .wm-item.is-hidden {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+    .wm-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .wm-thumb {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 2px;
+    }
+    .wm-thumb .k-visual-img, .wm-thumb .k-svg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .wm-name-box {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .wm-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .wm-item.is-hidden .wm-name {
+      text-decoration: line-through;
+      color: #ef4444;
+    }
+    .wm-cat-name {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .wm-toggle-btn {
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1.5px solid #22c55e;
+      background: #f0fdf4;
+      color: #15803d;
+      white-space: nowrap;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .wm-item.is-hidden .wm-toggle-btn {
+      border-color: #ef4444;
+      background: #ffffff;
+      color: #dc2626;
+    }
+    .wm-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      flex-shrink: 0;
+    }
+    .wm-footer-info {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #475569;
+    }
+    .wm-done-btn {
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 10px 28px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* フローティングトースト通知 */
+    .app-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.9);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      white-space: nowrap;
+    }
+    .app-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
     /* =========================================================
        拡大表示モーダル (#zukan-modal)
        ========================================================= */
@@ -1294,6 +1663,9 @@
       <div class="zukan-tabs-wrapper" id="zukan-tabs-wrapper">
         <!-- JSでタブを動的生成 -->
       </div>
+      <button class="btn btn-word-manage" id="btn-zukan-word-manage" title="ことばの表示・非表示設定">
+        <span>⚙️</span> かくす
+      </button>
       <span class="zukan-count-badge" id="zukan-count-badge">0こ</span>
     </header>
 
@@ -1311,9 +1683,14 @@
       <span class="modal-category-tag" id="modal-cat-tag">カテゴリ</span>
       <div class="modal-svg-box" id="modal-svg-box"></div>
       <h2 class="modal-name" id="modal-name">ことば</h2>
-      <button class="btn modal-speak-btn" id="modal-speak-btn">
-        <span>🔊</span> もういちど きく
-      </button>
+      <div style="display: flex; gap: 10px; width: 100%; justify-content: center; align-items: center; flex-wrap: wrap;">
+        <button class="btn modal-speak-btn" id="modal-speak-btn">
+          <span>🔊</span> もういちど きく
+        </button>
+        <button class="btn modal-hide-btn" id="modal-hide-btn" title="ずかんやクイズでこの単語を非表示にします">
+          <span>👁️</span> かくす
+        </button>
+      </div>
       <div class="modal-nav-row">
         <button class="btn modal-nav-btn" id="modal-prev-btn">← まえ</button>
         <button class="btn modal-nav-btn" id="modal-next-btn">つぎ →</button>
@@ -1491,6 +1868,20 @@
             <span class="slider"></span>
           </label>
         </div>
+
+        <!-- 8. 単語の表示・非表示設定 -->
+        <div class="setting-section">
+          <div class="setting-label-row">
+            <span class="setting-label">8. ことばの ひょうじ・非表示</span>
+            <span class="setting-val-display" id="val-hidden-count">0語 非表示</span>
+          </div>
+          <p style="font-size: 0.9rem; color: #64748b; line-height: 1.4;">
+            なじみのない言葉や難しい言葉をかくして、ずかんやクイズから省略できます。
+          </p>
+          <button class="btn btn-manage-words-open" id="btn-open-word-manager">
+            <span>📝</span> ことばの 表示・非表示を えらぶ
+          </button>
+        </div>
       </div>
 
       <!-- 右: リアルタイム・プレビュー -->
@@ -1504,6 +1895,51 @@
       </div>
     </div>
   </div>
+
+  <!-- =======================================================
+       単語の表示・非表示 管理モーダル (#word-manager-modal)
+       ======================================================= -->
+  <div class="wm-modal-overlay" id="word-manager-modal">
+    <div class="wm-modal-card">
+      <header class="wm-header">
+        <h3 class="wm-title"><span>📝</span> ことばの 表示・非表示 設定</h3>
+        <button class="wm-close-btn" id="wm-close-btn" aria-label="閉じる">✕</button>
+      </header>
+
+      <div class="wm-filter-bar">
+        <div class="wm-search-row">
+          <input type="text" class="wm-search-input" id="wm-search-input" placeholder="🔍 ことばを けんさく（ひらがな）">
+          <button class="wm-reset-all-btn" id="wm-reset-all-btn">全単語を表示に戻す</button>
+        </div>
+
+        <div class="wm-cat-tabs" id="wm-cat-tabs">
+          <!-- JSでカテゴリボタン生成 -->
+        </div>
+
+        <div class="wm-status-row">
+          <span id="wm-status-count">表示中: 1000 / 1000語</span>
+          <div class="wm-show-filter-toggle">
+            <button class="wm-subfilter-btn active" data-filter="all" id="wm-subfilter-all">すべて</button>
+            <button class="wm-subfilter-btn" data-filter="hidden" id="wm-subfilter-hidden">非表示のみ (<span id="wm-hidden-badge-count">0</span>)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="wm-list-scroll" id="wm-list-scroll">
+        <div class="wm-grid" id="wm-grid">
+          <!-- JSで単語カード生成 -->
+        </div>
+      </div>
+
+      <footer class="wm-footer">
+        <div class="wm-footer-info" id="wm-footer-info">全体: 1000 / 1000語 表示中</div>
+        <button class="btn wm-done-btn" id="wm-done-btn">かんりょう</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- フローティング通知トースト -->
+  <div id="app-toast" class="app-toast"></div>
 
   <!-- =======================================================
        JavaScript: ロジック & データベース
@@ -1531,10 +1967,19 @@
       choiceCount: 3,       // 2, 3, 4
       speechSpeed: 'normal',// 'slow' | 'normal'
       soundEnabled: true,
-      modalPreview: true
+      modalPreview: true,
+      hiddenWords: []       // 非表示単語のID配列
     };
 
     let settings = { ...DEFAULT_SETTINGS };
+    let hiddenWordsSet = new Set();
+
+    function updateHiddenWordsSet() {
+      if (!Array.isArray(settings.hiddenWords)) {
+        settings.hiddenWords = [];
+      }
+      hiddenWordsSet = new Set(settings.hiddenWords);
+    }
 
     function loadSettings() {
       try {
@@ -1548,12 +1993,68 @@
       if (!settings.categories || settings.categories.length === 0) {
         settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'doushi'];
       }
+      updateHiddenWordsSet();
     }
 
     function saveSettings() {
       try {
         localStorage.setItem('kotoba_zukan_settings', JSON.stringify(settings));
       } catch(e) {}
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('app-toast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function hideWord(wordId, showToastAlert = true) {
+      if (!settings.hiddenWords.includes(wordId)) {
+        settings.hiddenWords.push(wordId);
+        updateHiddenWordsSet();
+        saveSettings();
+        if (showToastAlert) {
+          const w = ALL_WORDS.find(item => item.id === wordId);
+          showToast(`「${w ? w.name : 'たんご'}」を 非表示にしました`);
+        }
+      }
+    }
+
+    function unhideWord(wordId, showToastAlert = true) {
+      if (settings.hiddenWords.includes(wordId)) {
+        settings.hiddenWords = settings.hiddenWords.filter(id => id !== wordId);
+        updateHiddenWordsSet();
+        saveSettings();
+        if (showToastAlert) {
+          const w = ALL_WORDS.find(item => item.id === wordId);
+          showToast(`「${w ? w.name : 'たんご'}」を 表示にもどしました`);
+        }
+      }
+    }
+
+    function toggleWord(wordId) {
+      if (hiddenWordsSet.has(wordId)) {
+        unhideWord(wordId, false);
+      } else {
+        hideWord(wordId, false);
+      }
+    }
+
+    function resetAllHiddenWords() {
+      if (!settings.hiddenWords || settings.hiddenWords.length === 0) {
+        showToast('非表示のことばはありません');
+        return;
+      }
+      const count = settings.hiddenWords.length;
+      settings.hiddenWords = [];
+      updateHiddenWordsSet();
+      saveSettings();
+      showToast(`${count}語を すべて表示にもどしました`);
     }
 
     /* =========================================================
@@ -1753,7 +2254,7 @@
 
     // 表示カテゴリまたは選択肢の音声を事前ロード（初期表示の高速化＆帯域保護）
     function preloadCategoryAudio(cat) {
-      const words = (cat === 'all' || !cat) ? ALL_WORDS : ALL_WORDS.filter(w => w.category === cat);
+      const words = ((cat === 'all' || !cat) ? ALL_WORDS : ALL_WORDS.filter(w => w.category === cat)).filter(w => !hiddenWordsSet.has(w.id));
       words.slice(0, 36).forEach(w => {
         loadAudioBuffer(`audio/words/${w.id}.mp3`);
       });
@@ -2046,13 +2547,54 @@
       const grid = document.getElementById('zukan-grid');
       grid.innerHTML = '';
 
-      currentFilteredWords = ALL_WORDS.filter(w => {
+      // カテゴリ内全単語と表示可能単語を集計
+      const categoryAllWords = ALL_WORDS.filter(w => {
         if (!settings.categories.includes(w.category)) return false;
         if (currentCategoryFilter === 'all') return true;
         return w.category === currentCategoryFilter;
       });
 
-      document.getElementById('zukan-count-badge').textContent = `${currentFilteredWords.length}こ`;
+      currentFilteredWords = categoryAllWords.filter(w => !hiddenWordsSet.has(w.id));
+
+      const hiddenCountInCat = categoryAllWords.length - currentFilteredWords.length;
+      const countBadge = document.getElementById('zukan-count-badge');
+      if (countBadge) {
+        if (hiddenCountInCat > 0) {
+          countBadge.textContent = `${currentFilteredWords.length} / ${categoryAllWords.length}こ`;
+        } else {
+          countBadge.textContent = `${currentFilteredWords.length}こ`;
+        }
+      }
+
+      // ナビバーの「かくす」ボタン状態
+      const manageBtn = document.getElementById('btn-zukan-word-manage');
+      if (manageBtn) {
+        if (hiddenCountInCat > 0) {
+          manageBtn.classList.add('has-hidden');
+          manageBtn.innerHTML = `<span>⚙️</span> かくす (${hiddenCountInCat})`;
+        } else {
+          manageBtn.classList.remove('has-hidden');
+          manageBtn.innerHTML = `<span>⚙️</span> かくす`;
+        }
+      }
+
+      if (currentFilteredWords.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">🙈</div>
+            <p style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">ひょうじできる ことばが ありません</p>
+            <p style="font-size: 0.95rem; margin-bottom: 20px;">単語がすべて非表示になっているか、設定で除外されています。</p>
+            <button class="btn btn-primary" id="btn-zukan-empty-manage" style="background:#2563eb; color:#fff; padding:10px 24px; border-radius:999px; font-weight:700;">
+              ことばの表示・非表示を 設定する
+            </button>
+          </div>
+        `;
+        const emptyBtn = document.getElementById('btn-zukan-empty-manage');
+        if (emptyBtn) {
+          emptyBtn.addEventListener('click', () => openWordManager(currentCategoryFilter));
+        }
+        return;
+      }
 
       currentFilteredWords.forEach((word, index) => {
         const card = document.createElement('div');
@@ -2089,6 +2631,18 @@
 
       document.getElementById('modal-svg-box').innerHTML = getWordVisualHtml(word.id, word.name);
       document.getElementById('modal-name').textContent = word.name;
+
+      // 個別非表示ボタン
+      const hideBtn = document.getElementById('modal-hide-btn');
+      if (hideBtn) {
+        hideBtn.onclick = () => {
+          playSound('tap');
+          hideWord(word.id, true);
+          modal.classList.remove('active');
+          renderZukanCards();
+        };
+      }
+
       modal.classList.add('active');
     }
 
@@ -2097,6 +2651,15 @@
         playSound('tap');
         showScreen('home-screen');
       });
+
+      // 単語管理（非表示設定）ボタン
+      const manageBtn = document.getElementById('btn-zukan-word-manage');
+      if (manageBtn) {
+        manageBtn.addEventListener('click', () => {
+          playSound('tap');
+          openWordManager(currentCategoryFilter);
+        });
+      }
 
       // モーダルイベント
       const modal = document.getElementById('zukan-modal');
@@ -2151,10 +2714,10 @@
     let isAnswerProcessing = false;
 
     function startQuizSession() {
-      // 対象語彙を抽出
-      const candidates = ALL_WORDS.filter(w => settings.categories.includes(w.category));
+      // 対象語彙を抽出（非表示単語を除外）
+      const candidates = ALL_WORDS.filter(w => settings.categories.includes(w.category) && !hiddenWordsSet.has(w.id));
       if (candidates.length === 0) {
-        alert('せってい で カテゴリを ひとついじょう えらんでね！');
+        alert('表示できる ことばが ありません。せってい で カテゴリや ことばの表示設定を かくにんしてね！');
         showScreen('setting-screen');
         return;
       }
@@ -2186,8 +2749,8 @@
         format = Math.random() < 0.5 ? 'choose-pic' : 'choose-text';
       }
 
-      // 選択肢作成 (正解1 + 誤答 n-1)
-      const otherWords = ALL_WORDS.filter(w => w.id !== targetWord.id && settings.categories.includes(w.category));
+      // 選択肢作成 (正解1 + 誤答 n-1、非表示単語を除外)
+      const otherWords = ALL_WORDS.filter(w => w.id !== targetWord.id && settings.categories.includes(w.category) && !hiddenWordsSet.has(w.id));
       // 同カテゴリ優先で誤答を選ぶ
       const sameCatOthers = otherWords.filter(w => w.category === targetWord.category).sort(() => 0.5 - Math.random());
       const diffCatOthers = otherWords.filter(w => w.category !== targetWord.category).sort(() => 0.5 - Math.random());
@@ -2633,6 +3196,12 @@
       // 効果音 & モーダル
       document.getElementById('opt-sound-enabled').checked = settings.soundEnabled;
       document.getElementById('opt-modal-preview').checked = settings.modalPreview;
+
+      // 8. 非表示語数
+      const hiddenCountEl = document.getElementById('val-hidden-count');
+      if (hiddenCountEl) {
+        hiddenCountEl.textContent = `${settings.hiddenWords.length}語 非表示`;
+      }
     }
 
     // リアルタイム・プレビュー更新
@@ -2640,10 +3209,10 @@
       const mock = document.getElementById('preview-mock-device');
       mock.innerHTML = '';
 
-      // サンプル単語を決定（選択中カテゴリから）
-      const avail = ALL_WORDS.filter(w => settings.categories.includes(w.category));
-      const sampleTarget = avail.length > 0 ? avail[0] : ALL_WORDS[0];
-      const distractors = ALL_WORDS.filter(w => w.id !== sampleTarget.id).slice(0, settings.choiceCount - 1);
+      // サンプル単語を決定（選択中カテゴリから、非表示除外）
+      const avail = ALL_WORDS.filter(w => settings.categories.includes(w.category) && !hiddenWordsSet.has(w.id));
+      const sampleTarget = avail.length > 0 ? avail[0] : (ALL_WORDS.find(w => !hiddenWordsSet.has(w.id)) || ALL_WORDS[0]);
+      const distractors = ALL_WORDS.filter(w => w.id !== sampleTarget.id && !hiddenWordsSet.has(w.id)).slice(0, settings.choiceCount - 1);
       const choices = [sampleTarget, ...distractors];
 
       let format = settings.quizFormat === 'random' ? 'choose-pic' : settings.quizFormat;
@@ -2777,12 +3346,209 @@
         settings.modalPreview = e.target.checked;
       });
 
+      // 単語管理モーダルを開くボタン
+      const openWordManagerBtn = document.getElementById('btn-open-word-manager');
+      if (openWordManagerBtn) {
+        openWordManagerBtn.addEventListener('click', () => {
+          playSound('tap');
+          openWordManager('all');
+        });
+      }
+
       // 完了ボタン
       document.getElementById('btn-setting-done').addEventListener('click', () => {
         playSound('tap');
         saveSettings();
         showScreen('home-screen');
       });
+    }
+
+    /* =========================================================
+       単語の表示・非表示 管理ロジック
+       ========================================================= */
+    let wmCurrentCat = 'all';
+    let wmSearchKeyword = '';
+    let wmSubFilter = 'all'; // 'all' | 'hidden'
+
+    function openWordManager(initialCategory = 'all') {
+      wmCurrentCat = initialCategory || 'all';
+      wmSearchKeyword = '';
+      wmSubFilter = 'all';
+
+      const searchInput = document.getElementById('wm-search-input');
+      if (searchInput) searchInput.value = '';
+
+      document.querySelectorAll('.wm-subfilter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === 'all');
+      });
+
+      renderWordManagerCatTabs();
+      renderWordManagerList();
+
+      const modal = document.getElementById('word-manager-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeWordManager() {
+      const modal = document.getElementById('word-manager-modal');
+      if (modal) modal.classList.remove('active');
+      renderZukanCards();
+      syncSettingControls();
+    }
+
+    function renderWordManagerCatTabs() {
+      const tabsBox = document.getElementById('wm-cat-tabs');
+      if (!tabsBox) return;
+      tabsBox.innerHTML = '';
+
+      CATEGORIES_DEF.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = `wm-cat-btn ${cat.id === wmCurrentCat ? 'active' : ''}`;
+        btn.textContent = cat.name;
+        btn.onclick = () => {
+          playSound('tap');
+          wmCurrentCat = cat.id;
+          document.querySelectorAll('.wm-cat-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderWordManagerList();
+        };
+        tabsBox.appendChild(btn);
+      });
+    }
+
+    function renderWordManagerList() {
+      const grid = document.getElementById('wm-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      // フィルタリング
+      const list = ALL_WORDS.filter(w => {
+        if (wmCurrentCat !== 'all' && w.category !== wmCurrentCat) return false;
+        if (wmSearchKeyword) {
+          if (!w.name.includes(wmSearchKeyword) && !w.id.includes(wmSearchKeyword)) return false;
+        }
+        if (wmSubFilter === 'hidden') {
+          return hiddenWordsSet.has(w.id);
+        }
+        return true;
+      });
+
+      // 集計
+      const catTotal = ALL_WORDS.filter(w => wmCurrentCat === 'all' || w.category === wmCurrentCat).length;
+      const catHidden = ALL_WORDS.filter(w => (wmCurrentCat === 'all' || w.category === wmCurrentCat) && hiddenWordsSet.has(w.id)).length;
+      const catVisible = catTotal - catHidden;
+
+      const statusCountEl = document.getElementById('wm-status-count');
+      if (statusCountEl) {
+        statusCountEl.textContent = `表示中: ${catVisible} / ${catTotal}語 (非表示: ${catHidden}語)`;
+      }
+
+      const hiddenBadgeEl = document.getElementById('wm-hidden-badge-count');
+      if (hiddenBadgeEl) {
+        hiddenBadgeEl.textContent = `${catHidden}`;
+      }
+
+      const footerInfo = document.getElementById('wm-footer-info');
+      if (footerInfo) {
+        footerInfo.textContent = `全体: ${ALL_WORDS.length - settings.hiddenWords.length} / ${ALL_WORDS.length}語 表示中 (${settings.hiddenWords.length}語 非表示)`;
+      }
+
+      if (list.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px 10px; color: #64748b;">
+            <p style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">該当することばが ありません</p>
+            <p style="font-size: 0.9rem;">検索文字を消すか、フィルターを「すべて」に切り替えてみてください。</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.forEach(word => {
+        const isHidden = hiddenWordsSet.has(word.id);
+        const item = document.createElement('div');
+        item.className = `wm-item ${isHidden ? 'is-hidden' : ''}`;
+        item.innerHTML = `
+          <div class="wm-item-left">
+            <div class="wm-thumb">${getWordVisualHtml(word.id, word.name)}</div>
+            <div class="wm-name-box">
+              <span class="wm-name">${word.name}</span>
+              <span class="wm-cat-name">${word.categoryName}</span>
+            </div>
+          </div>
+          <button class="wm-toggle-btn">${isHidden ? '🚫 非表示' : '👁️ 表示中'}</button>
+        `;
+
+        item.onclick = () => {
+          playSound('tap');
+          toggleWord(word.id);
+          const nowHidden = hiddenWordsSet.has(word.id);
+          item.classList.toggle('is-hidden', nowHidden);
+          const toggleBtn = item.querySelector('.wm-toggle-btn');
+          if (toggleBtn) {
+            toggleBtn.textContent = nowHidden ? '🚫 非表示' : '👁️ 表示中';
+          }
+          // ステータス更新
+          const updatedCatHidden = ALL_WORDS.filter(w => (wmCurrentCat === 'all' || w.category === wmCurrentCat) && hiddenWordsSet.has(w.id)).length;
+          const updatedCatVisible = catTotal - updatedCatHidden;
+          if (statusCountEl) statusCountEl.textContent = `表示中: ${updatedCatVisible} / ${catTotal}語 (非表示: ${updatedCatHidden}語)`;
+          if (hiddenBadgeEl) hiddenBadgeEl.textContent = `${updatedCatHidden}`;
+          if (footerInfo) footerInfo.textContent = `全体: ${ALL_WORDS.length - settings.hiddenWords.length} / ${ALL_WORDS.length}語 表示中 (${settings.hiddenWords.length}語 非表示)`;
+          syncSettingControls();
+        };
+
+        grid.appendChild(item);
+      });
+    }
+
+    function initWordManagerEvents() {
+      // 検索入力
+      const searchInput = document.getElementById('wm-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          wmSearchKeyword = e.target.value.trim();
+          renderWordManagerList();
+        });
+      }
+
+      // サブフィルター（すべて / 非表示のみ）
+      document.querySelectorAll('.wm-subfilter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          playSound('tap');
+          wmSubFilter = btn.dataset.filter;
+          document.querySelectorAll('.wm-subfilter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderWordManagerList();
+        });
+      });
+
+      // 全単語を表示に戻すボタン
+      const resetBtn = document.getElementById('wm-reset-all-btn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          if (confirm('非表示にしている単語を すべて表示に戻しますか？')) {
+            playSound('tap');
+            resetAllHiddenWords();
+            renderWordManagerList();
+            renderZukanCards();
+            syncSettingControls();
+          }
+        });
+      }
+
+      // 閉じる & 完了ボタン
+      const closeBtn = document.getElementById('wm-close-btn');
+      if (closeBtn) closeBtn.addEventListener('click', closeWordManager);
+
+      const doneBtn = document.getElementById('wm-done-btn');
+      if (doneBtn) doneBtn.addEventListener('click', closeWordManager);
+
+      // モーダル背景クリックで閉じる
+      const modal = document.getElementById('word-manager-modal');
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeWordManager();
+        });
+      }
     }
 
     /* =========================================================
@@ -2807,6 +3573,7 @@
       initZukanEvents();
       initQuizEvents();
       initSettingEvents();
+      initWordManagerEvents();
       // 初期カテゴリの音声を事前ロード
       preloadCategoryAudio('all');
     });
