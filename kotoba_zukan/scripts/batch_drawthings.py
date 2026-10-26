@@ -14,6 +14,10 @@ import base64
 import urllib.request
 import urllib.error
 
+# Ensure output is unbuffered so task logs update immediately
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(line_buffering=True)
+
 API_URL = "http://127.0.0.1:7860/sdapi/v1/txt2img"
 MANIFEST_PATH = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/prompts_manifest.json"
 IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/images"
@@ -68,6 +72,10 @@ def run_batch(limit=None, target_category=None):
         img_path = os.path.join(IMAGES_DIR, f"{item['id']}.png")
         if item.get('status') != 'generated' or not os.path.exists(img_path) or os.path.getsize(img_path) < 1000:
             pending_items.append(item)
+
+    # Prioritize doushi (verbs) first when not filtering by category
+    if not target_category:
+        pending_items.sort(key=lambda x: (0 if x['category'] == 'doushi' else 1))
 
     total_pending = len(pending_items)
     total_all = len(manifest)

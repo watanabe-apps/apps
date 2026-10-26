@@ -46,11 +46,42 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            transition: background 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ヘッダー */
+        /* 画面全体の色味変化（運転中の視界で直感的にわかるアンビエント発光） */
+        body.state-idle {
+            background: radial-gradient(ellipse at 50% 25%, #182338 0%, #0c1220 50%, #060911 100%);
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
+        }
+
+        body.state-listening {
+            /* 聞き取り中：クリアで鮮やかなディープブルー */
+            background: radial-gradient(ellipse at 50% 25%, #0e4c84 0%, #082847 55%, #031221 100%);
+            box-shadow: inset 0 0 110px rgba(56, 189, 248, 0.55);
+        }
+
+        body.state-thinking {
+            /* 思考中：温かみのあるアンバー・オレンジ */
+            background: radial-gradient(ellipse at 50% 25%, #693802 0%, #3d1f01 55%, #180a00 100%);
+            box-shadow: inset 0 0 110px rgba(251, 191, 36, 0.55);
+        }
+
+        body.state-speaking {
+            /* 発音・読み上げ中：鮮明で落ち着いたエメラルドグリーン */
+            background: radial-gradient(ellipse at 50% 25%, #0a5b2c 0%, #053318 55%, #01160a 100%);
+            box-shadow: inset 0 0 110px rgba(74, 222, 128, 0.55);
+        }
+
+        body.state-error {
+            /* エラー時：警告レッド */
+            background: radial-gradient(ellipse at 50% 25%, #661111 0%, #380707 55%, #170202 100%);
+            box-shadow: inset 0 0 110px rgba(248, 113, 113, 0.6);
+        }
+
+        /* ヘッダー（画面端を避けて内側に配置） */
         header {
-            padding: env(safe-area-inset-top, 16px) 20px 12px 20px;
+            padding: calc(env(safe-area-inset-top, 16px) + 6px) 24px 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -61,22 +92,23 @@
         }
 
         .app-title {
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.25rem;
+            font-weight: 800;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .model-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 14px;
             background: rgba(56, 189, 248, 0.15);
             color: var(--primary);
             border: 1px solid rgba(56, 189, 248, 0.3);
-            max-width: 140px;
+            max-width: 160px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -87,23 +119,25 @@
             gap: 12px;
         }
 
+        /* 大型化したヘッダーボタン（画面端でも押しやすい） */
         .icon-btn {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            width: 42px;
-            height: 42px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.35rem;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
         .icon-btn:active {
             transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* メインビジュアルエリア（運転中ひと目で状況がわかる大画面） */
@@ -372,29 +406,29 @@
             100% { border-color: #38bdf8; box-shadow: 0 0 25px rgba(56, 189, 248, 0.5); }
         }
 
-        /* 操作コントロールバー */
+        /* 操作コントロールバー（画面端を避けて押しやすく配置） */
         .controls {
             width: 100%;
             display: flex;
-            gap: 10px;
+            gap: 16px;
             z-index: 20;
-            padding-top: 8px;
+            padding: 12px 18px calc(env(safe-area-inset-bottom, 12px) + 6px) 18px;
             flex-shrink: 0;
         }
 
         .main-btn {
             flex: 1;
-            height: 60px;
-            border-radius: 30px;
-            font-size: 1.2rem;
+            height: 72px;
+            border-radius: 36px;
+            font-size: 1.4rem;
             font-weight: 800;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.45);
             transition: all 0.2s;
         }
         .main-btn:active {
@@ -414,17 +448,19 @@
         }
 
         .btn-clear-chat {
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
+            width: 72px;
+            height: 72px;
+            border-radius: 36px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             color: var(--text-sub);
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
         }
         .btn-clear-chat:active {
             background: rgba(255, 255, 255, 0.15);
@@ -451,12 +487,12 @@
 
         .modal-content {
             width: 100%;
-            max-width: 540px;
-            max-height: 85vh;
+            max-width: 580px;
+            max-height: 88vh;
             background: #131b2e;
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px 24px 0 0;
-            padding: 24px 20px calc(env(safe-area-inset-bottom, 20px) + 20px) 20px;
+            border-radius: 28px 28px 0 0;
+            padding: 26px 26px calc(env(safe-area-inset-bottom, 24px) + 24px) 26px;
             overflow-y: auto;
             color: var(--text-main);
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -471,38 +507,38 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--card-border);
         }
 
         .modal-header h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
+            font-size: 1.6rem;
+            font-weight: 800;
         }
 
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-bottom: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 10px;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             background: #0b0f19;
             color: var(--text-main);
-            font-size: 1rem;
+            font-size: 1.2rem;
             outline: none;
         }
 
@@ -510,12 +546,12 @@
         .form-group select:focus,
         .form-group textarea:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3);
         }
 
         .form-row {
             display: flex;
-            gap: 12px;
+            gap: 14px;
         }
         .form-row .form-group {
             flex: 1;
@@ -524,38 +560,63 @@
         .range-wrap {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
         }
         .range-wrap input {
             flex: 1;
             padding: 0;
+            height: 36px;
         }
         .range-val {
-            font-size: 0.9rem;
-            font-weight: 700;
-            width: 48px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            width: 70px;
             text-align: right;
             color: var(--primary);
         }
 
         .btn-save {
             width: 100%;
-            height: 52px;
+            height: 66px;
             background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
             color: #0b0f19;
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.35rem;
+            font-weight: 800;
             border: none;
-            border-radius: 14px;
+            border-radius: 18px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 16px;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+        }
+        .btn-save:active {
+            transform: scale(0.97);
+        }
+
+        .btn-danger-outline {
+            width: 100%;
+            height: 58px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 16px;
+            cursor: pointer;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-danger-outline:active {
+            background: rgba(239, 68, 68, 0.2);
         }
 
         .tip {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 5px;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            margin-top: 6px;
+            line-height: 1.5;
         }
 
         /* 会話ログモーダル */
@@ -740,7 +801,23 @@
                 <div class="tip">ヘッダーの「Aa」ボタンでもワンタップで切り替え可能です。</div>
             </div>
 
+            <!-- 会話の記憶件数 -->
+            <div class="form-group">
+                <label for="historyLimitSelect">会話の記憶件数（AIに渡す過去ログ）</label>
+                <select id="historyLimitSelect">
+                    <option value="5">直近 5往復（通信量小・最速）</option>
+                    <option value="10">直近 10往復（標準・おすすめ）</option>
+                    <option value="20">直近 20往復（長めの文脈を記憶）</option>
+                    <option value="30">直近 30往復</option>
+                    <option value="999">すべて保持（制限なし）</option>
+                </select>
+                <div class="tip">※会話を長く記憶するほど前の文脈を理解できますが、件数が極端に多いと応答時間が延びる場合があります。</div>
+            </div>
+
             <button class="btn-save" id="saveSettingsBtn">設定を保存</button>
+            <button type="button" class="btn-danger-outline" id="settingsClearChatBtn">
+                🗑️ 会話履歴をすべて消去する
+            </button>
         </div>
     </div>
 
@@ -763,6 +840,9 @@
     <script>
         // --- 設定管理 (LocalStorage) ---
         const SETTINGS_KEY = "drive_gemini_settings";
+        const STORAGE_CHAT_LOG = "drive_gemini_ui_log";
+        const STORAGE_API_LOG = "drive_gemini_api_history";
+
         let config = {
             apiKey: "",
             model: "gemini-3.8-flash",
@@ -770,11 +850,12 @@
             thinkingLevel: "HIGH",
             silenceTimeout: 1.6,
             speechRate: 1.1,
-            fontSize: 1.25
+            fontSize: 1.35,
+            historyLimit: 10
         };
 
         function applyFontSize(size) {
-            const num = parseFloat(size) || 1.25;
+            const num = parseFloat(size) || 1.35;
             config.fontSize = num;
             document.documentElement.style.setProperty('--chat-font-size', `${num}rem`);
             const fontSizeVal = document.getElementById("fontSizeVal");
@@ -792,7 +873,7 @@
             } catch (e) {
                 console.error("設定ロード失敗:", e);
             }
-            applyFontSize(config.fontSize || 1.25);
+            applyFontSize(config.fontSize || 1.35);
             updateModelBadge();
         }
 
@@ -812,10 +893,41 @@
             badge.textContent = active + think;
         }
 
-        // --- 会話履歴 (セッション中保持) ---
-        // Gemini API contents format: [{role: 'user', parts: [{text: ''}]}, {role: 'model', parts: [{text: ''}]}]
+        // --- 会話履歴の永続化 (LocalStorage) ---
+        // Gemini API contents: [{role: 'user', parts: [{text: ''}]}, {role: 'model', parts: [{text: ''}]}]
         let conversationHistory = [];
         let uiLog = [];
+
+        function saveChatToStorage() {
+            try {
+                localStorage.setItem(STORAGE_CHAT_LOG, JSON.stringify(uiLog));
+                localStorage.setItem(STORAGE_API_LOG, JSON.stringify(conversationHistory));
+            } catch (e) {
+                console.warn("履歴保存失敗:", e);
+            }
+        }
+
+        function loadChatFromStorage() {
+            try {
+                const savedUi = localStorage.getItem(STORAGE_CHAT_LOG);
+                const savedApi = localStorage.getItem(STORAGE_API_LOG);
+                if (savedUi) uiLog = JSON.parse(savedUi);
+                if (savedApi) conversationHistory = JSON.parse(savedApi);
+            } catch (e) {
+                console.warn("履歴読込失敗:", e);
+            }
+        }
+
+        function clearAllChatHistory() {
+            if (confirm("これまでの会話履歴をすべて消去しますか？")) {
+                conversationHistory = [];
+                uiLog = [];
+                localStorage.removeItem(STORAGE_CHAT_LOG);
+                localStorage.removeItem(STORAGE_API_LOG);
+                renderChatMessages();
+                renderHistory();
+            }
+        }
 
         // --- 状態管理 ---
         // 'idle', 'listening', 'thinking', 'speaking', 'error'
@@ -1095,10 +1207,15 @@
                 parts: [{ text: text }]
             });
 
-            // 履歴が長すぎる場合は直近10往復（20件）に制限してトークン節約＆高速化
-            if (conversationHistory.length > 20) {
-                conversationHistory = conversationHistory.slice(-20);
+            // 設定された往復数（1往復=2件）に制限してトークン節約
+            const limitRounds = parseInt(config.historyLimit, 10) || 10;
+            if (limitRounds < 900) {
+                const maxItems = limitRounds * 2;
+                if (conversationHistory.length > maxItems) {
+                    conversationHistory = conversationHistory.slice(-maxItems);
+                }
             }
+            saveChatToStorage();
 
             // Gemini API呼び出し
             try {
@@ -1109,6 +1226,14 @@
                     role: "model",
                     parts: [{ text: replyText }]
                 });
+
+                if (limitRounds < 900) {
+                    const maxItems = limitRounds * 2;
+                    if (conversationHistory.length > maxItems) {
+                        conversationHistory = conversationHistory.slice(-maxItems);
+                    }
+                }
+                saveChatToStorage();
 
                 // 音声読み上げ
                 speakReply(replyText);
@@ -1434,6 +1559,7 @@
         function addUiLog(role, text) {
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             uiLog.push({ role, text, time });
+            saveChatToStorage();
             renderChatMessages();
             renderHistory();
         }
@@ -1518,12 +1644,7 @@
         // ログ消去ボタン（チャット画面下部）
         if (clearChatBtn) {
             clearChatBtn.addEventListener("click", () => {
-                if (confirm("会話を全て消去しますか？")) {
-                    conversationHistory = [];
-                    uiLog = [];
-                    renderChatMessages();
-                    renderHistory();
-                }
+                clearAllChatHistory();
             });
         }
 
@@ -1555,6 +1676,8 @@
         const fontSizeInput = document.getElementById("fontSizeInput");
         const fontSizeVal = document.getElementById("fontSizeVal");
         const fontSizeBtn = document.getElementById("fontSizeBtn");
+        const historyLimitSelect = document.getElementById("historyLimitSelect");
+        const settingsClearChatBtn = document.getElementById("settingsClearChatBtn");
 
         function openSettingsModal() {
             apiKeyInput.value = config.apiKey || "";
@@ -1566,9 +1689,17 @@
             silenceVal.textContent = config.silenceTimeout + "秒";
             speechRateInput.value = config.speechRate;
             rateVal.textContent = config.speechRate + "x";
-            if (fontSizeInput) fontSizeInput.value = config.fontSize || 1.25;
-            if (fontSizeVal) fontSizeVal.textContent = (config.fontSize || 1.25) + "rem";
+            if (fontSizeInput) fontSizeInput.value = config.fontSize || 1.35;
+            if (fontSizeVal) fontSizeVal.textContent = (config.fontSize || 1.35) + "rem";
+            if (historyLimitSelect) historyLimitSelect.value = String(config.historyLimit || 10);
             settingsModal.classList.add("open");
+        }
+
+        if (settingsClearChatBtn) {
+            settingsClearChatBtn.addEventListener("click", () => {
+                clearAllChatHistory();
+                settingsModal.classList.remove("open");
+            });
         }
 
         // ヘッダーのAaボタン（ワンタップで文字サイズトグル）
@@ -1726,6 +1857,7 @@
             config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
             config.speechRate = parseFloat(speechRateInput.value);
             if (fontSizeInput) config.fontSize = parseFloat(fontSizeInput.value);
+            if (historyLimitSelect) config.historyLimit = parseInt(historyLimitSelect.value, 10) || 10;
 
             applyFontSize(config.fontSize);
             saveConfig();
@@ -1744,16 +1876,14 @@
         });
         closeHistoryBtn.addEventListener("click", () => historyModal.classList.remove("open"));
         clearHistoryBtn.addEventListener("click", () => {
-            if (confirm("会話ログをリセットしますか？")) {
-                conversationHistory = [];
-                uiLog = [];
-                renderHistory();
-            }
+            clearAllChatHistory();
         });
 
         // ページロード時の初期化
         window.addEventListener("DOMContentLoaded", () => {
             loadConfig();
+            loadChatFromStorage();
+            renderChatMessages();
             initRecognition();
 
             // 音声一覧のロード（ブラウザキャッシュ用）
