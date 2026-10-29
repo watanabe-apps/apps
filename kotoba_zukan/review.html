@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ことばずかん - 画像レビュー＆不備指摘ツール</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --danger-light: #fef2f2;
+      --danger-border: #f87171;
+      --success: #10b981;
+      --accent: #f59e0b;
+      --border-color: #e2e8f0;
+      
+      --cat-doubutsu: #f97316;
+      --cat-tabemono: #ef4444;
+      --cat-norimono: #0284c7;
+      --cat-midikanamono: #10b981;
+      --cat-doushi: #8b5cf6;
+
+      --card-size: 160px;
+      --font-family: "Zen Maru Gothic", "UD Digi Kyokasho N-R", "Klee One", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 120px;
+    }
+
+    /* Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-top {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stats-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--danger-light);
+      color: var(--danger-dark);
+      border: 1px solid var(--danger-border);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .size-control label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .size-btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .size-btn {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .size-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Filter Toolbar */
+    .toolbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 8px 16px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cat-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .cat-tab.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.85rem;
+      font-family: inherit;
+      width: 180px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .flag-filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .flag-filter-btn.active {
+      background: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+    }
+
+    /* Main Grid */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+    }
+
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
+      gap: 12px;
+    }
+
+    /* Card Styling */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
+      border-color: #94a3b8;
+    }
+
+    /* Flagged State */
+    .card.is-flagged {
+      border-color: var(--danger);
+      background-color: #fff5f5;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+    }
+
+    .flag-badge {
+      display: none;
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: var(--danger);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .card.is-flagged .flag-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-top-actions {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: #ffffff;
+      transform: scale(1.1);
+    }
+
+    .image-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .card-info {
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-top: 1px solid #f1f5f9;
+      background: inherit;
+    }
+
+    .card-word {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .cat-tag {
+      font-weight: 700;
+    }
+
+    .cat-doubutsu { color: var(--cat-doubutsu); }
+    .cat-tabemono { color: var(--cat-tabemono); }
+    .cat-norimono { color: var(--cat-norimono); }
+    .cat-midikanamono { color: var(--cat-midikanamono); }
+    .cat-doushi { color: var(--cat-doushi); }
+
+    .card-comment {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--danger-dark);
+      background: rgba(239, 68, 68, 0.1);
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: none;
+      word-break: break-all;
+    }
+
+    .card.is-flagged .card-comment.has-text {
+      display: block;
+    }
+
+    /* Detail / Edit Reason Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modalSlide 0.25s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(20px) scale(0.97); }
+      to { transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 300px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .quick-reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .reason-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+      transition: all 0.15s;
+    }
+
+    .reason-btn:hover {
+      background: #eff6ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .reason-textarea {
+      width: 100%;
+      height: 70px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      resize: vertical;
+    }
+
+    .reason-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .prompt-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      color: #475569;
+      line-height: 1.4;
+      max-height: 100px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-dark);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Floating Dock / Bottom Bar */
+    .bottom-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 2px solid var(--border-color);
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+      padding: 12px 16px;
+      z-index: 40;
+    }
+
+    .dock-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .dock-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dock-count-box {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .dock-count-box span {
+      font-size: 1.3rem;
+      color: var(--danger);
+      font-weight: 800;
+    }
+
+    .dock-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease-out;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-top">
+      <div class="title-group">
+        <h1>🔍 ことばずかん 画像レビュー</h1>
+        <div class="stats-badge" id="stats-badge">
+          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">465</span>
+        </div>
+      </div>
+
+      <!-- Size Controls -->
+      <div class="size-control">
+        <label>表示サイズ:</label>
+        <div class="size-btn-group">
+          <button class="size-btn" onclick="setCardSize(110, this)">小</button>
+          <button class="size-btn active" onclick="setCardSize(160, this)">中</button>
+          <button class="size-btn" onclick="setCardSize(220, this)">大</button>
+          <button class="size-btn" onclick="setCardSize(290, this)">特大</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="toolbar">
+      <div class="cat-tabs" id="cat-tabs">
+        <button class="cat-tab active" data-cat="all">すべて (465)</button>
+        <button class="cat-tab" data-cat="tabemono">たべもの (112)</button>
+        <button class="cat-tab" data-cat="midikanamono">みぢかなもの (117)</button>
+        <button class="cat-tab" data-cat="doubutsu">どうぶつ (100)</button>
+        <button class="cat-tab" data-cat="norimono">のりもの (53)</button>
+        <button class="cat-tab" data-cat="doushi">どうし (83)</button>
+      </div>
+
+      <div class="filter-options">
+        <button class="flag-filter-btn" id="filter-flagged-btn" onclick="toggleFlaggedFilter()">
+          🚨 要修正のみ
+        </button>
+        <input type="text" class="search-input" id="search-input" placeholder="単語・IDで検索...">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main>
+    <div class="vocab-grid" id="vocab-grid"></div>
+  </main>
+
+  <!-- Floating Dock -->
+  <div class="bottom-dock">
+    <div class="dock-container">
+      <div class="dock-status">
+        <div class="dock-count-box">
+          選択中の要修正画像: <span id="dock-flag-count">0</span> 件
+        </div>
+      </div>
+
+      <div class="dock-actions">
+        <button class="btn btn-primary" onclick="copyForChat()">
+          📋 チャット用テキストをコピー
+        </button>
+        <button class="btn btn-secondary" onclick="exportJSON()">
+          💾 JSON保存
+        </button>
+        <button class="btn btn-secondary" onclick="triggerImportJSON()">
+          📥 JSON読込
+        </button>
+        <button class="btn btn-secondary" onclick="showSummaryModal()">
+          👀 指摘一覧を見る
+        </button>
+        <button class="btn btn-secondary" onclick="resetAllFlags()" style="color: var(--danger);">
+          🗑️ クリア
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail / Reason Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">単語詳細</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-img-wrap">
+        <img id="modal-img" src="" alt="">
+      </div>
+
+      <div>
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">
+          不備の理由（クイック選択またはメモ入力）:
+        </label>
+        <div class="quick-reasons">
+          <button class="reason-btn" onclick="addReasonTag('人体・手の奇形/崩れ')">🖐️ 手・人体の崩れ</button>
+          <button class="reason-btn" onclick="addReasonTag('背景が純白でない/黄ばみ')">🎨 背景の黄ばみ/色</button>
+          <button class="reason-btn" onclick="addReasonTag('単語の意味とズレている')">❓ 意味のズレ</button>
+          <button class="reason-btn" onclick="addReasonTag('構図・見切れがおかしい')">✂️ 構図・見切れ</button>
+          <button class="reason-btn" onclick="addReasonTag('旧世代スタイル/画風違い')">📜 旧世代スタイル</button>
+        </div>
+      </div>
+
+      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 腕が浮いている、箸の持ち方が変...）"></textarea>
+
+      <div>
+        <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">生成プロンプト:</label>
+        <div class="prompt-box" id="modal-prompt"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="playAudioFromModal()">🔊 発音を聴く</button>
+        <button class="btn btn-danger" id="modal-flag-toggle-btn" onclick="toggleModalFlag()">🚨 要修正にする</button>
+        <button class="btn btn-primary" onclick="saveModalChanges()">保存して閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div class="modal-overlay" id="summary-modal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>🚨 要修正として指摘した画像一覧 (<span id="summary-count">0</span>件)</h2>
+        <button class="modal-close" onclick="closeSummaryModal()">&times;</button>
+      </div>
+      <div id="summary-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeSummaryModal()">閉じる</button>
+        <button class="btn btn-primary" onclick="copyForChat(); closeSummaryModal();">📋 チャット用にコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for JSON import -->
+  <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+
+  <!-- Toast -->
+  <div class="toast" id="toast">📋 コピーしました</div>
+
+  <!-- Load Vocab DB -->
+  <script src="../common/vocab.js"></script>
+
+  <script>
+    'use strict';
+
+    // State
+    const STORAGE_KEY = 'kotoba_zukan_review_flags_v1';
+    let flaggedMap = {}; // { [id]: { id, name, category, reason } }
+    let currentCategory = 'all';
+    let onlyFlagged = false;
+    let searchQuery = '';
+    let currentModalItem = null;
+    let audioPlayer = new Audio();
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFlagsFromStorage();
+      setupTabs();
+      setupSearch();
+      renderGrid();
+      updateStats();
+    });
+
+    // LocalStorage
+    function loadFlagsFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          flaggedMap = JSON.parse(raw);
+        }
+      } catch (e) {
+        console.error('Failed to load review flags:', e);
+        flaggedMap = {};
+      }
+    }
+
+    function saveFlagsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(flaggedMap));
+      } catch (e) {
+        console.error('Failed to save review flags:', e);
+      }
+      updateStats();
+    }
+
+    // Grid Size Control
+    function setCardSize(size, btn) {
+      document.documentElement.style.setProperty('--card-size', size + 'px');
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    // Filter Controls
+    function setupTabs() {
+      const tabs = document.querySelectorAll('.cat-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentCategory = tab.dataset.cat;
+          renderGrid();
+        });
+      });
+    }
+
+    function setupSearch() {
+      const input = document.getElementById('search-input');
+      input.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        renderGrid();
+      });
+    }
+
+    function toggleFlaggedFilter() {
+      onlyFlagged = !onlyFlagged;
+      const btn = document.getElementById('filter-flagged-btn');
+      btn.classList.toggle('active', onlyFlagged);
+      renderGrid();
+    }
+
+    // Render Grid
+    function renderGrid() {
+      const container = document.getElementById('vocab-grid');
+      const list = window.VocabDB ? window.VocabDB.list : [];
+      
+      const filtered = list.filter(item => {
+        if (currentCategory !== 'all' && item.category !== currentCategory) return false;
+        if (onlyFlagged && !flaggedMap[item.id]) return false;
+        if (searchQuery) {
+          const matchName = item.name.toLowerCase().includes(searchQuery);
+          const matchId = item.id.toLowerCase().includes(searchQuery);
+          const matchPrompt = item.prompt && item.prompt.toLowerCase().includes(searchQuery);
+          if (!matchName && !matchId && !matchPrompt) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+            <p style="font-size: 1.2rem; font-weight: 700;">条件に一致する画像がありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isFlagged = !!flaggedMap[item.id];
+        const reason = isFlagged ? (flaggedMap[item.id].reason || '') : '';
+        const imgPath = 'images/' + item.file;
+
+        return `
+          <div class="card ${isFlagged ? 'is-flagged' : ''}" 
+               id="card-${item.id}"
+               onclick="handleCardClick(event, '${item.id}')">
+            
+            <div class="flag-badge">🚨 要修正</div>
+
+            <div class="card-top-actions">
+              <button class="icon-btn" title="詳細・理由を編集" onclick="openDetailModal(event, '${item.id}')">🔍</button>
+              <button class="icon-btn" title="発音を再生" onclick="playAudio(event, '${item.id}')">🔊</button>
+            </div>
+
+            <div class="image-container">
+              <img src="${imgPath}" loading="lazy" alt="${item.name}">
+            </div>
+
+            <div class="card-info">
+              <div class="card-word">${item.name}</div>
+              <div class="card-meta">
+                <span class="cat-tag cat-${item.category}">${item.categoryName}</span>
+                <span>${item.id}</span>
+              </div>
+              <div class="card-comment ${reason ? 'has-text' : ''}" id="comment-${item.id}">${escapeHtml(reason)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Interactions
+    function handleCardClick(e, id) {
+      if (e.target.closest('.card-top-actions')) return;
+      toggleFlag(id);
+    }
+
+    function toggleFlag(id, reason = '') {
+      const item = window.VocabDB.findById(id);
+      if (!item) return;
+
+      if (flaggedMap[id]) {
+        delete flaggedMap[id];
+        showToast(`⚪ 「${item.name}」の指摘を解除しました`);
+      } else {
+        flaggedMap[id] = {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          categoryName: item.categoryName,
+          reason: reason
+        };
+        showToast(`🚨 「${item.name}」を要修正に追加しました`);
+      }
+
+      saveFlagsToStorage();
+      updateCardUI(id);
+    }
+
+    function updateCardUI(id) {
+      const card = document.getElementById('card-' + id);
+      const isFlagged = !!flaggedMap[id];
+      if (card) {
+        card.classList.toggle('is-flagged', isFlagged);
+        const commentEl = document.getElementById('comment-' + id);
+        if (commentEl) {
+          const reason = isFlagged ? (flaggedMap[id].reason || '') : '';
+          commentEl.textContent = reason;
+          commentEl.classList.toggle('has-text', !!reason);
+        }
+      }
+      if (onlyFlagged && !isFlagged && card) {
+        card.remove();
+      }
+    }
+
+    function updateStats() {
+      const count = Object.keys(flaggedMap).length;
+      document.getElementById('flagged-count').textContent = count;
+      document.getElementById('dock-flag-count').textContent = count;
+      document.getElementById('summary-count').textContent = count;
+    }
+
+    // Audio Playback
+    function playAudio(e, id) {
+      if (e) e.stopPropagation();
+      audioPlayer.src = `audio/words/${id}.mp3`;
+      audioPlayer.play().catch(err => console.log('Audio error:', err));
+    }
+
+    function playAudioFromModal() {
+      if (currentModalItem) {
+        playAudio(null, currentModalItem.id);
+      }
+    }
+
+    // Detail Modal
+    function openDetailModal(e, id) {
+      if (e) e.stopPropagation();
+      const item = window.VocabDB.findById(id);
+      if (!item) return;
+      currentModalItem = item;
+
+      document.getElementById('modal-title').textContent = `${item.name} (${item.id}) - ${item.categoryName}`;
+      document.getElementById('modal-img').src = 'images/' + item.file;
+      document.getElementById('modal-prompt').textContent = item.prompt || '（プロンプト情報なし）';
+
+      const flagInfo = flaggedMap[id];
+      const isFlagged = !!flagInfo;
+      document.getElementById('modal-reason-input').value = isFlagged ? (flagInfo.reason || '') : '';
+
+      updateModalFlagBtn(isFlagged);
+
+      document.getElementById('detail-modal').classList.add('active');
+    }
+
+    function updateModalFlagBtn(isFlagged) {
+      const btn = document.getElementById('modal-flag-toggle-btn');
+      if (isFlagged) {
+        btn.textContent = '⚪ 指摘を解除する';
+        btn.className = 'btn btn-secondary';
+      } else {
+        btn.textContent = '🚨 要修正にする';
+        btn.className = 'btn btn-danger';
+      }
+    }
+
+    function toggleModalFlag() {
+      if (!currentModalItem) return;
+      const id = currentModalItem.id;
+      const isCurrentlyFlagged = !!flaggedMap[id];
+      const reason = document.getElementById('modal-reason-input').value.trim();
+
+      if (isCurrentlyFlagged) {
+        delete flaggedMap[id];
+      } else {
+        flaggedMap[id] = {
+          id: currentModalItem.id,
+          name: currentModalItem.name,
+          category: currentModalItem.category,
+          categoryName: currentModalItem.categoryName,
+          reason: reason
+        };
+      }
+      saveFlagsToStorage();
+      updateCardUI(id);
+      updateModalFlagBtn(!isCurrentlyFlagged);
+    }
+
+    function addReasonTag(tag) {
+      const input = document.getElementById('modal-reason-input');
+      const val = input.value.trim();
+      if (!val) {
+        input.value = tag;
+      } else if (!val.includes(tag)) {
+        input.value = val + ' / ' + tag;
+      }
+    }
+
+    function saveModalChanges() {
+      if (!currentModalItem) return;
+      const id = currentModalItem.id;
+      const reason = document.getElementById('modal-reason-input').value.trim();
+
+      if (reason) {
+        // Automatically flag if reason provided
+        flaggedMap[id] = {
+          id: currentModalItem.id,
+          name: currentModalItem.name,
+          category: currentModalItem.category,
+          categoryName: currentModalItem.categoryName,
+          reason: reason
+        };
+        saveFlagsToStorage();
+        updateCardUI(id);
+      } else if (flaggedMap[id]) {
+        flaggedMap[id].reason = '';
+        saveFlagsToStorage();
+        updateCardUI(id);
+      }
+
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').classList.remove('active');
+      currentModalItem = null;
+    }
+
+    // Summary Modal
+    function showSummaryModal() {
+      const listEl = document.getElementById('summary-list');
+      const keys = Object.keys(flaggedMap);
+
+      if (keys.length === 0) {
+        listEl.innerHTML = '<p style="padding: 20px; text-align: center; color: #64748b;">要修正として指摘された画像はまだありません。</p>';
+      } else {
+        listEl.innerHTML = keys.map(id => {
+          const item = flaggedMap[id];
+          return `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="images/${item.id}.png" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <div>
+                  <strong style="font-size: 0.95rem;">${item.name}</strong>
+                  <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${item.id}) [${item.categoryName || ''}]</span>
+                  ${item.reason ? `<div style="font-size: 0.8rem; color: #dc2626; margin-top: 2px;">💬 ${escapeHtml(item.reason)}</div>` : ''}
+                </div>
+              </div>
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleFlag('${item.id}'); showSummaryModal();">解除</button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('summary-modal').classList.add('active');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summary-modal').classList.remove('active');
+    }
+
+    // Export & Copy
+    function copyForChat() {
+      const keys = Object.keys(flaggedMap);
+      if (keys.length === 0) {
+        alert('要修正として指摘された画像がまだありません。画像をタップして指摘を追加してください。');
+        return;
+      }
+
+      let text = `【ことばずかん 画像修正指摘リスト (計 ${keys.length} 件)】\n`;
+      keys.forEach((id, idx) => {
+        const item = flaggedMap[id];
+        const reason = item.reason ? `: ${item.reason}` : '';
+        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}]${reason}\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 チャット用テキストをコピーしました！そのまま貼り付けてください');
+      }).catch(err => {
+        // Fallback prompt
+        window.prompt('コピーしてください:', text);
+      });
+    }
+
+    function exportJSON() {
+      const keys = Object.keys(flaggedMap);
+      if (keys.length === 0) {
+        alert('要修正の画像がありません。');
+        return;
+      }
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(flaggedMap, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', 'review_feedback.json');
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('💾 review_feedback.json を保存しました');
+    }
+
+    function triggerImportJSON() {
+      document.getElementById('json-file-input').click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (typeof imported === 'object' && imported !== null) {
+            flaggedMap = Object.assign({}, flaggedMap, imported);
+            saveFlagsToStorage();
+            renderGrid();
+            showToast(`📥 ${Object.keys(imported).length} 件の指摘データを読み込みました`);
+          }
+        } catch (err) {
+          alert('JSONファイルの読み込みに失敗しました: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function resetAllFlags() {
+      const count = Object.keys(flaggedMap).length;
+      if (count === 0) return;
+      if (confirm(`要修正として指摘した ${count} 件のデータをすべてクリアしますか？`)) {
+        flaggedMap = {};
+        saveFlagsToStorage();
+        renderGrid();
+        showToast('🗑️ すべての指摘をクリアしました');
+      }
+    }
+
+    // Helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
+

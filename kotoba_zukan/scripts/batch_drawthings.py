@@ -21,8 +21,11 @@ if hasattr(sys.stdout, 'reconfigure'):
 API_URL = "http://127.0.0.1:7860/sdapi/v1/txt2img"
 MANIFEST_PATH = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/prompts_manifest.json"
 IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/images"
+COMMON_IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/common/images"
 
 BASE_NEGATIVE = (
+    "two heads, multiple heads, two tails, multiple tails, extra legs, extra arms, extra limbs, "
+    "deformed anatomy, disfigured, mutant, duplicate, human hands on animal, blue fur on wild animal, "
     "photograph, realistic photo, 3d render, yellow tint, sepia, yellowish, aged paper, "
     "parchment, dirty background, complex background, scenery, dark background, noisy, "
     "messy, blurry, low quality, text, watermark, signature, borders, frames, cut off"
@@ -35,7 +38,7 @@ def is_api_alive():
     except Exception:
         return False
 
-def generate_image(prompt_text, width=512, height=512, steps=20):
+def generate_image(prompt_text, width=512, height=512, steps=16):
     payload = {
         "prompt": prompt_text,
         "negative_prompt": BASE_NEGATIVE,
@@ -55,7 +58,7 @@ def generate_image(prompt_text, width=512, height=512, steps=20):
             raise RuntimeError("No image returned from Draw Things API")
         return base64.b64decode(images[0])
 
-def run_batch(limit=None, target_category=None):
+def run_batch(limit=None, target_category=None, target_ids=None):
     if not is_api_alive():
         print("ERROR: Draw Things is not reachable at http://127.0.0.1:7860")
         print("Please start Draw Things and enable the API Server.")
@@ -64,32 +67,38 @@ def run_batch(limit=None, target_category=None):
     with open(MANIFEST_PATH, 'r', encoding='utf-8') as f:
         manifest = json.load(f)
 
+    target_id_set = set(target_ids) if target_ids else None
+
     # Filter items needing generation
     pending_items = []
     for item in manifest:
+        if target_id_set is not None:
+            if item['id'] in target_id_set:
+                pending_items.append(item)
+            continue
         if target_category and item['category'] != target_category:
             continue
         img_path = os.path.join(IMAGES_DIR, f"{item['id']}.png")
         if item.get('status') != 'generated' or not os.path.exists(img_path) or os.path.getsize(img_path) < 1000:
             pending_items.append(item)
 
-    # Prioritize doushi (verbs) first when not filtering by category
-    if not target_category:
+    # Prioritize doushi (verbs) first when not filtering by category or ids
+    if not target_category and not target_id_set:
         pending_items.sort(key=lambda x: (0 if x['category'] == 'doushi' else 1))
 
     total_pending = len(pending_items)
     total_all = len(manifest)
-    total_generated = total_all - total_pending
 
     print(f"==================================================")
     print(f" Kotoba Zukan - Draw Things Batch Generator")
     print(f" Total Vocab: {total_all} words")
-    print(f" Already Generated: {total_generated} words")
-    print(f" Remaining to Generate: {total_pending} words")
+    print(f" Items in target queue: {total_pending} words")
     if limit:
         print(f" Limit for this session: {limit} words")
     if target_category:
         print(f" Target category: {target_category}")
+    if target_id_set:
+        print(f" Target explicit IDs: {len(target_id_set)} IDs")
     print(f"==================================================\n")
 
     if total_pending == 0:
@@ -109,6 +118,7 @@ def run_batch(limit=None, target_category=None):
         cat = item['categoryName']
         prompt = item['prompt']
         out_file = os.path.join(IMAGES_DIR, f"{word_id}.png")
+        common_out_file = os.path.join(COMMON_IMAGES_DIR, f"{word_id}.png")
 
         count += 1
         print(f"[{count}/{min(limit or total_pending, total_pending)}] Generating: {name} ({word_id}) [{cat}]...")
@@ -118,6 +128,11 @@ def run_batch(limit=None, target_category=None):
             img_bytes = generate_image(prompt)
             with open(out_file, 'wb') as img_f:
                 img_f.write(img_bytes)
+
+            # Also mirror to common/images/
+            if os.path.exists(COMMON_IMAGES_DIR):
+                with open(common_out_file, 'wb') as c_img_f:
+                    c_img_f.write(img_bytes)
 
             # Update manifest
             item['status'] = 'generated'
@@ -145,6 +160,7 @@ def run_batch(limit=None, target_category=None):
 if __name__ == '__main__':
     limit_arg = None
     cat_arg = None
+    ids_arg = None
     args = sys.argv[1:]
     
     for i, a in enumerate(args):
@@ -152,9 +168,16 @@ if __name__ == '__main__':
             limit_arg = int(args[i+1])
         elif a == '--category' and i + 1 < len(args):
             cat_arg = args[i+1]
+        elif a == '--ids' and i + 1 < len(args):
+            ids_arg = [x.strip() for x in args[i+1].split(',') if x.strip()]
+        elif a == '--file' and i + 1 < len(args):
+            with open(args[i+1], 'r', encoding='utf-8') as f:
+                ids_arg = [line.strip() for line in f if line.strip() and not line.startswith('#')]
         elif a.startswith('--limit='):
             limit_arg = int(a.split('=')[1])
         elif a.startswith('--category='):
             cat_arg = a.split('=')[1]
+        elif a.startswith('--ids='):
+            ids_arg = [x.strip() for x in a.split('=')[1].split(',') if x.strip()]
 
-    run_batch(limit=limit_arg, target_category=cat_arg)
+    run_batch(limit=limit_arg, target_category=cat_arg, target_ids=ids_arg)
