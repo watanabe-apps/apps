@@ -892,7 +892,7 @@
       container.innerHTML = filtered.map(item => {
         const isFlagged = !!flaggedMap[item.id];
         const reason = isFlagged ? (flaggedMap[item.id].reason || '') : '';
-        const imgPath = 'images/' + item.file;
+        const imgPath = '../common/images/' + item.file;
 
         return `
           <div class="card ${isFlagged ? 'is-flagged' : ''}" 
@@ -907,7 +907,7 @@
             </div>
 
             <div class="image-container">
-              <img src="${imgPath}" loading="lazy" alt="${item.name}">
+              <img src="${imgPath}" loading="lazy" alt="${item.name}" onerror="if(!this.dataset.fb){this.dataset.fb='1'; this.src='images/' + '${item.file}';}">
             </div>
 
             <div class="card-info">
@@ -996,7 +996,15 @@
       currentModalItem = item;
 
       document.getElementById('modal-title').textContent = `${item.name} (${item.id}) - ${item.categoryName}`;
-      document.getElementById('modal-img').src = 'images/' + item.file;
+      const modalImg = document.getElementById('modal-img');
+      modalImg.dataset.fb = '';
+      modalImg.onerror = function() {
+        if (!this.dataset.fb) {
+          this.dataset.fb = '1';
+          this.src = 'images/' + item.file;
+        }
+      };
+      modalImg.src = '../common/images/' + item.file;
       document.getElementById('modal-prompt').textContent = item.prompt || '（プロンプト情報なし）';
 
       const flagInfo = flaggedMap[id];
@@ -1094,7 +1102,7 @@
           return `
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="images/${item.id}.png" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <img src="../common/images/${item.id}.png" onerror="if(!this.dataset.fb){this.dataset.fb='1'; this.src='images/${item.id}.png';}" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <div>
                   <strong style="font-size: 0.95rem;">${item.name}</strong>
                   <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${item.id}) [${item.categoryName || ''}]</span>

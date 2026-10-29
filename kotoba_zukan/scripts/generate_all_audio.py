@@ -18,9 +18,11 @@ VOICE = "ja-JP-NanamiNeural"
 os.makedirs(AUDIO_WORDS_DIR, exist_ok=True)
 os.makedirs(AUDIO_SYSTEM_DIR, exist_ok=True)
 
+FORCE_OVERWRITE = True
+
 async def synthesize(sem, word_id, text, out_path):
     async with sem:
-        if os.path.exists(out_path) and os.path.getsize(out_path) > 1000:
+        if not FORCE_OVERWRITE and os.path.exists(out_path) and os.path.getsize(out_path) > 1000:
             print(f"[SKIP] {word_id} ({text}) already exists.")
             return
         for attempt in range(3):
@@ -38,15 +40,15 @@ async def main():
     with open(MANIFEST_PATH, 'r', encoding='utf-8') as f:
         manifest = json.load(f)
 
-    sem = asyncio.Semaphore(10)
+    sem = asyncio.Semaphore(5)
     tasks = []
 
-    # 1. 100 Words
+    # 1. Words (Uses tts_text if available, otherwise name)
     for item in manifest:
         word_id = item['id']
-        name = item['name']
+        tts_text = item.get('tts_text', item['name'])
         out_path = os.path.join(AUDIO_WORDS_DIR, f"{word_id}.mp3")
-        tasks.append(synthesize(sem, word_id, name, out_path))
+        tasks.append(synthesize(sem, word_id, tts_text, out_path))
 
     # 2. System audio (Quiz clear fanfare text)
     tasks.append(synthesize(sem, "quiz_clear", "たいへんよくできました！", os.path.join(AUDIO_SYSTEM_DIR, "quiz_clear.mp3")))
