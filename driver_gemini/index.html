@@ -650,9 +650,214 @@
             color: var(--text-sub);
             margin-bottom: 4px;
         }
+
+        /* ===== v2 追加スタイル（テキストモード・チャット分割） ===== */
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        .chat-bubble {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        .chat-bubble.model.error {
+            border-left-color: var(--error-color);
+        }
+
+        .app-title {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .header-buttons {
+            flex-shrink: 0;
+        }
+        /* スマホ幅ではモデル名バッジを隠してタイトルを1行に（モデル名は設定画面で確認） */
+        @media (max-width: 440px) {
+            .model-badge {
+                display: none;
+            }
+        }
+
+        /* 現在のチャット名（タップでチャット一覧） */
+        .current-chat-title {
+            width: 100%;
+            flex-shrink: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            padding: 0 10px 8px 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .controls {
+            align-items: center;
+        }
+
+        /* 丸ボタン（モード切替・新規チャット） */
+        .btn-round {
+            width: 72px;
+            height: 72px;
+            border-radius: 36px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-size: 1.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+        .btn-round:active {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(0.94);
+        }
+
+        /* テキスト入力バー */
+        .text-input-bar {
+            display: none;
+            flex: 1;
+            min-width: 0;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        body.mode-text .text-input-bar {
+            display: flex;
+        }
+        body.mode-text #mainActionBtn,
+        body.mode-text #newChatQuickBtn {
+            display: none;
+        }
+        body.mode-text .controls {
+            align-items: flex-end;
+        }
+
+        .text-input {
+            flex: 1;
+            min-width: 0;
+            min-height: 72px;
+            max-height: 180px;
+            resize: none;
+            padding: 22px 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(11, 15, 25, 0.85);
+            color: var(--text-main);
+            font-size: 1.2rem;
+            line-height: 1.4;
+            font-family: inherit;
+            outline: none;
+        }
+        .text-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-send {
+            width: 72px;
+            height: 72px;
+            border-radius: 36px;
+            border: none;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: #0b0f19;
+            font-size: 1.7rem;
+            font-weight: 800;
+            flex-shrink: 0;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4);
+        }
+        .btn-send:active {
+            transform: scale(0.94);
+        }
+        .btn-send:disabled {
+            opacity: 0.4;
+        }
+
+        /* チャット一覧 */
+        .btn-new-chat {
+            width: 100%;
+            height: 66px;
+            border-radius: 18px;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary);
+            font-size: 1.3rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-bottom: 18px;
+        }
+        .btn-new-chat:active {
+            background: rgba(56, 189, 248, 0.3);
+        }
+
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 14px 14px 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            cursor: pointer;
+            min-height: 80px;
+        }
+        .chat-item:active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .chat-item.active {
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.12);
+        }
+        .chat-item-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .chat-item-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-item-meta,
+        .chat-item-preview {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-item-del {
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            flex-shrink: 0;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+        .chat-item-del:active {
+            background: rgba(239, 68, 68, 0.25);
+        }
     </style>
 </head>
-<body class="state-idle">
+<body class="state-idle mode-voice">
 
     <!-- ヘッダー -->
     <header>
@@ -662,7 +867,7 @@
         </div>
         <div class="header-buttons">
             <button class="icon-btn" id="fontSizeBtn" title="文字サイズ切り替え" style="font-weight: 800; font-size: 1.05rem;">Aa</button>
-            <button class="icon-btn" id="historyBtn" title="会話ログ">📜</button>
+            <button class="icon-btn" id="chatListBtn" title="チャット一覧">💬</button>
             <button class="icon-btn" id="settingsBtn" title="設定">⚙️</button>
         </div>
     </header>
@@ -681,12 +886,15 @@
             </div>
         </div>
 
+        <!-- 現在のチャット名（タップでチャット一覧） -->
+        <div class="current-chat-title" id="currentChatTitle">💬 新しいチャット</div>
+
         <!-- 会話タイムライン（全文字表示エリア） -->
         <div class="chat-container" id="chatContainer">
             <div class="empty-chat" id="emptyChat">
-                <div style="font-size: 2.8rem; margin-bottom: 10px;">🚗 🎙️</div>
-                <div style="font-size: 1.15rem; font-weight: 700;">DriveVoice ハンズフリー対話</div>
-                <div style="font-size: 0.85rem; color: var(--text-sub); margin-top: 6px;">
+                <div style="font-size: 2.8rem; margin-bottom: 10px;" id="emptyChatIcon">🚗 🎙️</div>
+                <div style="font-size: 1.2rem; font-weight: 700;">DriveVoice</div>
+                <div style="font-size: 0.95rem; color: var(--text-sub); margin-top: 6px; line-height: 1.6;" id="emptyChatSub">
                     下の「運転開始」を押すと、声だけで会話できます<br>
                     話した内容とGeminiの回答がすべてここに文字で表示されます
                 </div>
@@ -705,12 +913,15 @@
 
         <!-- コントロールボタン -->
         <div class="controls">
+            <button class="btn-round" id="modeToggleBtn" title="テキスト入力に切り替え">⌨️</button>
             <button class="main-btn btn-start" id="mainActionBtn">
-                <span>▶ 運転開始（ハンズフリー）</span>
+                <span>▶ 運転開始</span>
             </button>
-            <button class="btn-clear-chat" id="clearChatBtn" title="会話ログを消去">
-                🗑️
-            </button>
+            <div class="text-input-bar" id="textInputBar">
+                <textarea id="textInput" class="text-input" rows="1" placeholder="メッセージ"></textarea>
+                <button class="btn-send" id="sendTextBtn" title="送信">➤</button>
+            </div>
+            <button class="btn-round" id="newChatQuickBtn" title="新しいチャット">＋</button>
         </div>
     </main>
 
@@ -731,9 +942,9 @@
 
             <!-- モデル選択 -->
             <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px;">
                     <label for="modelSelect" style="margin-bottom: 0;">使用モデル</label>
-                    <button type="button" id="fetchModelsBtn" style="background: none; border: 1px solid rgba(56, 189, 248, 0.4); color: var(--primary); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                    <button type="button" id="fetchModelsBtn" style="background: none; border: 1px solid rgba(56, 189, 248, 0.4); color: var(--primary); padding: 8px 12px; border-radius: 10px; font-size: 0.95rem; cursor: pointer;">
                         🔄 使えるモデル一覧を取得
                     </button>
                 </div>
@@ -766,10 +977,10 @@
 
             <!-- 接続テストボタン -->
             <div style="margin-bottom: 18px;">
-                <button type="button" id="testApiBtn" style="width: 100%; padding: 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--primary); border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem;">
+                <button type="button" id="testApiBtn" style="width: 100%; padding: 16px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--primary); border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 1.1rem;">
                     🔌 APIキーとモデルの接続テスト
                 </button>
-                <div id="testResult" style="font-size: 0.85rem; margin-top: 10px; line-height: 1.4; word-break: break-all;"></div>
+                <div id="testResult" style="font-size: 0.95rem; margin-top: 10px; line-height: 1.4; word-break: break-all;"></div>
             </div>
 
             <!-- 無音判定時間（沈黙時間） -->
@@ -791,12 +1002,21 @@
                 </div>
             </div>
 
+            <!-- テキストモードの読み上げ -->
+            <div class="form-group">
+                <label for="textSpeakSelect">テキストモードでの回答読み上げ</label>
+                <select id="textSpeakSelect">
+                    <option value="off">読み上げない（文字のみ）</option>
+                    <option value="on">読み上げる</option>
+                </select>
+            </div>
+
             <!-- 会話文字サイズ -->
             <div class="form-group">
                 <label>会話文字サイズ</label>
                 <div class="range-wrap">
-                    <input type="range" id="fontSizeInput" min="1.0" max="2.0" step="0.1" value="1.25">
-                    <span class="range-val" id="fontSizeVal">1.25rem</span>
+                    <input type="range" id="fontSizeInput" min="1.0" max="2.0" step="0.1" value="1.35">
+                    <span class="range-val" id="fontSizeVal">1.35rem</span>
                 </div>
                 <div class="tip">ヘッダーの「Aa」ボタンでもワンタップで切り替え可能です。</div>
             </div>
@@ -811,37 +1031,40 @@
                     <option value="30">直近 30往復</option>
                     <option value="999">すべて保持（制限なし）</option>
                 </select>
-                <div class="tip">※会話を長く記憶するほど前の文脈を理解できますが、件数が極端に多いと応答時間が延びる場合があります。</div>
+                <div class="tip">※チャットごとに、そのチャット内の直近の会話だけをAIに渡します。件数が極端に多いと応答時間が延びる場合があります。</div>
             </div>
 
             <button class="btn-save" id="saveSettingsBtn">設定を保存</button>
             <button type="button" class="btn-danger-outline" id="settingsClearChatBtn">
-                🗑️ 会話履歴をすべて消去する
+                🗑️ すべてのチャットを削除する
             </button>
         </div>
     </div>
 
-    <!-- 会話ログモーダル -->
-    <div class="modal" id="historyModal">
+    <!-- チャット一覧モーダル -->
+    <div class="modal" id="chatListModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>📜 今回の会話ログ</h2>
-                <div style="display: flex; gap: 8px;">
-                    <button class="icon-btn" id="clearHistoryBtn" title="履歴消去" style="font-size: 1rem;">🗑️</button>
-                    <button class="icon-btn" id="closeHistoryBtn">✕</button>
-                </div>
+                <h2>💬 チャット一覧</h2>
+                <button class="icon-btn" id="closeChatListBtn">✕</button>
             </div>
-            <div class="history-list" id="historyList">
-                <div style="text-align: center; color: var(--text-sub); padding: 20px;">まだ会話はありません</div>
-            </div>
+            <button type="button" class="btn-new-chat" id="newChatBtn">＋ 新しいチャット</button>
+            <div class="chat-list" id="chatList"></div>
+            <button type="button" class="btn-danger-outline" id="deleteAllChatsBtn" style="margin-top: 22px;">
+                🗑️ すべてのチャットを削除
+            </button>
         </div>
     </div>
 
     <script>
-        // --- 設定管理 (LocalStorage) ---
+        // ============================================================
+        // 設定管理 (LocalStorage)
+        // ============================================================
         const SETTINGS_KEY = "drive_gemini_settings";
-        const STORAGE_CHAT_LOG = "drive_gemini_ui_log";
-        const STORAGE_API_LOG = "drive_gemini_api_history";
+        const STORAGE_CHATS = "drive_gemini_chats_v2";
+        const STORAGE_ACTIVE_CHAT = "drive_gemini_active_chat";
+        const LEGACY_CHAT_LOG = "drive_gemini_ui_log";
+        const LEGACY_API_LOG = "drive_gemini_api_history";
 
         let config = {
             apiKey: "",
@@ -851,7 +1074,9 @@
             silenceTimeout: 1.6,
             speechRate: 1.1,
             fontSize: 1.35,
-            historyLimit: 10
+            historyLimit: 10,
+            inputMode: "voice",     // 'voice' | 'text'
+            textModeSpeak: false    // テキストモードでも回答を読み上げるか
         };
 
         function applyFontSize(size) {
@@ -893,55 +1118,150 @@
             badge.textContent = active + think;
         }
 
-        // --- 会話履歴の永続化 (LocalStorage) ---
-        // Gemini API contents: [{role: 'user', parts: [{text: ''}]}, {role: 'model', parts: [{text: ''}]}]
-        let conversationHistory = [];
-        let uiLog = [];
+        // ============================================================
+        // チャット管理（Geminiのように複数チャットを分けて保存）
+        // chat = { id, title, createdAt, updatedAt, messages: [{role, text, time, ts, error}] }
+        // ============================================================
+        let chats = [];
+        let activeChatId = null;
 
-        function saveChatToStorage() {
+        function genId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        }
+
+        function createChatObject() {
+            const now = Date.now();
+            return { id: genId(), title: "", createdAt: now, updatedAt: now, messages: [] };
+        }
+
+        function makeTitle(text) {
+            const t = String(text || "").replace(/\s+/g, " ").trim();
+            return t.length > 28 ? t.slice(0, 28) + "…" : t;
+        }
+
+        function getChatById(id) {
+            return chats.find(c => c.id === id) || null;
+        }
+
+        function getActiveChat() {
+            let chat = getChatById(activeChatId);
+            if (!chat) {
+                chat = createChatObject();
+                chats.unshift(chat);
+                activeChatId = chat.id;
+            }
+            return chat;
+        }
+
+        function sortChats() {
+            chats.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        }
+
+        function saveChats() {
             try {
-                localStorage.setItem(STORAGE_CHAT_LOG, JSON.stringify(uiLog));
-                localStorage.setItem(STORAGE_API_LOG, JSON.stringify(conversationHistory));
+                // 空のチャットは（表示中のもの以外）保存しない
+                const toSave = chats.filter(c => c.messages.length > 0 || c.id === activeChatId);
+                localStorage.setItem(STORAGE_CHATS, JSON.stringify(toSave));
+                localStorage.setItem(STORAGE_ACTIVE_CHAT, activeChatId || "");
             } catch (e) {
                 console.warn("履歴保存失敗:", e);
             }
         }
 
-        function loadChatFromStorage() {
+        function loadChats() {
+            let saved = null;
             try {
-                const savedUi = localStorage.getItem(STORAGE_CHAT_LOG);
-                const savedApi = localStorage.getItem(STORAGE_API_LOG);
-                if (savedUi) uiLog = JSON.parse(savedUi);
-                if (savedApi) conversationHistory = JSON.parse(savedApi);
+                saved = localStorage.getItem(STORAGE_CHATS);
+                if (saved) chats = JSON.parse(saved) || [];
+                activeChatId = localStorage.getItem(STORAGE_ACTIVE_CHAT) || null;
+
+                // 旧バージョン（単一の会話履歴）からの移行
+                if (!saved) {
+                    const legacy = localStorage.getItem(LEGACY_CHAT_LOG);
+                    const oldLog = legacy ? (JSON.parse(legacy) || []) : [];
+                    if (oldLog.length > 0) {
+                        const chat = createChatObject();
+                        chat.messages = oldLog.map(m => ({
+                            role: m.role === "model" ? "model" : "user",
+                            text: String(m.text || ""),
+                            time: m.time || "",
+                            ts: Date.now(),
+                            error: m.role === "model" && /^⚠️/.test(m.text || "")
+                        }));
+                        const firstUser = chat.messages.find(m => m.role === "user");
+                        chat.title = makeTitle(firstUser ? firstUser.text : "以前の会話");
+                        chats = [chat];
+                        activeChatId = chat.id;
+                    }
+                }
             } catch (e) {
                 console.warn("履歴読込失敗:", e);
+                chats = [];
+            }
+
+            if (!Array.isArray(chats)) chats = [];
+            chats.forEach(c => {
+                if (!Array.isArray(c.messages)) c.messages = [];
+            });
+            sortChats();
+            getActiveChat();
+
+            if (!saved) {
+                saveChats();
+                localStorage.removeItem(LEGACY_CHAT_LOG);
+                localStorage.removeItem(LEGACY_API_LOG);
             }
         }
 
-        function clearAllChatHistory() {
-            if (confirm("これまでの会話履歴をすべて消去しますか？")) {
-                conversationHistory = [];
-                uiLog = [];
-                localStorage.removeItem(STORAGE_CHAT_LOG);
-                localStorage.removeItem(STORAGE_API_LOG);
-                renderChatMessages();
-                renderHistory();
-            }
+        function appendMessage(chatId, role, text, isError = false) {
+            const chat = getChatById(chatId);
+            if (!chat) return; // 応答待ちの間にチャットが削除された
+            const now = new Date();
+            chat.messages.push({
+                role,
+                text,
+                time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                ts: now.getTime(),
+                error: isError
+            });
+            if (!chat.title && role === "user") chat.title = makeTitle(text);
+            chat.updatedAt = now.getTime();
+            sortChats();
+            saveChats();
+            if (chatId === activeChatId) renderChatMessages();
+            updateChatTitleBar();
         }
 
-        // --- 状態管理 ---
+        // AIに渡す会話（チャット内の直近N往復。エラー表示は除外）
+        function buildApiContents(chat) {
+            let msgs = (chat ? chat.messages : []).filter(m => !m.error && m.text && m.text.trim());
+            const limitRounds = parseInt(config.historyLimit, 10) || 10;
+            if (limitRounds < 900) msgs = msgs.slice(-(limitRounds * 2));
+
+            const contents = [];
+            for (const m of msgs) {
+                const role = m.role === "model" ? "model" : "user";
+                const last = contents[contents.length - 1];
+                if (last && last.role === role) {
+                    // 同じ役割が連続した場合（エラーで回答が無かった等）は1つにまとめる
+                    last.parts[0].text += "\n" + m.text;
+                } else {
+                    contents.push({ role, parts: [{ text: m.text }] });
+                }
+            }
+            while (contents.length && contents[0].role !== "user") contents.shift();
+            return contents;
+        }
+
+        // ============================================================
+        // 状態管理
+        // ============================================================
         // 'idle', 'listening', 'thinking', 'speaking', 'error'
+        const STATES = ["idle", "listening", "thinking", "speaking", "error"];
         let currentState = "idle";
         let isDrivingMode = false;
+        let isRequestInFlight = false;
         let wakeLock = null;
-
-        // 音声認識オブジェクト
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        let isRecognitionActive = false;
-        let speechRecognitionRestartTimer = null;
-        let silenceTimer = null;
-        let currentTranscript = "";
 
         // Web Audio Context (効果音用)
         let audioCtx = null;
@@ -998,9 +1318,6 @@
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock was released');
-                    });
                 } catch (err) {
                     console.warn(`Wake Lockエラー: ${err.name}, ${err.message}`);
                 }
@@ -1009,13 +1326,20 @@
 
         function releaseWakeLock() {
             if (wakeLock !== null) {
-                wakeLock.release().then(() => {
-                    wakeLock = null;
-                });
+                const lock = wakeLock;
+                wakeLock = null;
+                lock.release().catch(() => {});
             }
         }
 
-        // --- UI状態の切り替え ---
+        // 画面復帰時にスリープ防止を再取得
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && isDrivingMode) {
+                requestWakeLock();
+            }
+        });
+
+        // --- DOM参照 ---
         const statusBar = document.getElementById("statusBar");
         const orbIcon = document.getElementById("orbIcon");
         const statusText = document.getElementById("statusText");
@@ -1025,21 +1349,29 @@
         const chatContainer = document.getElementById("chatContainer");
         const chatMessages = document.getElementById("chatMessages");
         const emptyChat = document.getElementById("emptyChat");
+        const emptyChatIcon = document.getElementById("emptyChatIcon");
+        const emptyChatSub = document.getElementById("emptyChatSub");
+        const currentChatTitle = document.getElementById("currentChatTitle");
         const mainActionBtn = document.getElementById("mainActionBtn");
-        const clearChatBtn = document.getElementById("clearChatBtn");
+        const modeToggleBtn = document.getElementById("modeToggleBtn");
+        const newChatQuickBtn = document.getElementById("newChatQuickBtn");
+        const textInput = document.getElementById("textInput");
+        const sendTextBtn = document.getElementById("sendTextBtn");
 
         function setState(state, detail = "") {
             currentState = state;
-            document.body.className = `state-${state}`;
+            STATES.forEach(s => document.body.classList.remove(`state-${s}`));
+            document.body.classList.add(`state-${state}`);
+            const isText = config.inputMode === "text";
 
             switch (state) {
                 case "idle":
-                    orbIcon.textContent = "💤";
-                    statusText.textContent = "運転モード停止中";
-                    statusSubtext.textContent = "「運転開始」を押すと完全ハンズフリーになります";
-                    mainActionBtn.className = "main-btn btn-start";
-                    mainActionBtn.innerHTML = "<span>▶ 運転開始（ハンズフリー）</span>";
-                    if (liveBubble) liveBubble.style.display = "none";
+                    orbIcon.textContent = isText ? "⌨️" : "💤";
+                    statusText.textContent = isText ? "テキストモード" : "運転モード停止中";
+                    statusSubtext.textContent = isText
+                        ? "下の入力欄にメッセージを入力して送信"
+                        : "「運転開始」を押すと完全ハンズフリーになります";
+                    hideLiveBubble();
                     break;
 
                 case "listening":
@@ -1052,129 +1384,210 @@
                     orbIcon.textContent = "💭";
                     statusText.textContent = "Gemini考え中...";
                     statusSubtext.textContent = "回答を生成しています";
-                    if (liveBubble) liveBubble.style.display = "none";
+                    hideLiveBubble();
                     break;
 
                 case "speaking":
                     orbIcon.textContent = "🔊";
                     statusText.textContent = "Gemini回答中";
-                    statusSubtext.textContent = "読み上げ完了で自動マイク再開します";
-                    if (liveBubble) liveBubble.style.display = "none";
+                    statusSubtext.textContent = isDrivingMode
+                        ? "読み上げ完了で自動マイク再開します"
+                        : "ここをタップで読み上げを停止";
+                    hideLiveBubble();
                     break;
 
                 case "error":
                     orbIcon.textContent = "⚠️";
                     statusText.textContent = "エラー";
                     statusSubtext.textContent = detail || "電波状況をご確認ください";
-                    if (liveBubble) liveBubble.style.display = "none";
+                    hideLiveBubble();
                     break;
+            }
+            updateControls();
+        }
+
+        function updateControls() {
+            if (isDrivingMode) {
+                mainActionBtn.className = "main-btn btn-stop";
+                mainActionBtn.innerHTML = "<span>⏹ 運転終了</span>";
+            } else {
+                mainActionBtn.className = "main-btn btn-start";
+                mainActionBtn.innerHTML = "<span>▶ 運転開始</span>";
+            }
+            sendTextBtn.disabled = isRequestInFlight;
+        }
+
+        function showLiveBubble(text) {
+            if (!liveBubble) return;
+            liveBubble.style.display = "block";
+            liveText.textContent = text;
+            liveBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+
+        function hideLiveBubble() {
+            if (liveBubble) liveBubble.style.display = "none";
+        }
+
+        // ============================================================
+        // 入力モード（音声 / テキスト）
+        // ============================================================
+        function applyInputMode(mode) {
+            config.inputMode = mode === "text" ? "text" : "voice";
+            const isText = config.inputMode === "text";
+            document.body.classList.toggle("mode-text", isText);
+            document.body.classList.toggle("mode-voice", !isText);
+            modeToggleBtn.textContent = isText ? "🎙️" : "⌨️";
+            modeToggleBtn.title = isText ? "音声（運転）モードに切り替え" : "テキスト入力に切り替え";
+            updateEmptyChatText();
+        }
+
+        function updateEmptyChatText() {
+            if (config.inputMode === "text") {
+                emptyChatIcon.textContent = "⌨️ 💬";
+                emptyChatSub.innerHTML = "下の入力欄にメッセージを入力して送信してください<br>🎙️ボタンで音声（運転）モードに戻れます";
+            } else {
+                emptyChatIcon.textContent = "🚗 🎙️";
+                emptyChatSub.innerHTML = "下の「運転開始」を押すと、声だけで会話できます<br>話した内容とGeminiの回答がすべてここに文字で表示されます";
             }
         }
 
-        // --- 音声認識の初期化 ---
-        function initRecognition() {
-            if (!SpeechRecognition) {
-                alert("お使いのブラウザは音声認識に対応していません。iOS SafariまたはGoogle Chromeでお試しください。");
-                return false;
+        // ============================================================
+        // 音声認識（毎回新しいインスタンスを作り、古いイベントは無視する）
+        // ============================================================
+        const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let recognitionGen = 0;          // 世代番号（古いインスタンスのイベントを無視するため）
+        let isRecognitionActive = false;
+        let recognitionConfirmed = false; // onstart が実際に来たか
+        let recognitionStartedAt = 0;
+        let recognitionRetryCount = 0;
+        let speechRecognitionRestartTimer = null;
+        let silenceTimer = null;
+        let currentTranscript = "";
+        let transcriptBase = "";          // 認識セッションが途中で切れた時の引き継ぎ分
+
+        function disposeRecognition() {
+            clearTimeout(speechRecognitionRestartTimer);
+            recognitionGen++;
+            const old = recognition;
+            recognition = null;
+            isRecognitionActive = false;
+            recognitionConfirmed = false;
+            if (old) {
+                old.onstart = null;
+                old.onspeechstart = null;
+                old.onresult = null;
+                old.onerror = null;
+                old.onend = null;
+                try { old.abort(); } catch (e) {}
             }
+        }
 
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'ja-JP';
+        function createRecognition() {
+            const gen = ++recognitionGen;
+            const rec = new SpeechRecognitionCtor();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'ja-JP';
+            const isStale = () => gen !== recognitionGen;
 
-            recognition.onstart = () => {
+            rec.onstart = () => {
+                if (isStale()) return;
                 isRecognitionActive = true;
-                if (currentState !== "listening" && isDrivingMode) {
-                    setState("listening");
-                    playListenBeep();
+                recognitionConfirmed = true;
+            };
+
+            rec.onspeechstart = () => {
+                if (isStale()) return;
+                if (isDrivingMode && currentState === "listening") {
+                    showLiveBubble(currentTranscript || "（音声を聞き取っています...）");
                 }
             };
 
-            recognition.onspeechstart = () => {
-                if (liveBubble && isDrivingMode && currentState === "listening") {
-                    liveBubble.style.display = "block";
-                    liveText.textContent = "（音声を聞き取っています...）";
-                    liveBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                }
-            };
-
-            recognition.onresult = (event) => {
-                if (!isDrivingMode || currentState === "thinking" || currentState === "speaking") return;
+            rec.onresult = (event) => {
+                if (isStale() || !isDrivingMode || currentState !== "listening") return;
 
                 let transcript = "";
                 for (let i = 0; i < event.results.length; ++i) {
                     transcript += event.results[i][0].transcript;
                 }
+                const full = (transcriptBase + transcript).trim();
+                if (!full) return;
 
-                if (transcript.trim().length > 0) {
-                    currentTranscript = transcript;
-                    if (liveBubble) {
-                        liveBubble.style.display = "block";
-                        liveText.textContent = currentTranscript;
-                        liveBubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
-                    if (statusSubtext) {
-                        statusSubtext.textContent = `聞き取り中: 「${currentTranscript.slice(-20)}」`;
-                    }
+                currentTranscript = full;
+                showLiveBubble(full);
+                statusSubtext.textContent = `聞き取り中: 「${full.slice(-20)}」`;
 
-                    // 無音タイマーのリセット（沈黙を検知して自動送信）
-                    resetSilenceTimer();
-                }
+                // 無音タイマーのリセット（沈黙を検知して自動送信）
+                resetSilenceTimer();
             };
 
-            recognition.onerror = (event) => {
+            rec.onerror = (event) => {
+                if (isStale()) return;
                 console.warn("音声認識エラー:", event.error);
-                if (event.error === "no-speech") {
-                    // 単なる沈黙。無視して継続
-                    return;
-                }
-                if (event.error === "not-allowed") {
+                if (event.error === "not-allowed" || event.error === "service-not-allowed") {
                     stopDrivingMode();
-                    alert("マイクの使用が許可されていません。ブラウザ設定でマイクを許可してください。");
+                    alert("マイク（音声認識）の使用が許可されていません。ブラウザ設定でマイクを許可してください。");
                 }
+                // no-speech / aborted / network / audio-capture などは onend で自動再開
             };
 
-            recognition.onend = () => {
+            rec.onend = () => {
+                if (isStale()) return;
                 isRecognitionActive = false;
-                // 運転モード中かつ、思考中・読み上げ中でなければマイクを自動再開
+                recognitionConfirmed = false;
+                // 運転モード中で聞き取り中なら自動再開（途中までの認識内容は引き継ぐ）
                 if (isDrivingMode && currentState === "listening") {
+                    transcriptBase = currentTranscript;
                     clearTimeout(speechRecognitionRestartTimer);
-                    speechRecognitionRestartTimer = setTimeout(() => {
-                        startRecognitionSafely();
-                    }, 300);
+                    speechRecognitionRestartTimer = setTimeout(startRecognitionSafely, 300);
                 }
             };
 
-            return true;
+            return rec;
         }
 
         function startRecognitionSafely() {
-            if (!recognition) initRecognition();
-            if (isRecognitionActive) return;
+            if (!SpeechRecognitionCtor || !isDrivingMode || currentState !== "listening") return;
+            if (isRecognitionActive && recognition) return;
 
+            disposeRecognition();
+            recognition = createRecognition();
             try {
                 recognition.start();
+                isRecognitionActive = true;
+                recognitionStartedAt = Date.now();
+                recognitionRetryCount = 0;
             } catch (e) {
                 console.warn("Recognition start例外:", e);
-                setTimeout(() => {
-                    if (isDrivingMode && !isRecognitionActive) {
-                        try { recognition.start(); } catch (err) {}
-                    }
-                }, 500);
+                isRecognitionActive = false;
+                recognitionRetryCount++;
+                clearTimeout(speechRecognitionRestartTimer);
+                speechRecognitionRestartTimer = setTimeout(
+                    startRecognitionSafely,
+                    Math.min(500 * recognitionRetryCount, 3000)
+                );
             }
         }
 
         function stopRecognitionSafely() {
             clearTimeout(silenceTimer);
-            clearTimeout(speechRecognitionRestartTimer);
-            if (recognition && isRecognitionActive) {
-                try {
-                    recognition.stop();
-                } catch (e) {}
-            }
-            isRecognitionActive = false;
+            disposeRecognition();
         }
+
+        // 聞き取り中なのにマイクが止まっていたら自動復旧するウォッチドッグ
+        setInterval(() => {
+            if (!isDrivingMode || currentState !== "listening") return;
+            if (!isRecognitionActive) {
+                startRecognitionSafely();
+                return;
+            }
+            if (!recognitionConfirmed && Date.now() - recognitionStartedAt > 6000) {
+                console.warn("音声認識が開始されないため再起動します");
+                disposeRecognition();
+                startRecognitionSafely();
+            }
+        }, 3000);
 
         // 発話終了（無音検知）のタイマー
         function resetSilenceTimer() {
@@ -1183,91 +1596,100 @@
 
             silenceTimer = setTimeout(() => {
                 if (currentTranscript.trim().length > 0 && isDrivingMode && currentState === "listening") {
-                    handleUserSpeechCompleted(currentTranscript.trim());
+                    sendUserMessage(currentTranscript.trim(), "voice");
                 }
             }, timeoutMs);
         }
 
-        // ユーザーが話し終わったときの処理
-        async function handleUserSpeechCompleted(text) {
+        // ============================================================
+        // メッセージ送信（音声・テキスト共通）
+        // ============================================================
+        function toFriendlyError(err) {
+            const errStr = ((err && err.message) || "").toLowerCase();
+            if ((err && err.name === "AbortError") || errStr.includes("abort") || errStr.includes("timeout")) {
+                return "回答がタイムアウトしました。思考型モデルのため生成に時間がかかりました。思考レベルをMEDIUMやLOWにすると高速になります。";
+            } else if (errStr.includes("not found") || errStr.includes("404")) {
+                return `モデル「${getActiveModel()}」が存在しません。設定で gemini-3.8-flash または gemini-1.5-flash に変更してください。`;
+            } else if (errStr.includes("api key not valid") || errStr.includes("api_key_invalid")) {
+                return "APIキーが無効です。設定でAPIキーをご確認ください。";
+            } else if (errStr.includes("403") || errStr.includes("permission")) {
+                return "APIの利用権限エラーです。キーの設定をご確認ください。";
+            } else if (errStr.includes("quota") || errStr.includes("429")) {
+                return "APIの利用枠上限に達しました。しばらく待ってからお試しください。";
+            }
+            return `通信エラー: ${(err && err.message) || "電波状況をご確認ください"}`;
+        }
+
+        function afterTurnFinished() {
+            if (isDrivingMode) {
+                resumeListening();
+            } else {
+                setState("idle");
+            }
+        }
+
+        async function sendUserMessage(rawText, source) {
+            const text = (rawText || "").trim();
+            if (!text) return;
+
+            if (isRequestInFlight) {
+                statusSubtext.textContent = "前の回答を待っています...";
+                return;
+            }
+
             currentTranscript = "";
+            transcriptBase = "";
             clearTimeout(silenceTimer);
-            if (liveBubble) liveBubble.style.display = "none";
+            hideLiveBubble();
 
-            // 音声認識を一旦一時停止（自分の読み上げやノイズを拾わないようにする）
-            stopRecognitionSafely();
+            // 音声認識を一旦停止（自分の読み上げやノイズを拾わないようにする）
+            if (source === "voice") stopRecognitionSafely();
+            if (currentState === "speaking") stopSpeaking();
 
+            const chatId = getActiveChat().id;
             playSendBeep();
+            appendMessage(chatId, "user", text);
+
+            isRequestInFlight = true;
             setState("thinking");
 
-            // 会話履歴に追加
-            addUiLog("user", text);
-            conversationHistory.push({
-                role: "user",
-                parts: [{ text: text }]
-            });
-
-            // 設定された往復数（1往復=2件）に制限してトークン節約
-            const limitRounds = parseInt(config.historyLimit, 10) || 10;
-            if (limitRounds < 900) {
-                const maxItems = limitRounds * 2;
-                if (conversationHistory.length > maxItems) {
-                    conversationHistory = conversationHistory.slice(-maxItems);
-                }
-            }
-            saveChatToStorage();
-
-            // Gemini API呼び出し
+            let replyText = null;
+            let errorMsg = null;
             try {
-                const replyText = await callGeminiAPI();
-                // 会話履歴に追加
-                addUiLog("model", replyText);
-                conversationHistory.push({
-                    role: "model",
-                    parts: [{ text: replyText }]
-                });
-
-                if (limitRounds < 900) {
-                    const maxItems = limitRounds * 2;
-                    if (conversationHistory.length > maxItems) {
-                        conversationHistory = conversationHistory.slice(-maxItems);
-                    }
-                }
-                saveChatToStorage();
-
-                // 音声読み上げ
-                speakReply(replyText);
+                replyText = await callGeminiAPI(buildApiContents(getChatById(chatId)));
             } catch (err) {
                 console.error("Gemini呼び出し失敗:", err);
-                playErrorBeep();
+                errorMsg = toFriendlyError(err);
+            }
+            isRequestInFlight = false;
 
-                let friendlyMsg = "通信エラーが発生しました。";
-                const errStr = (err.message || "").toLowerCase();
+            // 応答待ちの間に別チャットへ切り替えた場合は、元のチャットに保存するだけで読み上げない
+            const stillActive = chatId === activeChatId;
+            const shouldSpeak = stillActive &&
+                (isDrivingMode || (config.inputMode === "text" && config.textModeSpeak));
 
-                if (errStr.includes("abort") || errStr.includes("timeout")) {
-                    friendlyMsg = "回答がタイムアウトしました。思考型モデルのため生成に時間がかかりました。思考レベルをMEDIUMやLOWにすると高速になります。";
-                } else if (errStr.includes("not found") || errStr.includes("404")) {
-                    friendlyMsg = `モデル「${getActiveModel()}」が存在しません。設定で gemini-3.8-flash または gemini-1.5-flash に変更してください。`;
-                } else if (errStr.includes("api key not valid") || errStr.includes("api_key_invalid") || errStr.includes("400")) {
-                    friendlyMsg = "APIキーが無効です。設定でAPIキーをご確認ください。";
-                } else if (errStr.includes("403") || errStr.includes("permission")) {
-                    friendlyMsg = "APIの利用権限エラーです。キーの設定をご確認ください。";
-                } else if (errStr.includes("quota") || errStr.includes("429")) {
-                    friendlyMsg = "APIの利用枠上限に達しました。しばらく待ってからお試しください。";
+            if (replyText !== null) {
+                appendMessage(chatId, "model", replyText);
+                if (shouldSpeak) {
+                    speakReply(replyText);
                 } else {
-                    friendlyMsg = `通信エラー: ${err.message || "電波状況をご確認ください"}`;
+                    afterTurnFinished();
                 }
-
-                setState("error", friendlyMsg);
-                addUiLog("model", `⚠️ ${friendlyMsg}`);
-
-                // 音声で案内
-                speakReply(friendlyMsg, true);
+            } else {
+                playErrorBeep();
+                appendMessage(chatId, "model", `⚠️ ${errorMsg}`, true);
+                if (shouldSpeak) {
+                    speakReply(errorMsg);
+                } else if (isDrivingMode) {
+                    resumeListening();
+                } else {
+                    setState("error", errorMsg);
+                }
             }
         }
 
         // --- Gemini API 呼び出し ---
-        async function callGeminiAPI(retryCount = 0) {
+        async function callGeminiAPI(contents, retryCount = 0) {
             const trimmedKey = (config.apiKey || "").trim();
             if (!trimmedKey) {
                 throw new Error("APIキーが未設定です。右上の歯車アイコンから設定してください。");
@@ -1276,9 +1698,7 @@
             const activeModel = getActiveModel();
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(trimmedKey)}`;
 
-            const requestBody = {
-                contents: conversationHistory
-            };
+            const requestBody = { contents };
 
             // 思考レベル設定 (3.8 flash high対応)
             if (config.thinkingLevel && config.thinkingLevel !== "OFF") {
@@ -1291,6 +1711,7 @@
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 45000); // 思考型モデル対応のため45秒タイムアウト
+            let httpStatus = 0;
 
             try {
                 const response = await fetch(endpoint, {
@@ -1301,6 +1722,7 @@
                 });
 
                 clearTimeout(timeoutId);
+                httpStatus = response.status;
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
@@ -1329,21 +1751,25 @@
                 return finalAnswer;
             } catch (error) {
                 clearTimeout(timeoutId);
-                // 1回だけ自動リトライ
-                if (retryCount < 1) {
+                // タイムアウトや設定ミス（4xx）以外は1回だけ自動リトライ
+                const isClientError = httpStatus >= 400 && httpStatus < 500 && httpStatus !== 429;
+                if (retryCount < 1 && error.name !== "AbortError" && !isClientError) {
                     console.log("通信リトライ中...");
                     await new Promise(r => setTimeout(r, 1000));
-                    return callGeminiAPI(retryCount + 1);
+                    return callGeminiAPI(contents, retryCount + 1);
                 }
                 throw error;
             }
         }
 
-        // --- 音声合成（Text-to-Speech）読み上げ ---
+        // ============================================================
+        // 音声合成（Text-to-Speech）読み上げ
+        // ============================================================
         let speechChunks = [];
         let currentChunkIndex = 0;
         let speechWatchdogTimer = null;
         let activeUtterance = null; // iOS SafariのGC消滅防止
+        let speechSessionId = 0;    // 停止後に遅れて届く onend を無視するため
 
         function splitTextIntoSentences(text) {
             // iOS Safariの長文停止バグ対策：句点・感嘆符・改行で適切に分割
@@ -1363,9 +1789,21 @@
             return chunks.length > 0 ? chunks : [text];
         }
 
-        function speakReply(text, isErrorNotice = false) {
+        function stopSpeaking() {
+            speechSessionId++;
+            speechChunks = [];
+            currentChunkIndex = 0;
+            clearTimeout(speechWatchdogTimer);
+            activeUtterance = null;
+            clearSpeechHighlights();
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+            }
+        }
+
+        function speakReply(text) {
             if (!('speechSynthesis' in window)) {
-                if (isDrivingMode) resumeListening();
+                afterTurnFinished();
                 return;
             }
 
@@ -1376,37 +1814,32 @@
                 .trim();
 
             if (!cleanText) {
-                if (isDrivingMode) resumeListening();
+                afterTurnFinished();
                 return;
             }
 
-            setState("speaking");
-
             // iOS Safariのcancelバグ対策：cancel後150ms待ってから再生開始
-            try {
-                window.speechSynthesis.cancel();
-            } catch (e) {}
+            stopSpeaking();
+            const session = speechSessionId;
+            setState("speaking");
 
             speechChunks = splitTextIntoSentences(cleanText);
             currentChunkIndex = 0;
 
             setTimeout(() => {
-                playNextSpeechChunk();
+                if (session === speechSessionId) playNextSpeechChunk(session);
             }, 150);
         }
 
-        function playNextSpeechChunk() {
+        function playNextSpeechChunk(session) {
             clearTimeout(speechWatchdogTimer);
-
-            if (!isDrivingMode && currentState !== "speaking") return;
+            if (session !== speechSessionId) return;
 
             // 全チャンク読み上げ完了
             if (currentChunkIndex >= speechChunks.length) {
                 activeUtterance = null;
                 clearSpeechHighlights();
-                if (isDrivingMode) {
-                    resumeListening();
-                }
+                afterTurnFinished();
                 return;
             }
 
@@ -1415,7 +1848,7 @@
             currentChunkIndex++;
 
             if (!chunkText || chunkText.trim().length === 0) {
-                playNextSpeechChunk();
+                playNextSpeechChunk(session);
                 return;
             }
 
@@ -1437,11 +1870,11 @@
 
             let hasFinished = false;
             const finishAndNext = () => {
-                if (hasFinished) return;
+                if (hasFinished || session !== speechSessionId) return;
                 hasFinished = true;
                 clearTimeout(speechWatchdogTimer);
                 activeUtterance = null;
-                playNextSpeechChunk();
+                playNextSpeechChunk(session);
             };
 
             utterance.onend = finishAndNext;
@@ -1472,22 +1905,40 @@
         // マイクを聞き取りモードに自動復帰
         function resumeListening() {
             if (!isDrivingMode) return;
+            currentTranscript = "";
+            transcriptBase = "";
             setState("listening");
             liveText.textContent = "（聞いています...）";
             playListenBeep();
             startRecognitionSafely();
         }
 
-        // --- 運転モード開始 / 停止 ---
-        async function startDrivingMode() {
+        // ============================================================
+        // 運転モード開始 / 停止
+        // ============================================================
+        function startDrivingMode() {
+            if (!SpeechRecognitionCtor) {
+                alert("お使いのブラウザは音声認識に対応していません。iOS SafariまたはGoogle Chromeでお試しください。");
+                return;
+            }
             if (!config.apiKey) {
                 openSettingsModal();
                 alert("まずはGemini API Keyを設定してください。");
                 return;
             }
+            if (isRequestInFlight) {
+                statusSubtext.textContent = "前の回答を受信中です。少し待ってから開始してください";
+                return;
+            }
 
             // オーディオコンテキストのアクティベート（iOS Safariのサウンド制約解除）
             getAudioContext();
+
+            // 前回の読み上げ・認識の残りを完全に掃除
+            stopSpeaking();
+            stopRecognitionSafely();
+            currentTranscript = "";
+            transcriptBase = "";
 
             // iOS Safariの音声合成アンロック
             if ('speechSynthesis' in window) {
@@ -1498,16 +1949,25 @@
                 } catch (e) {}
             }
 
-            // スリープ防止
-            await requestWakeLock();
-
             isDrivingMode = true;
-            mainActionBtn.className = "main-btn btn-stop";
-            mainActionBtn.innerHTML = "<span>⏹ 運転モード終了</span>";
-
             setState("listening");
             playListenBeep();
+
+            // 【重要】タップ操作の流れの中で同期的に認識を開始する（awaitを挟むとiOSで拒否される）
             startRecognitionSafely();
+
+            // スリープ防止（awaitしない）
+            requestWakeLock();
+        }
+
+        function stopDrivingMode() {
+            isDrivingMode = false;
+            stopRecognitionSafely();
+            currentTranscript = "";
+            transcriptBase = "";
+            stopSpeaking();
+            releaseWakeLock();
+            setState(isRequestInFlight ? "thinking" : "idle");
         }
 
         // 発声中の文をハイライト＆自動スクロールする関数
@@ -1528,42 +1988,88 @@
         }
 
         // 最新のGemini回答を文ごとに分割してスパンタグ化
-        function formatModelTextWithSentences(text, isLatest) {
-            if (!isLatest) {
-                return escapeHtml(text).replace(/\n/g, '<br>');
-            }
+        function formatModelTextWithSentences(text) {
             const clean = text.replace(/[*#_~`>]/g, '').trim();
             const chunks = splitTextIntoSentences(clean);
-            return chunks.map((chunk, idx) => 
+            return chunks.map((chunk, idx) =>
                 `<span class="speech-sentence" id="speech-sentence-${idx}">${escapeHtml(chunk).replace(/\n/g, '<br>')}</span>`
             ).join(' ');
         }
 
-        function stopDrivingMode() {
-            isDrivingMode = false;
-            speechChunks = [];
-            clearTimeout(speechWatchdogTimer);
-            clearSpeechHighlights();
-            activeUtterance = null;
-            stopRecognitionSafely();
-            if ('speechSynthesis' in window) {
-                try {
-                    window.speechSynthesis.cancel();
-                } catch (e) {}
+        // ============================================================
+        // チャット切り替え・作成・削除
+        // ============================================================
+        function interruptForChatChange() {
+            if (currentState === "speaking") {
+                stopSpeaking();
+                afterTurnFinished();
+            } else if (isDrivingMode && currentState === "listening") {
+                // 聞き取り途中の内容は破棄して聞き直す
+                stopRecognitionSafely();
+                currentTranscript = "";
+                transcriptBase = "";
+                hideLiveBubble();
+                startRecognitionSafely();
+            } else if (currentState === "error" && !isDrivingMode) {
+                setState("idle");
             }
-            releaseWakeLock();
-            setState("idle");
         }
 
-        // --- 会話ログ管理 ---
-        function addUiLog(role, text) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            uiLog.push({ role, text, time });
-            saveChatToStorage();
+        function refreshChatViews() {
             renderChatMessages();
-            renderHistory();
+            renderChatList();
+            updateChatTitleBar();
         }
 
+        function startNewChat() {
+            interruptForChatChange();
+            const current = getChatById(activeChatId);
+            if (!(current && current.messages.length === 0)) {
+                const chat = createChatObject();
+                chats.unshift(chat);
+                activeChatId = chat.id;
+            }
+            saveChats();
+            refreshChatViews();
+        }
+
+        function switchChat(id) {
+            if (id === activeChatId || !getChatById(id)) return;
+            interruptForChatChange();
+            activeChatId = id;
+            saveChats();
+            refreshChatViews();
+        }
+
+        function deleteChat(id) {
+            const chat = getChatById(id);
+            if (!chat) return;
+            if (!confirm(`「${chat.title || "新しいチャット"}」を削除しますか？`)) return;
+            const wasActive = id === activeChatId;
+            if (wasActive) interruptForChatChange();
+            chats = chats.filter(c => c.id !== id);
+            if (wasActive) {
+                activeChatId = chats.length > 0 ? chats[0].id : null;
+                getActiveChat();
+            }
+            saveChats();
+            refreshChatViews();
+        }
+
+        function deleteAllChats() {
+            if (!confirm("すべてのチャット履歴を削除しますか？\nこの操作は元に戻せません。")) return false;
+            interruptForChatChange();
+            chats = [];
+            activeChatId = null;
+            getActiveChat();
+            saveChats();
+            refreshChatViews();
+            return true;
+        }
+
+        // ============================================================
+        // 描画
+        // ============================================================
         // 最下部へスクロールする安全関数
         function scrollToBottom() {
             if (!chatContainer) return;
@@ -1575,10 +2081,16 @@
             }, 80);
         }
 
+        function updateChatTitleBar() {
+            const chat = getActiveChat();
+            currentChatTitle.textContent = `💬 ${chat.title || "新しいチャット"}`;
+        }
+
         function renderChatMessages() {
             if (!chatMessages) return;
+            const messages = getActiveChat().messages;
 
-            if (uiLog.length === 0) {
+            if (messages.length === 0) {
                 if (emptyChat) emptyChat.style.display = "block";
                 chatMessages.innerHTML = "";
                 return;
@@ -1586,18 +2098,18 @@
 
             if (emptyChat) emptyChat.style.display = "none";
 
-            chatMessages.innerHTML = uiLog.map((item, index) => {
-                const isLatestModel = (item.role === 'model' && index === uiLog.length - 1);
-                const contentHtml = (item.role === 'model' && isLatestModel)
-                    ? formatModelTextWithSentences(item.text, true)
+            chatMessages.innerHTML = messages.map((item, index) => {
+                const isLatestModel = (item.role === 'model' && index === messages.length - 1);
+                const contentHtml = isLatestModel
+                    ? formatModelTextWithSentences(item.text)
                     : escapeHtml(item.text).replace(/\n/g, '<br>');
 
                 return `
-                <div class="chat-bubble ${item.role}">
+                <div class="chat-bubble ${item.role}${item.error ? ' error' : ''}">
                     <div class="bubble-meta">
                         <span>${item.role === 'user' ? '🚗 あなた' : '✨ Gemini'}</span>
                         <span>•</span>
-                        <span>${item.time}</span>
+                        <span>${escapeHtml(item.time || "")}</span>
                     </div>
                     <div>${contentHtml}</div>
                 </div>
@@ -1608,30 +2120,44 @@
             scrollToBottom();
         }
 
-        function renderHistory() {
-            const list = document.getElementById("historyList");
+        function formatChatDate(ts) {
+            if (!ts) return "";
+            const d = new Date(ts);
+            const now = new Date();
+            const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (d.toDateString() === now.toDateString()) return `今日 ${hm}`;
+            return `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+        }
+
+        function renderChatList() {
+            const list = document.getElementById("chatList");
             if (!list) return;
-            if (uiLog.length === 0) {
-                list.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">まだ会話はありません</div>';
-                return;
-            }
+            const visible = chats.filter(c => c.messages.length > 0 || c.id === activeChatId);
 
-            list.innerHTML = uiLog.map(item => `
-                <div class="history-item ${item.role}">
-                    <div class="history-time">${item.role === 'user' ? 'あなた' : 'Gemini'} • ${item.time}</div>
-                    <div>${escapeHtml(item.text)}</div>
-                </div>
-            `).join('');
-
-            list.scrollTop = list.scrollHeight;
+            list.innerHTML = visible.map(c => {
+                const last = c.messages[c.messages.length - 1];
+                const preview = last ? last.text.replace(/\s+/g, " ").slice(0, 50) : "まだメッセージはありません";
+                const rounds = c.messages.filter(m => m.role === "user").length;
+                return `
+                <div class="chat-item ${c.id === activeChatId ? 'active' : ''}" data-id="${escapeHtml(c.id)}">
+                    <div class="chat-item-main">
+                        <div class="chat-item-title">${escapeHtml(c.title || "新しいチャット")}</div>
+                        <div class="chat-item-meta">${formatChatDate(c.updatedAt)} ・ ${rounds}往復</div>
+                        <div class="chat-item-preview">${escapeHtml(preview)}</div>
+                    </div>
+                    <button type="button" class="chat-item-del" data-del="${escapeHtml(c.id)}" title="このチャットを削除">🗑️</button>
+                </div>`;
+            }).join('');
         }
 
         function escapeHtml(str) {
-            return str.replace(/[&<>'"]/g, 
+            return String(str ?? "").replace(/[&<>'"]/g,
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
 
-        // --- UI イベントリスナー ---
+        // ============================================================
+        // UI イベントリスナー
+        // ============================================================
         // メインアクションボタン
         mainActionBtn.addEventListener("click", () => {
             if (isDrivingMode) {
@@ -1641,23 +2167,130 @@
             }
         });
 
-        // ログ消去ボタン（チャット画面下部）
-        if (clearChatBtn) {
-            clearChatBtn.addEventListener("click", () => {
-                clearAllChatHistory();
-            });
+        // 上部ステータスバータップ（運転モードの停止 / 再開、テキストモードでは読み上げ停止）
+        statusBar.addEventListener("click", () => {
+            if (config.inputMode === "text") {
+                if (currentState === "speaking") {
+                    stopSpeaking();
+                    setState("idle");
+                }
+                return;
+            }
+            if (isDrivingMode) {
+                stopDrivingMode();
+            } else {
+                startDrivingMode();
+            }
+        });
+
+        // 入力モード切り替え（音声 ⇔ テキスト）
+        modeToggleBtn.addEventListener("click", () => {
+            if (config.inputMode === "voice") {
+                if (isDrivingMode) stopDrivingMode();
+                applyInputMode("text");
+                saveConfig();
+                if (!isRequestInFlight) setState("idle");
+                setTimeout(() => textInput.focus(), 50);
+            } else {
+                textInput.blur();
+                if (currentState === "speaking") stopSpeaking();
+                applyInputMode("voice");
+                saveConfig();
+                if (!isRequestInFlight) setState("idle");
+            }
+        });
+
+        // 新しいチャット（下部の＋ボタン）
+        newChatQuickBtn.addEventListener("click", () => {
+            startNewChat();
+            playTone(660, 'sine', 0.08, 0.15);
+        });
+
+        // テキスト送信
+        const isCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+        function autoResizeTextInput() {
+            textInput.style.height = "auto";
+            textInput.style.height = Math.min(textInput.scrollHeight + 2, 180) + "px";
         }
 
-        // 上部ステータスバータップ（一時停止 / 再開のトグル）
-        if (statusBar) {
-            statusBar.addEventListener("click", () => {
-                if (!isDrivingMode) {
-                    startDrivingMode();
-                } else {
-                    stopDrivingMode();
-                }
-            });
+        function submitTextInput() {
+            const text = textInput.value.trim();
+            if (!text || isRequestInFlight) return;
+            if (!config.apiKey) {
+                openSettingsModal();
+                alert("まずはGemini API Keyを設定してください。");
+                return;
+            }
+            getAudioContext();
+            textInput.value = "";
+            autoResizeTextInput();
+            sendUserMessage(text, "text");
         }
+
+        textInput.addEventListener("input", autoResizeTextInput);
+        textInput.addEventListener("keydown", (e) => {
+            // PCではEnterで送信（Shift+Enterで改行）。日本語変換中のEnterは無視。
+            // スマホでは改行キーは改行として扱い、➤ボタンで送信。
+            if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229 && !isCoarsePointer) {
+                e.preventDefault();
+                submitTextInput();
+            }
+        });
+        sendTextBtn.addEventListener("click", submitTextInput);
+
+        // iOSでキーボード表示時に入力欄が隠れないよう画面高さを追従
+        if (window.visualViewport) {
+            const fitToViewport = () => {
+                document.body.style.height = `${window.visualViewport.height}px`;
+                window.scrollTo(0, 0);
+            };
+            window.visualViewport.addEventListener("resize", fitToViewport);
+        }
+
+        // モーダル共通：背景タップで閉じる
+        document.querySelectorAll(".modal").forEach(modal => {
+            modal.addEventListener("click", (e) => {
+                if (e.target === modal) modal.classList.remove("open");
+            });
+        });
+
+        // チャット一覧モーダル
+        const chatListModal = document.getElementById("chatListModal");
+        const chatListBtn = document.getElementById("chatListBtn");
+        const closeChatListBtn = document.getElementById("closeChatListBtn");
+        const newChatBtn = document.getElementById("newChatBtn");
+        const deleteAllChatsBtn = document.getElementById("deleteAllChatsBtn");
+        const chatListEl = document.getElementById("chatList");
+
+        function openChatListModal() {
+            renderChatList();
+            chatListModal.classList.add("open");
+        }
+
+        chatListBtn.addEventListener("click", openChatListModal);
+        currentChatTitle.addEventListener("click", openChatListModal);
+        closeChatListBtn.addEventListener("click", () => chatListModal.classList.remove("open"));
+        newChatBtn.addEventListener("click", () => {
+            startNewChat();
+            chatListModal.classList.remove("open");
+        });
+        deleteAllChatsBtn.addEventListener("click", () => {
+            if (deleteAllChats()) chatListModal.classList.remove("open");
+        });
+        chatListEl.addEventListener("click", (e) => {
+            const delBtn = e.target.closest("[data-del]");
+            if (delBtn) {
+                e.stopPropagation();
+                deleteChat(delBtn.dataset.del);
+                return;
+            }
+            const item = e.target.closest(".chat-item");
+            if (item) {
+                switchChat(item.dataset.id);
+                chatListModal.classList.remove("open");
+            }
+        });
 
         // 設定モーダル
         const settingsModal = document.getElementById("settingsModal");
@@ -1677,54 +2310,52 @@
         const fontSizeVal = document.getElementById("fontSizeVal");
         const fontSizeBtn = document.getElementById("fontSizeBtn");
         const historyLimitSelect = document.getElementById("historyLimitSelect");
+        const textSpeakSelect = document.getElementById("textSpeakSelect");
         const settingsClearChatBtn = document.getElementById("settingsClearChatBtn");
+        const testApiBtn = document.getElementById("testApiBtn");
+        const testResult = document.getElementById("testResult");
+        const fetchModelsBtn = document.getElementById("fetchModelsBtn");
 
         function openSettingsModal() {
             apiKeyInput.value = config.apiKey || "";
             modelSelect.value = config.model;
             customModelInput.value = config.customModel;
             customModelGroup.style.display = config.model === "custom" ? "block" : "none";
-            if (thinkingLevelSelect) thinkingLevelSelect.value = config.thinkingLevel || "HIGH";
+            thinkingLevelSelect.value = config.thinkingLevel || "HIGH";
             silenceTimeoutInput.value = config.silenceTimeout;
             silenceVal.textContent = config.silenceTimeout + "秒";
             speechRateInput.value = config.speechRate;
             rateVal.textContent = config.speechRate + "x";
-            if (fontSizeInput) fontSizeInput.value = config.fontSize || 1.35;
-            if (fontSizeVal) fontSizeVal.textContent = (config.fontSize || 1.35) + "rem";
-            if (historyLimitSelect) historyLimitSelect.value = String(config.historyLimit || 10);
+            fontSizeInput.value = config.fontSize || 1.35;
+            fontSizeVal.textContent = (config.fontSize || 1.35) + "rem";
+            historyLimitSelect.value = String(config.historyLimit || 10);
+            textSpeakSelect.value = config.textModeSpeak ? "on" : "off";
             settingsModal.classList.add("open");
         }
 
-        if (settingsClearChatBtn) {
-            settingsClearChatBtn.addEventListener("click", () => {
-                clearAllChatHistory();
-                settingsModal.classList.remove("open");
-            });
-        }
+        settingsClearChatBtn.addEventListener("click", () => {
+            if (deleteAllChats()) settingsModal.classList.remove("open");
+        });
 
         // ヘッダーのAaボタン（ワンタップで文字サイズトグル）
-        if (fontSizeBtn) {
-            const fontSizes = [1.1, 1.3, 1.55, 1.85];
-            fontSizeBtn.addEventListener("click", () => {
-                const current = parseFloat(config.fontSize) || 1.25;
-                // 次のサイズを決定
-                let next = fontSizes[0];
-                for (let i = 0; i < fontSizes.length; i++) {
-                    if (fontSizes[i] > current + 0.05) {
-                        next = fontSizes[i];
-                        break;
-                    }
+        const fontSizes = [1.1, 1.3, 1.55, 1.85];
+        fontSizeBtn.addEventListener("click", () => {
+            const current = parseFloat(config.fontSize) || 1.35;
+            // 次のサイズを決定
+            let next = fontSizes[0];
+            for (let i = 0; i < fontSizes.length; i++) {
+                if (fontSizes[i] > current + 0.05) {
+                    next = fontSizes[i];
+                    break;
                 }
-                applyFontSize(next);
-                saveConfig();
-            });
-        }
+            }
+            applyFontSize(next);
+            saveConfig();
+        });
 
-        if (fontSizeInput) {
-            fontSizeInput.addEventListener("input", () => {
-                applyFontSize(fontSizeInput.value);
-            });
-        }
+        fontSizeInput.addEventListener("input", () => {
+            applyFontSize(fontSizeInput.value);
+        });
 
         settingsBtn.addEventListener("click", openSettingsModal);
         closeSettingsBtn.addEventListener("click", () => settingsModal.classList.remove("open"));
@@ -1742,7 +2373,6 @@
         });
 
         // モデル一覧取得機能
-        const fetchModelsBtn = document.getElementById("fetchModelsBtn");
         fetchModelsBtn.addEventListener("click", async () => {
             const key = apiKeyInput.value.trim();
             if (!key) {
@@ -1759,7 +2389,7 @@
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
                     const errMsg = errData.error?.message || `HTTP ${response.status}`;
-                    testResult.innerHTML = `<span style="color:#f87171">❌ 取得失敗 (${response.status}):</span><br><code style="font-size:0.75rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px;">${escapeHtml(errMsg)}</code>`;
+                    testResult.innerHTML = `<span style="color:#f87171">❌ 取得失敗 (${response.status}):</span><br><code style="font-size:0.85rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px;">${escapeHtml(errMsg)}</code>`;
                     return;
                 }
 
@@ -1775,14 +2405,14 @@
                 }
 
                 // セレクトボックスを再構築
-                modelSelect.innerHTML = availableModels.map(m => 
+                modelSelect.innerHTML = availableModels.map(m =>
                     `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`
                 ).join('') + '<option value="custom">カスタム手入力</option>';
 
                 // 優先モデルを選択
-                const preferred = availableModels.find(m => m === "gemini-3.8-flash") || 
-                                  availableModels.find(m => m === "gemini-2.0-flash") || 
-                                  availableModels.find(m => m === "gemini-1.5-flash") || 
+                const preferred = availableModels.find(m => m === "gemini-3.8-flash") ||
+                                  availableModels.find(m => m === "gemini-2.0-flash") ||
+                                  availableModels.find(m => m === "gemini-1.5-flash") ||
                                   availableModels[0];
                 if (preferred) {
                     modelSelect.value = preferred;
@@ -1797,13 +2427,10 @@
         });
 
         // API接続テスト機能
-        const testApiBtn = document.getElementById("testApiBtn");
-        const testResult = document.getElementById("testResult");
-
         testApiBtn.addEventListener("click", async () => {
             const key = apiKeyInput.value.trim();
             const selectedModel = modelSelect.value === "custom" ? customModelInput.value.trim() : modelSelect.value;
-            const currentThinking = thinkingLevelSelect ? thinkingLevelSelect.value : (config.thinkingLevel || "HIGH");
+            const currentThinking = thinkingLevelSelect.value || "HIGH";
 
             if (!key) {
                 testResult.textContent = "❌ 先にAPIキーを入力してください。";
@@ -1816,7 +2443,7 @@
 
             try {
                 const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(key)}`;
-                
+
                 const testBody = {
                     contents: [{ role: "user", parts: [{ text: "こんにちは" }] }]
                 };
@@ -1837,15 +2464,16 @@
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
                     const errMsg = errData.error?.message || `HTTP ${response.status}`;
-                    testResult.innerHTML = `<span style="color:#f87171">❌ 接続エラー (${response.status}):</span><br><code style="font-size:0.75rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px; word-break:break-all;">${escapeHtml(errMsg)}</code>`;
+                    testResult.innerHTML = `<span style="color:#f87171">❌ 接続エラー (${response.status}):</span><br><code style="font-size:0.85rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px; word-break:break-all;">${escapeHtml(errMsg)}</code>`;
                     return;
                 }
 
                 const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "OK";
-                testResult.innerHTML = `<span style="color:#4ade80">✅ 接続成功！「${selectedModel}」が正常に応答しました。</span><br><span style="font-size:0.75rem; color:#94a3b8;">返答: ${escapeHtml(reply.slice(0, 50))}...</span>`;
+                const parts = data.candidates?.[0]?.content?.parts || [];
+                const answer = parts.filter(p => !p.thought && p.text).map(p => p.text).join("") || "OK";
+                testResult.innerHTML = `<span style="color:#4ade80">✅ 接続成功！「${escapeHtml(selectedModel)}」が正常に応答しました。</span><br><span style="font-size:0.85rem; color:#94a3b8;">返答: ${escapeHtml(answer.slice(0, 50))}...</span>`;
             } catch (e) {
-                testResult.innerHTML = `<span style="color:#f87171">❌ 通信例外エラー:</span><br><code style="font-size:0.75rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px;">${escapeHtml(e.message)}</code>`;
+                testResult.innerHTML = `<span style="color:#f87171">❌ 通信例外エラー:</span><br><code style="font-size:0.85rem; color:#fca5a5; display:block; margin-top:4px; padding:6px; background:rgba(0,0,0,0.4); border-radius:6px;">${escapeHtml(e.message)}</code>`;
             }
         });
 
@@ -1853,38 +2481,27 @@
             config.apiKey = apiKeyInput.value.trim();
             config.model = modelSelect.value;
             config.customModel = customModelInput.value.trim();
-            if (thinkingLevelSelect) config.thinkingLevel = thinkingLevelSelect.value;
+            config.thinkingLevel = thinkingLevelSelect.value;
             config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
             config.speechRate = parseFloat(speechRateInput.value);
-            if (fontSizeInput) config.fontSize = parseFloat(fontSizeInput.value);
-            if (historyLimitSelect) config.historyLimit = parseInt(historyLimitSelect.value, 10) || 10;
+            config.fontSize = parseFloat(fontSizeInput.value);
+            config.historyLimit = parseInt(historyLimitSelect.value, 10) || 10;
+            config.textModeSpeak = textSpeakSelect.value === "on";
 
             applyFontSize(config.fontSize);
             saveConfig();
             settingsModal.classList.remove("open");
         });
 
-        // 会話ログモーダル
-        const historyModal = document.getElementById("historyModal");
-        const historyBtn = document.getElementById("historyBtn");
-        const closeHistoryBtn = document.getElementById("closeHistoryBtn");
-        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-
-        historyBtn.addEventListener("click", () => {
-            renderHistory();
-            historyModal.classList.add("open");
-        });
-        closeHistoryBtn.addEventListener("click", () => historyModal.classList.remove("open"));
-        clearHistoryBtn.addEventListener("click", () => {
-            clearAllChatHistory();
-        });
-
+        // ============================================================
         // ページロード時の初期化
+        // ============================================================
         window.addEventListener("DOMContentLoaded", () => {
             loadConfig();
-            loadChatFromStorage();
-            renderChatMessages();
-            initRecognition();
+            loadChats();
+            applyInputMode(config.inputMode);
+            setState("idle");
+            refreshChatViews();
 
             // 音声一覧のロード（ブラウザキャッシュ用）
             if ('speechSynthesis' in window) {
