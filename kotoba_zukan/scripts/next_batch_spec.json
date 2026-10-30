@@ -1,0 +1,79 @@
+{
+  "next_reset_jst": "2026-10-30 12:35",
+  "batch_1_creatures_food": [
+    {
+      "id": "d_batta",
+      "name": "ばった",
+      "tts_text": "バッタ",
+      "prompt": "An educational picture book watercolor illustration of a friendly green grasshopper standing (ばった). Gentle warm Japanese picture book style with delicate watercolor textures and soft clear pencil contours. Anatomically normal Japanese grasshopper (long antenna on head, large green jumping hind legs, slender body). ABSOLUTELY NO weird antenna or protrusion on the rear abdomen. Solid pure white background (#ffffff), completely isolated, no background scenery, no ground, no clutter, no text, flashcard quality."
+    },
+    {
+      "id": "d_katatsumuri",
+      "name": "かたつむり",
+      "tts_text": "カタツムリ",
+      "prompt": "An educational picture book watercolor illustration of a cute friendly snail crawling (かたつむり). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. Cute spiral shell on its back, cute round eyes located naturally at the tips of its two upper tentacles. NO duplicate eyes on the face, normal charming snail. Solid pure white background (#ffffff), completely isolated, no ground, no scenery, no text, flashcard quality."
+    },
+    {
+      "id": "t_edamame",
+      "name": "えだまめ",
+      "tts_text": "枝豆",
+      "prompt": "An educational picture book watercolor illustration of Japanese green edamame soybeans in pod (えだまめ). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. Fresh green fuzzy pods with 2-3 plump round soybeans nestled inside, one pod slightly popped open showing bright green round beans. Authentic Japanese edamame, NOT sweet peas, NOT snow peas. Solid pure white background (#ffffff), completely isolated, no bowl, no shadow, no text, flashcard quality."
+    },
+    {
+      "id": "t_kaki",
+      "name": "かき",
+      "tts_text": "柿",
+      "prompt": "An educational picture book watercolor illustration of a ripe Japanese persimmon fruit (かき). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. A glossy bright orange whole persimmon with a green calyx on top, placed next to a neatly halved persimmon showing authentic persimmon flesh with jelly-like translucent pulp and small seeds. NOT citrus segments, NOT an orange. Solid pure white background (#ffffff), completely isolated, no plate, no shadow, no text, flashcard quality."
+    }
+  ],
+  "batch_2_daily_goods": [
+    {
+      "id": "m_reizouko",
+      "name": "れいぞうこ",
+      "tts_text": "冷蔵庫",
+      "prompt": "An educational picture book watercolor illustration of a Japanese home refrigerator (れいぞうこ). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Soft pastel light-blue or white clean refrigerator with upper fridge door and lower freezer drawer, charming and friendly design suitable for children picture book. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no kitchen, no floor, no text, flashcard quality."
+    },
+    {
+      "id": "m_yakan",
+      "name": "やかん",
+      "tts_text": "やかん",
+      "prompt": "An educational picture book watercolor illustration of a cute kitchen kettle (やかん). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Charming kettle with spout, arched handle, and lid, painted in warm friendly colors (soft yellow, red, or gentle stainless texture with watercolor wash). NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no stove, no clutter, no text, flashcard quality."
+    },
+    {
+      "id": "m_manaita",
+      "name": "まないた",
+      "tts_text": "まな板",
+      "prompt": "An educational picture book watercolor illustration of a wooden cutting board (まないた). Gentle warm Japanese picture book style with delicate watercolor and soft wood grain pencil textures. A clean rectangular wooden cutting board with smooth rounded corners, warm natural wood tone, placed neatly. NOT a photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no table, no food scraps, no knife, no text, flashcard quality."
+    },
+    {
+      "id": "m_handoso-pu",
+      "name": "はんどそーぷ",
+      "tts_text": "ハンドソープ",
+      "prompt": "An educational picture book watercolor illustration of a foaming hand soap dispenser bottle (はんどそーぷ). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Friendly pastel pump bottle with a pump head dispensing a tiny cloud of white bubbly foam, cute clean design. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no sink, no text, flashcard quality."
+    },
+    {
+      "id": "m_shanpu-",
+      "name": "しゃんぷー",
+      "tts_text": "シャンプー",
+      "prompt": "An educational picture book watercolor illustration of a shampoo pump bottle (しゃんぷー). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Friendly pastel pump bottle for hair shampoo, cute tear-drop droplet icon or soap bubble decoration on bottle, warm bathroom essential illustration. NOT a 3D render, NOT a photograph. Solid pure white background (#ffffff), completely isolated, no bathroom, no text, flashcard quality."
+    },
+    {
+      "id": "m_bandoeido",
+      "name": "ばんどえいど",
+      "tts_text": "絆創膏",
+      "prompt": "An educational picture book watercolor illustration of cute adhesive bandage strips (ばんどえいど). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Two cute flexible bandages with small colorful stars or pastel polka dot pattern, neat gauze pad in the center. NOT a realistic medical photo, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no skin, no clutter, no text, flashcard quality."
+    },
+    {
+      "id": "m_tsumiki",
+      "name": "つみき",
+      "tts_text": "積み木",
+      "prompt": "An educational picture book watercolor illustration of colorful wooden building blocks (つみき). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. A neat little set of wooden toy blocks (red cube, blue cylinder, yellow triangle roof) arranged playfully. Hand-painted wooden textures with soft contours. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no floor shadow, no text, flashcard quality."
+    },
+    {
+      "id": "m_nawatobi",
+      "name": "なわとび",
+      "tts_text": "縄跳び",
+      "prompt": "An educational picture book watercolor illustration of a children jump rope (なわとび). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Cute jump rope loosely looped in a neat oval, with colorful plastic or wooden handles (blue and red). NOT a photo, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no floor, no text, flashcard quality."
+    }
+  ]
+}

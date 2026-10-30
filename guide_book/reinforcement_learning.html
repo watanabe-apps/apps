@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>強化学習体験シミュレーター</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    /* ロボットの滑らかな移動アニメーション */
+    .robot-token {
+      transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-3 select-none">
+
+  <!-- ヘッダーエリア -->
+  <header class="w-full max-w-md flex items-center justify-between py-2 border-b border-slate-800">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🤖</span>
+      <div>
+        <h1 class="text-sm font-black tracking-wide text-white flex items-center gap-1.5">
+          強化学習シミュレーター
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Q-Learning</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">マスの数字＝将来得られる報酬の予測値 (Q値)</p>
+      </div>
+    </div>
+
+    <!-- ユーティリティボタン群 -->
+    <div class="flex items-center gap-1.5">
+      <button id="btn-explain" class="px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition flex items-center gap-1">
+        <span>📖</span>
+        <span>解説</span>
+      </button>
+      <button id="btn-sound" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition" title="音声切替">
+        🔊
+      </button>
+      <button id="btn-reset" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs border border-slate-700 transition" title="学習リセット">
+        🔄
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full max-w-md flex flex-col gap-2.5 mt-2 flex-grow">
+
+    <!-- 学習ステータスバー -->
+    <div class="grid grid-cols-3 gap-2 bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 text-center shadow-inner">
+      <div>
+        <div class="text-[10px] text-slate-400 font-semibold">試行回数</div>
+        <div id="stat-episodes" class="text-base font-black text-cyan-400">0</div>
+      </div>
+      <div>
+        <div class="text-[10px] text-slate-400 font-semibold">ゴール成功率</div>
+        <div id="stat-winrate" class="text-base font-black text-emerald-400">0%</div>
+      </div>
+      <div>
+        <div class="text-[10px] text-slate-400 font-semibold">探索度 (ε)</div>
+        <div id="stat-epsilon" class="text-base font-black text-amber-400">100%</div>
+      </div>
+    </div>
+
+    <!-- 迷路グリッドエリア -->
+    <div class="relative bg-slate-900/60 p-2 rounded-2xl border border-slate-800 shadow-xl flex flex-col items-center">
+      <div id="grid-container" class="w-full aspect-square grid relative">
+        <!-- JSでマス目を動的生成 (2x2〜10x10) -->
+      </div>
+
+      <!-- 凡例 -->
+      <div class="w-full flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1">
+        <div class="flex items-center gap-2">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500/30 border border-emerald-400 inline-block"></span><span class="text-emerald-300 font-bold">+</span> 最善手</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/30 border border-rose-400 inline-block"></span><span class="text-rose-300 font-bold">-</span> 危険手</span>
+          <span class="text-slate-500 font-mono">0 未学習</span>
+        </div>
+        <span class="text-[10px] text-slate-500">※空きマスをタップで🌋設置</span>
+      </div>
+    </div>
+
+    <!-- マス数設定スライダー (2x2〜10x10) -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center gap-2">
+      <span class="text-xs text-slate-400 whitespace-nowrap font-medium">📐 マス数</span>
+      <button id="btn-size-dec" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-700 transition" title="1マス減らす">－</button>
+      <input id="slider-grid-size" type="range" min="2" max="10" value="5" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+      <button id="btn-size-inc" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-700 transition" title="1マス増やす">＋</button>
+      <span id="label-grid-size" class="text-xs font-mono font-bold text-indigo-400 w-10 text-right">5×5</span>
+    </div>
+
+    <!-- スピード調整スライダー -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center gap-2">
+      <span class="text-xs text-slate-400 whitespace-nowrap font-medium">⚡ 速度</span>
+      <input id="slider-speed" type="range" min="1" max="5" value="2" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+      <span id="label-speed" class="text-xs font-mono font-bold text-cyan-400 w-10 text-right">1.0x</span>
+    </div>
+
+    <!-- 操作ボタンエリア -->
+    <div class="flex flex-col gap-1.5">
+      <!-- リアルタイム走行ボタン -->
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btn-run-auto" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 font-black text-white text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition">
+          <span id="icon-auto">▶</span>
+          <span id="text-auto">学習スタート</span>
+        </button>
+
+        <button id="btn-test-run" class="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-600 font-black text-slate-200 text-xs flex items-center justify-center gap-1.5 transition">
+          <span>🏃</span>
+          <span>テスト走行</span>
+        </button>
+      </div>
+
+      <!-- 高速一括学習ボタン (10回 / 100回 / 1000回) -->
+      <div class="grid grid-cols-3 gap-2">
+        <button id="btn-train-10" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+          <span>⚡</span>
+          <span>10回学習</span>
+        </button>
+        <button id="btn-train-100" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+          <span>⚡</span>
+          <span>100回学習</span>
+        </button>
+        <button id="btn-train-1000" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+          <span>⚡</span>
+          <span>1000回学習</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 解説モーダル -->
+  <div id="modal-explain" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-md max-h-[88vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+      <!-- モーダルヘッダー -->
+      <div class="p-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <h2 class="text-sm font-black text-white flex items-center gap-1.5">
+          <span>📖</span> 強化学習の仕組みと数値の根拠
+        </h2>
+        <button id="btn-close-modal" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-base">✕</button>
+      </div>
+
+      <!-- モーダル本文 -->
+      <div class="p-4 overflow-y-auto text-xs space-y-3.5 text-slate-300 leading-relaxed">
+        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+          <h3 class="font-bold text-cyan-400 mb-1 flex items-center gap-1">
+            <span>1.</span> マスの数字は何を表しているか？
+          </h3>
+          <p>
+            数字は<strong class="text-white">「Q値（行動価値）」</strong>です。「そのマスでその方向に進んだ時、将来トータルでどれくらい得をするか」の予測スコアです。進めない壁方向は最初から除外されています。
+          </p>
+        </section>
+
+        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+          <h3 class="font-bold text-emerald-400 mb-1 flex items-center gap-1">
+            <span>2.</span> スコア算出のルール（報酬）
+          </h3>
+          <ul class="list-disc list-inside space-y-0.5 text-slate-300">
+            <li><span class="text-emerald-400 font-bold">🏆 ゴール到着</span>：<strong class="text-white">+100点</strong></li>
+            <li><span class="text-rose-400 font-bold">🌋 火山に落下</span>：<strong class="text-white">-100点</strong>（即ゲームオーバー）</li>
+            <li><span class="text-slate-400 font-bold">🐾 1歩歩く</span>：<strong class="text-white">-2点</strong>（最短ルートを好ませるコスト）</li>
+          </ul>
+        </section>
+
+        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+          <h3 class="font-bold text-amber-400 mb-1 flex items-center gap-1">
+            <span>3.</span> なぜゴールから数字が増えていくのか？
+          </h3>
+          <p>
+            強化学習（ベルマン方程式）では、<strong class="text-white">「次の一歩で得られる最高スコアの85%（割引率γ）」</strong>を手前のマスに引き継ぎます。
+          </p>
+          <div class="mt-1.5 p-2 rounded bg-slate-950 font-mono text-[11px] text-cyan-300 border border-slate-800">
+            Q = 現在のQ + 0.55 × [ 即時報酬 + 0.85 × 次の最高Q - 現在のQ ]
+          </div>
+          <p class="mt-1.5 text-slate-400">
+            ゴールした時の+100点が、試行を重ねるたびにドミノ倒しのようにスタートへ向かって逆流（伝播）することで、安全な最短ルートが形成されます。
+          </p>
+        </section>
+
+        <section class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-700/40">
+          <h3 class="font-bold text-indigo-300 mb-1 flex items-center gap-1">
+            <span>💡</span> 試行回数と定着の視点
+          </h3>
+          <p class="text-slate-200">
+            10回では迷い（赤や未学習）が多いロボットも、<strong>100回・1000回と圧倒的な試行回数を積むことで無駄のない行動が定着</strong>します。
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // グリッド設定 (デフォルト 5x5, 2x2〜10x10に対応)
+    let gridSize = 5;
+    let numCells = gridSize * gridSize;
+    const START_POS = 0;
+    let startPos = START_POS;
+    let goalPos = numCells - 1;
+
+    // 行動の定義: 0=上, 1=右, 2=下, 3=左
+    const ACTIONS = [0, 1, 2, 3];
+    let actionDeltas = [-gridSize, +1, +gridSize, -1];
+
+    // デフォルトの罠 (火山) 位置マップ
+    const DEFAULT_TRAPS = {
+      2: [1],
+      3: [4],
+      4: [5, 10],
+      5: [6, 13, 16],
+      6: [7, 16, 20, 27],
+      7: [8, 18, 26, 31, 38],
+      8: [9, 21, 30, 36, 43, 52],
+      9: [10, 24, 34, 42, 50, 60, 68],
+      10: [11, 27, 38, 48, 58, 69, 79, 84]
+    };
+
+    // 強化学習ハイパーパラメータ
+    const ALPHA = 0.55;         // 学習率
+    const GAMMA = 0.85;         // 割引率
+    const REWARD_GOAL = 100;
+    const REWARD_TRAP = -100;
+    const REWARD_STEP = -2;
+
+    // 状態変数
+    let qTable = Array.from({ length: numCells }, () => [0, 0, 0, 0]);
+    let traps = new Set(DEFAULT_TRAPS[gridSize] || [6, 13, 16]); // デフォルトの罠 (火山) 位置
+    let robotPos = startPos;
+    let epsilon = 1.0;          // 探索率 (最初は100%ランダム)
+    let totalEpisodes = 0;
+    let totalWins = 0;
+
+    // 実行制御
+    let isAutoRunning = false;
+    let isTestRunning = false;
+    let isStepRunning = false;
+    let isEpisodeEnding = false;
+    let speedRate = 1.0;
+    let soundEnabled = true;
+
+    // Web Audio API によるシンセ音
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep(freq, type = 'sine', duration = 0.08, vol = 0.08) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playChord(freqs, type = 'sine', duration = 0.25) {
+      if (!soundEnabled) return;
+      freqs.forEach((f, i) => {
+        setTimeout(() => playBeep(f, type, duration, 0.07), i * 60);
+      });
+    }
+
+    // 指定マス・方向への移動が壁で遮られていないか検証 (アクションマスキング)
+    function isValidMove(cell, action) {
+      const row = Math.floor(cell / gridSize);
+      const col = cell % gridSize;
+      if (action === 0) return row > 0;              // 上
+      if (action === 1) return col < gridSize - 1;  // 右
+      if (action === 2) return row < gridSize - 1;  // 下
+      if (action === 3) return col > 0;              // 左
+      return false;
+    }
+
+    // 有効な行動のみのリストを取得
+    function getValidActions(cell) {
+      return ACTIONS.filter(a => isValidMove(cell, a));
+    }
+
+    // 次の状態インデックスを計算
+    function getNextState(cell, action) {
+      if (!isValidMove(cell, action)) return cell;
+      return cell + actionDeltas[action];
+    }
+
+    // ε-greedy 法による行動選択
+    function chooseAction(cell, forceGreedy = false) {
+      const valids = getValidActions(cell);
+      if (valids.length === 0) return 0;
+
+      // 探索: ランダムに行動
+      if (!forceGreedy && Math.random() < epsilon) {
+        return valids[Math.floor(Math.random() * valids.length)];
+      }
+
+      // 活用: 有効な手の中で最大Q値を持つ行動を選択 (同値ならランダム)
+      let bestQ = -Infinity;
+      let bestActions = [];
+
+      for (const a of valids) {
+        const q = qTable[cell][a];
+        if (q > bestQ) {
+          bestQ = q;
+          bestActions = [a];
+        } else if (Math.abs(q - bestQ) < 0.0001) {
+          bestActions.push(a);
+        }
+      }
+
+      return bestActions[Math.floor(Math.random() * bestActions.length)];
+    }
+
+    // DOM参照
+    const gridContainer = document.getElementById('grid-container');
+    const statEpisodes = document.getElementById('stat-episodes');
+    const statWinrate = document.getElementById('stat-winrate');
+    const statEpsilon = document.getElementById('stat-epsilon');
+    const btnRunAuto = document.getElementById('btn-run-auto');
+    const iconAuto = document.getElementById('icon-auto');
+    const textAuto = document.getElementById('text-auto');
+    const btnTestRun = document.getElementById('btn-test-run');
+    const btnTrain10 = document.getElementById('btn-train-10');
+    const btnTrain100 = document.getElementById('btn-train-100');
+    const btnTrain1000 = document.getElementById('btn-train-1000');
+    const btnReset = document.getElementById('btn-reset');
+    const btnSound = document.getElementById('btn-sound');
+    const btnExplain = document.getElementById('btn-explain');
+    const modalExplain = document.getElementById('modal-explain');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const sliderSpeed = document.getElementById('slider-speed');
+    const labelSpeed = document.getElementById('label-speed');
+    const sliderGridSize = document.getElementById('slider-grid-size');
+    const labelGridSize = document.getElementById('label-grid-size');
+    const btnSizeDec = document.getElementById('btn-size-dec');
+    const btnSizeInc = document.getElementById('btn-size-inc');
+
+    // グリッドサイズに応じたタイポグラフィ・レイアウト設定
+    function getGridTypography(size) {
+      if (size <= 2) {
+        return {
+          qFont: 'text-xs',
+          fontSize: '12px',
+          zeroFontSize: '11px',
+          qPadding: 'px-1',
+          startLabel: 'text-xs px-2 py-1',
+          centerIcon: 'text-3xl',
+          robotSize: 'text-4xl',
+          cellBorder: 'rounded-2xl',
+          gap: '6px'
+        };
+      } else if (size <= 3) {
+        return {
+          qFont: 'text-[11px]',
+          fontSize: '11px',
+          zeroFontSize: '10px',
+          qPadding: 'px-1',
+          startLabel: 'text-[11px] px-1.5 py-0.5',
+          centerIcon: 'text-2xl',
+          robotSize: 'text-3xl',
+          cellBorder: 'rounded-xl',
+          gap: '5px'
+        };
+      } else if (size <= 4) {
+        return {
+          qFont: 'text-[10px]',
+          fontSize: '10px',
+          zeroFontSize: '9px',
+          qPadding: 'px-0.5',
+          startLabel: 'text-[10px] px-1 py-0.5',
+          centerIcon: 'text-xl',
+          robotSize: 'text-2xl',
+          cellBorder: 'rounded-xl',
+          gap: '5px'
+        };
+      } else if (size === 5) {
+        return {
+          qFont: 'text-[9px]',
+          fontSize: '9px',
+          zeroFontSize: '8.5px',
+          qPadding: 'px-0.5',
+          startLabel: 'text-[10px] px-1 py-0.5',
+          centerIcon: 'text-base',
+          robotSize: 'text-2xl',
+          cellBorder: 'rounded-xl',
+          gap: '6px'
+        };
+      } else if (size <= 6) {
+        return {
+          qFont: 'text-[8px]',
+          fontSize: '8px',
+          zeroFontSize: '7.5px',
+          qPadding: 'px-0.5',
+          startLabel: 'text-[9px] px-0.5 py-0.5',
+          centerIcon: 'text-sm',
+          robotSize: 'text-xl',
+          cellBorder: 'rounded-lg',
+          gap: '4px'
+        };
+      } else if (size <= 8) {
+        return {
+          qFont: 'text-[7px]',
+          fontSize: '7px',
+          zeroFontSize: '6.5px',
+          qPadding: 'px-0.5',
+          startLabel: 'text-[7.5px] px-0.5 py-0',
+          centerIcon: 'text-xs',
+          robotSize: 'text-base',
+          cellBorder: 'rounded-md',
+          gap: '3px'
+        };
+      } else {
+        return {
+          qFont: 'text-[6px]',
+          fontSize: '6.5px',
+          zeroFontSize: '6px',
+          qPadding: 'px-0.5',
+          startLabel: 'text-[6.5px] px-0.5 py-0',
+          centerIcon: 'text-[11px]',
+          robotSize: 'text-xs',
+          cellBorder: 'rounded',
+          gap: '2px'
+        };
+      }
+    }
+
+    // グリッド要素の動的生成
+    function createGridDOM() {
+      const typo = getGridTypography(gridSize);
+      gridContainer.innerHTML = '';
+      gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
+      gridContainer.style.gridTemplateRows = `repeat(${gridSize}, minmax(0, 1fr))`;
+      gridContainer.style.gap = typo.gap;
+
+      for (let i = 0; i < numCells; i++) {
+        const cell = document.createElement('div');
+        cell.id = `cell-${i}`;
+        cell.className = `relative ${typo.cellBorder} border border-slate-800 bg-slate-900/90 flex items-center justify-center cursor-pointer transition overflow-hidden`;
+        cell.onclick = () => onCellClick(i);
+
+        // 4方向のQ値数値コンテナ
+        // 上
+        const valUp = document.createElement('span');
+        valUp.id = `q-${i}-0`;
+        valUp.className = `absolute top-0.5 left-1/2 -translate-x-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
+        valUp.style.fontSize = typo.fontSize;
+        // 右
+        const valRight = document.createElement('span');
+        valRight.id = `q-${i}-1`;
+        valRight.className = `absolute right-0.5 top-1/2 -translate-y-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
+        valRight.style.fontSize = typo.fontSize;
+        // 下
+        const valDown = document.createElement('span');
+        valDown.id = `q-${i}-2`;
+        valDown.className = `absolute bottom-0.5 left-1/2 -translate-x-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
+        valDown.style.fontSize = typo.fontSize;
+        // 左
+        const valLeft = document.createElement('span');
+        valLeft.id = `q-${i}-3`;
+        valLeft.className = `absolute left-0.5 top-1/2 -translate-y-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
+        valLeft.style.fontSize = typo.fontSize;
+
+        cell.appendChild(valUp);
+        cell.appendChild(valRight);
+        cell.appendChild(valDown);
+        cell.appendChild(valLeft);
+
+        // セル中央のアイコン表示エリア
+        const centerIcon = document.createElement('div');
+        centerIcon.id = `center-${i}`;
+        centerIcon.className = `${typo.centerIcon} select-none pointer-events-none z-10 transition-transform`;
+        cell.appendChild(centerIcon);
+
+        gridContainer.appendChild(cell);
+      }
+
+      // ロボットのアバター要素
+      const robotEl = document.createElement('div');
+      robotEl.id = 'robot-token';
+      robotEl.className = `robot-token absolute top-0 left-0 z-20 pointer-events-none ${typo.robotSize} flex items-center justify-center drop-shadow-md`;
+      robotEl.innerHTML = '🤖';
+      gridContainer.appendChild(robotEl);
+    }
+
+    // ロボットの画面位置を現在のマスに同期
+    function syncRobotPosition(instant = false) {
+      const robotEl = document.getElementById('robot-token');
+      if (!robotEl) return;
+      const targetCell = document.getElementById(`cell-${robotPos}`);
+      if (!targetCell) return;
+
+      const containerRect = gridContainer.getBoundingClientRect();
+      const cellRect = targetCell.getBoundingClientRect();
+
+      const left = cellRect.left - containerRect.left + (cellRect.width / 2);
+      const top = cellRect.top - containerRect.top + (cellRect.height / 2);
+
+      if (instant) {
+        robotEl.style.transition = 'none';
+      }
+      robotEl.style.transform = `translate(${left}px, ${top}px) translate(-50%, -50%)`;
+      if (instant) {
+        void robotEl.offsetWidth;
+        robotEl.style.transition = '';
+      }
+    }
+
+    // 数値フォーマット補助 (+85, -100, 0)
+    function formatQ(val) {
+      const rounded = Math.round(val);
+      if (rounded > 0) return `+${rounded}`;
+      return `${rounded}`;
+    }
+
+    // グリッド全体のビジュアル（数値・配色・セル状態）を更新
+    function updateGridVisuals(instantSync = false) {
+      const typo = getGridTypography(gridSize);
+
+      for (let i = 0; i < numCells; i++) {
+        const cell = document.getElementById(`cell-${i}`);
+        const center = document.getElementById(`center-${i}`);
+        if (!cell || !center) continue;
+
+        // 特殊セルの描画
+        if (i === startPos) {
+          center.innerHTML = `<span class="${typo.startLabel} font-black text-cyan-400 bg-cyan-950/80 rounded border border-cyan-800">START</span>`;
+          cell.className = `relative ${typo.cellBorder} border border-cyan-500/40 bg-cyan-950/20 flex items-center justify-center overflow-hidden`;
+        } else if (i === goalPos) {
+          center.innerHTML = '🏆';
+          cell.className = `relative ${typo.cellBorder} border border-amber-500/50 bg-amber-950/30 flex items-center justify-center overflow-hidden animate-pulse`;
+        } else if (traps.has(i)) {
+          center.innerHTML = '🌋';
+          cell.className = `relative ${typo.cellBorder} border border-rose-600/60 bg-rose-950/30 flex items-center justify-center overflow-hidden`;
+        } else {
+          center.innerHTML = '';
+          cell.className = `relative ${typo.cellBorder} border border-slate-800 bg-slate-900/90 hover:border-slate-700 flex items-center justify-center overflow-hidden`;
+        }
+
+        // ゴールや罠の中は進行先Q値を非表示
+        const isTerminal = (i === goalPos || traps.has(i));
+
+        // 各方向の数値を描画
+        const validActs = getValidActions(i);
+        const maxQInCell = validActs.length > 0 ? Math.max(...validActs.map(a => qTable[i][a])) : 0;
+
+        for (let a = 0; a < 4; a++) {
+          const qEl = document.getElementById(`q-${i}-${a}`);
+          if (!qEl) continue;
+
+          // 壁方向または終端セルの場合は非表示
+          if (isTerminal || !isValidMove(i, a)) {
+            qEl.textContent = '';
+            qEl.className = 'hidden';
+            continue;
+          }
+
+          const qVal = qTable[i][a];
+          qEl.textContent = formatQ(qVal);
+
+          // 数値の色分け
+          if (qVal > 0) {
+            if (qVal === maxQInCell && maxQInCell > 10) {
+              qEl.className = `${getPosClass(a)} ${typo.qFont} font-black text-emerald-300 bg-emerald-500/20 ${typo.qPadding} rounded border border-emerald-500/40`;
+            } else {
+              qEl.className = `${getPosClass(a)} ${typo.qFont} font-bold text-emerald-400/90`;
+            }
+            qEl.style.fontSize = typo.fontSize;
+          } else if (qVal < 0) {
+            qEl.className = `${getPosClass(a)} ${typo.qFont} font-semibold text-rose-400/90`;
+            qEl.style.fontSize = typo.fontSize;
+          } else {
+            qEl.className = `${getPosClass(a)} ${typo.qFont} font-mono text-slate-600`;
+            qEl.style.fontSize = typo.zeroFontSize;
+          }
+        }
+      }
+
+      // ステータス数値の更新
+      statEpisodes.textContent = totalEpisodes;
+      const rate = totalEpisodes > 0 ? Math.round((totalWins / totalEpisodes) * 100) : 0;
+      statWinrate.textContent = `${rate}%`;
+      statEpsilon.textContent = `${Math.round(epsilon * 100)}%`;
+
+      syncRobotPosition(instantSync);
+    }
+
+    function getPosClass(action) {
+      if (action === 0) return 'absolute top-0.5 left-1/2 -translate-x-1/2 leading-none pointer-events-none transition';
+      if (action === 1) return 'absolute right-0.5 top-1/2 -translate-y-1/2 leading-none pointer-events-none transition';
+      if (action === 2) return 'absolute bottom-0.5 left-1/2 -translate-x-1/2 leading-none pointer-events-none transition';
+      return 'absolute left-0.5 top-1/2 -translate-y-1/2 leading-none pointer-events-none transition';
+    }
+
+    // ステップ実行間隔（ミリ秒）を取得
+    function getStepInterval() {
+      const baseMs = 260;
+      return Math.max(30, Math.floor(baseMs / speedRate));
+    }
+
+    // 1ステップの移動とQ値更新
+    function stepSimulation(forceGreedy = false) {
+      if (isEpisodeEnding || isStepRunning) return;
+      isStepRunning = true;
+
+      const curState = robotPos;
+      const action = chooseAction(curState, forceGreedy);
+      const nextState = getNextState(curState, action);
+
+      // 移動音
+      playBeep(320 + action * 40, 'sine', 0.05, 0.04);
+
+      // 報酬と終端判定
+      let reward = REWARD_STEP;
+      let done = false;
+      let isGoal = false;
+      let isTrap = false;
+
+      if (nextState === goalPos) {
+        reward = REWARD_GOAL;
+        done = true;
+        isGoal = true;
+      } else if (traps.has(nextState)) {
+        reward = REWARD_TRAP;
+        done = true;
+        isTrap = true;
+      }
+
+      // Q学習の更新式 (Q-learning)
+      // 次の状態で有効な手だけの最大Q値を探索
+      const validNextQ = getValidActions(nextState).map(a => qTable[nextState][a]);
+      const nextMaxQ = (done || validNextQ.length === 0) ? 0 : Math.max(...validNextQ);
+
+      const oldQ = qTable[curState][action];
+      qTable[curState][action] = oldQ + ALPHA * (reward + GAMMA * nextMaxQ - oldQ);
+
+      // ロボットを移動
+      robotPos = nextState;
+      updateGridVisuals();
+
+      // 終端処理 (ゴールまたは罠)
+      if (done) {
+        isEpisodeEnding = true;
+        totalEpisodes++;
+        if (isGoal) {
+          totalWins++;
+          playChord([523, 659, 784, 1046], 'triangle', 0.25);
+        } else if (isTrap) {
+          playBeep(140, 'sawtooth', 0.2, 0.12);
+        }
+
+        // 探索率の徐行減衰
+        if (!forceGreedy) {
+          epsilon = Math.max(0.02, epsilon * 0.985);
+        }
+
+        setTimeout(() => {
+          robotPos = startPos;
+          isEpisodeEnding = false;
+          isStepRunning = false;
+          updateGridVisuals();
+
+          if (isTestRunning) {
+            stopTest();
+          } else if (isAutoRunning) {
+            scheduleNextStep();
+          }
+        }, Math.max(120, getStepInterval() * 1.5));
+        return;
+      }
+
+      isStepRunning = false;
+      if (isAutoRunning || isTestRunning) {
+        scheduleNextStep();
+      }
+    }
+
+    let loopTimer = null;
+    function scheduleNextStep() {
+      if (loopTimer) clearTimeout(loopTimer);
+      loopTimer = setTimeout(() => {
+        if (isAutoRunning) stepSimulation(false);
+        else if (isTestRunning) stepSimulation(true);
+      }, getStepInterval());
+    }
+
+    // 一括高速学習 (10回 / 100回 / 1000回)
+    function batchTrain(episodes) {
+      stopAuto();
+      stopTest();
+
+      const maxSteps = Math.max(40, gridSize * gridSize * 2);
+
+      for (let ep = 0; ep < episodes; ep++) {
+        let s = startPos;
+        let steps = 0;
+
+        while (steps < maxSteps) {
+          steps++;
+          const a = chooseAction(s, false);
+          const nextS = getNextState(s, a);
+
+          let r = REWARD_STEP;
+          let done = false;
+
+          if (nextS === goalPos) {
+            r = REWARD_GOAL;
+            done = true;
+            totalWins++;
+          } else if (traps.has(nextS)) {
+            r = REWARD_TRAP;
+            done = true;
+          }
+
+          const validNextQ = getValidActions(nextS).map(act => qTable[nextS][act]);
+          const nextMaxQ = (done || validNextQ.length === 0) ? 0 : Math.max(...validNextQ);
+
+          const curQ = qTable[s][a];
+          qTable[s][a] = curQ + ALPHA * (r + GAMMA * nextMaxQ - curQ);
+
+          s = nextS;
+          if (done) break;
+        }
+        totalEpisodes++;
+      }
+
+      // エピソード数に応じた探索率の減衰
+      const decay = Math.pow(0.99, Math.min(episodes, 250));
+      epsilon = Math.max(0.02, epsilon * decay);
+
+      robotPos = startPos;
+      updateGridVisuals(true);
+      playChord([440, 554, 659, 880], 'sine', 0.15);
+    }
+
+    function startAuto() {
+      stopTest();
+      isAutoRunning = true;
+      iconAuto.textContent = '⏸';
+      textAuto.textContent = '学習ストップ';
+      btnRunAuto.classList.replace('from-emerald-500', 'from-amber-500');
+      btnRunAuto.classList.replace('to-teal-500', 'to-orange-500');
+      stepSimulation(false);
+    }
+
+    function stopAuto() {
+      isAutoRunning = false;
+      iconAuto.textContent = '▶';
+      textAuto.textContent = '学習スタート';
+      btnRunAuto.classList.replace('from-amber-500', 'from-emerald-500');
+      btnRunAuto.classList.replace('to-orange-500', 'to-teal-500');
+      if (loopTimer) clearTimeout(loopTimer);
+    }
+
+    function startTest() {
+      stopAuto();
+      isTestRunning = true;
+      robotPos = startPos;
+      btnTestRun.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400');
+      updateGridVisuals();
+      stepSimulation(true);
+    }
+
+    function stopTest() {
+      isTestRunning = false;
+      btnTestRun.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400');
+      if (loopTimer) clearTimeout(loopTimer);
+    }
+
+    // セルクリックで罠（火山）の追加・削除
+    function onCellClick(index) {
+      if (index === startPos || index === goalPos) return;
+      if (traps.has(index)) {
+        traps.delete(index);
+        playBeep(400, 'sine', 0.08);
+      } else {
+        traps.add(index);
+        playBeep(180, 'triangle', 0.1);
+      }
+      if (robotPos === index) {
+        robotPos = startPos;
+      }
+      updateGridVisuals();
+    }
+
+    // グリッドサイズ変更 (2x2〜10x10)
+    function setGridSize(newSize) {
+      newSize = Math.max(2, Math.min(10, newSize));
+      if (newSize === gridSize) return;
+
+      stopAuto();
+      stopTest();
+
+      gridSize = newSize;
+      numCells = gridSize * gridSize;
+      startPos = 0;
+      goalPos = numCells - 1;
+      actionDeltas = [-gridSize, +1, +gridSize, -1];
+
+      sliderGridSize.value = gridSize;
+      labelGridSize.textContent = `${gridSize}×${gridSize}`;
+      btnSizeDec.disabled = (gridSize <= 2);
+      btnSizeInc.disabled = (gridSize >= 10);
+      btnSizeDec.classList.toggle('opacity-40', gridSize <= 2);
+      btnSizeDec.classList.toggle('cursor-not-allowed', gridSize <= 2);
+      btnSizeInc.classList.toggle('opacity-40', gridSize >= 10);
+      btnSizeInc.classList.toggle('cursor-not-allowed', gridSize >= 10);
+
+      qTable = Array.from({ length: numCells }, () => [0, 0, 0, 0]);
+      traps = new Set(DEFAULT_TRAPS[gridSize] || []);
+      robotPos = startPos;
+      epsilon = 1.0;
+      totalEpisodes = 0;
+      totalWins = 0;
+
+      createGridDOM();
+      updateGridVisuals(true);
+      playBeep(360, 'sine', 0.05, 0.04);
+    }
+
+    // 全リセット
+    function resetAll() {
+      stopAuto();
+      stopTest();
+      qTable = Array.from({ length: numCells }, () => [0, 0, 0, 0]);
+      traps = new Set(DEFAULT_TRAPS[gridSize] || []);
+      robotPos = startPos;
+      epsilon = 1.0;
+      totalEpisodes = 0;
+      totalWins = 0;
+      updateGridVisuals(true);
+      playBeep(260, 'sawtooth', 0.15);
+    }
+
+    // イベントリスナーの登録
+    btnRunAuto.addEventListener('click', () => {
+      initAudio();
+      if (isAutoRunning) stopAuto();
+      else startAuto();
+    });
+
+    btnTestRun.addEventListener('click', () => {
+      initAudio();
+      if (isTestRunning) stopTest();
+      else startTest();
+    });
+
+    btnTrain10.addEventListener('click', () => batchTrain(10));
+    btnTrain100.addEventListener('click', () => batchTrain(100));
+    btnTrain1000.addEventListener('click', () => batchTrain(1000));
+    btnReset.addEventListener('click', resetAll);
+
+    // 音声トグル
+    btnSound.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      btnSound.textContent = soundEnabled ? '🔊' : '🔇';
+    });
+
+    // マス数（サイズ）変更
+    sliderGridSize.addEventListener('input', (e) => {
+      setGridSize(parseInt(e.target.value, 10));
+    });
+    btnSizeDec.addEventListener('click', () => {
+      setGridSize(gridSize - 1);
+    });
+    btnSizeInc.addEventListener('click', () => {
+      setGridSize(gridSize + 1);
+    });
+
+    // スピードスライダー
+    sliderSpeed.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      const speeds = [0.5, 1.0, 2.0, 4.0, 8.0];
+      speedRate = speeds[val - 1];
+      labelSpeed.textContent = `${speedRate.toFixed(1)}x`;
+    });
+
+    // 解説モーダル
+    btnExplain.addEventListener('click', () => {
+      modalExplain.classList.remove('hidden');
+    });
+    btnCloseModal.addEventListener('click', () => {
+      modalExplain.classList.add('hidden');
+    });
+    modalExplain.addEventListener('click', (e) => {
+      if (e.target === modalExplain) modalExplain.classList.add('hidden');
+    });
+
+    // 初期化実行
+    window.addEventListener('resize', () => syncRobotPosition(false));
+    window.addEventListener('load', () => {
+      createGridDOM();
+      updateGridVisuals(true);
+    });
+  </script>
+</body>
+</html>
