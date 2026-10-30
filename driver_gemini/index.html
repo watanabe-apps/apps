@@ -79,44 +79,94 @@
             box-shadow: inset 0 0 110px rgba(248, 113, 113, 0.6);
         }
 
-        /* ヘッダー（画面端を避けて内側に配置） */
-        header {
-            padding: calc(env(safe-area-inset-top, 16px) + 6px) 24px 12px 24px;
+        /* ===== ヘッダーバーの洗練デザイン ===== */
+        header.app-header {
+            padding: calc(env(safe-area-inset-top, 16px) + 8px) 16px 12px 16px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(180deg, rgba(11, 15, 25, 0.95) 0%, rgba(11, 15, 25, 0.6) 100%);
-            backdrop-filter: blur(10px);
-            z-index: 20;
-            border-bottom: 1px solid var(--card-border);
+            gap: 10px;
+            background: rgba(13, 19, 33, 0.96);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 30;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+            flex-shrink: 0;
+            width: 100%;
         }
 
-        .app-title {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
+        .header-left, .header-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
-        .model-badge {
-            font-size: 0.85rem;
-            font-weight: 700;
+        .header-center {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
             padding: 4px 10px;
             border-radius: 14px;
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            max-width: 160px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .header-center:active {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(0.98);
+        }
+
+        .header-chat-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #f8fafc;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header-chat-name::after {
+            content: "▾";
+            font-size: 0.8rem;
+            color: var(--primary);
+            opacity: 0.85;
+            margin-left: 2px;
         }
 
-        .header-buttons {
+        .header-chat-sub {
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        .app-brand {
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        .model-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            max-width: 130px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* 大型化したヘッダーボタン（画面端でも押しやすい） */
@@ -124,20 +174,75 @@
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.35rem;
+            font-size: 1.25rem;
             cursor: pointer;
             transition: all 0.2s;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
         }
         .icon-btn:active {
             transform: scale(0.92);
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* コピートースト通知 */
+        .toast {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 16px) + 76px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid var(--primary);
+            color: #f8fafc;
+            padding: 10px 22px;
+            border-radius: 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.35);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 画面幅が狭いスマホ向けの調整 */
+        @media (max-width: 420px) {
+            header.app-header {
+                padding-left: 12px;
+                padding-right: 12px;
+                gap: 6px;
+            }
+            .header-left, .header-right {
+                gap: 6px;
+            }
+            .icon-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.15rem;
+            }
+            #newChatHeaderBtn {
+                display: none; /* 下部コントロールにも+ボタンがあるため幅狭スマホではヘッダーの+を隠して中央タイトル幅を確保 */
+            }
+            .header-chat-name {
+                font-size: 1rem;
+            }
+            .model-badge {
+                display: none;
+            }
         }
 
         /* メインビジュアルエリア（運転中ひと目で状況がわかる大画面） */
@@ -376,12 +481,50 @@
         }
 
         .bubble-meta {
-            font-size: 0.72rem;
+            font-size: 0.8rem;
             color: var(--text-sub);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .bubble-meta-info {
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        /* 吹き出し個別コピーボタン */
+        .bubble-copy-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #cbd5e1;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 9px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .bubble-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .bubble-copy-btn:active {
+            transform: scale(0.93);
+        }
+        .bubble-copy-btn.copied {
+            background: rgba(74, 222, 128, 0.22);
+            border-color: rgba(74, 222, 128, 0.6);
+            color: #4ade80;
         }
 
         /* リアルタイム入力中（認識中）吹き出し */
