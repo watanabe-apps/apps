@@ -15,136 +15,384 @@
     .robot-token {
       transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+
+    /* テーマ定義 (CSS変数) */
+    :root, [data-theme="night"] {
+      --bg-page: #0b0f19;
+      --bg-header: rgba(17, 24, 39, 0.95);
+      --bg-card: rgba(17, 24, 39, 0.9);
+      --bg-card-sub: rgba(31, 41, 55, 0.85);
+      --border-main: #374151;
+      --border-sub: #1f2937;
+      --text-main: #f9fafb;
+      --text-sub: #9ca3af;
+      --text-muted: #6b7280;
+      --cell-bg: rgba(17, 24, 39, 0.95);
+      --cell-border: #374151;
+      --cell-hover: #4b5563;
+      --q-zero: #6b7280;
+      --q-pos: #34d399;
+      --q-pos-best: #6ee7b7;
+      --q-pos-bg: rgba(16, 185, 129, 0.22);
+      --q-pos-border: rgba(16, 185, 129, 0.5);
+      --q-neg: #f87171;
+      --start-bg: rgba(8, 51, 68, 0.45);
+      --start-border: rgba(6, 182, 212, 0.65);
+      --start-text: #22d3ee;
+      --goal-bg: rgba(120, 53, 15, 0.45);
+      --goal-border: rgba(245, 158, 11, 0.65);
+      --trap-bg: rgba(136, 19, 55, 0.45);
+      --trap-border: rgba(225, 29, 72, 0.7);
+      --btn-secondary-bg: #1f2937;
+      --btn-secondary-hover: #374151;
+      --btn-secondary-border: #374151;
+      --btn-secondary-text: #f9fafb;
+      --modal-bg: #111827;
+    }
+
+    [data-theme="light"] {
+      --bg-page: #f3f4f6;
+      --bg-header: rgba(255, 255, 255, 0.98);
+      --bg-card: #ffffff;
+      --bg-card-sub: #f9fafb;
+      --border-main: #d1d5db;
+      --border-sub: #e5e7eb;
+      --text-main: #111827;
+      --text-sub: #4b5563;
+      --text-muted: #9ca3af;
+      --cell-bg: #ffffff;
+      --cell-border: #e5e7eb;
+      --cell-hover: #d1d5db;
+      --q-zero: #9ca3af;
+      --q-pos: #059669;
+      --q-pos-best: #047857;
+      --q-pos-bg: rgba(16, 185, 129, 0.16);
+      --q-pos-border: rgba(16, 185, 129, 0.5);
+      --q-neg: #dc2626;
+      --start-bg: rgba(14, 165, 233, 0.15);
+      --start-border: rgba(14, 165, 233, 0.65);
+      --start-text: #0284c7;
+      --goal-bg: rgba(245, 158, 11, 0.18);
+      --goal-border: rgba(245, 158, 11, 0.65);
+      --trap-bg: rgba(239, 68, 68, 0.15);
+      --trap-border: rgba(239, 68, 68, 0.65);
+      --btn-secondary-bg: #f3f4f6;
+      --btn-secondary-hover: #e5e7eb;
+      --btn-secondary-border: #d1d5db;
+      --btn-secondary-text: #1f2937;
+      --modal-bg: #ffffff;
+    }
+
+    [data-theme="cyber"] {
+      --bg-page: #0a011a;
+      --bg-header: rgba(22, 6, 48, 0.95);
+      --bg-card: rgba(24, 7, 54, 0.9);
+      --bg-card-sub: rgba(42, 14, 90, 0.85);
+      --border-main: #7c3aed;
+      --border-sub: #4c1d95;
+      --text-main: #faf5ff;
+      --text-sub: #d8b4fe;
+      --text-muted: #9333ea;
+      --cell-bg: rgba(20, 5, 45, 0.95);
+      --cell-border: #581c87;
+      --cell-hover: #9333ea;
+      --q-zero: #7e22ce;
+      --q-pos: #06b6d4;
+      --q-pos-best: #22d3ee;
+      --q-pos-bg: rgba(6, 182, 212, 0.28);
+      --q-pos-border: #06b6d4;
+      --q-neg: #f43f5e;
+      --start-bg: rgba(6, 182, 212, 0.25);
+      --start-border: #06b6d4;
+      --start-text: #22d3ee;
+      --goal-bg: rgba(217, 70, 239, 0.25);
+      --goal-border: #d946ef;
+      --trap-bg: rgba(244, 63, 94, 0.25);
+      --trap-border: #f43f5e;
+      --btn-secondary-bg: #2e0854;
+      --btn-secondary-hover: #4c1d95;
+      --btn-secondary-border: #7c3aed;
+      --btn-secondary-text: #faf5ff;
+      --modal-bg: #15052f;
+    }
+
+    [data-theme="forest"] {
+      --bg-page: #011811;
+      --bg-header: rgba(4, 38, 27, 0.95);
+      --bg-card: rgba(5, 46, 33, 0.9);
+      --bg-card-sub: rgba(6, 68, 48, 0.85);
+      --border-main: #059669;
+      --border-sub: #064e3b;
+      --text-main: #ecfdf5;
+      --text-sub: #6ee7b7;
+      --text-muted: #047857;
+      --cell-bg: rgba(2, 26, 19, 0.95);
+      --cell-border: #064e3b;
+      --cell-hover: #047857;
+      --q-zero: #065f46;
+      --q-pos: #34d399;
+      --q-pos-best: #6ee7b7;
+      --q-pos-bg: rgba(52, 211, 153, 0.24);
+      --q-pos-border: rgba(52, 211, 153, 0.55);
+      --q-neg: #f87171;
+      --start-bg: rgba(20, 184, 166, 0.22);
+      --start-border: #14b8a6;
+      --start-text: #2dd4bf;
+      --goal-bg: rgba(234, 179, 8, 0.22);
+      --goal-border: #eab308;
+      --trap-bg: rgba(239, 68, 68, 0.22);
+      --trap-border: #ef4444;
+      --btn-secondary-bg: #064e3b;
+      --btn-secondary-hover: #047857;
+      --btn-secondary-border: #059669;
+      --btn-secondary-text: #ecfdf5;
+      --modal-bg: #04261b;
+    }
+
+    [data-theme="paper"] {
+      --bg-page: #f4eee3;
+      --bg-header: rgba(254, 250, 243, 0.98);
+      --bg-card: #fbf8f2;
+      --bg-card-sub: #ede4d3;
+      --border-main: #cfc2aa;
+      --border-sub: #e2d6c1;
+      --text-main: #292524;
+      --text-sub: #78716c;
+      --text-muted: #a8a29e;
+      --cell-bg: #fffdfa;
+      --cell-border: #cfc2aa;
+      --cell-hover: #a8a29e;
+      --q-zero: #a8a29e;
+      --q-pos: #15803d;
+      --q-pos-best: #166534;
+      --q-pos-bg: rgba(22, 101, 52, 0.16);
+      --q-pos-border: rgba(22, 101, 52, 0.5);
+      --q-neg: #b91c1c;
+      --start-bg: rgba(14, 116, 144, 0.14);
+      --start-border: rgba(14, 116, 144, 0.55);
+      --start-text: #0e7490;
+      --goal-bg: rgba(180, 83, 9, 0.18);
+      --goal-border: rgba(180, 83, 9, 0.55);
+      --trap-bg: rgba(185, 28, 28, 0.14);
+      --trap-border: rgba(185, 28, 28, 0.55);
+      --btn-secondary-bg: #e6ddce;
+      --btn-secondary-hover: #cfc2aa;
+      --btn-secondary-border: #cfc2aa;
+      --btn-secondary-text: #292524;
+      --modal-bg: #fdfaf3;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      transition: background-color 0.25s, color 0.25s;
+    }
+    .theme-header {
+      background-color: var(--bg-header);
+      border-color: var(--border-sub);
+    }
+    .theme-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-sub);
+    }
+    .theme-card-sub {
+      background-color: var(--bg-card-sub);
+      border-color: var(--border-sub);
+    }
+    .theme-border {
+      border-color: var(--border-sub);
+    }
+    .theme-border-main {
+      border-color: var(--border-main);
+    }
+    .theme-text-sub {
+      color: var(--text-sub);
+    }
+    .theme-text-muted {
+      color: var(--text-muted);
+    }
+    .theme-btn-sec {
+      background-color: var(--btn-secondary-bg);
+      border-color: var(--btn-secondary-border);
+      color: var(--btn-secondary-text);
+    }
+    .theme-btn-sec:hover {
+      background-color: var(--btn-secondary-hover);
+    }
+    .theme-modal {
+      background-color: var(--modal-bg);
+      border-color: var(--border-main);
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-3 select-none">
+<body class="h-screen max-h-screen overflow-hidden flex flex-col select-none">
 
-  <!-- ヘッダーエリア -->
-  <header class="w-full max-w-md flex items-center justify-between py-2 border-b border-slate-800">
+  <!-- ヘッダーエリア (横画面に最適化されたスリムな上部ナビゲーション) -->
+  <header class="w-full px-3 py-1.5 flex-none flex items-center justify-between border-b theme-header z-10">
     <div class="flex items-center gap-2">
-      <span class="text-2xl">🤖</span>
+      <span class="text-xl sm:text-2xl">🤖</span>
       <div>
-        <h1 class="text-sm font-black tracking-wide text-white flex items-center gap-1.5">
-          強化学習シミュレーター
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Q-Learning</span>
+        <h1 class="text-xs sm:text-sm font-black tracking-wide flex items-center gap-1.5">
+          <span>強化学習シミュレーター</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">Q-Learning</span>
         </h1>
-        <p class="text-[11px] text-slate-400">マスの数字＝将来得られる報酬の予測値 (Q値)</p>
+        <p class="text-[10px] sm:text-[11px] theme-text-sub hidden sm:block">マスの数字＝将来得られる報酬の予測値 (Q値)</p>
       </div>
     </div>
 
-    <!-- ユーティリティボタン群 -->
+    <!-- ユーティリティコントロール群 (テーマ選択・解説・音声・リセット) -->
     <div class="flex items-center gap-1.5">
-      <button id="btn-explain" class="px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition flex items-center gap-1">
+      <!-- テーマ選択ドロップダウン -->
+      <div class="flex items-center gap-1 theme-btn-sec border rounded-lg px-2 py-1 text-xs font-semibold shadow-sm transition">
+        <span>🎨</span>
+        <select id="select-theme" class="bg-transparent text-xs font-bold outline-none cursor-pointer">
+          <option value="night">🌙 ナイト</option>
+          <option value="light">☀️ ライト</option>
+          <option value="cyber">🔮 サイバー</option>
+          <option value="forest">🌲 フォレスト</option>
+          <option value="paper">☕ ペーパー</option>
+        </select>
+      </div>
+
+      <button id="btn-explain" class="px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition flex items-center gap-1 shadow-sm">
         <span>📖</span>
-        <span>解説</span>
+        <span class="hidden sm:inline">解説</span>
       </button>
-      <button id="btn-sound" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition" title="音声切替">
+      <button id="btn-sound" class="p-1.5 rounded-lg theme-btn-sec text-xs border transition shadow-sm" title="音声切替">
         🔊
       </button>
-      <button id="btn-reset" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs border border-slate-700 transition" title="学習リセット">
+      <button id="btn-reset" class="p-1.5 rounded-lg theme-btn-sec hover:bg-rose-950/40 text-rose-400 text-xs border transition shadow-sm" title="学習リセット">
         🔄
       </button>
     </div>
   </header>
 
-  <main class="w-full max-w-md flex flex-col gap-2.5 mt-2 flex-grow">
+  <!-- メインコンテンツエリア (横画面最適化: 2カラム横並び配置) -->
+  <main class="flex-1 min-h-0 w-full flex flex-col md:flex-row items-stretch p-2.5 sm:p-3 gap-3 overflow-hidden">
 
-    <!-- 学習ステータスバー -->
-    <div class="grid grid-cols-3 gap-2 bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 text-center shadow-inner">
-      <div>
-        <div class="text-[10px] text-slate-400 font-semibold">試行回数</div>
-        <div id="stat-episodes" class="text-base font-black text-cyan-400">0</div>
-      </div>
-      <div>
-        <div class="text-[10px] text-slate-400 font-semibold">ゴール成功率</div>
-        <div id="stat-winrate" class="text-base font-black text-emerald-400">0%</div>
-      </div>
-      <div>
-        <div class="text-[10px] text-slate-400 font-semibold">探索度 (ε)</div>
-        <div id="stat-epsilon" class="text-base font-black text-amber-400">100%</div>
-      </div>
-    </div>
-
-    <!-- 迷路グリッドエリア -->
-    <div class="relative bg-slate-900/60 p-2 rounded-2xl border border-slate-800 shadow-xl flex flex-col items-center">
-      <div id="grid-container" class="w-full aspect-square grid relative">
-        <!-- JSでマス目を動的生成 (2x2〜10x10) -->
-      </div>
-
-      <!-- 凡例 -->
-      <div class="w-full flex items-center justify-between text-[11px] text-slate-400 mt-2 px-1">
-        <div class="flex items-center gap-2">
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500/30 border border-emerald-400 inline-block"></span><span class="text-emerald-300 font-bold">+</span> 最善手</span>
-          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/30 border border-rose-400 inline-block"></span><span class="text-rose-300 font-bold">-</span> 危険手</span>
-          <span class="text-slate-500 font-mono">0 未学習</span>
+    <!-- 左側: 迷路グリッドエリア (画面が許す限り最大表示) -->
+    <section class="flex-1 min-h-0 min-w-0 flex flex-col items-center justify-between p-2.5 rounded-2xl border theme-card shadow-xl overflow-hidden relative">
+      <!-- グリッドコンテナの親ラッパー (縦横比1:1で最大化) -->
+      <div id="grid-wrapper" class="w-full flex-1 min-h-0 flex items-center justify-center relative p-1 overflow-hidden">
+        <div id="grid-container" class="relative rounded-2xl border theme-border shadow-2xl" style="display: grid; width: 100%; height: 100%; max-width: 100%; max-height: 100%; aspect-ratio: 1 / 1;">
+          <!-- JSでマス目を動的生成 (2x2〜10x10) -->
         </div>
-        <span class="text-[10px] text-slate-500">※空きマスをタップで🌋設置</span>
-      </div>
-    </div>
-
-    <!-- マス数設定スライダー (2x2〜10x10) -->
-    <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center gap-2">
-      <span class="text-xs text-slate-400 whitespace-nowrap font-medium">📐 マス数</span>
-      <button id="btn-size-dec" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-700 transition" title="1マス減らす">－</button>
-      <input id="slider-grid-size" type="range" min="2" max="10" value="5" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-      <button id="btn-size-inc" class="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-700 transition" title="1マス増やす">＋</button>
-      <span id="label-grid-size" class="text-xs font-mono font-bold text-indigo-400 w-10 text-right">5×5</span>
-    </div>
-
-    <!-- スピード調整スライダー -->
-    <div class="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center gap-2">
-      <span class="text-xs text-slate-400 whitespace-nowrap font-medium">⚡ 速度</span>
-      <input id="slider-speed" type="range" min="1" max="5" value="2" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
-      <span id="label-speed" class="text-xs font-mono font-bold text-cyan-400 w-10 text-right">1.0x</span>
-    </div>
-
-    <!-- 操作ボタンエリア -->
-    <div class="flex flex-col gap-1.5">
-      <!-- リアルタイム走行ボタン -->
-      <div class="grid grid-cols-2 gap-2">
-        <button id="btn-run-auto" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 font-black text-white text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition">
-          <span id="icon-auto">▶</span>
-          <span id="text-auto">学習スタート</span>
-        </button>
-
-        <button id="btn-test-run" class="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-600 font-black text-slate-200 text-xs flex items-center justify-center gap-1.5 transition">
-          <span>🏃</span>
-          <span>テスト走行</span>
-        </button>
       </div>
 
-      <!-- 高速一括学習ボタン (10回 / 100回 / 1000回) -->
-      <div class="grid grid-cols-3 gap-2">
-        <button id="btn-train-10" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
-          <span>⚡</span>
-          <span>10回学習</span>
-        </button>
-        <button id="btn-train-100" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
-          <span>⚡</span>
-          <span>100回学習</span>
-        </button>
-        <button id="btn-train-1000" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
-          <span>⚡</span>
-          <span>1000回学習</span>
-        </button>
+      <!-- 凡例エリア -->
+      <div class="flex-none w-full max-w-2xl flex items-center justify-between text-[11px] theme-text-sub mt-2 px-2 pt-1.5 border-t theme-border">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500/30 border border-emerald-400 inline-block"></span><span class="text-emerald-400 font-bold">+</span> 最善手</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500/30 border border-rose-400 inline-block"></span><span class="text-rose-400 font-bold">-</span> 危険手</span>
+          <span class="theme-text-muted font-mono font-bold">0 未学習</span>
+        </div>
+        <span class="text-[10px] theme-text-muted">※空きマスをタップで🌋設置/解除</span>
       </div>
-    </div>
+    </section>
+
+    <!-- 右側: 操作・設定・ステータスサイドバー -->
+    <aside id="control-sidebar" class="flex-none w-full md:w-80 lg:w-88 xl:w-96 flex flex-col gap-2.5 overflow-y-auto pr-0.5">
+
+      <!-- 学習ステータスバー -->
+      <div class="grid grid-cols-3 gap-2 theme-card-sub border rounded-xl p-2.5 text-center shadow-inner">
+        <div>
+          <div class="text-[10px] theme-text-sub font-semibold">試行回数</div>
+          <div id="stat-episodes" class="text-base font-black text-cyan-400">0</div>
+        </div>
+        <div>
+          <div class="text-[10px] theme-text-sub font-semibold">ゴール成功率</div>
+          <div id="stat-winrate" class="text-base font-black text-emerald-400">0%</div>
+        </div>
+        <div>
+          <div class="text-[10px] theme-text-sub font-semibold">探索度 (ε)</div>
+          <div id="stat-epsilon" class="text-base font-black text-amber-400">100%</div>
+        </div>
+      </div>
+
+      <!-- マス数設定スライダー (2x2〜10x10) -->
+      <div class="theme-card-sub border rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+        <span class="text-xs theme-text-sub whitespace-nowrap font-medium">📐 マス数</span>
+        <button id="btn-size-dec" class="w-6 h-6 rounded theme-btn-sec active:scale-95 font-bold text-xs flex items-center justify-center border transition" title="1マス減らす">－</button>
+        <input id="slider-grid-size" type="range" min="2" max="10" value="5" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+        <button id="btn-size-inc" class="w-6 h-6 rounded theme-btn-sec active:scale-95 font-bold text-xs flex items-center justify-center border transition" title="1マス増やす">＋</button>
+        <span id="label-grid-size" class="text-xs font-mono font-bold text-indigo-400 w-10 text-right">5×5</span>
+      </div>
+
+      <!-- 数字サイズ調整スライダー -->
+      <div class="theme-card-sub border rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+        <span class="text-xs theme-text-sub whitespace-nowrap font-medium">🔤 数字サイズ</span>
+        <button id="btn-font-dec" class="w-6 h-6 rounded theme-btn-sec active:scale-95 font-bold text-xs flex items-center justify-center border transition" title="数字を小さく">－</button>
+        <input id="slider-font-scale" type="range" min="0.6" max="1.8" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+        <button id="btn-font-inc" class="w-6 h-6 rounded theme-btn-sec active:scale-95 font-bold text-xs flex items-center justify-center border transition" title="数字を大きく">＋</button>
+        <span id="label-font-scale" class="text-xs font-mono font-bold text-amber-400 w-10 text-right">1.0x</span>
+      </div>
+
+      <!-- スピード調整スライダー -->
+      <div class="theme-card-sub border rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm">
+        <span class="text-xs theme-text-sub whitespace-nowrap font-medium">⚡ 速度</span>
+        <input id="slider-speed" type="range" min="1" max="5" value="2" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+        <span id="label-speed" class="text-xs font-mono font-bold text-cyan-400 w-10 text-right">1.0x</span>
+      </div>
+
+      <!-- 操作ボタンエリア -->
+      <div class="flex flex-col gap-1.5">
+        <!-- リアルタイム走行ボタン -->
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-run-auto" class="py-2.5 px-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 font-black text-white text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition">
+            <span id="icon-auto">▶</span>
+            <span id="text-auto">学習スタート</span>
+          </button>
+
+          <button id="btn-test-run" class="py-2.5 px-2 rounded-xl theme-btn-sec active:scale-95 border font-black text-xs flex items-center justify-center gap-1.5 transition" title="学習結果の最善手のみで走ります（Q値や試行回数は更新されません）">
+            <span id="icon-test">🎯</span>
+            <span id="text-test">実力テスト</span>
+          </button>
+        </div>
+
+        <!-- 高速一括学習ボタン (10回 / 100回 / 1000回) -->
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-train-10" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+            <span>⚡</span>
+            <span>10回</span>
+          </button>
+          <button id="btn-train-100" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+            <span>⚡</span>
+            <span>100回</span>
+          </button>
+          <button id="btn-train-1000" class="py-2.5 px-1 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 active:scale-95 font-black text-white text-xs shadow-md flex items-center justify-center gap-1 transition">
+            <span>⚡</span>
+            <span>1000回</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ガイドインフォメーションカード -->
+      <div class="theme-card-sub border rounded-xl p-3 text-xs theme-text-sub space-y-1 shadow-sm">
+        <div class="font-bold flex items-center gap-1 text-[11px] text-indigo-400">
+          <span>💡</span> <span>強化学習のポイント</span>
+        </div>
+        <p class="text-[10.5px] leading-relaxed">
+          「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。
+        </p>
+      </div>
+
+    </aside>
   </main>
 
   <!-- 解説モーダル -->
   <div id="modal-explain" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-md max-h-[88vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
+    <div class="theme-modal border w-full max-w-md max-h-[88vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden">
       <!-- モーダルヘッダー -->
-      <div class="p-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-        <h2 class="text-sm font-black text-white flex items-center gap-1.5">
+      <div class="p-3.5 border-b theme-border flex items-center justify-between">
+        <h2 class="text-sm font-black flex items-center gap-1.5">
           <span>📖</span> 強化学習の仕組みと数値の根拠
         </h2>
-        <button id="btn-close-modal" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-base">✕</button>
+        <button id="btn-close-modal" class="p-1 rounded-lg theme-text-sub hover:text-white transition text-base">✕</button>
       </div>
 
       <!-- モーダル本文 -->
-      <div class="p-4 overflow-y-auto text-xs space-y-3.5 text-slate-300 leading-relaxed">
-        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+      <div class="p-4 overflow-y-auto text-xs space-y-3.5 theme-text-sub leading-relaxed">
+        <section class="theme-card-sub p-3 rounded-xl border theme-border">
           <h3 class="font-bold text-cyan-400 mb-1 flex items-center gap-1">
             <span>1.</span> マスの数字は何を表しているか？
           </h3>
@@ -153,37 +401,37 @@
           </p>
         </section>
 
-        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+        <section class="theme-card-sub p-3 rounded-xl border theme-border">
           <h3 class="font-bold text-emerald-400 mb-1 flex items-center gap-1">
             <span>2.</span> スコア算出のルール（報酬）
           </h3>
-          <ul class="list-disc list-inside space-y-0.5 text-slate-300">
+          <ul class="list-disc list-inside space-y-0.5">
             <li><span class="text-emerald-400 font-bold">🏆 ゴール到着</span>：<strong class="text-white">+100点</strong></li>
             <li><span class="text-rose-400 font-bold">🌋 火山に落下</span>：<strong class="text-white">-100点</strong>（即ゲームオーバー）</li>
-            <li><span class="text-slate-400 font-bold">🐾 1歩歩く</span>：<strong class="text-white">-2点</strong>（最短ルートを好ませるコスト）</li>
+            <li><span class="theme-text-muted font-bold">🐾 1歩歩く</span>：<strong class="text-white">-2点</strong>（最短ルートを好ませるコスト）</li>
           </ul>
         </section>
 
-        <section class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
+        <section class="theme-card-sub p-3 rounded-xl border theme-border">
           <h3 class="font-bold text-amber-400 mb-1 flex items-center gap-1">
             <span>3.</span> なぜゴールから数字が増えていくのか？
           </h3>
           <p>
             強化学習（ベルマン方程式）では、<strong class="text-white">「次の一歩で得られる最高スコアの85%（割引率γ）」</strong>を手前のマスに引き継ぎます。
           </p>
-          <div class="mt-1.5 p-2 rounded bg-slate-950 font-mono text-[11px] text-cyan-300 border border-slate-800">
+          <div class="mt-1.5 p-2 rounded bg-black/40 font-mono text-[11px] text-cyan-300 border theme-border">
             Q = 現在のQ + 0.55 × [ 即時報酬 + 0.85 × 次の最高Q - 現在のQ ]
           </div>
-          <p class="mt-1.5 text-slate-400">
+          <p class="mt-1.5 theme-text-muted">
             ゴールした時の+100点が、試行を重ねるたびにドミノ倒しのようにスタートへ向かって逆流（伝播）することで、安全な最短ルートが形成されます。
           </p>
         </section>
 
-        <section class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-700/40">
-          <h3 class="font-bold text-indigo-300 mb-1 flex items-center gap-1">
+        <section class="theme-card-sub p-3 rounded-xl border theme-border">
+          <h3 class="font-bold text-indigo-400 mb-1 flex items-center gap-1">
             <span>💡</span> 試行回数と定着の視点
           </h3>
-          <p class="text-slate-200">
+          <p>
             10回では迷い（赤や未学習）が多いロボットも、<strong>100回・1000回と圧倒的な試行回数を積むことで無駄のない行動が定着</strong>します。
           </p>
         </section>
@@ -236,7 +484,9 @@
     let isTestRunning = false;
     let isStepRunning = false;
     let isEpisodeEnding = false;
+    let testStepCount = 0;       // 実力テスト時の歩数カウント
     let speedRate = 1.0;
+    let fontScale = 1.0;         // 数字フォントサイズの倍率 (0.6x〜1.8x)
     let soundEnabled = true;
 
     // Web Audio API によるシンセ音
@@ -324,7 +574,9 @@
     }
 
     // DOM参照
+    const gridWrapper = document.getElementById('grid-wrapper');
     const gridContainer = document.getElementById('grid-container');
+    const selectTheme = document.getElementById('select-theme');
     const statEpisodes = document.getElementById('stat-episodes');
     const statWinrate = document.getElementById('stat-winrate');
     const statEpsilon = document.getElementById('stat-epsilon');
@@ -332,6 +584,8 @@
     const iconAuto = document.getElementById('icon-auto');
     const textAuto = document.getElementById('text-auto');
     const btnTestRun = document.getElementById('btn-test-run');
+    const iconTest = document.getElementById('icon-test');
+    const textTest = document.getElementById('text-test');
     const btnTrain10 = document.getElementById('btn-train-10');
     const btnTrain100 = document.getElementById('btn-train-100');
     const btnTrain1000 = document.getElementById('btn-train-1000');
@@ -346,93 +600,133 @@
     const labelGridSize = document.getElementById('label-grid-size');
     const btnSizeDec = document.getElementById('btn-size-dec');
     const btnSizeInc = document.getElementById('btn-size-inc');
+    const sliderFontScale = document.getElementById('slider-font-scale');
+    const labelFontScale = document.getElementById('label-font-scale');
+    const btnFontDec = document.getElementById('btn-font-dec');
+    const btnFontInc = document.getElementById('btn-font-inc');
 
-    // グリッドサイズに応じたタイポグラフィ・レイアウト設定
+    // 数字サイズ（フォントスケール）の変更
+    function setFontScale(newScale) {
+      fontScale = Math.max(0.6, Math.min(1.8, Math.round(newScale * 10) / 10));
+      if (sliderFontScale) sliderFontScale.value = fontScale.toFixed(1);
+      if (labelFontScale) labelFontScale.textContent = `${fontScale.toFixed(1)}x`;
+      if (btnFontDec) {
+        btnFontDec.disabled = (fontScale <= 0.6);
+        btnFontDec.classList.toggle('opacity-40', fontScale <= 0.6);
+        btnFontDec.classList.toggle('cursor-not-allowed', fontScale <= 0.6);
+      }
+      if (btnFontInc) {
+        btnFontInc.disabled = (fontScale >= 1.8);
+        btnFontInc.classList.toggle('opacity-40', fontScale >= 1.8);
+        btnFontInc.classList.toggle('cursor-not-allowed', fontScale >= 1.8);
+      }
+      try {
+        localStorage.setItem('rl_font_scale', fontScale);
+      } catch (e) {}
+      applyDynamicCellTypography();
+    }
+
+    // テーマの適用
+    function applyTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      try {
+        localStorage.setItem('rl_theme', themeName);
+      } catch (e) {}
+      if (selectTheme) selectTheme.value = themeName;
+      updateGridVisuals(true);
+    }
+
+    // グリッドコンテナの最大正方形サイズ計算とリサイズ
+    let currentContainerSize = 400;
+    function resizeGridContainer() {
+      if (!gridWrapper || !gridContainer) return;
+      const rect = gridWrapper.getBoundingClientRect();
+      const pad = 12;
+      const availW = Math.max(120, Math.floor(rect.width - pad));
+      const availH = Math.max(120, Math.floor(rect.height - pad));
+      const targetSize = Math.floor(Math.min(availW, availH));
+
+      currentContainerSize = targetSize;
+      gridContainer.style.width = `${targetSize}px`;
+      gridContainer.style.height = `${targetSize}px`;
+
+      // セル内文字サイズやロボット位置の同期
+      applyDynamicCellTypography();
+      syncRobotPosition(true);
+    }
+
+    // グリッドサイズに応じたタイポグラフィ・レイアウト設定 (数字サイズ倍率fontScaleを反映)
     function getGridTypography(size) {
-      if (size <= 2) {
-        return {
-          qFont: 'text-xs',
-          fontSize: '12px',
-          zeroFontSize: '11px',
-          qPadding: 'px-1',
-          startLabel: 'text-xs px-2 py-1',
-          centerIcon: 'text-3xl',
-          robotSize: 'text-4xl',
-          cellBorder: 'rounded-2xl',
-          gap: '6px'
-        };
-      } else if (size <= 3) {
-        return {
-          qFont: 'text-[11px]',
-          fontSize: '11px',
-          zeroFontSize: '10px',
-          qPadding: 'px-1',
-          startLabel: 'text-[11px] px-1.5 py-0.5',
-          centerIcon: 'text-2xl',
-          robotSize: 'text-3xl',
-          cellBorder: 'rounded-xl',
-          gap: '5px'
-        };
-      } else if (size <= 4) {
-        return {
-          qFont: 'text-[10px]',
-          fontSize: '10px',
-          zeroFontSize: '9px',
-          qPadding: 'px-0.5',
-          startLabel: 'text-[10px] px-1 py-0.5',
-          centerIcon: 'text-xl',
-          robotSize: 'text-2xl',
-          cellBorder: 'rounded-xl',
-          gap: '5px'
-        };
-      } else if (size === 5) {
-        return {
-          qFont: 'text-[9px]',
-          fontSize: '9px',
-          zeroFontSize: '8.5px',
-          qPadding: 'px-0.5',
-          startLabel: 'text-[10px] px-1 py-0.5',
-          centerIcon: 'text-base',
-          robotSize: 'text-2xl',
-          cellBorder: 'rounded-xl',
-          gap: '6px'
-        };
-      } else if (size <= 6) {
-        return {
-          qFont: 'text-[8px]',
-          fontSize: '8px',
-          zeroFontSize: '7.5px',
-          qPadding: 'px-0.5',
-          startLabel: 'text-[9px] px-0.5 py-0.5',
-          centerIcon: 'text-sm',
-          robotSize: 'text-xl',
-          cellBorder: 'rounded-lg',
-          gap: '4px'
-        };
-      } else if (size <= 8) {
-        return {
-          qFont: 'text-[7px]',
-          fontSize: '7px',
-          zeroFontSize: '6.5px',
-          qPadding: 'px-0.5',
-          startLabel: 'text-[7.5px] px-0.5 py-0',
-          centerIcon: 'text-xs',
-          robotSize: 'text-base',
-          cellBorder: 'rounded-md',
-          gap: '3px'
-        };
+      const cellSize = currentContainerSize / size;
+      const baseQFont = Math.max(7, Math.min(22, cellSize * 0.17));
+      const qFontPx = baseQFont * fontScale;
+      const qZeroPx = Math.max(6.5, baseQFont * 0.88) * fontScale;
+      const iconPx = Math.max(12, Math.min(46, cellSize * 0.44));
+      const robotPx = Math.max(15, Math.min(54, cellSize * 0.52));
+      const startPx = Math.max(7, Math.min(13, cellSize * 0.16));
+
+      let cellBorder = 'rounded-xl';
+      let gap = '4px';
+      if (size <= 3) {
+        cellBorder = 'rounded-2xl';
+        gap = '6px';
+      } else if (size <= 5) {
+        cellBorder = 'rounded-xl';
+        gap = '5px';
+      } else if (size <= 7) {
+        cellBorder = 'rounded-lg';
+        gap = '3px';
       } else {
-        return {
-          qFont: 'text-[6px]',
-          fontSize: '6.5px',
-          zeroFontSize: '6px',
-          qPadding: 'px-0.5',
-          startLabel: 'text-[6.5px] px-0.5 py-0',
-          centerIcon: 'text-[11px]',
-          robotSize: 'text-xs',
-          cellBorder: 'rounded',
-          gap: '2px'
-        };
+        cellBorder = 'rounded-md';
+        gap = '2px';
+      }
+
+      return {
+        cellSize,
+        qFontPx: `${qFontPx.toFixed(1)}px`,
+        qZeroPx: `${qZeroPx.toFixed(1)}px`,
+        iconPx: `${iconPx.toFixed(1)}px`,
+        robotPx: `${robotPx.toFixed(1)}px`,
+        startPx: `${startPx.toFixed(1)}px`,
+        cellBorder,
+        gap
+      };
+    }
+
+    // リサイズ時にセル内タイポグラフィを動的更新
+    function applyDynamicCellTypography() {
+      const typo = getGridTypography(gridSize);
+      gridContainer.style.gap = typo.gap;
+
+      for (let i = 0; i < numCells; i++) {
+        const cell = document.getElementById(`cell-${i}`);
+        if (!cell) continue;
+
+        // 各方向Q値のフォントサイズ
+        for (let a = 0; a < 4; a++) {
+          const qEl = document.getElementById(`q-${i}-${a}`);
+          if (qEl) {
+            const isZero = qEl.getAttribute('data-zero') === 'true';
+            qEl.style.fontSize = isZero ? typo.qZeroPx : typo.qFontPx;
+          }
+        }
+
+        // 中央アイコンのフォントサイズ
+        const centerIcon = document.getElementById(`center-${i}`);
+        if (centerIcon) {
+          centerIcon.style.fontSize = typo.iconPx;
+        }
+
+        // STARTラベルのフォントサイズ
+        const startLabel = document.getElementById(`start-label-${i}`);
+        if (startLabel) {
+          startLabel.style.fontSize = typo.startPx;
+        }
+      }
+
+      const robotEl = document.getElementById('robot-token');
+      if (robotEl) {
+        robotEl.style.fontSize = typo.robotPx;
       }
     }
 
@@ -440,37 +734,42 @@
     function createGridDOM() {
       const typo = getGridTypography(gridSize);
       gridContainer.innerHTML = '';
-      gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, minmax(0, 1fr))`;
-      gridContainer.style.gridTemplateRows = `repeat(${gridSize}, minmax(0, 1fr))`;
+      gridContainer.style.display = 'grid';
+      gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+      gridContainer.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
       gridContainer.style.gap = typo.gap;
 
       for (let i = 0; i < numCells; i++) {
         const cell = document.createElement('div');
         cell.id = `cell-${i}`;
-        cell.className = `relative ${typo.cellBorder} border border-slate-800 bg-slate-900/90 flex items-center justify-center cursor-pointer transition overflow-hidden`;
+        cell.className = `relative ${typo.cellBorder} border cursor-pointer transition overflow-hidden flex items-center justify-center`;
+        cell.style.width = '100%';
+        cell.style.height = '100%';
+        cell.style.backgroundColor = 'var(--cell-bg)';
+        cell.style.borderColor = 'var(--cell-border)';
         cell.onclick = () => onCellClick(i);
 
         // 4方向のQ値数値コンテナ
         // 上
         const valUp = document.createElement('span');
         valUp.id = `q-${i}-0`;
-        valUp.className = `absolute top-0.5 left-1/2 -translate-x-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
-        valUp.style.fontSize = typo.fontSize;
+        valUp.className = 'absolute top-1 left-1/2 -translate-x-1/2 font-mono leading-none pointer-events-none transition';
+        valUp.style.fontSize = typo.qFontPx;
         // 右
         const valRight = document.createElement('span');
         valRight.id = `q-${i}-1`;
-        valRight.className = `absolute right-0.5 top-1/2 -translate-y-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
-        valRight.style.fontSize = typo.fontSize;
+        valRight.className = 'absolute right-1 top-1/2 -translate-y-1/2 font-mono leading-none pointer-events-none transition';
+        valRight.style.fontSize = typo.qFontPx;
         // 下
         const valDown = document.createElement('span');
         valDown.id = `q-${i}-2`;
-        valDown.className = `absolute bottom-0.5 left-1/2 -translate-x-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
-        valDown.style.fontSize = typo.fontSize;
+        valDown.className = 'absolute bottom-1 left-1/2 -translate-x-1/2 font-mono leading-none pointer-events-none transition';
+        valDown.style.fontSize = typo.qFontPx;
         // 左
         const valLeft = document.createElement('span');
         valLeft.id = `q-${i}-3`;
-        valLeft.className = `absolute left-0.5 top-1/2 -translate-y-1/2 ${typo.qFont} font-mono leading-none pointer-events-none transition`;
-        valLeft.style.fontSize = typo.fontSize;
+        valLeft.className = 'absolute left-1 top-1/2 -translate-y-1/2 font-mono leading-none pointer-events-none transition';
+        valLeft.style.fontSize = typo.qFontPx;
 
         cell.appendChild(valUp);
         cell.appendChild(valRight);
@@ -480,7 +779,8 @@
         // セル中央のアイコン表示エリア
         const centerIcon = document.createElement('div');
         centerIcon.id = `center-${i}`;
-        centerIcon.className = `${typo.centerIcon} select-none pointer-events-none z-10 transition-transform`;
+        centerIcon.className = 'select-none pointer-events-none z-10 transition-transform flex items-center justify-center';
+        centerIcon.style.fontSize = typo.iconPx;
         cell.appendChild(centerIcon);
 
         gridContainer.appendChild(cell);
@@ -489,7 +789,8 @@
       // ロボットのアバター要素
       const robotEl = document.createElement('div');
       robotEl.id = 'robot-token';
-      robotEl.className = `robot-token absolute top-0 left-0 z-20 pointer-events-none ${typo.robotSize} flex items-center justify-center drop-shadow-md`;
+      robotEl.className = 'robot-token absolute top-0 left-0 z-20 pointer-events-none flex items-center justify-center drop-shadow-md select-none';
+      robotEl.style.fontSize = typo.robotPx;
       robotEl.innerHTML = '🤖';
       gridContainer.appendChild(robotEl);
     }
@@ -533,19 +834,27 @@
         const center = document.getElementById(`center-${i}`);
         if (!cell || !center) continue;
 
-        // 特殊セルの描画
+        // 特殊セルの描画 (テーマCSS変数連動)
         if (i === startPos) {
-          center.innerHTML = `<span class="${typo.startLabel} font-black text-cyan-400 bg-cyan-950/80 rounded border border-cyan-800">START</span>`;
-          cell.className = `relative ${typo.cellBorder} border border-cyan-500/40 bg-cyan-950/20 flex items-center justify-center overflow-hidden`;
+          center.innerHTML = `<span id="start-label-${i}" style="font-size:${typo.startPx};" class="font-black px-1 py-0.5 rounded border border-[var(--start-border)] text-[var(--start-text)] bg-[var(--start-bg)]">START</span>`;
+          cell.style.backgroundColor = 'var(--start-bg)';
+          cell.style.borderColor = 'var(--start-border)';
+          cell.classList.remove('animate-pulse');
         } else if (i === goalPos) {
           center.innerHTML = '🏆';
-          cell.className = `relative ${typo.cellBorder} border border-amber-500/50 bg-amber-950/30 flex items-center justify-center overflow-hidden animate-pulse`;
+          cell.style.backgroundColor = 'var(--goal-bg)';
+          cell.style.borderColor = 'var(--goal-border)';
+          cell.classList.add('animate-pulse');
         } else if (traps.has(i)) {
           center.innerHTML = '🌋';
-          cell.className = `relative ${typo.cellBorder} border border-rose-600/60 bg-rose-950/30 flex items-center justify-center overflow-hidden`;
+          cell.style.backgroundColor = 'var(--trap-bg)';
+          cell.style.borderColor = 'var(--trap-border)';
+          cell.classList.remove('animate-pulse');
         } else {
           center.innerHTML = '';
-          cell.className = `relative ${typo.cellBorder} border border-slate-800 bg-slate-900/90 hover:border-slate-700 flex items-center justify-center overflow-hidden`;
+          cell.style.backgroundColor = 'var(--cell-bg)';
+          cell.style.borderColor = 'var(--cell-border)';
+          cell.classList.remove('animate-pulse');
         }
 
         // ゴールや罠の中は進行先Q値を非表示
@@ -569,20 +878,35 @@
           const qVal = qTable[i][a];
           qEl.textContent = formatQ(qVal);
 
-          // 数値の色分け
+          // 数値の色分け (テーマ変数連動)
           if (qVal > 0) {
+            qEl.setAttribute('data-zero', 'false');
+            qEl.style.fontSize = typo.qFontPx;
             if (qVal === maxQInCell && maxQInCell > 10) {
-              qEl.className = `${getPosClass(a)} ${typo.qFont} font-black text-emerald-300 bg-emerald-500/20 ${typo.qPadding} rounded border border-emerald-500/40`;
+              qEl.className = `${getPosClass(a)} font-black px-0.5 rounded`;
+              qEl.style.color = 'var(--q-pos-best)';
+              qEl.style.backgroundColor = 'var(--q-pos-bg)';
+              qEl.style.border = '1px solid var(--q-pos-border)';
             } else {
-              qEl.className = `${getPosClass(a)} ${typo.qFont} font-bold text-emerald-400/90`;
+              qEl.className = `${getPosClass(a)} font-bold`;
+              qEl.style.color = 'var(--q-pos)';
+              qEl.style.backgroundColor = 'transparent';
+              qEl.style.border = 'none';
             }
-            qEl.style.fontSize = typo.fontSize;
           } else if (qVal < 0) {
-            qEl.className = `${getPosClass(a)} ${typo.qFont} font-semibold text-rose-400/90`;
-            qEl.style.fontSize = typo.fontSize;
+            qEl.setAttribute('data-zero', 'false');
+            qEl.style.fontSize = typo.qFontPx;
+            qEl.className = `${getPosClass(a)} font-semibold`;
+            qEl.style.color = 'var(--q-neg)';
+            qEl.style.backgroundColor = 'transparent';
+            qEl.style.border = 'none';
           } else {
-            qEl.className = `${getPosClass(a)} ${typo.qFont} font-mono text-slate-600`;
-            qEl.style.fontSize = typo.zeroFontSize;
+            qEl.setAttribute('data-zero', 'true');
+            qEl.style.fontSize = typo.qZeroPx;
+            qEl.className = `${getPosClass(a)} font-mono font-medium`;
+            qEl.style.color = 'var(--q-zero)';
+            qEl.style.backgroundColor = 'transparent';
+            qEl.style.border = 'none';
           }
         }
       }
@@ -637,36 +961,50 @@
         isTrap = true;
       }
 
-      // Q学習の更新式 (Q-learning)
-      // 次の状態で有効な手だけの最大Q値を探索
-      const validNextQ = getValidActions(nextState).map(a => qTable[nextState][a]);
-      const nextMaxQ = (done || validNextQ.length === 0) ? 0 : Math.max(...validNextQ);
+      // 実力テスト(forceGreedy)時の無限ループ防止上限
+      if (forceGreedy) {
+        testStepCount++;
+        const maxTestSteps = Math.max(30, gridSize * gridSize * 2);
+        if (testStepCount >= maxTestSteps && !done) {
+          done = true; // タイムアウト終了
+        }
+      }
 
-      const oldQ = qTable[curState][action];
-      qTable[curState][action] = oldQ + ALPHA * (reward + GAMMA * nextMaxQ - oldQ);
+      // Q学習の更新式 (Q-learning)
+      // ★実力テスト(forceGreedy=true)の時はQ値を更新しない（学習させない）
+      if (!forceGreedy) {
+        const validNextQ = getValidActions(nextState).map(a => qTable[nextState][a]);
+        const nextMaxQ = (done || validNextQ.length === 0) ? 0 : Math.max(...validNextQ);
+
+        const oldQ = qTable[curState][action];
+        qTable[curState][action] = oldQ + ALPHA * (reward + GAMMA * nextMaxQ - oldQ);
+      }
 
       // ロボットを移動
       robotPos = nextState;
       updateGridVisuals();
 
-      // 終端処理 (ゴールまたは罠)
+      // 終端処理 (ゴールまたは罠またはステップ上限)
       if (done) {
         isEpisodeEnding = true;
-        totalEpisodes++;
+        // ★実力テスト(forceGreedy=true)の時は試行回数・勝率・探索度を更新しない
+        if (!forceGreedy) {
+          totalEpisodes++;
+          if (isGoal) {
+            totalWins++;
+          }
+          epsilon = Math.max(0.02, epsilon * 0.985);
+        }
+
         if (isGoal) {
-          totalWins++;
           playChord([523, 659, 784, 1046], 'triangle', 0.25);
         } else if (isTrap) {
           playBeep(140, 'sawtooth', 0.2, 0.12);
         }
 
-        // 探索率の徐行減衰
-        if (!forceGreedy) {
-          epsilon = Math.max(0.02, epsilon * 0.985);
-        }
-
         setTimeout(() => {
           robotPos = startPos;
+          testStepCount = 0;
           isEpisodeEnding = false;
           isStepRunning = false;
           updateGridVisuals();
@@ -766,15 +1104,21 @@
     function startTest() {
       stopAuto();
       isTestRunning = true;
+      testStepCount = 0;
       robotPos = startPos;
       btnTestRun.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400');
+      if (iconTest) iconTest.textContent = '⏸';
+      if (textTest) textTest.textContent = 'テスト停止';
       updateGridVisuals();
       stepSimulation(true);
     }
 
     function stopTest() {
       isTestRunning = false;
+      testStepCount = 0;
       btnTestRun.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400');
+      if (iconTest) iconTest.textContent = '🎯';
+      if (textTest) textTest.textContent = '実力テスト';
       if (loopTimer) clearTimeout(loopTimer);
     }
 
@@ -825,6 +1169,7 @@
       totalWins = 0;
 
       createGridDOM();
+      resizeGridContainer();
       updateGridVisuals(true);
       playBeep(360, 'sine', 0.05, 0.04);
     }
@@ -839,6 +1184,7 @@
       epsilon = 1.0;
       totalEpisodes = 0;
       totalWins = 0;
+      resizeGridContainer();
       updateGridVisuals(true);
       playBeep(260, 'sawtooth', 0.15);
     }
@@ -878,6 +1224,23 @@
       setGridSize(gridSize + 1);
     });
 
+    // 数字サイズ変更
+    if (sliderFontScale) {
+      sliderFontScale.addEventListener('input', (e) => {
+        setFontScale(parseFloat(e.target.value));
+      });
+    }
+    if (btnFontDec) {
+      btnFontDec.addEventListener('click', () => {
+        setFontScale(fontScale - 0.1);
+      });
+    }
+    if (btnFontInc) {
+      btnFontInc.addEventListener('click', () => {
+        setFontScale(fontScale + 0.1);
+      });
+    }
+
     // スピードスライダー
     sliderSpeed.addEventListener('input', (e) => {
       const val = parseInt(e.target.value, 10);
@@ -897,11 +1260,43 @@
       if (e.target === modalExplain) modalExplain.classList.add('hidden');
     });
 
+    // テーマ選択
+    if (selectTheme) {
+      selectTheme.addEventListener('change', (e) => {
+        applyTheme(e.target.value);
+      });
+    }
+
     // 初期化実行
-    window.addEventListener('resize', () => syncRobotPosition(false));
+    window.addEventListener('resize', () => {
+      resizeGridContainer();
+      syncRobotPosition(true);
+    });
+
     window.addEventListener('load', () => {
+      // 保存テーマの復元
+      const savedTheme = localStorage.getItem('rl_theme') || 'night';
+      applyTheme(savedTheme);
+
+      // 保存数字サイズの復元
+      try {
+        const savedScale = parseFloat(localStorage.getItem('rl_font_scale'));
+        if (!isNaN(savedScale) && savedScale >= 0.5 && savedScale <= 2.0) {
+          setFontScale(savedScale);
+        }
+      } catch (e) {}
+
+      // 初回グリッド生成とリサイズ
       createGridDOM();
+      resizeGridContainer();
       updateGridVisuals(true);
+
+      // ResizeObserver による動的追従
+      if (window.ResizeObserver && gridWrapper) {
+        new ResizeObserver(() => {
+          resizeGridContainer();
+        }).observe(gridWrapper);
+      }
     });
   </script>
 </body>
