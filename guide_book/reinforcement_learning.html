@@ -16,6 +16,20 @@
       transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    /* ロボットのすくみ・震えアニメーション (全方向マイナス時) */
+    @keyframes robot-shiver {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(-3.5px, 1px) rotate(-7deg); }
+      40% { transform: translate(3.5px, -1px) rotate(7deg); }
+      60% { transform: translate(-2.5px, -1px) rotate(-5deg); }
+      80% { transform: translate(2.5px, 1px) rotate(5deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    .robot-shivering {
+      animation: robot-shiver 0.09s infinite ease-in-out !important;
+      display: inline-block;
+    }
+
     /* テーマ定義 (CSS変数) */
     :root, [data-theme="night"] {
       --bg-page: #0b0f19;
@@ -334,6 +348,24 @@
         <span id="label-speed" class="text-xs font-mono font-bold text-cyan-400 w-10 text-right">1.0x</span>
       </div>
 
+      <!-- マイナス進入禁止モード（オプション） -->
+      <div class="theme-card-sub border rounded-xl px-3 py-2 flex items-center justify-between shadow-sm cursor-pointer select-none transition" id="container-avoid-negative" title="マイナスの方向へ進まなくなります。全方向がマイナスになると身動きできなくなります。">
+        <div class="flex items-center gap-2">
+          <span class="text-base" id="icon-avoid-negative">🙅</span>
+          <div>
+            <div class="text-xs font-bold flex items-center gap-1.5">
+              <span>マイナス進入禁止</span>
+              <span id="badge-avoid-negative" class="text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-700 text-slate-300">OFF</span>
+            </div>
+            <p class="text-[9.5px] theme-text-muted leading-tight">全方向マイナスで自信喪失・立ちすくみ</p>
+          </div>
+        </div>
+        <!-- トグルスイッチ -->
+        <button id="toggle-avoid-negative" type="button" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-700 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="false">
+          <span id="toggle-circle" class="translate-x-0 pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+        </button>
+      </div>
+
       <!-- 操作ボタンエリア -->
       <div class="flex flex-col gap-1.5">
         <!-- リアルタイム走行ボタン -->
@@ -371,7 +403,7 @@
         <div class="font-bold flex items-center gap-1 text-[11px] text-indigo-400">
           <span>💡</span> <span>強化学習のポイント</span>
         </div>
-        <p class="text-[10.5px] leading-relaxed">
+        <p id="guide-message" class="text-[10.5px] leading-relaxed">
           「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。
         </p>
       </div>
@@ -429,10 +461,25 @@
 
         <section class="theme-card-sub p-3 rounded-xl border theme-border">
           <h3 class="font-bold text-indigo-400 mb-1 flex items-center gap-1">
-            <span>💡</span> 試行回数と定着の視点
+            <span>4.</span> 試行回数と定着の視点
           </h3>
           <p>
             10回では迷い（赤や未学習）が多いロボットも、<strong>100回・1000回と圧倒的な試行回数を積むことで無駄のない行動が定着</strong>します。
+          </p>
+        </section>
+
+        <section class="theme-card-sub p-3 rounded-xl border theme-border border-amber-500/30 bg-amber-500/5">
+          <h3 class="font-bold text-amber-400 mb-1 flex items-center gap-1">
+            <span>5.</span> なぜ「マイナス進入禁止」で動けなくなるのか？（教育・学習心理）
+          </h3>
+          <p class="leading-relaxed">
+            正解の報酬（プラス評価）があれば、子どももAIも自発的にルールを学んでいきます。しかし、<strong>いきなり難易度が高すぎると失敗（マイナス評価・叱責）ばかりが記憶に刻まれます</strong>。
+          </p>
+          <p class="mt-1.5 leading-relaxed">
+            「マイナス進入禁止」をONにすると、周囲の選択肢がすべてマイナス評価になったマスで、ロボットは<strong>「どこに進んでも怒られる・失敗する」と判断して自信を失い、その場で震えて立ちすくんでしまいます</strong>。
+          </p>
+          <p class="mt-1.5 theme-text-muted leading-relaxed">
+            これは心理学でいう<strong class="text-amber-300">「学習性無力感」</strong>の再現です。学びを支えるには、まず小さな成功体験（スモールステップ）を重ねて「自信」を育むことが何より大切であることを示しています。
           </p>
         </section>
       </div>
@@ -478,6 +525,8 @@
     let epsilon = 1.0;          // 探索率 (最初は100%ランダム)
     let totalEpisodes = 0;
     let totalWins = 0;
+    let avoidNegativeMode = false; // マイナス進入禁止モード
+    let isFreezing = false;        // 自信喪失・立ちすくみ演出中フラグ
 
     // 実行制御
     let isAutoRunning = false;
@@ -524,6 +573,25 @@
       });
     }
 
+    // 困惑・立ちすくみサウンド (下降する不安なトーン)
+    function playFreezeSound() {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+        gain.gain.exponentialRampToAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } catch (e) {}
+    }
+
     // 指定マス・方向への移動が壁で遮られていないか検証 (アクションマスキング)
     function isValidMove(cell, action) {
       const row = Math.floor(cell / gridSize);
@@ -546,21 +614,31 @@
       return cell + actionDeltas[action];
     }
 
-    // ε-greedy 法による行動選択
+    // ε-greedy 法による行動選択（マイナス進入禁止モード対応）
     function chooseAction(cell, forceGreedy = false) {
       const valids = getValidActions(cell);
       if (valids.length === 0) return 0;
 
-      // 探索: ランダムに行動
-      if (!forceGreedy && Math.random() < epsilon) {
-        return valids[Math.floor(Math.random() * valids.length)];
+      // マイナス進入禁止モード: Q値がマイナスの手を除外
+      let candidateActions = valids;
+      if (avoidNegativeMode) {
+        candidateActions = valids.filter(a => qTable[cell][a] >= 0);
+        // 全方向がマイナスの場合、動けなくなる（立ちすくみシグナル -1）
+        if (candidateActions.length === 0) {
+          return -1;
+        }
       }
 
-      // 活用: 有効な手の中で最大Q値を持つ行動を選択 (同値ならランダム)
+      // 探索: ランダムに行動 (候補手の中から選択)
+      if (!forceGreedy && Math.random() < epsilon) {
+        return candidateActions[Math.floor(Math.random() * candidateActions.length)];
+      }
+
+      // 活用: 候補手の中で最大Q値を持つ行動を選択 (同値ならランダム)
       let bestQ = -Infinity;
       let bestActions = [];
 
-      for (const a of valids) {
+      for (const a of candidateActions) {
         const q = qTable[cell][a];
         if (q > bestQ) {
           bestQ = q;
@@ -604,6 +682,45 @@
     const labelFontScale = document.getElementById('label-font-scale');
     const btnFontDec = document.getElementById('btn-font-dec');
     const btnFontInc = document.getElementById('btn-font-inc');
+    const containerAvoidNegative = document.getElementById('container-avoid-negative');
+    const toggleAvoidNegative = document.getElementById('toggle-avoid-negative');
+    const badgeAvoidNegative = document.getElementById('badge-avoid-negative');
+    const iconAvoidNegative = document.getElementById('icon-avoid-negative');
+    const toggleCircle = document.getElementById('toggle-circle');
+    const guideMessage = document.getElementById('guide-message');
+
+    // マイナス進入禁止モードの切り替え
+    function setAvoidNegativeMode(enabled) {
+      avoidNegativeMode = !!enabled;
+
+      if (toggleAvoidNegative && toggleCircle && badgeAvoidNegative && containerAvoidNegative) {
+        if (avoidNegativeMode) {
+          toggleAvoidNegative.setAttribute('aria-checked', 'true');
+          toggleAvoidNegative.classList.replace('bg-slate-700', 'bg-amber-600');
+          toggleCircle.classList.replace('translate-x-0', 'translate-x-4');
+          badgeAvoidNegative.textContent = 'ON';
+          badgeAvoidNegative.className = 'text-[9px] px-1.5 py-0.2 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40';
+          containerAvoidNegative.classList.add('border-amber-500/40', 'bg-amber-500/5');
+          if (guideMessage && !isFreezing) {
+            guideMessage.innerHTML = '【マイナス進入禁止 ON】マイナス評価（Q&lt;0）の手を拒否します。全方向がマイナスになると自信を失い立ちすくみます。';
+          }
+        } else {
+          toggleAvoidNegative.setAttribute('aria-checked', 'false');
+          toggleAvoidNegative.classList.replace('bg-amber-600', 'bg-slate-700');
+          toggleCircle.classList.replace('translate-x-4', 'translate-x-0');
+          badgeAvoidNegative.textContent = 'OFF';
+          badgeAvoidNegative.className = 'text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-700 text-slate-300';
+          containerAvoidNegative.classList.remove('border-amber-500/40', 'bg-amber-500/5');
+          if (guideMessage && !isFreezing) {
+            guideMessage.innerHTML = '「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。';
+          }
+        }
+      }
+
+      try {
+        localStorage.setItem('rl_avoid_negative', avoidNegativeMode ? 'true' : 'false');
+      } catch (e) {}
+    }
 
     // 数字サイズ（フォントスケール）の変更
     function setFontScale(newScale) {
@@ -791,8 +908,94 @@
       robotEl.id = 'robot-token';
       robotEl.className = 'robot-token absolute top-0 left-0 z-20 pointer-events-none flex items-center justify-center drop-shadow-md select-none';
       robotEl.style.fontSize = typo.robotPx;
-      robotEl.innerHTML = '🤖';
+      robotEl.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          <span id="robot-avatar" class="inline-block transition-transform">🤖</span>
+          <span id="robot-sweat" class="absolute -top-1.5 -right-2 text-[0.6em] opacity-0 transition-opacity pointer-events-none">💦</span>
+        </div>
+      `;
       gridContainer.appendChild(robotEl);
+    }
+
+    let freezeTimer = null;
+
+    // 立ちすくみ・震え状態の解除
+    function clearFreezeState() {
+      if (freezeTimer) {
+        clearTimeout(freezeTimer);
+        freezeTimer = null;
+      }
+      isFreezing = false;
+      const avatar = document.getElementById('robot-avatar');
+      const sweat = document.getElementById('robot-sweat');
+      if (avatar) {
+        avatar.textContent = '🤖';
+        avatar.classList.remove('robot-shivering');
+      }
+      if (sweat) {
+        sweat.classList.remove('opacity-100');
+        sweat.classList.add('opacity-0');
+      }
+      for (let i = 0; i < numCells; i++) {
+        const c = document.getElementById(`cell-${i}`);
+        if (c) c.classList.remove('ring-4', 'ring-rose-500/80', 'animate-pulse');
+      }
+    }
+
+    // 自信喪失・立ちすくみ（震え）の発生
+    function triggerFreezeState(curState, forceGreedy = false) {
+      clearFreezeState();
+      isFreezing = true;
+      isEpisodeEnding = true;
+
+      const avatar = document.getElementById('robot-avatar');
+      const sweat = document.getElementById('robot-sweat');
+      const curCell = document.getElementById(`cell-${curState}`);
+
+      if (avatar) {
+        avatar.textContent = '😰';
+        avatar.classList.add('robot-shivering');
+      }
+      if (sweat) {
+        sweat.classList.remove('opacity-0');
+        sweat.classList.add('opacity-100');
+      }
+      if (curCell) {
+        curCell.classList.add('ring-4', 'ring-rose-500/80', 'animate-pulse');
+      }
+
+      if (guideMessage) {
+        guideMessage.innerHTML = '<span class="text-rose-400 font-bold">😰 全方向マイナスのため自信喪失！</span> どの方向へ進んでもマイナス評価のため、動けなくなって立ちすくんでいます（学習性無力感）。';
+      }
+
+      playFreezeSound();
+
+      // 震えのアニメーション時間 (約1.3秒)
+      const freezeDuration = Math.max(900, Math.min(1800, getStepInterval() * 3.5));
+      freezeTimer = setTimeout(() => {
+        clearFreezeState();
+
+        if (guideMessage) {
+          if (avoidNegativeMode) {
+            guideMessage.innerHTML = '【マイナス進入禁止 ON】マイナス評価（Q&lt;0）の手を拒否します。全方向がマイナスになると自信を失い立ちすくみます。';
+          } else {
+            guideMessage.innerHTML = '「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。';
+          }
+        }
+
+        robotPos = startPos;
+        testStepCount = 0;
+        isEpisodeEnding = false;
+        isStepRunning = false;
+        updateGridVisuals();
+
+        if (forceGreedy || isTestRunning) {
+          stopTest();
+        } else if (isAutoRunning) {
+          totalEpisodes++;
+          scheduleNextStep();
+        }
+      }, freezeDuration);
     }
 
     // ロボットの画面位置を現在のマスに同期
@@ -935,11 +1138,18 @@
 
     // 1ステップの移動とQ値更新
     function stepSimulation(forceGreedy = false) {
-      if (isEpisodeEnding || isStepRunning) return;
+      if (isEpisodeEnding || isStepRunning || isFreezing) return;
       isStepRunning = true;
 
       const curState = robotPos;
       const action = chooseAction(curState, forceGreedy);
+
+      // マイナス進入禁止モードかつ全方向マイナスの場合は動けず震える
+      if (action === -1) {
+        triggerFreezeState(curState, forceGreedy);
+        return;
+      }
+
       const nextState = getNextState(curState, action);
 
       // 移動音
@@ -1037,6 +1247,7 @@
     function batchTrain(episodes) {
       stopAuto();
       stopTest();
+      clearFreezeState();
 
       const maxSteps = Math.max(40, gridSize * gridSize * 2);
 
@@ -1047,6 +1258,10 @@
         while (steps < maxSteps) {
           steps++;
           const a = chooseAction(s, false);
+          // 全方向マイナスのため立ちすくみ（挫折エピソードとして即終了）
+          if (a === -1) {
+            break;
+          }
           const nextS = getNextState(s, a);
 
           let r = REWARD_STEP;
@@ -1084,6 +1299,7 @@
 
     function startAuto() {
       stopTest();
+      clearFreezeState();
       isAutoRunning = true;
       iconAuto.textContent = '⏸';
       textAuto.textContent = '学習ストップ';
@@ -1103,6 +1319,7 @@
 
     function startTest() {
       stopAuto();
+      clearFreezeState();
       isTestRunning = true;
       testStepCount = 0;
       robotPos = startPos;
@@ -1125,6 +1342,7 @@
     // セルクリックで罠（火山）の追加・削除
     function onCellClick(index) {
       if (index === startPos || index === goalPos) return;
+      clearFreezeState();
       if (traps.has(index)) {
         traps.delete(index);
         playBeep(400, 'sine', 0.08);
@@ -1145,6 +1363,7 @@
 
       stopAuto();
       stopTest();
+      clearFreezeState();
 
       gridSize = newSize;
       numCells = gridSize * gridSize;
@@ -1178,6 +1397,7 @@
     function resetAll() {
       stopAuto();
       stopTest();
+      clearFreezeState();
       qTable = Array.from({ length: numCells }, () => [0, 0, 0, 0]);
       traps = new Set(DEFAULT_TRAPS[gridSize] || []);
       robotPos = startPos;
@@ -1206,6 +1426,21 @@
     btnTrain100.addEventListener('click', () => batchTrain(100));
     btnTrain1000.addEventListener('click', () => batchTrain(1000));
     btnReset.addEventListener('click', resetAll);
+
+    // マイナス進入禁止トグルのクリック
+    if (containerAvoidNegative) {
+      containerAvoidNegative.addEventListener('click', () => {
+        initAudio();
+        setAvoidNegativeMode(!avoidNegativeMode);
+      });
+    }
+    if (toggleAvoidNegative) {
+      toggleAvoidNegative.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initAudio();
+        setAvoidNegativeMode(!avoidNegativeMode);
+      });
+    }
 
     // 音声トグル
     btnSound.addEventListener('click', () => {
@@ -1277,6 +1512,10 @@
       // 保存テーマの復元
       const savedTheme = localStorage.getItem('rl_theme') || 'night';
       applyTheme(savedTheme);
+
+      // マイナス進入禁止モードの復元
+      const savedAvoidNeg = localStorage.getItem('rl_avoid_negative') === 'true';
+      setAvoidNegativeMode(savedAvoidNeg);
 
       // 保存数字サイズの復元
       try {
