@@ -1160,14 +1160,28 @@
                 <div id="testResult" style="font-size: 0.95rem; margin-top: 10px; line-height: 1.4; word-break: break-all;"></div>
             </div>
 
+            <!-- AI応答タイムアウト時間 -->
+            <div class="form-group">
+                <label for="apiTimeoutSelect">AI応答タイムアウト（回答の待ち時間上限）</label>
+                <select id="apiTimeoutSelect">
+                    <option value="30">30秒（短め・超高速応答用）</option>
+                    <option value="60">60秒（1分・標準）</option>
+                    <option value="90">90秒（1分30秒・思考HIGH推奨）</option>
+                    <option value="120">120秒（2分・じっくり思考）</option>
+                    <option value="180">180秒（3分・長考・詳細回答用）</option>
+                    <option value="300">300秒（5分・ほぼ無制限）</option>
+                </select>
+                <div class="tip">※Gemini 3.8 Flashなど思考レベルが高いモデルは長考することがあるため、90秒〜120秒がおすすめです。</div>
+            </div>
+
             <!-- 無音判定時間（沈黙時間） -->
             <div class="form-group">
                 <label>話し終わり判定（無音検知）</label>
                 <div class="range-wrap">
-                    <input type="range" id="silenceTimeoutInput" min="1.0" max="3.5" step="0.2" value="1.6">
+                    <input type="range" id="silenceTimeoutInput" min="1.0" max="6.0" step="0.2" value="1.6">
                     <span class="range-val" id="silenceVal">1.6秒</span>
                 </div>
-                <div class="tip">発言後、この秒数の沈黙があると自動でGeminiに送信されます。</div>
+                <div class="tip">発言後、この秒数の沈黙があると自動でGeminiに送信されます。（1.0秒〜6.0秒）</div>
             </div>
 
             <!-- 読み上げ速度 -->
@@ -1252,6 +1266,7 @@
             customModel: "",
             thinkingLevel: "HIGH",
             silenceTimeout: 1.6,
+            apiTimeout: 90,         // AI応答タイムアウト秒数 (デフォルト90秒)
             speechRate: 1.1,
             fontSize: 1.35,
             historyLimit: 10,
@@ -1278,6 +1293,7 @@
             } catch (e) {
                 console.error("設定ロード失敗:", e);
             }
+            config.apiTimeout = parseInt(config.apiTimeout, 10) || 90;
             applyFontSize(config.fontSize || 1.35);
             updateModelBadge();
         }
@@ -1786,8 +1802,9 @@
         // ============================================================
         function toFriendlyError(err) {
             const errStr = ((err && err.message) || "").toLowerCase();
+            const timeoutSec = parseInt(config.apiTimeout, 10) || 90;
             if ((err && err.name === "AbortError") || errStr.includes("abort") || errStr.includes("timeout")) {
-                return "回答がタイムアウトしました。思考型モデルのため生成に時間がかかりました。思考レベルをMEDIUMやLOWにすると高速になります。";
+                return `回答がタイムアウト（${timeoutSec}秒）しました。設定の「AI応答タイムアウト」で待ち時間を延ばすか、思考レベルを調整してください。`;
             } else if (errStr.includes("not found") || errStr.includes("404")) {
                 return `モデル「${getActiveModel()}」が存在しません。設定で gemini-3.8-flash または gemini-1.5-flash に変更してください。`;
             } else if (errStr.includes("api key not valid") || errStr.includes("api_key_invalid")) {
@@ -1890,7 +1907,8 @@
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000); // 思考型モデル対応のため45秒タイムアウト
+            const timeoutSec = parseInt(config.apiTimeout, 10) || 90;
+            const timeoutId = setTimeout(() => controller.abort(), timeoutSec * 1000);
             let httpStatus = 0;
 
             try {
@@ -2667,6 +2685,7 @@
         const customModelGroup = document.getElementById("customModelGroup");
         const customModelInput = document.getElementById("customModelInput");
         const thinkingLevelSelect = document.getElementById("thinkingLevelSelect");
+        const apiTimeoutSelect = document.getElementById("apiTimeoutSelect");
         const silenceTimeoutInput = document.getElementById("silenceTimeoutInput");
         const silenceVal = document.getElementById("silenceVal");
         const speechRateInput = document.getElementById("speechRateInput");
@@ -2687,6 +2706,7 @@
             customModelInput.value = config.customModel;
             customModelGroup.style.display = config.model === "custom" ? "block" : "none";
             thinkingLevelSelect.value = config.thinkingLevel || "HIGH";
+            apiTimeoutSelect.value = String(config.apiTimeout || 90);
             silenceTimeoutInput.value = config.silenceTimeout;
             silenceVal.textContent = config.silenceTimeout + "秒";
             speechRateInput.value = config.speechRate;
@@ -2849,6 +2869,7 @@
             config.model = modelSelect.value;
             config.customModel = customModelInput.value.trim();
             config.thinkingLevel = thinkingLevelSelect.value;
+            config.apiTimeout = parseInt(apiTimeoutSelect.value, 10) || 90;
             config.silenceTimeout = parseFloat(silenceTimeoutInput.value);
             config.speechRate = parseFloat(speechRateInput.value);
             config.fontSize = parseFloat(fontSizeInput.value);
