@@ -224,6 +224,55 @@
       border-color: var(--danger);
     }
 
+    /* Subcategory Filter Toolbar */
+    .subcat-toolbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 16px 12px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .subcat-toolbar::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .subcat-toolbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .subcat-pill {
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+    }
+
+    .subcat-pill:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .subcat-pill.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
     /* Main Grid */
     main {
       max-width: 1400px;
@@ -353,12 +402,37 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.7rem;
+      font-size: 0.72rem;
       color: var(--text-sub);
+      gap: 6px;
+    }
+
+    .card-tags {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
     }
 
     .cat-tag {
       font-weight: 700;
+    }
+
+    .subcat-tag {
+      font-size: 0.68rem;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .card-id {
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      white-space: nowrap;
     }
 
     .cat-doubutsu { color: var(--cat-doubutsu); }
@@ -651,7 +725,7 @@
       <div class="title-group">
         <h1>🔍 ことばずかん 画像レビュー</h1>
         <div class="stats-badge" id="stats-badge">
-          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">465</span>
+          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">491</span>
         </div>
       </div>
 
@@ -669,21 +743,19 @@
 
     <!-- Filter Toolbar -->
     <div class="toolbar">
-      <div class="cat-tabs" id="cat-tabs">
-        <button class="cat-tab active" data-cat="all">すべて (465)</button>
-        <button class="cat-tab" data-cat="tabemono">たべもの (112)</button>
-        <button class="cat-tab" data-cat="midikanamono">みぢかなもの (117)</button>
-        <button class="cat-tab" data-cat="doubutsu">どうぶつ (100)</button>
-        <button class="cat-tab" data-cat="norimono">のりもの (53)</button>
-        <button class="cat-tab" data-cat="doushi">どうし (83)</button>
-      </div>
+      <div class="cat-tabs" id="cat-tabs"></div>
 
       <div class="filter-options">
         <button class="flag-filter-btn" id="filter-flagged-btn" onclick="toggleFlaggedFilter()">
           🚨 要修正のみ
         </button>
-        <input type="text" class="search-input" id="search-input" placeholder="単語・IDで検索...">
+        <input type="text" class="search-input" id="search-input" placeholder="単語・ID・分類で検索...">
       </div>
+    </div>
+
+    <!-- Subcategory Filter Toolbar -->
+    <div class="subcat-toolbar" id="subcat-toolbar" style="display: none;">
+      <div id="subcat-pills" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
     </div>
   </header>
 
@@ -790,17 +862,47 @@
 
     // State
     const STORAGE_KEY = 'kotoba_zukan_review_flags_v1';
-    let flaggedMap = {}; // { [id]: { id, name, category, reason } }
+    let flaggedMap = {}; // { [id]: { id, name, category, categoryName, subCategory, subCategoryName, reason } }
     let currentCategory = 'all';
+    let currentSubCategory = 'all';
     let onlyFlagged = false;
     let searchQuery = '';
     let currentModalItem = null;
     let audioPlayer = new Audio();
 
+    const CATEGORIES_DEF = [
+      { id: 'all', name: 'すべて' },
+      { id: 'doubutsu', name: 'いきもの' },
+      { id: 'tabemono', name: 'たべもの' },
+      { id: 'norimono', name: 'のりもの' },
+      { id: 'midikanamono', name: 'みぢかなもの' },
+      { id: 'doushi', name: 'どうし' }
+    ];
+
+    function getVocabList() {
+      if (window.APP_VOCAB && Array.isArray(window.APP_VOCAB.list)) {
+        return window.APP_VOCAB.list;
+      }
+      if (window.VocabDB && Array.isArray(window.VocabDB.list)) {
+        return window.VocabDB.list;
+      }
+      return [];
+    }
+
+    function getVocabById(id) {
+      if (window.APP_VOCAB && window.APP_VOCAB.byId && window.APP_VOCAB.byId[id]) {
+        return window.APP_VOCAB.byId[id];
+      }
+      if (window.VocabDB && typeof window.VocabDB.findById === 'function') {
+        return window.VocabDB.findById(id);
+      }
+      return null;
+    }
+
     // Init
     window.addEventListener('DOMContentLoaded', () => {
       loadFlagsFromStorage();
-      setupTabs();
+      renderCategoryTabs();
       setupSearch();
       renderGrid();
       updateStats();
@@ -836,15 +938,87 @@
     }
 
     // Filter Controls
-    function setupTabs() {
-      const tabs = document.querySelectorAll('.cat-tab');
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          currentCategory = tab.dataset.cat;
+    function renderCategoryTabs() {
+      const container = document.getElementById('cat-tabs');
+      if (!container) return;
+      const list = getVocabList();
+      container.innerHTML = '';
+
+      CATEGORIES_DEF.forEach(cat => {
+        const count = cat.id === 'all'
+          ? list.length
+          : list.filter(w => w.category === cat.id).length;
+        const btn = document.createElement('button');
+        btn.className = `cat-tab ${cat.id === currentCategory ? 'active' : ''}`;
+        btn.dataset.cat = cat.id;
+        btn.textContent = `${cat.name} (${count})`;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          currentCategory = cat.id;
+          currentSubCategory = 'all';
+          renderSubCategoryPills();
           renderGrid();
         });
+        container.appendChild(btn);
+      });
+
+      renderSubCategoryPills();
+    }
+
+    function renderSubCategoryPills() {
+      const toolbar = document.getElementById('subcat-toolbar');
+      const pillsContainer = document.getElementById('subcat-pills');
+      if (!toolbar || !pillsContainer) return;
+
+      if (currentCategory === 'all') {
+        toolbar.style.display = 'none';
+        pillsContainer.innerHTML = '';
+        return;
+      }
+
+      const list = getVocabList();
+      const catWords = list.filter(w => w.category === currentCategory);
+      
+      const subMap = new Map();
+      catWords.forEach(w => {
+        if (w.subCategory) {
+          const current = subMap.get(w.subCategory) || { name: w.subCategoryName || w.subCategory, count: 0 };
+          current.count++;
+          subMap.set(w.subCategory, current);
+        }
+      });
+
+      if (subMap.size === 0) {
+        toolbar.style.display = 'none';
+        pillsContainer.innerHTML = '';
+        return;
+      }
+
+      toolbar.style.display = 'block';
+      pillsContainer.innerHTML = '';
+
+      // 「すべて」ピル
+      const allPill = document.createElement('button');
+      allPill.className = `subcat-pill ${currentSubCategory === 'all' ? 'active' : ''}`;
+      allPill.textContent = `すべて (${catWords.length})`;
+      allPill.addEventListener('click', () => {
+        currentSubCategory = 'all';
+        renderSubCategoryPills();
+        renderGrid();
+      });
+      pillsContainer.appendChild(allPill);
+
+      subMap.forEach((info, subId) => {
+        const pill = document.createElement('button');
+        pill.className = `subcat-pill ${currentSubCategory === subId ? 'active' : ''}`;
+        pill.textContent = `${info.name} (${info.count})`;
+        pill.addEventListener('click', () => {
+          currentSubCategory = subId;
+          renderSubCategoryPills();
+          renderGrid();
+        });
+        pillsContainer.appendChild(pill);
       });
     }
 
@@ -866,16 +1040,18 @@
     // Render Grid
     function renderGrid() {
       const container = document.getElementById('vocab-grid');
-      const list = window.VocabDB ? window.VocabDB.list : [];
+      const list = getVocabList();
       
       const filtered = list.filter(item => {
         if (currentCategory !== 'all' && item.category !== currentCategory) return false;
+        if (currentSubCategory !== 'all' && item.subCategory !== currentSubCategory) return false;
         if (onlyFlagged && !flaggedMap[item.id]) return false;
         if (searchQuery) {
-          const matchName = item.name.toLowerCase().includes(searchQuery);
-          const matchId = item.id.toLowerCase().includes(searchQuery);
+          const matchName = item.name && item.name.toLowerCase().includes(searchQuery);
+          const matchId = item.id && item.id.toLowerCase().includes(searchQuery);
           const matchPrompt = item.prompt && item.prompt.toLowerCase().includes(searchQuery);
-          if (!matchName && !matchId && !matchPrompt) return false;
+          const matchSub = item.subCategoryName && item.subCategoryName.toLowerCase().includes(searchQuery);
+          if (!matchName && !matchId && !matchPrompt && !matchSub) return false;
         }
         return true;
       });
@@ -892,7 +1068,7 @@
       container.innerHTML = filtered.map(item => {
         const isFlagged = !!flaggedMap[item.id];
         const reason = isFlagged ? (flaggedMap[item.id].reason || '') : '';
-        const imgPath = '../common/images/' + item.file;
+        const imgPath = '../common/images/' + (item.file || (item.id + '.png'));
 
         return `
           <div class="card ${isFlagged ? 'is-flagged' : ''}" 
@@ -907,14 +1083,17 @@
             </div>
 
             <div class="image-container">
-              <img src="${imgPath}" loading="lazy" alt="${item.name}" onerror="if(!this.dataset.fb){this.dataset.fb='1'; this.src='images/' + '${item.file}';}">
+              <img src="${imgPath}" loading="lazy" alt="${item.name}">
             </div>
 
             <div class="card-info">
               <div class="card-word">${item.name}</div>
               <div class="card-meta">
-                <span class="cat-tag cat-${item.category}">${item.categoryName}</span>
-                <span>${item.id}</span>
+                <div class="card-tags">
+                  <span class="cat-tag cat-${item.category}">${item.categoryName || item.category}</span>
+                  ${item.subCategoryName ? `<span class="subcat-tag">${item.subCategoryName}</span>` : ''}
+                </div>
+                <span class="card-id">${item.id}</span>
               </div>
               <div class="card-comment ${reason ? 'has-text' : ''}" id="comment-${item.id}">${escapeHtml(reason)}</div>
             </div>
@@ -930,7 +1109,7 @@
     }
 
     function toggleFlag(id, reason = '') {
-      const item = window.VocabDB.findById(id);
+      const item = getVocabById(id);
       if (!item) return;
 
       if (flaggedMap[id]) {
@@ -942,6 +1121,8 @@
           name: item.name,
           category: item.category,
           categoryName: item.categoryName,
+          subCategory: item.subCategory || '',
+          subCategoryName: item.subCategoryName || '',
           reason: reason
         };
         showToast(`🚨 「${item.name}」を要修正に追加しました`);
@@ -970,6 +1151,9 @@
 
     function updateStats() {
       const count = Object.keys(flaggedMap).length;
+      const total = getVocabList().length;
+      const totalEl = document.getElementById('total-count');
+      if (totalEl) totalEl.textContent = total;
       document.getElementById('flagged-count').textContent = count;
       document.getElementById('dock-flag-count').textContent = count;
       document.getElementById('summary-count').textContent = count;
@@ -991,20 +1175,15 @@
     // Detail Modal
     function openDetailModal(e, id) {
       if (e) e.stopPropagation();
-      const item = window.VocabDB.findById(id);
+      const item = getVocabById(id);
       if (!item) return;
       currentModalItem = item;
 
-      document.getElementById('modal-title').textContent = `${item.name} (${item.id}) - ${item.categoryName}`;
+      const subInfo = item.subCategoryName ? ` ＞ ${item.subCategoryName}` : '';
+      document.getElementById('modal-title').textContent = `${item.name} (${item.id}) - ${item.categoryName || item.category}${subInfo}`;
       const modalImg = document.getElementById('modal-img');
-      modalImg.dataset.fb = '';
-      modalImg.onerror = function() {
-        if (!this.dataset.fb) {
-          this.dataset.fb = '1';
-          this.src = 'images/' + item.file;
-        }
-      };
-      modalImg.src = '../common/images/' + item.file;
+      modalImg.onerror = null;
+      modalImg.src = '../common/images/' + (item.file || (item.id + '.png'));
       document.getElementById('modal-prompt').textContent = item.prompt || '（プロンプト情報なし）';
 
       const flagInfo = flaggedMap[id];
@@ -1041,6 +1220,8 @@
           name: currentModalItem.name,
           category: currentModalItem.category,
           categoryName: currentModalItem.categoryName,
+          subCategory: currentModalItem.subCategory || '',
+          subCategoryName: currentModalItem.subCategoryName || '',
           reason: reason
         };
       }
@@ -1071,6 +1252,8 @@
           name: currentModalItem.name,
           category: currentModalItem.category,
           categoryName: currentModalItem.categoryName,
+          subCategory: currentModalItem.subCategory || '',
+          subCategoryName: currentModalItem.subCategoryName || '',
           reason: reason
         };
         saveFlagsToStorage();
@@ -1099,13 +1282,15 @@
       } else {
         listEl.innerHTML = keys.map(id => {
           const item = flaggedMap[id];
+          const subInfo = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
+          const imgFile = item.file || (item.id + '.png');
           return `
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
               <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="../common/images/${item.id}.png" onerror="if(!this.dataset.fb){this.dataset.fb='1'; this.src='images/${item.id}.png';}" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
+                <img src="../common/images/${imgFile}" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
                 <div>
                   <strong style="font-size: 0.95rem;">${item.name}</strong>
-                  <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${item.id}) [${item.categoryName || ''}]</span>
+                  <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${item.id}) [${item.categoryName || ''}${subInfo}]</span>
                   ${item.reason ? `<div style="font-size: 0.8rem; color: #dc2626; margin-top: 2px;">💬 ${escapeHtml(item.reason)}</div>` : ''}
                 </div>
               </div>
@@ -1133,8 +1318,9 @@
       let text = `【ことばずかん 画像修正指摘リスト (計 ${keys.length} 件)】\n`;
       keys.forEach((id, idx) => {
         const item = flaggedMap[id];
+        const sub = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
         const reason = item.reason ? `: ${item.reason}` : '';
-        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}]${reason}\n`;
+        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}${sub}]${reason}\n`;
       });
 
       navigator.clipboard.writeText(text).then(() => {

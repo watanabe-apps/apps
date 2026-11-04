@@ -17,7 +17,7 @@ import urllib.error
 import shutil
 
 API_URL = "http://127.0.0.1:7860/sdapi/v1/txt2img"
-KZ_IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/images"
+# KZ_IMAGES_DIR removed
 COMMON_IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/common/images"
 ARTIFACT_DIR = "/Users/watanabetatsuki/.gemini/antigravity/brain/a382f397-33b4-437b-a5d1-e53b23bcbce6"
 
@@ -75,14 +75,10 @@ def generate_one(target_id, data):
             img_b64 = res_json["images"][0]
             img_bytes = base64.b64decode(img_b64)
 
-            # 1. Save to kotoba_zukan/images
-            kz_file = os.path.join(KZ_IMAGES_DIR, f"{target_id}.png")
-            with open(kz_file, "wb") as f:
-                f.write(img_bytes)
-
-            # 2. Copy to common/images
+            # Save directly to common/images
             common_file = os.path.join(COMMON_IMAGES_DIR, f"{target_id}.png")
-            shutil.copyfile(kz_file, common_file)
+            with open(common_file, "wb") as f:
+                f.write(img_bytes)
 
             # 3. Copy to artifact dir for preview
             artifact_file = os.path.join(ARTIFACT_DIR, f"{target_id}.png")

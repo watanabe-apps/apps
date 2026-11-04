@@ -307,6 +307,43 @@
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
 
+    .zukan-subtabs-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      scrollbar-width: none;
+    }
+    .zukan-subtabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .subcat-pill {
+      padding: 5px 14px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #64748b;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .subcat-pill:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .subcat-pill.active {
+      background: #3b82f6;
+      color: #ffffff;
+      border-color: #3b82f6;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+    }
+
     .zukan-count-badge {
       font-size: 0.95rem;
       font-weight: 700;
@@ -1668,6 +1705,7 @@
       </button>
       <span class="zukan-count-badge" id="zukan-count-badge">0こ</span>
     </header>
+    <div class="zukan-subtabs-bar" id="zukan-subtabs-bar" style="display: none;"></div>
 
     <div class="zukan-grid-scroll">
       <div class="zukan-grid" id="zukan-grid">
@@ -1795,7 +1833,7 @@
             <span class="setting-label">1. たいしょう カテゴリ</span>
           </div>
           <div class="category-chips-grid" id="opt-categories">
-            <button class="cat-chip checked" data-cat="doubutsu">どうぶつ</button>
+            <button class="cat-chip checked" data-cat="doubutsu">いきもの</button>
             <button class="cat-chip checked" data-cat="tabemono">たべもの</button>
             <button class="cat-chip checked" data-cat="norimono">のりもの</button>
             <button class="cat-chip checked" data-cat="midikanamono">みぢかなもの</button>
@@ -1966,7 +2004,7 @@
     // カテゴリ定義
     const CATEGORIES_DEF = [
       { id: 'all', name: 'すべて' },
-      { id: 'doubutsu', name: 'どうぶつ', color: 'var(--cat-doubutsu)' },
+      { id: 'doubutsu', name: 'いきもの', color: 'var(--cat-doubutsu)' },
       { id: 'tabemono', name: 'たべもの', color: 'var(--cat-tabemono)' },
       { id: 'norimono', name: 'のりもの', color: 'var(--cat-norimono)' },
       { id: 'midikanamono', name: 'みぢかなもの', color: 'var(--cat-midikanamono)' },
@@ -2433,7 +2471,7 @@
         <div class="k-visual-wrap">
           <img src="../common/images/${wordId}.png" alt="${wordName}" class="k-visual-img" draggable="false"
             onload="const fb=this.parentElement.querySelector('.k-fallback-svg'); if(fb) fb.style.display='none';"
-            onerror="if(!this.dataset.fb){this.dataset.fb='1'; this.src='images/${wordId}.png';}else{this.style.display='none'; const fb=this.parentElement.querySelector('.k-fallback-svg'); if(fb) fb.style.display='flex';}"
+            onerror="this.style.display='none'; const fb=this.parentElement.querySelector('.k-fallback-svg'); if(fb) fb.style.display='flex';"
             style="-webkit-user-drag:none; user-drag:none; pointer-events:none;">
           <div class="k-fallback-svg">
             ${svg}
@@ -2530,6 +2568,7 @@
        図鑑画面ロジック
        ========================================================= */
     let currentCategoryFilter = 'all';
+    let currentSubCategoryFilter = 'all';
     let currentFilteredWords = [];
     let modalCurrentWordIndex = 0;
 
@@ -2546,12 +2585,69 @@
         tab.textContent = cat.name;
         tab.addEventListener('click', () => {
           playSound('tap');
-          currentCategoryFilter = cat.id;
+          if (currentCategoryFilter !== cat.id) {
+            currentCategoryFilter = cat.id;
+            currentSubCategoryFilter = 'all';
+          }
           document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           renderZukanCards();
         });
         container.appendChild(tab);
+      });
+
+      renderZukanSubTabs();
+    }
+
+    function renderZukanSubTabs() {
+      const subBar = document.getElementById('zukan-subtabs-bar');
+      if (!subBar) return;
+
+      if (currentCategoryFilter === 'all') {
+        subBar.style.display = 'none';
+        subBar.innerHTML = '';
+        return;
+      }
+
+      // 現在の大カテゴリーに属するサブカテゴリーを抽出
+      const catWords = ALL_WORDS.filter(w => w.category === currentCategoryFilter && settings.categories.includes(w.category));
+      const subMap = new Map();
+      catWords.forEach(w => {
+        if (w.subCategory && !subMap.has(w.subCategory)) {
+          subMap.set(w.subCategory, w.subCategoryName || w.subCategory);
+        }
+      });
+
+      if (subMap.size <= 1) {
+        subBar.style.display = 'none';
+        subBar.innerHTML = '';
+        return;
+      }
+
+      subBar.style.display = 'flex';
+      subBar.innerHTML = '';
+
+      // 「すべて」ピル
+      const allPill = document.createElement('button');
+      allPill.className = `subcat-pill ${currentSubCategoryFilter === 'all' ? 'active' : ''}`;
+      allPill.textContent = 'すべて';
+      allPill.addEventListener('click', () => {
+        playSound('tap');
+        currentSubCategoryFilter = 'all';
+        renderZukanCards();
+      });
+      subBar.appendChild(allPill);
+
+      subMap.forEach((subName, subId) => {
+        const pill = document.createElement('button');
+        pill.className = `subcat-pill ${currentSubCategoryFilter === subId ? 'active' : ''}`;
+        pill.textContent = subName;
+        pill.addEventListener('click', () => {
+          playSound('tap');
+          currentSubCategoryFilter = subId;
+          renderZukanCards();
+        });
+        subBar.appendChild(pill);
       });
     }
 
@@ -2565,7 +2661,9 @@
       const categoryAllWords = ALL_WORDS.filter(w => {
         if (!settings.categories.includes(w.category)) return false;
         if (currentCategoryFilter === 'all') return true;
-        return w.category === currentCategoryFilter;
+        if (w.category !== currentCategoryFilter) return false;
+        if (currentSubCategoryFilter !== 'all' && w.subCategory !== currentSubCategoryFilter) return false;
+        return true;
       });
 
       currentFilteredWords = categoryAllWords.filter(w => !hiddenWordsSet.has(w.id));
