@@ -3438,6 +3438,9 @@
 
     function setupCanvasInteraction(slot, slotIdx) {
       let isDrawing = false;
+      let hasMoved = false;
+      let startX = 0;
+      let startY = 0;
       let currentStroke = [];
 
       const getCoord = (e) => {
@@ -3464,8 +3467,11 @@
         });
 
         isDrawing = true;
+        hasMoved = false;
         currentStroke = [];
         const pt = getCoord(e);
+        startX = pt.x;
+        startY = pt.y;
         currentStroke.push(pt);
 
         const isEraser = appState.currentTool === 'eraser';
@@ -3496,6 +3502,9 @@
         if (!isDrawing) return;
         e.preventDefault();
         const pt = getCoord(e);
+        if (!hasMoved && Math.hypot(pt.x - startX, pt.y - startY) > 5) {
+          hasMoved = true;
+        }
         currentStroke.push(pt);
 
         slot.ctx.lineTo(pt.x, pt.y);
@@ -3525,14 +3534,36 @@
           }
         } catch (err) {}
 
-        commitCurrentStroke();
+        if (hasMoved) {
+          commitCurrentStroke();
+        } else {
+          // タップ（移動なし）の場合：直前の1画を削除（アンドゥ）
+          currentStroke = [];
+          if (slot.strokes.length > 0) {
+            slot.strokes.pop();
+          }
+          redrawSlot(slot);
+        }
+        checkCompletionState();
+      };
+
+      const cancelDrawing = () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        currentStroke = [];
+        redrawSlot(slot);
         checkCompletionState();
       };
 
       slot.forceCommitCurrentStroke = () => {
         if (isDrawing) {
           isDrawing = false;
-          commitCurrentStroke();
+          if (hasMoved) {
+            commitCurrentStroke();
+          } else {
+            currentStroke = [];
+            redrawSlot(slot);
+          }
           checkCompletionState();
         }
       };
@@ -3540,17 +3571,17 @@
       slot.canvas.addEventListener('pointerdown', startDrawing);
       slot.canvas.addEventListener('pointermove', moveDrawing);
       slot.canvas.addEventListener('pointerup', stopDrawing);
-      slot.canvas.addEventListener('pointercancel', stopDrawing);
+      slot.canvas.addEventListener('pointercancel', cancelDrawing);
 
       const onWindowPointerUp = (e) => {
         if (isDrawing) stopDrawing(e);
       };
       window.addEventListener('pointerup', onWindowPointerUp);
-      window.addEventListener('pointercancel', onWindowPointerUp);
+      window.addEventListener('pointercancel', cancelDrawing);
 
       slot.cleanup = () => {
         window.removeEventListener('pointerup', onWindowPointerUp);
-        window.removeEventListener('pointercancel', onWindowPointerUp);
+        window.removeEventListener('pointercancel', cancelDrawing);
       };
     }
 

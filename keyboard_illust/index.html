@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4T10JYJ9XC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-4T10JYJ9XC');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>イラスト平仮名キーボード</title>
+    <!-- アイコン設定 -->
+    <link rel="apple-touch-icon" href="img.png">
+    <link rel="icon" href="img.png">
+    <!-- 共通単語辞書の読み込み -->
+    <script src="../common/vocab.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap');
+
+        :root {
+            --key-size: min(4.2vw, 11vh);
+            --text-size: 5.5vh;
+        }
+
+        body {
+            font-family: "UD Digi Kyokasho N-R", "UD Digi Kyokasho N-B", "UDデジタル教科書体 N-R", "UDデジタル教科書体 N-B", "Klee One", sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            background: #fff;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            overflow: hidden;
+            /* セーフエリア対応 */
+            padding-top: env(safe-area-inset-top);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            box-sizing: border-box;
+            /* iOSタップ時のグレーのハイライトを消す */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* === スタート画面（音声ロック解除用） === */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100%;
+            background: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .title-logo {
+            font-size: min(7.5vw, 5.5vh);
+            color: #333;
+            margin-bottom: 2vh;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .subtitle-desc {
+            font-size: min(3.8vw, 2.4vh);
+            color: #666;
+            margin-bottom: 5vh;
+            text-align: center;
+        }
+
+        .btn-home {
+            background: #007AFF;
+            color: white;
+            border-radius: 14px;
+            padding: 2vh 0;
+            width: 60vw;
+            max-width: 320px;
+            font-size: min(5vw, 3.5vh);
+            border: none;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+            font-family: inherit;
+            cursor: pointer;
+            touch-action: manipulation;
+            margin-bottom: 2.5vh;
+        }
+
+        .btn-home:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+
+        /* トリプルタップ用ボタン */
+        .btn-home-sub {
+            background: #ffffff;
+            color: #007AFF;
+            border: 2px solid #007AFF;
+            border-radius: 14px;
+            padding: 1.2vh 0;
+            width: 60vw;
+            max-width: 320px;
+            font-size: min(3.8vw, 2.4vh);
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            font-family: inherit;
+            cursor: pointer;
+            touch-action: manipulation;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            transition: all 0.15s;
+        }
+
+        .btn-home-sub:active {
+            background: #f0f7ff;
+            transform: scale(0.96);
+        }
+
+        #display {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 1.2vh 2vw;
+            flex-grow: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 10;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        #text {
+            font-size: var(--text-size, 5.5vh);
+            font-weight: bold;
+            overflow-y: auto;
+            width: 100%;
+            height: 100%;
+            text-align: left;
+            margin-right: 2vw;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            align-items: center;
+            padding: 4px;
+            box-sizing: border-box;
+            cursor: pointer;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .char-cell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 1.25em;
+            padding: 0 2px;
+            margin: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .char-cell.selected {
+            background-color: #dbeafe !important;
+            border-color: #007AFF !important;
+            color: #0056b3;
+        }
+
+        .char-cell.space-char {
+            min-width: 0.6em;
+            color: #aaa;
+        }
+
+        /* === 枠付きイラストセル（大きめ、文字は枠を作らずシャドウでオーバーレイ） === */
+        .char-cell.illust-cell {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.55em;
+            height: 1.55em;
+            margin: 0 4px;
+            padding: 0;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            vertical-align: middle;
+            box-sizing: border-box;
+        }
+
+        .char-cell.illust-cell.selected {
+            border-color: #007AFF !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+        }
+
+        .char-cell.illust-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        /* 下寄せオーバーレイ文字（枠なし＋白シャドウでくっきり可読性を向上） */
+        .char-cell.illust-cell .caption {
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            right: 0;
+            font-size: 0.34em;
+            font-weight: bold;
+            text-align: center;
+            background: transparent !important;
+            color: #000;
+            text-shadow:
+                -2px -2px 0 #fff,
+                 2px -2px 0 #fff,
+                -2px  2px 0 #fff,
+                 2px  2px 0 #fff,
+                 0px -2px 0 #fff,
+                 0px  2px 0 #fff,
+                -2px  0px 0 #fff,
+                 2px  0px 0 #fff,
+                 0px  0px 4px #fff,
+                 0px  0px 4px #fff;
+            line-height: 1;
+            pointer-events: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 1px;
+        }
+
+        /* 非アクティブ時は幅0！文字間隔を広げず完全に自然な見た目を保つ */
+        .cursor-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 0;
+            height: 1.25em;
+            margin: 0;
+            position: relative;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        /* アクティブ時だけ青い縦棒カーソル（幅3px）が現れる */
+        .cursor-slot.active {
+            width: 3px;
+            margin: 0 1.5px;
+        }
+
+        .cursor-slot.active::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 85%;
+            background-color: #007AFF;
+            border-radius: 2px;
+            animation: cursor-blink 1s infinite;
+        }
+
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1vh 1vw;
+            flex-shrink: 0;
+            width: 20vw;
+        }
+
+        .btn {
+            font-family: inherit;
+            font-size: min(3vh, 3.5vw);
+            padding: 1vh 0;
+            cursor: pointer;
+            border-radius: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.1s;
+        }
+
+        .btn:active {
+            background: #e9e9e9;
+            transform: scale(0.95);
+        }
+
+        /* === 候補バー（変換リスト：無駄なスペースなし、枠付きタイル表示） === */
+        #suggest-bar {
+            width: 100%;
+            height: min(10.5vh, 84px);
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            box-sizing: border-box;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
+            z-index: 5;
+        }
+
+        #suggest-bar.empty {
+            display: none;
+        }
+
+        /* タイルアイテム共通（枠付き四角タイル） */
+        .suggest-item {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: min(9.2vh, 72px);
+            height: min(9.2vh, 72px);
+            background: #ffffff;
+            border: 2px solid #94a3b8;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            flex-shrink: 0;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            transition: transform 0.1s, border-color 0.1s, background-color 0.1s;
+            box-sizing: border-box;
+        }
+
+        .suggest-item:active {
+            transform: scale(0.92);
+            background: #f1f5f9;
+        }
+
+        /* 先頭の平仮名そのまま確定ボタン（カード化せず、文字長に応じてそのまま綺麗に表示） */
+        .suggest-text-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: min(9.2vh, 72px);
+            width: auto;
+            min-width: min(8vh, 60px);
+            padding: 0 18px;
+            margin-right: 4px;
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 14px;
+            color: #1d4ed8;
+            font-weight: bold;
+            font-family: inherit;
+            font-size: min(4.2vh, 30px);
+            line-height: 1;
+            white-space: nowrap;
+            flex-shrink: 0;
+            cursor: pointer;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+            transition: transform 0.1s, background-color 0.1s;
+            box-sizing: border-box;
+        }
+
+        .suggest-text-btn:active {
+            transform: scale(0.95);
+            background: #dbeafe;
+        }
+
+        /* 枠付きイラスト候補（画像大きく、文字は枠なし＋シャドウでオーバーレイ） */
+        .suggest-item.item-illust {
+            border-color: #cbd5e1;
+        }
+
+        .suggest-item.item-illust img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .suggest-item.item-illust .suggest-caption {
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: min(2.4vh, 16px);
+            font-weight: bold;
+            color: #000;
+            background: transparent;
+            text-shadow:
+                -2px -2px 0 #fff,
+                 2px -2px 0 #fff,
+                -2px  2px 0 #fff,
+                 2px  2px 0 #fff,
+                 0px -2px 0 #fff,
+                 0px  2px 0 #fff,
+                -2px  0px 0 #fff,
+                 2px  0px 0 #fff,
+                 0px  0px 4px #fff,
+                 0px  0px 4px #fff;
+            line-height: 1.1;
+            pointer-events: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 2px;
+        }
+
+        #keyboard-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            background: #fff;
+            z-index: 2;
+            padding-bottom: max(2vh, env(safe-area-inset-bottom));
+        }
+
+        #instruction {
+            text-align: center;
+            font-size: 1.8vh;
+            color: #888;
+            font-weight: bold;
+            margin: 0.5vh 0;
+        }
+
+        #keyboard {
+            display: flex;
+            flex-direction: row-reverse;
+            width: 100%;
+            padding: 0 1vw;
+            gap: 0.5vw;
+            box-sizing: border-box;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .kb-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vh;
+            align-items: center;
+        }
+
+        .col-checkbox {
+            width: calc(var(--key-size) * 0.4);
+            height: calc(var(--key-size) * 0.4);
+            border: 2px solid #aaa;
+            border-radius: 4px;
+            opacity: 0.2;
+            cursor: pointer;
+            background: transparent;
+            touch-action: manipulation;
+            margin-bottom: 0.5vh;
+        }
+
+        .col-checkbox.active {
+            background: #aaa;
+        }
+
+        .key {
+            font-family: inherit;
+            background: yellow;
+            border-radius: 10px;
+            font-size: calc(var(--key-size) * 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            border: none;
+            padding: 0;
+            margin: 0;
+            width: var(--key-size);
+            height: var(--key-size);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .key:active {
+            transform: scale(0.92);
+            background: #ffeb3b;
+        }
+
+        .disabled-key {
+            opacity: 0.3 !important;
+            pointer-events: none !important;
+            background: #e0e0e0;
+        }
+
+        .empty {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* === 設定モーダル === */
+        #settings-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .settings-content {
+            background: #fff;
+            padding: 3vh 5vw;
+            border-radius: 15px;
+            font-size: 2.6vh;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            max-width: 90vw;
+            box-sizing: border-box;
+        }
+
+        .btn-size-opt {
+            flex: 1;
+            padding: 0.8vh 0;
+            border: 2px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 10px;
+            font-size: 2.2vh;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            touch-action: manipulation;
+            color: #475569;
+            transition: all 0.15s;
+        }
+
+        .btn-size-opt:active {
+            transform: scale(0.96);
+        }
+
+        .btn-size-opt.active {
+            background: #007AFF;
+            border-color: #007AFF;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-mode-opt {
+            flex: 1;
+            padding: 0.8vh 0;
+            border: 2px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 10px;
+            font-size: 2.1vh;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            touch-action: manipulation;
+            color: #475569;
+            transition: all 0.15s;
+        }
+
+        .btn-mode-opt:active {
+            transform: scale(0.96);
+        }
+
+        .btn-mode-opt.active {
+            background: #007AFF;
+            border-color: #007AFF;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+        }
+
+        /* === 単語登録・管理フルスクリーンモーダル（図鑑風デザイン） === */
+        #vocab-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            z-index: 3000;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .vocab-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2vh 3vw;
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            flex-shrink: 0;
+        }
+
+        .vocab-title {
+            font-size: min(4vw, 2.8vh);
+            font-weight: bold;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vocab-close-btn {
+            background: #e2e8f0;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8vh 2.5vw;
+            font-size: min(3vw, 2.2vh);
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .vocab-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 1vh 3vw;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .vocab-btn {
+            font-family: inherit;
+            font-size: min(2.8vw, 1.9vh);
+            font-weight: bold;
+            padding: 0.8vh 1.6vw;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            touch-action: manipulation;
+        }
+
+        .vocab-btn:active {
+            transform: scale(0.97);
+            background: #f1f5f9;
+        }
+
+        .vocab-btn.btn-primary {
+            background: #007AFF;
+            color: #fff;
+            border-color: #007AFF;
+        }
+
+        /* 50音クイックフィルタータブ */
+        .vocab-tabs-bar {
+            display: flex;
+            gap: 6px;
+            padding: 8px 3vw;
+            background: #f8fafc;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .vocab-tab-btn {
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: min(2.8vw, 1.8vh);
+            font-weight: bold;
+            color: #475569;
+            cursor: pointer;
+            font-family: inherit;
+            touch-action: manipulation;
+        }
+
+        .vocab-tab-btn.active {
+            background: #007AFF;
+            border-color: #007AFF;
+            color: #ffffff;
+        }
+
+        .vocab-search-bar {
+            padding: 0.8vh 3vw;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .vocab-search-input {
+            flex-grow: 1;
+            padding: 0.8vh 2vw;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: min(3.5vw, 2.2vh);
+            font-family: inherit;
+            outline: none;
+            background: #f8fafc;
+        }
+
+        .vocab-count-badge {
+            font-size: min(2.8vw, 1.8vh);
+            color: #64748b;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* 単語グリッド（図鑑風正方形タイル、文字崩れなし） */
+        .vocab-list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px 3vw;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 14px;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+            align-content: flex-start;
+        }
+
+        /* 図鑑風枠付きカード */
+        .vocab-card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 2px solid #e2e8f0;
+            padding: 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .vocab-card:active {
+            transform: scale(0.96);
+            border-color: #007AFF;
+        }
+
+        .vocab-card-img-box {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .vocab-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .vocab-card-name {
+            font-size: 2.4vh;
+            font-weight: bold;
+            color: #1e293b;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            line-height: 1.2;
+        }
+
+        .vocab-card-tts {
+            font-size: 1.6vh;
+            color: #64748b;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .vocab-card-tag {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            background: #e0f2fe;
+            color: #0284c7;
+            font-weight: bold;
+        }
+
+        /* === 単語編集モーダル === */
+        #vocab-edit-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100dvh;
+            background: rgba(0, 0, 0, 0.65);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3500;
+        }
+
+        .vocab-edit-dialog {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 3vh 4vw;
+            width: 90vw;
+            max-width: 440px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .vocab-edit-title {
+            font-size: 2.6vh;
+            font-weight: bold;
+            text-align: center;
+            color: #1e293b;
+        }
+
+        .edit-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .edit-form-label {
+            font-size: 1.9vh;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .edit-form-input {
+            font-size: 2.2vh;
+            padding: 0.8vh 2vw;
+            border-radius: 8px;
+            border: 1.5px solid #cbd5e1;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .edit-image-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .edit-preview-img-wrapper {
+            width: 90px;
+            height: 90px;
+            border-radius: 10px;
+            border: 2px dashed #94a3b8;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            color: #94a3b8;
+            font-size: 28px;
+        }
+
+        .edit-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .edit-form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 1vh;
+        }
+
+        .edit-form-buttons button {
+            flex: 1;
+            padding: 1.2vh 0;
+            border-radius: 10px;
+            font-size: 2.2vh;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-edit-delete {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5 !important;
+            margin-top: 6px;
+            padding: 1vh 0;
+            border-radius: 8px;
+            font-size: 1.8vh;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- スタート画面 -->
+    <div id="start-screen">
+        <div class="title-logo">イラスト平仮名キーボード</div>
+        <div class="subtitle-desc">文字をうつと、イラストにへんかんできるよ！</div>
+        <button class="btn-home" id="btn-start">スタート</button>
+        <!-- 誤作動防止：トリプルタップで開く -->
+        <button class="btn-home-sub" id="btn-open-vocab-from-start">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span>📖</span> 単語の登録・管理
+            </div>
+            <span id="start-vocab-hint" style="font-size: min(3vw, 1.8vh); color: #007AFF; font-weight: normal;">トリプルタップで開く</span>
+        </button>
+    </div>
+
+    <!-- メイン入力表示 -->
+    <div id="display">
+        <div id="text"></div>
+        <div class="controls-grid">
+            <!-- 左上: １文字消す / 右上: 全部消す / 左下: 再生 / 右下: 設定 -->
+            <button class="btn" id="btn-del">⌫</button>
+            <button class="btn" id="btn-clr">🗑</button>
+            <button class="btn" id="btn-spk">🔊</button>
+            <button class="btn" id="btn-settings" style="flex-direction: column; line-height: 1.1;">
+                <span style="font-size: 1.2em;">⚙️</span>
+                <span style="font-size: 0.38em; color: #666; font-weight: normal;">トリプルタップ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 候補バー（先頭は平仮名のみ、続いて枠付きイラスト候補） -->
+    <div id="suggest-bar" class="empty"></div>
+
+    <!-- キーボード領域 -->
+    <div id="keyboard-wrapper">
+        <div id="instruction">※列の上の四角をタップで表示を切り替え</div>
+        <div id="keyboard"></div>
+    </div>
+
+    <!-- 設定モーダル（⚙️トリプルタップ） -->
+    <div id="settings-modal" class="hidden">
+        <div class="settings-content">
+            <h2 style="margin-top:0; text-align:center;">表示・機能設定</h2>
+            <label style="display:flex; align-items:center; margin-bottom:2vh;">
+                <input type="checkbox" id="chk-dakuon" style="transform:scale(1.5); margin-right:1.5vw;">
+                濁音・半濁音（が〜ぽ）
+            </label>
+            <label style="display:flex; align-items:center; margin-bottom:2vh;">
+                <input type="checkbox" id="chk-yoon" style="transform:scale(1.5); margin-right:1.5vw;">
+                拗音・小文字（ゃゅょっ等）
+            </label>
+            <label style="display:flex; align-items:center; margin-bottom:2vh;">
+                <input type="checkbox" id="chk-number" style="transform:scale(1.5); margin-right:1.5vw;">
+                数字（1〜0）
+            </label>
+            <label style="display:flex; align-items:center; margin-bottom:2vh;">
+                <input type="checkbox" id="chk-symbol" style="transform:scale(1.5); margin-right:1.5vw;">
+                句読点・記号（ー、。␣）
+            </label>
+            <hr style="margin: 2vh 0; border: none; border-top: 1px solid #ddd;">
+            <!-- イラスト文字オーバーレイ設定 -->
+            <label style="display:flex; align-items:center; margin-bottom:2vh; font-weight:bold; color:#0284c7;">
+                <input type="checkbox" id="chk-caption" style="transform:scale(1.5); margin-right:1.5vw;">
+                イラストに文字を残す（下寄せオーバーレイ）
+            </label>
+            <!-- 文字サイズ調整設定 -->
+            <div style="margin-bottom: 2vh;">
+                <div style="font-weight: bold; margin-bottom: 1vh; color: #334155; font-size: 2.2vh; display: flex; justify-content: space-between; align-items: center;">
+                    <span>文字サイズ</span>
+                    <span id="label-text-size" style="font-size: 1.8vh; color: #007AFF;">標準</span>
+                </div>
+                <div style="display: flex; gap: 8px;" id="text-size-options">
+                    <button type="button" class="btn-size-opt" data-size="4vh">小</button>
+                    <button type="button" class="btn-size-opt" data-size="5.5vh">標準</button>
+                    <button type="button" class="btn-size-opt" data-size="7vh">大</button>
+                    <button type="button" class="btn-size-opt" data-size="8.8vh">特大</button>
+                </div>
+            </div>
+            <!-- 変換候補の検索一致モード設定 -->
+            <div style="margin-bottom: 2vh;">
+                <div style="font-weight: bold; margin-bottom: 1vh; color: #334155; font-size: 2.2vh;">
+                    変換候補のさがし方
+                </div>
+                <div style="display: flex; gap: 8px;" id="match-mode-options">
+                    <button type="button" class="btn-mode-opt" data-mode="prefix">前方一致（おすすめ）</button>
+                    <button type="button" class="btn-mode-opt" data-mode="exact">完全一致</button>
+                </div>
+            </div>
+            <div style="margin-top:2vh;">
+                <!-- 誤作動防止：トリプルタップで開く -->
+                <button class="btn" id="btn-open-vocab-from-settings"
+                    style="background:#f0f9ff; border:1.5px solid #0284c7; color:#0284c7; padding: 1vh 2vw; width: 100%; font-size:2.2vh; margin-bottom:1.5vh; flex-direction:column; gap:2px;">
+                    <span>📖 単語の登録・管理を開く</span>
+                    <span id="settings-vocab-hint" style="font-size: 1.6vh; color: #0284c7; font-weight: normal;">トリプルタップで開く</span>
+                </button>
+                <button class="btn" id="btn-save"
+                    style="background:#007AFF; color:white; padding: 1vh 3vw; width: 100%;">保存して閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 単語登録・管理フルスクリーンモーダル -->
+    <div id="vocab-modal" class="hidden">
+        <div class="vocab-header">
+            <div class="vocab-title">
+                <span>📖</span> 単語の登録・管理
+            </div>
+            <button class="vocab-close-btn" id="btn-close-vocab">✖ とじる</button>
+        </div>
+
+        <div class="vocab-toolbar">
+            <button class="vocab-btn btn-primary" id="btn-add-word">
+                <span>➕</span> あたらしい単語を追加
+            </button>
+            <button class="vocab-btn" id="btn-reset-vocab">
+                <span>🔄</span> 初期データ一括読込
+            </button>
+            <button class="vocab-btn" id="btn-export-vocab">
+                <span>📤</span> エクスポート (保存)
+            </button>
+            <button class="vocab-btn" id="btn-import-vocab">
+                <span>📥</span> インポート (復元)
+            </button>
+            <input type="file" id="vocab-file-input" accept=".json" style="display:none;">
+        </div>
+
+        <!-- 50音クイックフィルタータブ -->
+        <div class="vocab-tabs-bar" id="vocab-tabs-bar">
+            <button class="vocab-tab-btn active" data-row="all">すべて</button>
+            <button class="vocab-tab-btn" data-row="a">あ行</button>
+            <button class="vocab-tab-btn" data-row="ka">か行</button>
+            <button class="vocab-tab-btn" data-row="sa">さ行</button>
+            <button class="vocab-tab-btn" data-row="ta">た行</button>
+            <button class="vocab-tab-btn" data-row="na">な行</button>
+            <button class="vocab-tab-btn" data-row="ha">は行</button>
+            <button class="vocab-tab-btn" data-row="ma">ま行</button>
+            <button class="vocab-tab-btn" data-row="ya">や行</button>
+            <button class="vocab-tab-btn" data-row="ra">ら行</button>
+            <button class="vocab-tab-btn" data-row="wa">わ行</button>
+        </div>
+
+        <div class="vocab-search-bar">
+            <input type="text" id="vocab-search-input" class="vocab-search-input" placeholder="単語をさがす（例：いぬ、くるま）...">
+            <div class="vocab-count-badge" id="vocab-count-badge">登録数: 0件</div>
+        </div>
+
+        <div class="vocab-list-container" id="vocab-list-container">
+            <!-- 図鑑カードが動的に生成されます -->
+        </div>
+    </div>
+
+    <!-- 単語編集・追加ダイアログ -->
+    <div id="vocab-edit-modal" class="hidden">
+        <div class="vocab-edit-dialog">
+            <div class="vocab-edit-title" id="edit-dialog-title">単語を追加</div>
+
+            <div class="edit-form-group">
+                <label class="edit-form-label">よみ（ひらがな）<span style="color:red;">*</span></label>
+                <input type="text" id="edit-vocab-name" class="edit-form-input" placeholder="例: いぬ">
+            </div>
+
+            <div class="edit-form-group">
+                <label class="edit-form-label">よみあげ（漢字など）</label>
+                <input type="text" id="edit-vocab-tts" class="edit-form-input" placeholder="例: 犬 (空欄ならよみと同じ)">
+            </div>
+
+            <div class="edit-form-group">
+                <label class="edit-form-label">イラスト画像<span style="color:red;">*</span></label>
+                <div class="edit-image-preview-box">
+                    <div class="edit-preview-img-wrapper" id="edit-preview-wrapper">
+                        <span id="edit-preview-placeholder">📷</span>
+                        <img id="edit-preview-img" class="edit-preview-img" src="" alt="プレビュー">
+                    </div>
+                    <div>
+                        <input type="file" id="edit-image-input" accept="image/*" style="font-size: 1.8vh;">
+                        <div style="font-size: 1.5vh; color: #888; margin-top: 4px;">写真やカメラから選択</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-form-buttons">
+                <button type="button" id="btn-cancel-edit" style="background: #e2e8f0; color: #334155;">キャンセル</button>
+                <button type="button" id="btn-save-edit" style="background: #007AFF; color: #ffffff;">保存する</button>
+            </div>
+
+            <button type="button" id="btn-delete-from-edit" class="btn-edit-delete hidden">🗑 この単語を削除する</button>
+        </div>
+    </div>
+
+    <script>
+        // バウンス防止
+        document.addEventListener('touchmove', function (e) {
+            if (!e.target.closest('#text') && !e.target.closest('#vocab-list-container')) e.preventDefault();
+        }, { passive: false });
+
+        // === 設定管理 ===
+        let kbSettings = {
+            showDakuon: true,
+            showYoon: true,
+            showNumber: true,
+            showSymbol: true,
+            showIllustCaption: true, // デフォルト: 下寄せオーバーレイで文字を表示
+            textSize: '5.5vh',       // デフォルト: 標準
+            matchMode: 'prefix'      // デフォルト: 前方一致 ('prefix' / 'partial' / 'exact')
+        };
+
+        const baseCols = [["あ", "い", "う", "え", "お"], ["か", "き", "く", "け", "こ"], ["さ", "し", "す", "せ", "そ"], ["た", "ち", "つ", "て", "と"], ["な", "に", "ぬ", "ね", "の"], ["は", "ひ", "ふ", "へ", "ほ"], ["ま", "み", "む", "め", "も"], ["や", " ", "ゆ", " ", "よ"], ["ら", "り", "る", "れ", "ろ"], ["わ", " ", " ", " ", "を"]];
+        const symbolCol = ["ん", "ー", "、", "。", "␣"];
+        const symbolHiddenCol = ["ん", " ", " ", " ", " "];
+        const dakuonCols = [["が", "ぎ", "ぐ", "げ", "ご"], ["ざ", "じ", "ず", "ぜ", "ぞ"], ["だ", "ぢ", "づ", "で", "ど"], ["ば", "び", "ぶ", "べ", "ぼ"], ["ぱ", "ぴ", "ぷ", "ぺ", "ぽ"]];
+        const yoonCols = [["ゃ", " ", "ゅ", " ", "ょ"], ["っ", " ", " ", " ", " "], ["ぁ", "ぃ", "ぅ", "ぇ", "ぉ"]];
+        const numberCols = [["1", "2", "3", "4", "5"], ["6", "7", "8", "9", "0"]];
+
+        // テキスト内容（文字列またはイラストオブジェクト）
+        // イラスト形式: { type: 'illust', id: '...', name: 'いぬ', tts_text: '犬', image: '...' }
+        let chars = [];
+        let selectionType = 'cursor'; // 'cursor' または 'char'
+        let cursorIndex = 0;          // 0 <= cursorIndex <= chars.length
+        let selectedCharIndex = -1;   // 0 <= selectedCharIndex < chars.length
+        
+        // 入力中の未確定文字列（インデックス検索対象）
+        let composingText = "";
+        let composingStartIndex = -1;
+
+        const synth = window.speechSynthesis;
+
+        // ==========================================
+        // ★ 単語辞書管理システム ★
+        // ==========================================
+        const VOCAB_STORAGE_KEY = 'vocaKb_custom_words_v2';
+        let vocabList = [];
+
+        function getDefaultVocabList() {
+            if (window.APP_VOCAB && Array.isArray(window.APP_VOCAB.list)) {
+                return window.APP_VOCAB.list.map(item => ({
+                    id: item.id || ('d_' + item.name),
+                    name: item.name,
+                    tts_text: item.tts_text || item.name,
+                    image: '../common/' + (item.image || ('images/' + item.file)),
+                    category: item.category || 'general',
+                    categoryName: item.categoryName || '',
+                    isCustom: false
+                }));
+            }
+            return [];
+        }
+
+        function loadVocab() {
+            try {
+                const defaults = getDefaultVocabList();
+                const saved = localStorage.getItem(VOCAB_STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // 共通辞書の新しい単語があれば自動マージ
+                    const existingMap = new Map(parsed.map(w => [w.id, w]));
+                    let addedNew = false;
+                    defaults.forEach(def => {
+                        if (!existingMap.has(def.id)) {
+                            existingMap.set(def.id, def);
+                            addedNew = true;
+                        }
+                    });
+                    vocabList = Array.from(existingMap.values());
+                    if (addedNew) saveVocab();
+                } else {
+                    vocabList = defaults;
+                    saveVocab();
+                }
+            } catch (e) {
+                console.error("辞書の読み込みに失敗しました:", e);
+                vocabList = getDefaultVocabList();
+            }
+        }
+
+        function saveVocab() {
+            try {
+                localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(vocabList));
+            } catch (e) {
+                console.error("辞書の保存に失敗しました:", e);
+                alert("保存容量の制限に達しました。画像を小さくするか不要な単語を整理してください。");
+            }
+        }
+
+        // ==========================================
+        // 音声エンジン・再生
+        // ==========================================
+        document.getElementById('btn-start').addEventListener('click', () => {
+            synth.resume();
+            synth.cancel();
+            let u = new SpeechSynthesisUtterance('あ');
+            u.volume = 0;
+            u.rate = 10;
+            synth.speak(u);
+
+            document.getElementById('start-screen').classList.add('hidden');
+            update();
+        });
+
+        function spk(str) {
+            if (!str) return;
+            synth.resume();
+            synth.cancel();
+
+            const u = new SpeechSynthesisUtterance(str);
+            u.lang = 'ja-JP';
+            u.rate = 1.0;
+            synth.speak(u);
+        }
+
+        function spkFull() {
+            const fullText = chars.map(c => {
+                if (typeof c === 'object' && c.type === 'illust') {
+                    return c.tts_text || c.name;
+                }
+                return c === '　' ? ' ' : c;
+            }).join('');
+            spk(fullText);
+        }
+
+        // ==========================================
+        // 候補バー（平仮名は平仮名のみ、枠付きイラスト＋シャドウオーバーレイ）
+        // ==========================================
+        function updateSuggestions() {
+            const bar = document.getElementById('suggest-bar');
+            bar.innerHTML = '';
+
+            if (!composingText || composingText.trim() === '') {
+                bar.classList.add('empty');
+                return;
+            }
+
+            // 1. 先頭：平仮名はカード化せず、そのままの文字長で綺麗に表示
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'suggest-text-btn';
+            confirmBtn.innerText = composingText;
+            confirmBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                confirmComposingAsText();
+            });
+            bar.appendChild(confirmBtn);
+
+            // 2. 枠付きイラスト候補（前方一致 / 完全一致）
+            let matches = [];
+            const mode = kbSettings.matchMode === 'exact' ? 'exact' : 'prefix';
+
+            if (mode === 'exact') {
+                // 完全一致（ぴったりのみ表示）
+                matches = vocabList.filter(item => item.name && item.name === composingText);
+            } else {
+                // 前方一致（おすすめ・デフォルト：頭文字から始まる単語）
+                matches = vocabList.filter(item => item.name && item.name.startsWith(composingText));
+            }
+
+            matches.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+            matches.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'suggest-item item-illust';
+
+                const img = document.createElement('img');
+                img.src = word.image;
+                img.alt = word.name;
+                img.onerror = () => { img.style.display = 'none'; };
+
+                const label = document.createElement('span');
+                label.className = 'suggest-caption';
+                label.innerText = word.name;
+
+                btn.appendChild(img);
+                btn.appendChild(label);
+
+                btn.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    selectIllustCandidate(word);
+                });
+                bar.appendChild(btn);
+            });
+
+            bar.classList.remove('empty');
+            bar.scrollLeft = 0;
+        }
+
+        // 文字のまま確定
+        function confirmComposingAsText() {
+            composingText = '';
+            composingStartIndex = -1;
+            updateSuggestions();
+        }
+
+        // イラスト候補を選択（文字をイラストに置き換える）
+        function selectIllustCandidate(word) {
+            const illustObj = {
+                type: 'illust',
+                id: word.id,
+                name: word.name,
+                tts_text: word.tts_text || word.name,
+                image: word.image
+            };
+
+            if (composingStartIndex >= 0 && composingText.length > 0) {
+                chars.splice(composingStartIndex, composingText.length, illustObj);
+                cursorIndex = composingStartIndex + 1;
+            } else {
+                chars.splice(cursorIndex, 0, illustObj);
+                cursorIndex++;
+            }
+
+            composingText = '';
+            composingStartIndex = -1;
+            selectionType = 'cursor';
+            selectedCharIndex = -1;
+
+            updateSuggestions();
+            update();
+            spk(word.tts_text || word.name);
+        }
+
+        // ==========================================
+        // 削除・クリア・入力処理
+        // ==========================================
+        function del() {
+            resetClr();
+            if (chars.length === 0) return;
+
+            if (selectionType === 'char' && selectedCharIndex >= 0 && selectedCharIndex < chars.length) {
+                const removedIdx = selectedCharIndex;
+                chars.splice(removedIdx, 1);
+                cursorIndex = Math.min(removedIdx, chars.length);
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+                confirmComposingAsText();
+                update();
+            } else {
+                if (cursorIndex > 0) {
+                    chars.splice(cursorIndex - 1, 1);
+                    cursorIndex--;
+                    selectionType = 'cursor';
+                    selectedCharIndex = -1;
+
+                    if (composingText.length > 0) {
+                        composingText = composingText.slice(0, -1);
+                        if (composingText.length === 0) {
+                            composingStartIndex = -1;
+                        }
+                    } else {
+                        composingStartIndex = -1;
+                    }
+
+                    updateSuggestions();
+                    update();
+                }
+            }
+        }
+
+        let clrTimer = null;
+        function clr() {
+            const btn = document.getElementById('btn-clr');
+            if (btn.dataset.confirm === "true") {
+                chars = [];
+                cursorIndex = 0;
+                selectedCharIndex = -1;
+                selectionType = 'cursor';
+                confirmComposingAsText();
+                update();
+                resetClr();
+            } else {
+                btn.dataset.confirm = "true";
+                btn.innerText = "けす？";
+                btn.style.background = "#ffcccc";
+                btn.style.color = "red";
+                btn.style.borderColor = "red";
+                clrTimer = setTimeout(resetClr, 3000);
+            }
+        }
+
+        function resetClr() {
+            const btn = document.getElementById('btn-clr');
+            if (!btn) return;
+            btn.dataset.confirm = "false";
+            btn.innerText = "🗑";
+            btn.style.background = ""; btn.style.color = ""; btn.style.borderColor = "";
+            if (clrTimer) clearTimeout(clrTimer);
+        }
+
+        // キー入力処理
+        function handleInput(charVal, speakName) {
+            resetClr();
+
+            const isPunctuationOrSpace = (charVal === '　' || charVal === ' ' || charVal === '、' || charVal === '。' || charVal === 'ー' || !isNaN(charVal));
+
+            if (selectionType === 'char' && selectedCharIndex >= 0 && selectedCharIndex < chars.length) {
+                chars[selectedCharIndex] = charVal;
+                cursorIndex = selectedCharIndex + 1;
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+
+                if (!isPunctuationOrSpace) {
+                    composingStartIndex = selectedCharIndex;
+                    composingText = charVal;
+                } else {
+                    confirmComposingAsText();
+                }
+            } else {
+                if (cursorIndex < 0 || cursorIndex > chars.length) {
+                    cursorIndex = chars.length;
+                }
+                chars.splice(cursorIndex, 0, charVal);
+
+                if (!isPunctuationOrSpace) {
+                    if (composingStartIndex === -1 || cursorIndex !== composingStartIndex + composingText.length) {
+                        composingStartIndex = cursorIndex;
+                        composingText = charVal;
+                    } else {
+                        composingText += charVal;
+                    }
+                } else {
+                    confirmComposingAsText();
+                }
+
+                cursorIndex++;
+                selectionType = 'cursor';
+                selectedCharIndex = -1;
+            }
+
+            spk(speakName || charVal);
+            update();
+            updateSuggestions();
+        }
+
+        // 文字・イラストの選択
+        function selectChar(idx) {
+            resetClr();
+            confirmComposingAsText();
+            selectionType = 'char';
+            selectedCharIndex = idx;
+            cursorIndex = -1;
+            update();
+
+            const item = chars[idx];
+            if (item) {
+                if (typeof item === 'object' && item.type === 'illust') {
+                    spk(item.tts_text || item.name);
+                } else {
+                    spk(item === '　' ? 'スペース' : item);
+                }
+            }
+        }
+
+        // スロット選択
+        function selectSlot(idx) {
+            resetClr();
+            confirmComposingAsText();
+            selectionType = 'cursor';
+            cursorIndex = Math.max(0, Math.min(chars.length, idx));
+            selectedCharIndex = -1;
+            update();
+        }
+
+        function updateCursorByCoord(clientX, clientY) {
+            if (chars.length === 0) {
+                selectSlot(0);
+                return;
+            }
+
+            const t = document.getElementById('text');
+            const cells = Array.from(t.querySelectorAll('.char-cell'));
+            if (cells.length === 0) {
+                selectSlot(0);
+                return;
+            }
+
+            let closestSlot = chars.length;
+            let minDistance = Infinity;
+
+            cells.forEach((cell, idx) => {
+                const rect = cell.getBoundingClientRect();
+                const centerY = rect.top + rect.height / 2;
+
+                const leftDist = Math.hypot(clientX - rect.left, clientY - centerY);
+                if (leftDist < minDistance) {
+                    minDistance = leftDist;
+                    closestSlot = idx;
+                }
+
+                const rightDist = Math.hypot(clientX - rect.right, clientY - centerY);
+                if (rightDist < minDistance) {
+                    minDistance = rightDist;
+                    closestSlot = idx + 1;
+                }
+            });
+
+            selectSlot(closestSlot);
+        }
+
+        function createCursorSlot(index) {
+            const slot = document.createElement('span');
+            slot.className = 'cursor-slot' + (selectionType === 'cursor' && cursorIndex === index ? ' active' : '');
+            slot.dataset.slot = index;
+            return slot;
+        }
+
+        // ==========================================
+        // 表示更新（イラスト描画 ＆ 枠なしシャドウオーバーレイ）
+        // ==========================================
+        function update() {
+            const t = document.getElementById('text');
+            t.innerHTML = '';
+
+            t.appendChild(createCursorSlot(0));
+
+            chars.forEach((c, idx) => {
+                const isSelected = selectionType === 'char' && selectedCharIndex === idx;
+
+                if (typeof c === 'object' && c.type === 'illust') {
+                    const cell = document.createElement('span');
+                    cell.className = 'char-cell illust-cell' + (isSelected ? ' selected' : '');
+                    cell.dataset.index = idx;
+
+                    const img = document.createElement('img');
+                    img.src = c.image;
+                    img.alt = c.name;
+                    cell.appendChild(img);
+
+                    // 設定でONなら「下寄せオーバーレイ文字（枠なし＋白シャドウ）」を表示
+                    if (kbSettings.showIllustCaption) {
+                        const caption = document.createElement('span');
+                        caption.className = 'caption';
+                        caption.innerText = c.name;
+                        cell.appendChild(caption);
+                    }
+
+                    t.appendChild(cell);
+                } else {
+                    const cell = document.createElement('span');
+                    cell.className = 'char-cell' + (c === '　' ? ' space-char' : '') + (isSelected ? ' selected' : '');
+                    cell.innerText = c === '　' ? '␣' : c;
+                    cell.dataset.index = idx;
+                    t.appendChild(cell);
+                }
+
+                t.appendChild(createCursorSlot(idx + 1));
+            });
+
+            const activeEl = t.querySelector('.selected') || t.querySelector('.cursor-slot.active');
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
+        }
+
+        // ==========================================
+        // タッチ操作
+        // ==========================================
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let longPressTimer = null;
+        let isLongPressActive = false;
+        let touchedCharIndex = -1;
+
+        const textEl = document.getElementById('text');
+
+        textEl.addEventListener('pointerdown', (e) => {
+            const targetChar = e.target.closest('.char-cell');
+
+            if (!targetChar) {
+                e.preventDefault();
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                isLongPressActive = false;
+                touchedCharIndex = -1;
+                selectSlot(chars.length);
+                return;
+            }
+
+            touchedCharIndex = parseInt(targetChar.dataset.index, 10);
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
+            isLongPressActive = false;
+
+            if (longPressTimer) clearTimeout(longPressTimer);
+
+            longPressTimer = setTimeout(() => {
+                isLongPressActive = true;
+                if (navigator.vibrate) {
+                    try { navigator.vibrate(35); } catch (err) { }
+                }
+                updateCursorByCoord(e.clientX, e.clientY);
+            }, 300);
+        });
+
+        textEl.addEventListener('pointermove', (e) => {
+            if (isLongPressActive) {
+                e.preventDefault();
+                updateCursorByCoord(e.clientX, e.clientY);
+            } else if (longPressTimer) {
+                const dist = Math.hypot(e.clientX - touchStartX, e.clientY - touchStartY);
+                if (dist > 8) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }
+        });
+
+        const finishTouch = (e) => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+
+            if (isLongPressActive) {
+                isLongPressActive = false;
+                return;
+            }
+
+            if (touchedCharIndex >= 0) {
+                const dist = Math.hypot(e.clientX - touchStartX, e.clientY - touchStartY);
+                if (dist <= 12) {
+                    selectChar(touchedCharIndex);
+                }
+            }
+            touchedCharIndex = -1;
+        };
+
+        textEl.addEventListener('pointerup', finishTouch);
+        textEl.addEventListener('pointercancel', () => {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            isLongPressActive = false;
+            touchedCharIndex = -1;
+        });
+
+        // ==========================================
+        // 表示設定モーダル ＆ 文字サイズ調整
+        // ==========================================
+        const SIZE_LABELS = {
+            '4vh': '小',
+            '5.5vh': '標準',
+            '7vh': '大',
+            '8.8vh': '特大'
+        };
+
+        function applyTextSize(size) {
+            const validSize = size || '5.5vh';
+            document.documentElement.style.setProperty('--text-size', validSize);
+            const textEl = document.getElementById('text');
+            if (textEl) {
+                textEl.style.fontSize = validSize;
+            }
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('vocaKbSettings_illust');
+            if (saved) Object.assign(kbSettings, JSON.parse(saved));
+            applyTextSize(kbSettings.textSize);
+        }
+
+        let selectedTextSize = '5.5vh';
+        let selectedMatchMode = 'prefix';
+
+        function openSettings() {
+            document.getElementById('chk-dakuon').checked = kbSettings.showDakuon;
+            document.getElementById('chk-yoon').checked = kbSettings.showYoon;
+            document.getElementById('chk-number').checked = kbSettings.showNumber;
+            document.getElementById('chk-symbol').checked = kbSettings.showSymbol;
+            document.getElementById('chk-caption').checked = (kbSettings.showIllustCaption !== false);
+
+            selectedTextSize = kbSettings.textSize || '5.5vh';
+            updateSizeOptionsUI(selectedTextSize);
+
+            selectedMatchMode = kbSettings.matchMode || 'prefix';
+            updateMatchModeUI(selectedMatchMode);
+
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function updateSizeOptionsUI(size) {
+            const container = document.getElementById('text-size-options');
+            if (!container) return;
+            container.querySelectorAll('.btn-size-opt').forEach(btn => {
+                const isActive = (btn.dataset.size === size);
+                btn.classList.toggle('active', isActive);
+            });
+            const labelEl = document.getElementById('label-text-size');
+            if (labelEl) {
+                labelEl.innerText = SIZE_LABELS[size] || '標準';
+            }
+        }
+
+        function updateMatchModeUI(mode) {
+            const container = document.getElementById('match-mode-options');
+            if (!container) return;
+            container.querySelectorAll('.btn-mode-opt').forEach(btn => {
+                const isActive = (btn.dataset.mode === mode);
+                btn.classList.toggle('active', isActive);
+            });
+        }
+
+        // 文字サイズ選択ボタン（即時プレビュー）
+        document.getElementById('text-size-options').addEventListener('pointerdown', (e) => {
+            const btn = e.target.closest('.btn-size-opt');
+            if (!btn) return;
+            e.preventDefault();
+            selectedTextSize = btn.dataset.size;
+            updateSizeOptionsUI(selectedTextSize);
+            applyTextSize(selectedTextSize);
+        });
+
+        // 変換候補マッチモード選択ボタン
+        document.getElementById('match-mode-options').addEventListener('pointerdown', (e) => {
+            const btn = e.target.closest('.btn-mode-opt');
+            if (!btn) return;
+            e.preventDefault();
+            selectedMatchMode = btn.dataset.mode;
+            updateMatchModeUI(selectedMatchMode);
+        });
+
+        function saveSettings() {
+            kbSettings.showDakuon = document.getElementById('chk-dakuon').checked;
+            kbSettings.showYoon = document.getElementById('chk-yoon').checked;
+            kbSettings.showNumber = document.getElementById('chk-number').checked;
+            kbSettings.showSymbol = document.getElementById('chk-symbol').checked;
+            kbSettings.showIllustCaption = document.getElementById('chk-caption').checked;
+            kbSettings.textSize = selectedTextSize;
+            kbSettings.matchMode = selectedMatchMode;
+
+            localStorage.setItem('vocaKbSettings_illust', JSON.stringify(kbSettings));
+            applyTextSize(kbSettings.textSize);
+            document.getElementById('settings-modal').classList.add('hidden');
+            buildKeyboard();
+            updateSuggestions();
+            update();
+        }
+
+        document.getElementById('btn-del').addEventListener('pointerdown', (e) => { e.preventDefault(); del(); });
+        document.getElementById('btn-clr').addEventListener('pointerdown', (e) => { e.preventDefault(); clr(); });
+        document.getElementById('btn-spk').addEventListener('pointerdown', (e) => { e.preventDefault(); spkFull(); });
+
+        // メイン画面の⚙️設定（トリプルタップ判定）
+        let settingsTapCount = 0;
+        let settingsTapTimer = null;
+        document.getElementById('btn-settings').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            settingsTapCount++;
+            if (settingsTapCount === 1) {
+                settingsTapTimer = setTimeout(() => { settingsTapCount = 0; }, 600);
+            }
+            if (settingsTapCount === 3) {
+                clearTimeout(settingsTapTimer);
+                settingsTapCount = 0;
+                openSettings();
+            }
+        });
+
+        document.getElementById('btn-save').addEventListener('pointerdown', (e) => { e.preventDefault(); saveSettings(); });
+
+        // ==========================================
+        // キーボード生成
+        // ==========================================
+        function buildKeyboard() {
+            const kb = document.getElementById('keyboard');
+            kb.innerHTML = '';
+            let colsToRender = [];
+            baseCols.forEach(col => colsToRender.push(col));
+            colsToRender.push(kbSettings.showSymbol ? symbolCol : symbolHiddenCol);
+            if (kbSettings.showDakuon) dakuonCols.forEach((col, i) => { let c = [...col]; c.isBlockStart = (i === 0); colsToRender.push(c); });
+            if (kbSettings.showYoon) yoonCols.forEach((col, i) => { let c = [...col]; if (!kbSettings.showDakuon && i === 0) c.isBlockStart = true; colsToRender.push(c); });
+            if (kbSettings.showNumber) numberCols.forEach((col, i) => { let c = [...col]; if (!kbSettings.showDakuon && !kbSettings.showYoon && i === 0) c.isBlockStart = true; colsToRender.push(c); });
+
+            const colCount = colsToRender.length;
+            let blockStartCount = 0;
+            colsToRender.forEach(col => { if (col.isBlockStart) blockStartCount++; });
+            const totalGapVw = (colCount - 1) * 0.5;
+            const totalMarginVw = blockStartCount * 2;
+            const availableVw = 98 - totalGapVw - totalMarginVw;
+            const vwPerKey = availableVw / colCount;
+            document.documentElement.style.setProperty('--key-size', `min(${vwPerKey}vw, 11vh)`);
+
+            colsToRender.forEach(colArr => {
+                const colDiv = document.createElement('div');
+                colDiv.className = 'kb-col';
+                if (colArr.isBlockStart) colDiv.style.marginRight = "2vw";
+
+                const cb = document.createElement('div');
+                cb.className = 'col-checkbox active';
+
+                cb.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    cb.classList.toggle('active');
+                    colDiv.querySelectorAll('.key').forEach(k => {
+                        if (!k.classList.contains('empty')) k.classList.toggle('disabled-key', !cb.classList.contains('active'));
+                    });
+                });
+                colDiv.appendChild(cb);
+
+                colArr.forEach(char => {
+                    const btn = document.createElement('button');
+                    btn.className = char === " " ? 'key empty' : 'key';
+                    btn.innerText = char === "␣" ? "空白" : (char === " " ? "" : char);
+                    if (char === "␣") btn.style.fontSize = "calc(var(--key-size) * 0.35)";
+
+                    if (char !== " ") {
+                        btn.addEventListener('pointerdown', (e) => {
+                            e.preventDefault();
+                            const inputChar = char === "␣" ? "　" : char;
+                            const speakName = char === "␣" ? "スペース" : char;
+                            handleInput(inputChar, speakName);
+                        });
+                    }
+                    colDiv.appendChild(btn);
+                });
+                kb.appendChild(colDiv);
+            });
+        }
+
+        // ==========================================
+        // ★ トリプルタップ設定（誤作動防止） ★
+        // ==========================================
+        function setupTripleTap(btnId, hintId, onTripleTap) {
+            const btn = document.getElementById(btnId);
+            const hint = document.getElementById(hintId);
+            let count = 0;
+            let timer = null;
+
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                count++;
+                if (timer) clearTimeout(timer);
+
+                if (count === 1) {
+                    if (hint) hint.innerText = "あと2回！";
+                    timer = setTimeout(() => {
+                        count = 0;
+                        if (hint) hint.innerText = "トリプルタップで開く";
+                    }, 800);
+                } else if (count === 2) {
+                    if (hint) hint.innerText = "あと1回！";
+                    timer = setTimeout(() => {
+                        count = 0;
+                        if (hint) hint.innerText = "トリプルタップで開く";
+                    }, 800);
+                } else if (count === 3) {
+                    count = 0;
+                    if (hint) hint.innerText = "トリプルタップで開く";
+                    onTripleTap();
+                }
+            });
+        }
+
+        // ==========================================
+        // ★ 単語登録・管理機能（図鑑風UI＆ロジック） ★
+        // ==========================================
+        const vocabModal = document.getElementById('vocab-modal');
+        const vocabListContainer = document.getElementById('vocab-list-container');
+        const vocabSearchInput = document.getElementById('vocab-search-input');
+        const vocabCountBadge = document.getElementById('vocab-count-badge');
+        const vocabTabsBar = document.getElementById('vocab-tabs-bar');
+
+        const editModal = document.getElementById('vocab-edit-modal');
+        const editDialogTitle = document.getElementById('edit-dialog-title');
+        const editNameInput = document.getElementById('edit-vocab-name');
+        const editTtsInput = document.getElementById('edit-vocab-tts');
+        const editImageInput = document.getElementById('edit-image-input');
+        const editPreviewImg = document.getElementById('edit-preview-img');
+        const editPreviewPlaceholder = document.getElementById('edit-preview-placeholder');
+        const btnDeleteFromEdit = document.getElementById('btn-delete-from-edit');
+
+        let editingWordId = null;
+        let currentEditingImageData = "";
+        let selectedRow = 'all';
+
+        // 50音行の判定マップ
+        const ROW_MAP = {
+            a: ['あ', 'い', 'う', 'え', 'お'],
+            ka: ['か', 'き', 'く', 'け', 'こ', 'が', 'ぎ', 'ぐ', 'げ', 'ご'],
+            sa: ['さ', 'し', 'す', 'せ', 'そ', 'ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
+            ta: ['た', 'ち', 'つ', 'て', 'と', 'だ', 'ぢ', 'づ', 'で', 'ど'],
+            na: ['な', 'に', 'ぬ', 'ね', 'の'],
+            ha: ['は', 'ひ', 'ふ', 'へ', 'ほ', 'ば', 'び', 'ぶ', 'べ', 'ぼ', 'ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
+            ma: ['ま', 'み', 'む', 'め', 'も'],
+            ya: ['や', 'ゆ', 'よ'],
+            ra: ['ら', 'り', 'る', 'れ', 'ろ'],
+            wa: ['わ', 'を', 'ん']
+        };
+
+        function setEditPreviewImage(src) {
+            currentEditingImageData = src || '';
+            if (src) {
+                editPreviewImg.src = src;
+                editPreviewImg.style.display = 'block';
+                editPreviewPlaceholder.style.display = 'none';
+            } else {
+                editPreviewImg.src = '';
+                editPreviewImg.style.display = 'none';
+                editPreviewPlaceholder.style.display = 'inline';
+            }
+        }
+
+        function openVocabModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            vocabModal.classList.remove('hidden');
+            renderVocabList();
+        }
+
+        function closeVocabModal() {
+            vocabModal.classList.add('hidden');
+        }
+
+        // スタート画面＆設定画面のトリプルタップ設定
+        setupTripleTap('btn-open-vocab-from-start', 'start-vocab-hint', openVocabModal);
+        setupTripleTap('btn-open-vocab-from-settings', 'settings-vocab-hint', openVocabModal);
+
+        document.getElementById('btn-close-vocab').addEventListener('click', closeVocabModal);
+
+        // 50音行タブの切り替え
+        vocabTabsBar.addEventListener('click', (e) => {
+            const tabBtn = e.target.closest('.vocab-tab-btn');
+            if (!tabBtn) return;
+            vocabTabsBar.querySelectorAll('.vocab-tab-btn').forEach(b => b.classList.remove('active'));
+            tabBtn.classList.add('active');
+            selectedRow = tabBtn.dataset.row;
+            renderVocabList();
+        });
+
+        // 単語一覧の描画（図鑑風正方形タイル、文字崩れなし）
+        function renderVocabList() {
+            const query = vocabSearchInput.value.trim().toLowerCase();
+            vocabListContainer.innerHTML = '';
+
+            let filtered = vocabList;
+
+            // 50音行フィルター
+            if (selectedRow && selectedRow !== 'all' && ROW_MAP[selectedRow]) {
+                const targetChars = ROW_MAP[selectedRow];
+                filtered = filtered.filter(w => {
+                    const firstChar = (w.name || '').charAt(0);
+                    return targetChars.includes(firstChar);
+                });
+            }
+
+            // 検索クエリフィルター
+            if (query) {
+                filtered = filtered.filter(w => (w.name && w.name.includes(query)) || (w.tts_text && w.tts_text.toLowerCase().includes(query)));
+            }
+
+            // 50音順ソート
+            filtered.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ja'));
+
+            vocabCountBadge.innerText = `登録数: ${filtered.length}件` + (filtered.length !== vocabList.length ? ` (全${vocabList.length}件中)` : '');
+
+            filtered.forEach(word => {
+                const card = document.createElement('div');
+                card.className = 'vocab-card';
+
+                // カスタム単語のバッジ
+                if (word.isCustom) {
+                    const tag = document.createElement('span');
+                    tag.className = 'vocab-card-tag';
+                    tag.innerText = '独自';
+                    card.appendChild(tag);
+                }
+
+                const imgBox = document.createElement('div');
+                imgBox.className = 'vocab-card-img-box';
+
+                const img = document.createElement('img');
+                img.className = 'vocab-card-img';
+                img.src = word.image || '';
+                img.alt = word.name;
+                img.onerror = () => { img.style.display = 'none'; };
+                imgBox.appendChild(img);
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'vocab-card-name';
+                nameDiv.innerText = word.name;
+
+                const ttsDiv = document.createElement('div');
+                ttsDiv.className = 'vocab-card-tts';
+                ttsDiv.innerText = word.tts_text || word.name;
+
+                card.appendChild(imgBox);
+                card.appendChild(nameDiv);
+                card.appendChild(ttsDiv);
+
+                // カード全体をタップで編集モーダルを開く
+                card.addEventListener('click', () => {
+                    openEditWordModal(word);
+                });
+
+                vocabListContainer.appendChild(card);
+            });
+        }
+
+        vocabSearchInput.addEventListener('input', renderVocabList);
+
+        // 新規追加モーダル
+        document.getElementById('btn-add-word').addEventListener('click', () => {
+            editingWordId = null;
+            editDialogTitle.innerText = 'あたらしい単語を追加';
+            editNameInput.value = '';
+            editTtsInput.value = '';
+            setEditPreviewImage('');
+            editImageInput.value = '';
+            btnDeleteFromEdit.classList.add('hidden');
+            editModal.classList.remove('hidden');
+        });
+
+        // 編集モーダル
+        function openEditWordModal(word) {
+            editingWordId = word.id;
+            editDialogTitle.innerText = '単語を編集';
+            editNameInput.value = word.name || '';
+            editTtsInput.value = word.tts_text || '';
+            setEditPreviewImage(word.image || '');
+            editImageInput.value = '';
+            btnDeleteFromEdit.classList.remove('hidden');
+            editModal.classList.remove('hidden');
+        }
+
+        document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+
+        // 画像リサイズ＆Base64変換（透過保持PNG、長辺256pxで軽量化）
+        function processImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        const maxDim = 256;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        editImageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const dataUrl = await processImageFile(file);
+                setEditPreviewImage(dataUrl);
+            } catch (err) {
+                alert("画像の読み込みに失敗しました: " + err.message);
+            }
+        });
+
+        // 単語保存
+        document.getElementById('btn-save-edit').addEventListener('click', () => {
+            const name = editNameInput.value.trim();
+            if (!name) {
+                alert("よみ（ひらがな）を入力してください。");
+                return;
+            }
+            if (!currentEditingImageData) {
+                alert("イラスト画像を選択してください。");
+                return;
+            }
+
+            const tts = editTtsInput.value.trim() || name;
+
+            if (editingWordId) {
+                const idx = vocabList.findIndex(w => w.id === editingWordId);
+                if (idx !== -1) {
+                    vocabList[idx].name = name;
+                    vocabList[idx].tts_text = tts;
+                    vocabList[idx].image = currentEditingImageData;
+                    vocabList[idx].isCustom = true;
+                }
+            } else {
+                const newId = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                vocabList.push({
+                    id: newId,
+                    name: name,
+                    tts_text: tts,
+                    image: currentEditingImageData,
+                    isCustom: true
+                });
+            }
+
+            saveVocab();
+            editModal.classList.add('hidden');
+            renderVocabList();
+        });
+
+        // 編集モーダル内からの削除ボタン
+        btnDeleteFromEdit.addEventListener('click', () => {
+            if (!editingWordId) return;
+            const word = vocabList.find(w => w.id === editingWordId);
+            if (!word) return;
+            if (confirm(`「${word.name}」を削除してもよろしいですか？`)) {
+                vocabList = vocabList.filter(w => w.id !== editingWordId);
+                saveVocab();
+                editModal.classList.add('hidden');
+                renderVocabList();
+            }
+        });
+
+        // 初期データ（図鑑465語）の一括読み込み（復元）
+        document.getElementById('btn-reset-vocab').addEventListener('click', () => {
+            if (confirm("初期データ（図鑑の465語）を一括読み込みします。\n※独自に追加した単語はそのまま保持されます。実行しますか？")) {
+                const defaults = getDefaultVocabList();
+                const existingMap = new Map(vocabList.map(item => [item.id, item]));
+
+                defaults.forEach(def => {
+                    if (!existingMap.has(def.id)) {
+                        existingMap.set(def.id, def);
+                    }
+                });
+
+                vocabList = Array.from(existingMap.values());
+                saveVocab();
+                renderVocabList();
+                alert(`初期データを一括読み込みしました（合計 ${vocabList.length} 件）`);
+            }
+        });
+
+        // エクスポート（JSONダウンロード）
+        document.getElementById('btn-export-vocab').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vocabList, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute("href", dataStr);
+            a.setAttribute("download", `kotoba_words_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+
+        // インポート（JSONファイル読み込み）
+        const fileInput = document.getElementById('vocab-file-input');
+        document.getElementById('btn-import-vocab').addEventListener('click', () => {
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        const existingMap = new Map(vocabList.map(item => [item.id, item]));
+                        imported.forEach(item => {
+                            if (item && item.name) {
+                                const id = item.id || ('custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5));
+                                existingMap.set(id, { ...item, id });
+                            }
+                        });
+                        vocabList = Array.from(existingMap.values());
+                        saveVocab();
+                        renderVocabList();
+                        alert(`単語データをインポートしました（合計 ${vocabList.length} 件）`);
+                    } else {
+                        alert("JSONデータの形式が正しくありません（単語の配列が必要です）。");
+                    }
+                } catch (err) {
+                    alert("ファイルの読み込みに失敗しました: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // ==========================================
+        // 初期起動処理
+        // ==========================================
+        loadSettings();
+        loadVocab();
+        buildKeyboard();
+        update();
+    </script>
+</body>
+
+</html>
