@@ -30,7 +30,8 @@
       --cat-tabemono: #ef4444;
       --cat-norimono: #0284c7;
       --cat-midikanamono: #10b981;
-      --cat-doushi: #8b5cf6;
+      --cat-ugoki: #8b5cf6;
+      --cat-kimochi: #ec4899;
 
       --card-size: 160px;
       --font-family: "Zen Maru Gothic", "UD Digi Kyokasho N-R", "Klee One", sans-serif;
@@ -439,7 +440,8 @@
     .cat-tabemono { color: var(--cat-tabemono); }
     .cat-norimono { color: var(--cat-norimono); }
     .cat-midikanamono { color: var(--cat-midikanamono); }
-    .cat-doushi { color: var(--cat-doushi); }
+    .cat-ugoki { color: var(--cat-ugoki); }
+    .cat-kimochi { color: var(--cat-kimochi); }
 
     .card-comment {
       margin-top: 4px;
@@ -876,7 +878,8 @@
       { id: 'tabemono', name: 'たべもの' },
       { id: 'norimono', name: 'のりもの' },
       { id: 'midikanamono', name: 'みぢかなもの' },
-      { id: 'doushi', name: 'どうし' }
+      { id: 'ugoki', name: 'うごき' },
+      { id: 'kimochi', name: 'きもち' }
     ];
 
     function getVocabList() {
@@ -1009,7 +1012,29 @@
       });
       pillsContainer.appendChild(allPill);
 
-      subMap.forEach((info, subId) => {
+      // 望ましいサブカテゴリー表示順序
+      const SUBCAT_ORDER = [
+        // いきもの
+        'riku_doubutsu', 'tori', 'sakana_umi', 'mushi',
+        // たべもの
+        'shushoku', 'niku_okazu', 'sakana_okazu', 'tamago_okazu', 'sonota_okazu', 'yasai', 'kudamono', 'oyatsu', 'nomimono',
+        // のりもの
+        'kuruma', 'hatarakukuruma', 'densha', 'sora', 'umi', 'sonota_norimono',
+        // みぢかなもの
+        'karada', 'gakkou', 'bunbougu', 'fuku_kougu', 'kagu_kaden', 'seikatsu_seiketsu', 'asobi',
+        // うごき
+        'kihon_ugoki', 'seikatsu_habit', 'tesaki_sagyou',
+        // きもち
+        'kimochi_hyoujou', 'tsutaeru_aisatsu', 'fureai_nakayoshi'
+      ];
+
+      const sortedSubEntries = Array.from(subMap.entries()).sort((a, b) => {
+        const ia = SUBCAT_ORDER.indexOf(a[0]);
+        const ib = SUBCAT_ORDER.indexOf(b[0]);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+
+      sortedSubEntries.forEach(([subId, info]) => {
         const pill = document.createElement('button');
         pill.className = `subcat-pill ${currentSubCategory === subId ? 'active' : ''}`;
         pill.textContent = `${info.name} (${info.count})`;

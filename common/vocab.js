@@ -1335,8 +1335,8 @@
     "file": "t_tamago.png",
     "prompt": "A realistic-leaning educational picture book illustration of fresh whole egg and a clean cracked egg showing golden yolk (たまご). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (smooth beige shell, bright round orange yolk and clear egg white). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "卵",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "tamago_okazu",
+    "subCategoryName": "たまごのおかず"
   },
   {
     "id": "t_onigiri",
@@ -1407,8 +1407,8 @@
     "file": "t_ke-ki.png",
     "prompt": "A realistic-leaning educational picture book illustration of slice of Japanese strawberry shortcake (けーき). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (soft fluffy sponge cake, layers of white fresh whipped cream, crowned with a bright red strawberry). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "ケーキ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_purin",
@@ -1419,8 +1419,8 @@
     "file": "t_purin.png",
     "prompt": "A realistic-leaning educational picture book illustration of traditional Japanese custard pudding (purin) (ぷりん). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (glossy caramel sauce dripping over smooth yellow egg custard on a small plate, topped with a cherry). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "プリン",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_aisu",
@@ -1431,8 +1431,8 @@
     "file": "t_aisu.png",
     "prompt": "A realistic-leaning educational picture book illustration of soft serve or scooped ice cream in a crisp wafer cone (あいす). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (swirled creamy vanilla ice cream with delicious texture). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "アイス",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_chokore-to",
@@ -1443,8 +1443,8 @@
     "file": "t_chokore-to.png",
     "prompt": "A realistic-leaning educational picture book illustration of a bar of chocolate partially unwrapped in silver foil (ちょこれーと). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (glossy brown segmented chocolate blocks, crinkled foil wrapper). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
     "tts_text": "チョコレート",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_ju-su",
@@ -1455,8 +1455,8 @@
     "file": "t_ju-su.png",
     "prompt": "A realistic-leaning educational picture book illustration of a glass of fresh orange juice with a straw (じゅーす). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clear glass tumbler, bright sunny orange juice, red-striped straw). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
     "tts_text": "ジュース",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_gyuunyuu",
@@ -1467,8 +1467,8 @@
     "file": "t_gyuunyuu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a classic paper milk carton pack (ぎゅうにゅう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (blue and white carton gable-top design, milk drop icon). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
     "tts_text": "牛乳",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_sakuranbo",
@@ -1947,8 +1947,8 @@
     "file": "t_sashimi.png",
     "prompt": "A realistic-leaning educational picture book illustration of a fresh delicate arrangement of raw fish sashimi slices with wasabi and shiso leaf, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お刺身",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sakana_okazu",
+    "subCategoryName": "さかなのおかず"
   },
   {
     "id": "t_hanba-gu",
@@ -1959,8 +1959,8 @@
     "file": "t_hanba-gu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a plump Japanese hamburger steak drizzled with rich brown demi-glace sauce, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ハンバーグ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_karaage",
@@ -1971,8 +1971,8 @@
     "file": "t_karaage.png",
     "prompt": "A realistic-leaning educational picture book illustration of a plate of crispy golden Japanese fried chicken (karaage) nuggets with lemon wedge, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "唐揚げ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_tonkatsu",
@@ -1983,8 +1983,8 @@
     "file": "t_tonkatsu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a crispy golden panko-breaded pork cutlet (tonkatsu) sliced neatly on shredded cabbage, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "とんかつ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_ebifurai",
@@ -1995,8 +1995,8 @@
     "file": "t_ebifurai.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pair of crispy breaded fried shrimp (ebi fry) with tartar sauce and lemon, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "エビフライ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sakana_okazu",
+    "subCategoryName": "さかなのおかず"
   },
   {
     "id": "t_korokke",
@@ -2007,8 +2007,8 @@
     "file": "t_korokke.png",
     "prompt": "A realistic-leaning educational picture book illustration of a golden oval potato croquette with crispy panko coating, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "コロッケ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_gyouza",
@@ -2019,8 +2019,8 @@
     "file": "t_gyouza.png",
     "prompt": "A realistic-leaning educational picture book illustration of a neat row of pan-fried Japanese gyoza dumplings with crispy golden-brown bottom, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "餃子",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_shuumai",
@@ -2031,8 +2031,8 @@
     "file": "t_shuumai.png",
     "prompt": "A realistic-leaning educational picture book illustration of steamed pork shumai dumplings with green peas on top, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "シューマイ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_nikujaga",
@@ -2043,8 +2043,8 @@
     "file": "t_nikujaga.png",
     "prompt": "A realistic-leaning educational picture book illustration of a home-cooked Japanese stew of simmered beef, potatoes, carrots, and onions (nikujaga), clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "肉じゃが",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_yakitori",
@@ -2055,8 +2055,8 @@
     "file": "t_yakitori.png",
     "prompt": "A realistic-leaning educational picture book illustration of skewers of grilled Japanese chicken yakitori with glossy tare glaze, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "焼き鳥",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_oden",
@@ -2067,8 +2067,8 @@
     "file": "t_oden.png",
     "prompt": "A realistic-leaning educational picture book illustration of a steaming pot of Japanese oden stew with daikon radish, boiled egg, and fish cake, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "おでん",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_takoyaki",
@@ -2079,8 +2079,8 @@
     "file": "t_takoyaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a boat tray of round golden takoyaki octopus balls with brown sauce, mayonnaise, and bonito flakes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "たこ焼き",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_okonomiyaki",
@@ -2091,8 +2091,8 @@
     "file": "t_okonomiyaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a savory Japanese cabbage okonomiyaki pancake with crisscross mayo, sweet brown sauce, and seaweed flakes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お好み焼き",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_taiyaki",
@@ -2103,8 +2103,8 @@
     "file": "t_taiyaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a fish-shaped Japanese taiyaki waffle pastry with sweet red bean paste filling, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "たい焼き",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_yakizakana",
@@ -2115,8 +2115,8 @@
     "file": "t_yakizakana.png",
     "prompt": "A realistic-leaning educational picture book illustration of a grilled whole fish with crispy salted skin and grated daikon radish, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "焼き魚",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sakana_okazu",
+    "subCategoryName": "さかなのおかず"
   },
   {
     "id": "t_tamagoyaki",
@@ -2127,8 +2127,8 @@
     "file": "t_tamagoyaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a sliced block of sweet Japanese rolled yellow omelet (tamagoyaki), clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "卵焼き",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "tamago_okazu",
+    "subCategoryName": "たまごのおかず"
   },
   {
     "id": "t_medamayaki",
@@ -2139,8 +2139,8 @@
     "file": "t_medamayaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a perfect sunny-side up fried egg with bright yellow yolk and crisp white edges, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "目玉焼き",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "tamago_okazu",
+    "subCategoryName": "たまごのおかず"
   },
   {
     "id": "t_nattou",
@@ -2151,8 +2151,8 @@
     "file": "t_nattou.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pack of fermented Japanese natto beans stirred with froth and green onions, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "納豆",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_toufu",
@@ -2163,8 +2163,8 @@
     "file": "t_toufu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a block of silky white Japanese chilled tofu (hiyayakko) topped with grated ginger and green onions, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "豆腐",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_misoshiru",
@@ -2175,8 +2175,8 @@
     "file": "t_misoshiru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a Japanese wooden soup bowl of warm miso soup with tofu cubes and seaweed, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "味噌汁",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_su-pu",
@@ -2187,8 +2187,8 @@
     "file": "t_su-pu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a ceramic bowl of warm vegetable broth soup, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "スープ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_sarada",
@@ -2199,8 +2199,8 @@
     "file": "t_sarada.png",
     "prompt": "A realistic-leaning educational picture book illustration of a colorful garden salad bowl with lettuce, cherry tomatoes, and cucumber, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "サラダ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_uinna-",
@@ -2211,8 +2211,8 @@
     "file": "t_uinna-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pair of red-skinned Japanese sausage wieners sliced with octopus tentacles, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ウインナー",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_hamu",
@@ -2223,8 +2223,8 @@
     "file": "t_hamu.png",
     "prompt": "A realistic-leaning educational picture book illustration of neat slices of pink deli ham laid out, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ハム",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "niku_okazu",
+    "subCategoryName": "にくのおかず"
   },
   {
     "id": "t_chi-zu",
@@ -2235,8 +2235,8 @@
     "file": "t_chi-zu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a yellow wedge of Swiss cheese with natural holes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "チーズ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_piza",
@@ -2247,8 +2247,8 @@
     "file": "t_piza.png",
     "prompt": "A realistic-leaning educational picture book illustration of a whole round baked Italian pizza topped with melted cheese, tomato sauce, and basil, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ピザ",
-    "subCategory": "okazu",
-    "subCategoryName": "おかず"
+    "subCategory": "sonota_okazu",
+    "subCategoryName": "そのほかのおかず"
   },
   {
     "id": "t_kukki-",
@@ -2259,8 +2259,8 @@
     "file": "t_kukki-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a plate of baked butter cookies with chocolate chips, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "クッキー",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_senbei",
@@ -2271,8 +2271,8 @@
     "file": "t_senbei.png",
     "prompt": "A realistic-leaning educational picture book illustration of a traditional round Japanese soy sauce rice cracker (senbei) with a strip of nori seaweed, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "せんべい",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_potetochippusu",
@@ -2283,8 +2283,8 @@
     "file": "t_potetochippusu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a bowl of golden crispy thin-cut salted potato chips, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ポテトチップス",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_poppuko-n",
@@ -2295,8 +2295,8 @@
     "file": "t_poppuko-n.png",
     "prompt": "A realistic-leaning educational picture book illustration of a striped paper bucket overflowing with fluffy buttered popcorn, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ポップコーン",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_do-natsu",
@@ -2307,8 +2307,8 @@
     "file": "t_do-natsu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a round ring donut with sweet pink strawberry glaze and sprinkles, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ドーナツ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_pafe",
@@ -2319,8 +2319,8 @@
     "file": "t_pafe.png",
     "prompt": "A realistic-leaning educational picture book illustration of a tall glass of fruit parfait with vanilla soft serve, strawberries, and wafers, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "パフェ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_kure-pu",
@@ -2331,8 +2331,8 @@
     "file": "t_kure-pu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a rolled French crepe cone filled with whipped cream, banana slices, and chocolate sauce, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "クレープ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_hottoke-ki",
@@ -2343,8 +2343,8 @@
     "file": "t_hottoke-ki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a stack of fluffy golden Japanese pancakes topped with a cube of melting butter and maple syrup drizzle, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ホットケーキ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_shu-kuri-mu",
@@ -2355,8 +2355,8 @@
     "file": "t_shu-kuri-mu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a round French choux cream puff overflowing with rich custard and whipped cream, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "シュークリーム",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_zeri-",
@@ -2367,8 +2367,8 @@
     "file": "t_zeri-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a translucent shimmering orange fruit jelly in a glass cup, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ゼリー",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_kyandi",
@@ -2379,8 +2379,8 @@
     "file": "t_kyandi.png",
     "prompt": "A realistic-leaning educational picture book illustration of an assortment of shiny colorful wrapped hard candy drops, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "キャンディー",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_dango",
@@ -2391,8 +2391,8 @@
     "file": "t_dango.png",
     "prompt": "A realistic-leaning educational picture book illustration of a skewer of three colorful Sanshoku dango rice balls (pink, white, green), clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お団子",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_dorayaki",
@@ -2403,8 +2403,8 @@
     "file": "t_dorayaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pair of Japanese pancake-like dorayaki patties sandwiched with sweet red bean paste, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "どら焼き",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_kakigoori",
@@ -2415,8 +2415,8 @@
     "file": "t_kakigoori.png",
     "prompt": "A realistic-leaning educational picture book illustration of a bowl of finely shaved ice dessert topped with vibrant red strawberry syrup and sweet condensed milk, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "かき氷",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_wataame",
@@ -2427,8 +2427,8 @@
     "file": "t_wataame.png",
     "prompt": "A realistic-leaning educational picture book illustration of a fluffy cloud-like ball of pink cotton candy on a paper stick, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "わたあめ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_gumi",
@@ -2439,8 +2439,8 @@
     "file": "t_gumi.png",
     "prompt": "A realistic-leaning educational picture book illustration of colorful chewy gummy bear candies, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "グミ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_softokuri-mu",
@@ -2451,8 +2451,8 @@
     "file": "t_softokuri-mu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a swirl of creamy white vanilla soft serve ice cream in a golden waffle cone, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ソフトクリーム",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "oyatsu",
+    "subCategoryName": "おやつ"
   },
   {
     "id": "t_mizu",
@@ -2463,8 +2463,8 @@
     "file": "t_mizu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a clear glass filled with pure refreshing water with small ice cubes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お水",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_ocha",
@@ -2475,8 +2475,8 @@
     "file": "t_ocha.png",
     "prompt": "A realistic-leaning educational picture book illustration of a traditional Japanese ceramic teacup filled with steaming green sencha tea, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お茶",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_mugicha",
@@ -2487,8 +2487,8 @@
     "file": "t_mugicha.png",
     "prompt": "A realistic-leaning educational picture book illustration of a tall glass of cold roasted barley tea (mugicha) with ice cubes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "麦茶",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_ko-cha",
@@ -2499,8 +2499,8 @@
     "file": "t_ko-cha.png",
     "prompt": "A realistic-leaning educational picture book illustration of a delicate porcelain teacup of clear amber black tea with lemon slice, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "紅茶",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_ko-hi-",
@@ -2511,8 +2511,8 @@
     "file": "t_ko-hi-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a classic white ceramic mug filled with aromatic black hot coffee, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "コーヒー",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_kokoa",
@@ -2523,8 +2523,8 @@
     "file": "t_kokoa.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cozy mug of warm hot cocoa topped with fluffy mini marshmallows, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ココア",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_ko-ra",
@@ -2535,8 +2535,8 @@
     "file": "t_ko-ra.png",
     "prompt": "A realistic-leaning educational picture book illustration of a tall glass of fizzy dark cola with ice cubes and lemon slice, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "コーラ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "t_kuri-muso-da",
@@ -2547,8 +2547,8 @@
     "file": "t_kuri-muso-da.png",
     "prompt": "A realistic-leaning educational picture book illustration of a retro Japanese cafe emerald green melon soda topped with a scoop of vanilla ice cream and bright red cherry, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "クリームソーダ",
-    "subCategory": "oyatsu_nomimono",
-    "subCategoryName": "おやつ・のみもの"
+    "subCategory": "nomimono",
+    "subCategoryName": "のみもの"
   },
   {
     "id": "n_kuruma",
@@ -2571,8 +2571,8 @@
     "file": "n_jitensha.png",
     "prompt": "A realistic-leaning educational picture book illustration of cheerful bicycle with basket (じてんしゃ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (two spoked wheels, handlebars with bell, comfortable seat, front wire basket, chain pedals). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "自転車",
-    "subCategory": "kuruma",
-    "subCategoryName": "まちのくるま"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_baiku",
@@ -2583,8 +2583,8 @@
     "file": "n_baiku.png",
     "prompt": "A realistic-leaning educational picture book illustration of friendly motorcycle / scooter (ばいく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (two wheels, handlebars, headlight, comfortable seat and mirror). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "バイク",
-    "subCategory": "kuruma",
-    "subCategoryName": "まちのくるま"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_basu",
@@ -2727,8 +2727,8 @@
     "file": "n_hikouki.png",
     "prompt": "A realistic-leaning educational picture book illustration of passenger jet airplane flying smoothly (ひこうき). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (white fuselage, swept-back wings, jet engines underneath, tail fin, passenger windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "飛行機",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "n_herikoputa-",
@@ -2739,8 +2739,8 @@
     "file": "n_herikoputa-.png",
     "prompt": "A realistic-leaning educational picture book illustration of rescue or passenger helicopter (へりこぷたー). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (spinning main rotor blades, tail rotor, cockpit bubble windows, landing skids). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "ヘリコプター",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "n_fune",
@@ -2751,8 +2751,8 @@
     "file": "n_fune.png",
     "prompt": "A realistic-leaning educational picture book illustration of cruising ship / ferry boat on gentle water (ふね). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean white hull, passenger deck, smoke stack, observation windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "船",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_roketto",
@@ -2763,8 +2763,8 @@
     "file": "n_roketto.png",
     "prompt": "A realistic-leaning educational picture book illustration of sleek space rocket blasting off (ろけっと). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (white cylindrical body, red nose cone, triangular stabilizer fins, gentle fire exhaust plumes). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "ロケット",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "n_keijidousha",
@@ -2799,8 +2799,8 @@
     "file": "n_kyanpinguka-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a comfortable recreational camper van RV with side awning and windows, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "キャンピングカー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "kuruma",
+    "subCategoryName": "まちのくるま"
   },
   {
     "id": "n_yuubinsha",
@@ -2823,8 +2823,8 @@
     "file": "n_gomishuushuusha.png",
     "prompt": "A realistic-leaning educational picture book illustration of a blue Japanese municipal garbage collection packer truck with rear hopper, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ゴミ収集車",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "hatarakukuruma",
+    "subCategoryName": "はたらくくるま"
   },
   {
     "id": "n_ro-doro-ra-",
@@ -2871,8 +2871,8 @@
     "file": "n_konkuri-tomikisa-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cement mixer truck with rotating angled drum barrel on chassis, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ミキサー車",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "hatarakukuruma",
+    "subCategoryName": "はたらくくるま"
   },
   {
     "id": "n_fo-kurifuto",
@@ -2883,8 +2883,8 @@
     "file": "n_fo-kurifuto.png",
     "prompt": "A realistic-leaning educational picture book illustration of a yellow industrial forklift vehicle with front lifting forks and overhead safety cage, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "フォークリフト",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "hatarakukuruma",
+    "subCategoryName": "はたらくくるま"
   },
   {
     "id": "n_torakuta-",
@@ -2919,8 +2919,8 @@
     "file": "n_dokuta-heri.png",
     "prompt": "A realistic-leaning educational picture book illustration of a doctor emergency medical air ambulance helicopter with red cross livery, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ドクターヘリ",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "n_shirobai",
@@ -2931,8 +2931,8 @@
     "file": "n_shirobai.png",
     "prompt": "A realistic-leaning educational picture book illustration of an authentic Japanese white police motorcycle (白バイ) with windshield, siren, and blue lights, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "白バイ",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "hatarakukuruma",
+    "subCategoryName": "はたらくくるま"
   },
   {
     "id": "n_chikatetsu",
@@ -2955,8 +2955,8 @@
     "file": "n_dokuta-iero-.png",
     "prompt": "A realistic-leaning educational picture book illustration of the famous Japanese Doctor Yellow high-speed bullet train track inspection test car, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ドクターイエロー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "densha",
+    "subCategoryName": "でんしゃ・てつどう"
   },
   {
     "id": "n_kamotsuressha",
@@ -3027,8 +3027,8 @@
     "file": "n_sanrinsha.png",
     "prompt": "A realistic-leaning educational picture book illustration of a colorful children tricycle with pedals on front wheel and handlebars, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "三輪車",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_sutoraida-",
@@ -3039,8 +3039,8 @@
     "file": "n_sutoraida-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a toddler balance bike (pedal-less runner bike) with pneumatic rubber tires, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ストライダー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_kikkusuke-ta-",
@@ -3051,8 +3051,8 @@
     "file": "n_kikkusuke-ta-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a sleek children kick scooter with two wheels, standing footdeck, and T-handlebar, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "キックスケーター",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_kurumaisu",
@@ -3063,8 +3063,8 @@
     "file": "n_kurumaisu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a comfortable modern lightweight manual wheelchair with large push-rim hand wheels, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "車いす",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_bebi-ka-",
@@ -3075,8 +3075,8 @@
     "file": "n_bebi-ka-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a modern lightweight foldable baby stroller buggy with sun canopy, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ベビーカー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sonota_norimono",
+    "subCategoryName": "そのほかののりもの"
   },
   {
     "id": "n_yotto",
@@ -3087,8 +3087,8 @@
     "file": "n_yotto.png",
     "prompt": "A realistic-leaning educational picture book illustration of a graceful sailing yacht with tall white triangular sails billowed in wind, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ヨット",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_kanu-",
@@ -3099,8 +3099,8 @@
     "file": "n_kanu-.png",
     "prompt": "A realistic-leaning educational picture book illustration of an open wooden Canadian canoe with a wooden paddle resting inside, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "カヌー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_bo-to",
@@ -3111,8 +3111,8 @@
     "file": "n_bo-to.png",
     "prompt": "A realistic-leaning educational picture book illustration of a classic wooden rowboat with a pair of wooden oars in oarlocks, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ボート",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_ka-feri-",
@@ -3123,8 +3123,8 @@
     "file": "n_ka-feri-.png",
     "prompt": "A realistic-leaning educational picture book illustration of a large drive-on car ferry vessel with open bow loading ramp and passenger decks, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "カーフェリー",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_oogatakyakusen",
@@ -3135,8 +3135,8 @@
     "file": "n_oogatakyakusen.png",
     "prompt": "A realistic-leaning educational picture book illustration of a magnificent giant luxury ocean cruise ship liner with multiple passenger cabin decks, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "客船",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_gyosen",
@@ -3147,8 +3147,8 @@
     "file": "n_gyosen.png",
     "prompt": "A realistic-leaning educational picture book illustration of a Japanese coastal fishing boat equipped with squid fishing lights and trawling booms, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "漁船",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_sensuikan",
@@ -3159,8 +3159,8 @@
     "file": "n_sensuikan.png",
     "prompt": "A realistic-leaning educational picture book illustration of a black submarine surfaced on ocean with conning tower and diving planes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "潜水艦",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "umi",
+    "subCategoryName": "うみののりもの"
   },
   {
     "id": "n_kikyuu",
@@ -3171,8 +3171,8 @@
     "file": "n_kikyuu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a colorful rainbow-striped hot air balloon floating gracefully in sky with wicker basket, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "気球",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "n_hikousen",
@@ -3183,8 +3183,8 @@
     "file": "n_hikousen.png",
     "prompt": "A realistic-leaning educational picture book illustration of a huge streamlined white blimp airship with gondola underneath, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "飛行船",
-    "subCategory": "sora_umi",
-    "subCategoryName": "そら・うみののりもの"
+    "subCategory": "sora",
+    "subCategoryName": "そらののりもの"
   },
   {
     "id": "m_enpitsu",
@@ -4593,8 +4593,8 @@
   {
     "id": "v_tatsu",
     "name": "たつ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tatsu.png",
     "file": "v_tatsu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cheerful child standing upright (たつ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (good posture, arms by sides, friendly smile, clean sneakers). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
@@ -4605,8 +4605,8 @@
   {
     "id": "v_suwaru",
     "name": "すわる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_suwaru.png",
     "file": "v_suwaru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child sitting politely on a wooden chair (すわる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (child in everyday clothes, sitting upright with hands on knees). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
@@ -4617,8 +4617,8 @@
   {
     "id": "v_aruku",
     "name": "あるく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_aruku.png",
     "file": "v_aruku.png",
     "prompt": "A realistic-leaning educational picture book illustration of cheerful young boy walking happily with good posture (あるく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (walking forward, swinging arms naturally, friendly smile). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4629,8 +4629,8 @@
   {
     "id": "v_hashiru",
     "name": "はしる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hashiru.png",
     "file": "v_hashiru.png",
     "prompt": "A realistic-leaning educational picture book illustration of energetic child running forward with vigor (はしる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (leaning forward dynamically, bent knees and pumping elbows, happy smiling expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4641,8 +4641,8 @@
   {
     "id": "v_tobu",
     "name": "とぶ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tobu.png",
     "file": "v_tobu.png",
     "prompt": "A realistic-leaning educational picture book illustration of child jumping high in the air with joyful expression (とぶ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (both feet off the ground, arms thrown up happily, clothes swaying with motion). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4653,8 +4653,8 @@
   {
     "id": "v_oyogu",
     "name": "およぐ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_oyogu.png",
     "file": "v_oyogu.png",
     "prompt": "A realistic-leaning educational picture book illustration of child swimming happily in clear water wearing swim cap and goggles (およぐ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (flutter kicking in water, friendly smile, water ripples around). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4665,8 +4665,8 @@
   {
     "id": "v_taberu",
     "name": "たべる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_taberu.png",
     "file": "v_taberu.png",
     "prompt": "A realistic-leaning educational picture book illustration of happy child sitting at a table eating delicious food with a spoon (たべる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (spoon raised near mouth, cheerful contented expression, clean small bowl). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4677,8 +4677,8 @@
   {
     "id": "v_nomu",
     "name": "のむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nomu.png",
     "file": "v_nomu.png",
     "prompt": "A realistic-leaning educational picture book illustration of happy child holding a cup with both hands drinking water or milk (のむ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (cup tilted gently to mouth, eyes smiling, peaceful expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4689,8 +4689,8 @@
   {
     "id": "v_neru",
     "name": "ねる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_neru.png",
     "file": "v_neru.png",
     "prompt": "A realistic-leaning educational picture book illustration of peaceful child fast asleep under a warm cozy blanket (ねる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (head resting on a soft fluffy pillow, closed calm eyes, gentle smiling in sleep). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4701,8 +4701,8 @@
   {
     "id": "v_okiru",
     "name": "おきる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_okiru.png",
     "file": "v_okiru.png",
     "prompt": "A realistic-leaning educational picture book illustration of child waking up in the morning stretching arms happily (おきる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (sitting up in bed, big refreshing morning stretch, wide awake friendly smile, sunshine mood). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4713,8 +4713,8 @@
   {
     "id": "v_arau",
     "name": "あらう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_arau.png",
     "file": "v_arau.png",
     "prompt": "A realistic-leaning educational picture book illustration of child carefully washing both hands with fluffy soap bubbles at a sink (あらう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (lathering palms with white soap suds, shiny water droplets, clean hygiene demonstration). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
@@ -4725,8 +4725,8 @@
   {
     "id": "v_yomu",
     "name": "よむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_yomu.png",
     "file": "v_yomu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child happily reading an open picture book (よむ). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (open illustrated book pages, engaged expression). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
@@ -4737,8 +4737,8 @@
   {
     "id": "v_kaku",
     "name": "かく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kaku.png",
     "file": "v_kaku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child drawing with a crayon on white drawing paper (かく). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (holding a red crayon, drawing colorful sunshine and flowers). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
@@ -4749,44 +4749,44 @@
   {
     "id": "v_utau",
     "name": "うたう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_utau.png",
     "file": "v_utau.png",
     "prompt": "A realistic-leaning educational picture book illustration of child singing happily with open mouth (うたう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (holding hand near chest or singing with music notes floating gently around, happy expression). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "歌う",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tesaki_sagyou",
+    "subCategoryName": "てさき・つかう"
   },
   {
     "id": "v_odoru",
     "name": "おどる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_odoru.png",
     "file": "v_odoru.png",
     "prompt": "A realistic-leaning educational picture book illustration of child dancing happily with playful dynamic pose (おどる). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (arms raised rhythmically, one foot lifted in dance, joyful happy energy). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "踊る",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_warau",
     "name": "わらう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_warau.png",
     "file": "v_warau.png",
     "prompt": "A realistic-leaning educational picture book illustration of child laughing joyfully with bright smiling face (わらう). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (happy curved eyes, open mouth with cheerful laughter, rosy cheeks, full of joy). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
     "tts_text": "笑う",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_migaku",
     "name": "みがく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_migaku.png",
     "file": "v_migaku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child holding a toothbrush brushing teeth carefully, with gentle foam bubbles and mirror, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4797,8 +4797,8 @@
   {
     "id": "v_kigaeru",
     "name": "きがえる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kigaeru.png",
     "file": "v_kigaeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child neatly changing clothes from pajamas into daytime t-shirt and pants, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4809,8 +4809,8 @@
   {
     "id": "v_haku",
     "name": "はく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_haku.png",
     "file": "v_haku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child sitting on the entryway step putting on shoes carefully, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4821,8 +4821,8 @@
   {
     "id": "v_nugu",
     "name": "ぬぐ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nugu.png",
     "file": "v_nugu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child taking off boots and socks at the door, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4833,8 +4833,8 @@
   {
     "id": "v_kaburu",
     "name": "かぶる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kaburu.png",
     "file": "v_kaburu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child placing a yellow sun hat on head with both hands, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4845,8 +4845,8 @@
   {
     "id": "v_fuku",
     "name": "ふく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_fuku.png",
     "file": "v_fuku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child wiping hands dry with a clean soft cotton towel, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4857,20 +4857,20 @@
   {
     "id": "v_dekakeru",
     "name": "でかける",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_dekakeru.png",
     "file": "v_dekakeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child with backpack waving goodbye opening the front door to go out, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "出かける",
-    "subCategory": "seikatsu_habit",
-    "subCategoryName": "せいかつのうごき"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_katazukeru",
     "name": "かたづける",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_katazukeru.png",
     "file": "v_katazukeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child tidying up colorful toy blocks placing them into a toy box, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4881,8 +4881,8 @@
   {
     "id": "v_tetsudau",
     "name": "てつだう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tetsudau.png",
     "file": "v_tetsudau.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child helping set the dinner table by carrying small bowls carefully, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4893,8 +4893,8 @@
   {
     "id": "v_suteru",
     "name": "すてる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_suteru.png",
     "file": "v_suteru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child dropping a paper scrap into an indoor wastebasket trash can, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4905,8 +4905,8 @@
   {
     "id": "v_osu",
     "name": "おす",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_osu.png",
     "file": "v_osu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a finger pressing a round wall doorbell button / elevator button with a chime ring, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4917,32 +4917,32 @@
   {
     "id": "v_te-o-furu",
     "name": "てをふる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_te-o-furu.png",
     "file": "v_te-o-furu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cheerful child raising an open hand and waving hello/goodbye, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "手を振る",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_ojigi",
     "name": "おじぎする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_ojigi.png",
     "file": "v_ojigi.png",
     "prompt": "A realistic-leaning educational picture book illustration of a polite Japanese child bowing slightly in friendly greeting with hands at sides, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お辞儀をする",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_ugai",
     "name": "うがいする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_ugai.png",
     "file": "v_ugai.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child with head tilted back gargling water from a cup, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4953,8 +4953,8 @@
   {
     "id": "v_hana-o-kamu",
     "name": "はなをかむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hana-o-kamu.png",
     "file": "v_hana-o-kamu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child gently blowing nose with a soft tissue paper, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4965,8 +4965,8 @@
   {
     "id": "v_kao-o-arau",
     "name": "かおをあらう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kao-o-arau.png",
     "file": "v_kao-o-arau.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child washing face with cupped hands splashing water over a sink, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4977,8 +4977,8 @@
   {
     "id": "v_tsukuru",
     "name": "つくる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tsukuru.png",
     "file": "v_tsukuru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child assembling wooden craft blocks creating a house, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -4989,8 +4989,8 @@
   {
     "id": "v_shagamu",
     "name": "しゃがむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_shagamu.png",
     "file": "v_shagamu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child crouching / squatting low on heels observing an ant on ground, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5001,8 +5001,8 @@
   {
     "id": "v_hau",
     "name": "はう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hau.png",
     "file": "v_hau.png",
     "prompt": "A realistic-leaning educational picture book illustration of a baby crawling forward on hands and knees on a soft play mat, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5013,8 +5013,8 @@
   {
     "id": "v_nekorobu",
     "name": "ねころぶ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nekorobu.png",
     "file": "v_nekorobu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child lying comfortably on back on grassy lawn looking up at blue sky, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5025,44 +5025,44 @@
   {
     "id": "v_te-o-tataku",
     "name": "てをたたく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_te-o-tataku.png",
     "file": "v_te-o-tataku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a happy child clapping hands together rhythmically with sound marks, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "手を叩く",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_te-o-tsunagu",
     "name": "てをつなぐ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_te-o-tsunagu.png",
     "file": "v_te-o-tsunagu.png",
     "prompt": "A realistic-leaning educational picture book illustration of two children holding hands walking together happily, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "手をつなぐ",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_yubisashu",
     "name": "ゆびさす",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_yubisashu.png",
     "file": "v_yubisashu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child extending index finger pointing towards a bird in the sky, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "指を差す",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_mochiageru",
     "name": "もちあげる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_mochiageru.png",
     "file": "v_mochiageru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child lifting up a toy box from the floor with both hands, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5073,8 +5073,8 @@
   {
     "id": "v_hakobu",
     "name": "はこぶ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hakobu.png",
     "file": "v_hakobu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child carefully carrying a tray with cup and plate, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5085,8 +5085,8 @@
   {
     "id": "v_hipparu",
     "name": "ひっぱる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hipparu.png",
     "file": "v_hipparu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child pulling a toy wooden wagon on a string, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5097,8 +5097,8 @@
   {
     "id": "v_nageru",
     "name": "なげる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nageru.png",
     "file": "v_nageru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cheerful child, full body view, dynamically throwing a yellow softball forward, standing in a pitching pose with both arms visible, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5109,8 +5109,8 @@
   {
     "id": "v_toru",
     "name": "とる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_toru.png",
     "file": "v_toru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child catching a flying soft ball with both open hands, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5121,20 +5121,20 @@
   {
     "id": "v_keru",
     "name": "ける",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_keru.png",
     "file": "v_keru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child kicking a soccer ball on a grass field, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "蹴る",
-    "subCategory": "tesaki_sagyou",
-    "subCategoryName": "てさき・つかう"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_noboru",
     "name": "のぼる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_noboru.png",
     "file": "v_noboru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child climbing up the steps of a playground slide, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5145,8 +5145,8 @@
   {
     "id": "v_oriru",
     "name": "おりる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_oriru.png",
     "file": "v_oriru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child stepping down the low platform safely, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5157,8 +5157,8 @@
   {
     "id": "v_watasu",
     "name": "わたす",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_watasu.png",
     "file": "v_watasu.png",
     "prompt": "A realistic-leaning educational picture book illustration of two polite children standing side by side, one child handing a notebook politely to the other friend, smiling expressions, upper body view, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5169,8 +5169,8 @@
   {
     "id": "v_morau",
     "name": "もらう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_morau.png",
     "file": "v_morau.png",
     "prompt": "A realistic-leaning educational picture book illustration of a delighted child receiving a wrapped gift present box with both hands, happy excited smile, upper body portrait, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5181,8 +5181,8 @@
   {
     "id": "v_hirow",
     "name": "ひろう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hirow.png",
     "file": "v_hirow.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child bending down picking up a fallen acorn from the ground, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5193,8 +5193,8 @@
   {
     "id": "v_tsukamu",
     "name": "つかむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tsukamu.png",
     "file": "v_tsukamu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child gripping a handrail firmly on stairs, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5205,56 +5205,56 @@
   {
     "id": "v_kakureru",
     "name": "かくれる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kakureru.png",
     "file": "v_kakureru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child hiding behind a tree trunk playing hide and seek, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "隠れる",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_mitsukeru",
     "name": "みつける",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_mitsukeru.png",
     "file": "v_mitsukeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a delighted child pointing and discovering a hidden treasure box, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "見つける",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_oikakeru",
     "name": "おいかける",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_oikakeru.png",
     "file": "v_oikakeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child running to chase a fluttering yellow butterfly, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "追いかける",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_nigeru",
     "name": "にげる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nigeru.png",
     "file": "v_nigeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a little rabbit darting away swiftly, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "逃げる",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_nuru",
     "name": "ぬる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nuru.png",
     "file": "v_nuru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child coloring in a drawing neatly with a blue colored pencil, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5265,8 +5265,8 @@
   {
     "id": "v_kiru",
     "name": "きる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kiru.png",
     "file": "v_kiru.png",
     "prompt": "A realistic-leaning educational picture book illustration of child safety scissors cutting along a straight dashed line on paper, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5277,8 +5277,8 @@
   {
     "id": "v_haru",
     "name": "はる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_haru.png",
     "file": "v_haru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cheerful child sticking colorful origami paper onto a sketchbook with a glue stick, sitting neatly, showing the child smiling face and both hands, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5289,8 +5289,8 @@
   {
     "id": "v_oru",
     "name": "おる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_oru.png",
     "file": "v_oru.png",
     "prompt": "An educational picture book watercolor illustration of folding origami paper (おる). Gentle warm Japanese picture book style with delicate watercolor textures and clean pencil contours. Showing cute hands of a child carefully folding a colorful sheet of origami paper (folding an origami crane or neat triangle) on a clean white desk. Natural hands with exactly 5 fingers on each hand. NOT a photograph, completely hand-drawn illustration. Solid pure white background (#ffffff), no background scenery, no props, no text, flashcard quality.",
@@ -5301,8 +5301,8 @@
   {
     "id": "v_kiku",
     "name": "きく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kiku.png",
     "file": "v_kiku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child cupping a hand to ear listening attentively to music, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5313,8 +5313,8 @@
   {
     "id": "v_miru",
     "name": "みる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_miru.png",
     "file": "v_miru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child looking through a magnifying glass at a green leaf with wide curious eyes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5325,56 +5325,56 @@
   {
     "id": "v_pianowohiku",
     "name": "ぴあのをひく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_pianowohiku.png",
     "file": "v_pianowohiku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child pressing piano keys with fingers on keyboard making music, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "ピアノを弾く",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tesaki_sagyou",
+    "subCategoryName": "てさき・つかう"
   },
   {
     "id": "v_te-o-ageru",
     "name": "てをあげる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_te-o-ageru.png",
     "file": "v_te-o-ageru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a student in classroom raising right hand straight up to answer question, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "手を挙げる",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_hanasu-talk",
     "name": "おはなしする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_hanasu-talk.png",
     "file": "v_hanasu-talk.png",
     "prompt": "A realistic-leaning educational picture book illustration of two children talking together pleasantly facing each other, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "お話しする",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_tsutaeru",
     "name": "つたえる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_tsutaeru.png",
     "file": "v_tsutaeru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child speaking with cupped hands delivering a message, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "伝える",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_tsumu",
     "name": "つむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tsumu.png",
     "file": "v_tsumu.png",
     "prompt": "A realistic-leaning educational picture book illustration of stacking wooden blocks carefully one on top of another without tumbling, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5385,8 +5385,8 @@
   {
     "id": "v_kuzusu",
     "name": "くずす",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kuzusu.png",
     "file": "v_kuzusu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a tall block tower tumbling down playfully, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5397,8 +5397,8 @@
   {
     "id": "v_kaku-draw",
     "name": "おえかきする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_kaku-draw.png",
     "file": "v_kaku-draw.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child drawing a smiling sunshine picture on drawing paper, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5409,92 +5409,92 @@
   {
     "id": "v_nikkori",
     "name": "にっこりする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_nikkori.png",
     "file": "v_nikkori.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child with a warm gentle smiling face and bright friendly eyes, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "にっこりする",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_naku",
     "name": "なく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_naku.png",
     "file": "v_naku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child crying with gentle tears on cheeks comforting face, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "泣く",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_odoroku",
     "name": "おどろく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_odoroku.png",
     "file": "v_odoroku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child with wide round eyes and open mouth looking pleasantly surprised, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "驚く",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_okoru",
     "name": "おこる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_okoru.png",
     "file": "v_okoru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child with slightly pouted cheeks and crossed arms looking cross, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "怒る",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_yorokobu",
     "name": "よろこぶ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_yorokobu.png",
     "file": "v_yorokobu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a delighted child jumping for joy with both fists pumped in celebration, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "喜ぶ",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "kimochi_hyoujou",
+    "subCategoryName": "きもち・ひょうじょう"
   },
   {
     "id": "v_akushu",
     "name": "あくしゅする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_akushu.png",
     "file": "v_akushu.png",
     "prompt": "A realistic-leaning educational picture book illustration of two friendly children standing together smiling and shaking hands warmly in friendship, upper body view, cheerful happy faces, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "握手する",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_yubikiri",
     "name": "ゆびきりする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_yubikiri.png",
     "file": "v_yubikiri.png",
     "prompt": "A realistic-leaning educational picture book illustration of two friendly children facing each other, smiling warmly and hooking their pinky fingers together in a pinky promise, upper body view, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "指切りする",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_itadaku",
     "name": "いただきます",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_itadaku.png",
     "file": "v_itadaku.png",
     "prompt": "A realistic-leaning educational picture book illustration of a cheerful child sitting politely with palms pressed together in front of the chest in the traditional Japanese itadakimasu greeting pose before eating, happy smiling expression, cute meal tray with bowl of rice and soup on table, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5505,8 +5505,8 @@
   {
     "id": "v_gochisousama",
     "name": "ごちそうさま",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_gochisousama.png",
     "file": "v_gochisousama.png",
     "prompt": "A realistic-leaning educational picture book illustration of a polite child with hands pressed together saying gochisousama after finishing a meal, empty bowl on the table, satisfied happy expression, upper body view, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5517,20 +5517,20 @@
   {
     "id": "v_gomen-nasai",
     "name": "あやまる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_gomen-nasai.png",
     "file": "v_gomen-nasai.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child bowing head slightly in a gentle sincere apology, hands neatly placed at sides, apologetic respectful expression, upper body portrait, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "あやまる",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "v_tatamu",
     "name": "たたむ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_tatamu.png",
     "file": "v_tatamu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child carefully folding a clean laundry t-shirt neatly into a square, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5541,8 +5541,8 @@
   {
     "id": "v_hodoku",
     "name": "ほどく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_hodoku.png",
     "file": "v_hodoku.png",
     "prompt": "A realistic-leaning educational picture book illustration of loosening and untying a knotted string ribbon, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5553,8 +5553,8 @@
   {
     "id": "v_haku-sweeping",
     "name": "ほうきではく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_haku-sweeping.png",
     "file": "v_haku-sweeping.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child sweeping the floor dust with a broom and dustpan, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
@@ -5565,26 +5565,26 @@
   {
     "id": "v_nobi-o-suru",
     "name": "のびをする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_nobi-o-suru.png",
     "file": "v_nobi-o-suru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a child stretching arms high above head stretching body after waking up, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "背伸びをする",
-    "subCategory": "seikatsu_habit",
-    "subCategoryName": "せいかつのうごき"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "v_akubi",
     "name": "あくびする",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_akubi.png",
     "file": "v_akubi.png",
     "prompt": "A realistic-leaning educational picture book illustration of a sleepy child covering mouth and yawning, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
     "tts_text": "あくびする",
-    "subCategory": "seikatsu_habit",
-    "subCategoryName": "せいかつのうごき"
+    "subCategory": "kihon_ugoki",
+    "subCategoryName": "からだのうごき"
   },
   {
     "id": "m_atama",
@@ -5649,62 +5649,62 @@
   {
     "id": "v_kusuguru",
     "name": "くすぐる",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_kusuguru.png",
     "file": "v_kusuguru.png",
     "prompt": "A realistic-leaning educational picture book illustration of a loving parent gently tickling a laughing young child's side (くすぐる), both giggling with joy, warm playful family moment, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, suitable for children vocabulary flashcard, illustration",
     "tts_text": "くすぐる",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_onbu",
     "name": "おんぶ",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_onbu.png",
     "file": "v_onbu.png",
     "prompt": "A realistic-leaning educational picture book illustration of a smiling parent carrying a cheerful little child on their back in a piggyback ride (おんぶ), happy warm family bond, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, suitable for children vocabulary flashcard, illustration",
     "tts_text": "おんぶ",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_kataguruma",
     "name": "かたぐるま",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_kataguruma.png",
     "file": "v_kataguruma.png",
     "prompt": "A realistic-leaning educational picture book illustration of a happy parent carrying a delighted young child on their shoulders in a shoulder ride (かたぐるま), child raising hands happily, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, suitable for children vocabulary flashcard, illustration",
     "tts_text": "肩車",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_oshikuramanjuu",
     "name": "おしくらまんじゅう",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_oshikuramanjuu.png",
     "file": "v_oshikuramanjuu.png",
     "prompt": "A realistic-leaning educational picture book illustration of three cute young children playfully bumping backs together in a friendly circle playing traditional oshikura manju (おしくらまんじゅう), laughing and staying warm together, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, suitable for children vocabulary flashcard, illustration",
     "tts_text": "おしくらまんじゅう",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "fureai_nakayoshi",
+    "subCategoryName": "ふれあい・なかよし"
   },
   {
     "id": "v_onegai",
     "name": "おねがい",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "kimochi",
+    "categoryName": "きもち",
     "image": "images/v_onegai.png",
     "file": "v_onegai.png",
     "prompt": "A realistic-leaning educational picture book illustration of a polite and sweet young Japanese child pressing palms together in front of chest in a please pose, bowing head gently forward with a sincere friendly smiling expression (おねがい), respectful cute asking gesture, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, suitable for children vocabulary flashcard, illustration",
     "tts_text": "お願い",
-    "subCategory": "asobi_communication",
-    "subCategoryName": "あそび・きもち"
+    "subCategory": "tsutaeru_aisatsu",
+    "subCategoryName": "つたえる・あいさつ"
   },
   {
     "id": "m_me",
@@ -5877,8 +5877,8 @@
   {
     "id": "v_iku",
     "name": "いく",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_iku.png",
     "file": "v_iku.png",
     "prompt": "An educational picture book watercolor illustration of a cute young Japanese child walking energetically forward with a joyful smile and swinging arms, isolated on a pure white background",
@@ -5889,8 +5889,8 @@
   {
     "id": "v_ittekimasu",
     "name": "いってきます",
-    "category": "doushi",
-    "categoryName": "どうし",
+    "category": "ugoki",
+    "categoryName": "うごき",
     "image": "images/v_ittekimasu.png",
     "file": "v_ittekimasu.png",
     "prompt": "An educational picture book watercolor illustration of a cute young Japanese child stepping out through the entrance doorway with a red randoseru backpack, turning back with a beaming smile while waving goodbye (いってきます), isolated on a pure white background",
@@ -5916,34 +5916,43 @@
       { id: "tabemono", name: "たべもの", count: VOCAB_LIST.filter(w => w.category === "tabemono").length },
       { id: "norimono", name: "のりもの", count: VOCAB_LIST.filter(w => w.category === "norimono").length },
       { id: "midikanamono", name: "みぢかなもの", count: VOCAB_LIST.filter(w => w.category === "midikanamono").length },
-      { id: "doushi", name: "どうし", count: VOCAB_LIST.filter(w => w.category === "doushi").length }
+      { id: "ugoki", name: "うごき", count: VOCAB_LIST.filter(w => w.category === "ugoki").length },
+      { id: "kimochi", name: "きもち", count: VOCAB_LIST.filter(w => w.category === "kimochi").length }
     ],
     subCategories: {
-    "mushi": "むし",
-    "sakana_umi": "うみ・みずのいきもの",
-    "tori": "とり",
-    "riku_doubutsu": "りくのどうぶつ",
-    "kudamono": "くだもの",
-    "yasai": "やさい",
-    "shushoku": "ごはん・パン・めん",
-    "okazu": "おかず",
-    "oyatsu_nomimono": "おやつ・のみもの",
-    "kuruma": "まちのくるま",
-    "hatarakukuruma": "はたらくくるま",
-    "densha": "でんしゃ・てつどう",
-    "sora_umi": "そら・うみののりもの",
-    "karada": "からだ",
-    "gakkou": "がっこう・しせつ",
-    "bunbougu": "ぶんぼうぐ",
-    "fuku_kougu": "みにつけるもの",
-    "kagu_kaden": "いえ・かぐ・かでん",
-    "seikatsu_seiketsu": "せいかつ・せいけつ",
-    "asobi": "おもちゃ・あそび",
-    "kihon_ugoki": "からだのうごき",
-    "seikatsu_habit": "せいかつのうごき",
-    "asobi_communication": "あそび・きもち",
-    "tesaki_sagyou": "てさき・つかう"
-    }
+  "riku_doubutsu": "りくのどうぶつ",
+  "tori": "とり",
+  "sakana_umi": "うみ・みずのいきもの",
+  "mushi": "むし",
+  "kudamono": "くだもの",
+  "yasai": "やさい",
+  "tamago_okazu": "たまごのおかず",
+  "shushoku": "ごはん・パン・めん",
+  "oyatsu": "おやつ",
+  "nomimono": "のみもの",
+  "sakana_okazu": "さかなのおかず",
+  "niku_okazu": "にくのおかず",
+  "sonota_okazu": "そのほかのおかず",
+  "kuruma": "まちのくるま",
+  "sonota_norimono": "そのほかののりもの",
+  "hatarakukuruma": "はたらくくるま",
+  "densha": "でんしゃ・てつどう",
+  "sora": "そらののりもの",
+  "umi": "うみののりもの",
+  "bunbougu": "ぶんぼうぐ",
+  "kagu_kaden": "いえ・かぐ・かでん",
+  "fuku_kougu": "みにつけるもの",
+  "seikatsu_seiketsu": "せいかつ・せいけつ",
+  "asobi": "おもちゃ・あそび",
+  "kihon_ugoki": "からだのうごき",
+  "seikatsu_habit": "せいかつのうごき",
+  "tesaki_sagyou": "てさき・つかう",
+  "kimochi_hyoujou": "きもち・ひょうじょう",
+  "tsutaeru_aisatsu": "つたえる・あいさつ",
+  "fureai_nakayoshi": "ふれあい・なかよし",
+  "karada": "からだ",
+  "gakkou": "がっこう・しせつ"
+}
   };
 
   global.APP_VOCAB = VOCAB_DATA;

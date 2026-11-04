@@ -43,7 +43,8 @@
       --cat-tabemono: #ef4444;
       --cat-norimono: #0284c7;
       --cat-midikanamono: #10b981;
-      --cat-doushi: #8b5cf6;
+      --cat-ugoki: #8b5cf6;
+      --cat-kimochi: #ec4899;
     }
 
     * {
@@ -1837,7 +1838,8 @@
             <button class="cat-chip checked" data-cat="tabemono">たべもの</button>
             <button class="cat-chip checked" data-cat="norimono">のりもの</button>
             <button class="cat-chip checked" data-cat="midikanamono">みぢかなもの</button>
-            <button class="cat-chip checked" data-cat="doushi">どうし</button>
+            <button class="cat-chip checked" data-cat="ugoki">うごき</button>
+            <button class="cat-chip checked" data-cat="kimochi">きもち</button>
           </div>
           <div class="cat-quick-actions">
             <button class="cat-quick-btn" id="btn-cat-all">すべて えらぶ</button>
@@ -2008,12 +2010,13 @@
       { id: 'tabemono', name: 'たべもの', color: 'var(--cat-tabemono)' },
       { id: 'norimono', name: 'のりもの', color: 'var(--cat-norimono)' },
       { id: 'midikanamono', name: 'みぢかなもの', color: 'var(--cat-midikanamono)' },
-      { id: 'doushi', name: 'どうし', color: 'var(--cat-doushi)' }
+      { id: 'ugoki', name: 'うごき', color: 'var(--cat-ugoki)' },
+      { id: 'kimochi', name: 'きもち', color: 'var(--cat-kimochi)' }
     ];
 
     // デフォルト設定
     const DEFAULT_SETTINGS = {
-      categories: ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'doushi'],
+      categories: ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi'],
       quizFormat: 'random', // 'choose-pic' | 'choose-text' | 'random'
       questionCount: 5,     // 1〜20
       choiceCount: 3,       // 2, 3, 4
@@ -2042,8 +2045,14 @@
       } catch(e) {
         settings = { ...DEFAULT_SETTINGS };
       }
+      // 旧doushi設定からの自動マイグレーション
+      if (settings.categories && settings.categories.includes('doushi')) {
+        settings.categories = settings.categories.filter(c => c !== 'doushi');
+        if (!settings.categories.includes('ugoki')) settings.categories.push('ugoki');
+        if (!settings.categories.includes('kimochi')) settings.categories.push('kimochi');
+      }
       if (!settings.categories || settings.categories.length === 0) {
-        settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'doushi'];
+        settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi'];
       }
       updateHiddenWordsSet();
     }
@@ -2638,7 +2647,29 @@
       });
       subBar.appendChild(allPill);
 
-      subMap.forEach((subName, subId) => {
+      // 望ましいサブカテゴリー表示順序
+      const SUBCAT_ORDER = [
+        // いきもの
+        'riku_doubutsu', 'tori', 'sakana_umi', 'mushi',
+        // たべもの
+        'shushoku', 'niku_okazu', 'sakana_okazu', 'tamago_okazu', 'sonota_okazu', 'yasai', 'kudamono', 'oyatsu', 'nomimono',
+        // のりもの
+        'kuruma', 'hatarakukuruma', 'densha', 'sora', 'umi', 'sonota_norimono',
+        // みぢかなもの
+        'karada', 'gakkou', 'bunbougu', 'fuku_kougu', 'kagu_kaden', 'seikatsu_seiketsu', 'asobi',
+        // うごき
+        'kihon_ugoki', 'seikatsu_habit', 'tesaki_sagyou',
+        // きもち
+        'kimochi_hyoujou', 'tsutaeru_aisatsu', 'fureai_nakayoshi'
+      ];
+
+      const sortedSubEntries = Array.from(subMap.entries()).sort((a, b) => {
+        const ia = SUBCAT_ORDER.indexOf(a[0]);
+        const ib = SUBCAT_ORDER.indexOf(b[0]);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+
+      sortedSubEntries.forEach(([subId, subName]) => {
         const pill = document.createElement('button');
         pill.className = `subcat-pill ${currentSubCategoryFilter === subId ? 'active' : ''}`;
         pill.textContent = subName;
@@ -3396,7 +3427,7 @@
       // すべて選ぶ / 全部消す
       document.getElementById('btn-cat-all').addEventListener('click', () => {
         playSound('tap');
-        settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'doushi'];
+        settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi'];
         document.querySelectorAll('#opt-categories .cat-chip').forEach(c => c.classList.add('checked'));
         updateLivePreview();
       });
