@@ -472,48 +472,14 @@
       font-size: 13px;
     }
 
-    /* 単語管理ボタン (図鑑ヘッダー) */
+    /* 単語管理ボタン (図鑑ヘッダー) - 一時的に非表示 */
     .btn-word-manage {
-      background: #f1f5f9;
-      color: #475569;
-      font-size: 0.92rem;
-      padding: 6px 12px;
-      border-radius: 12px;
-      border: 1.5px solid #cbd5e1;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-weight: 700;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-    .btn-word-manage:hover {
-      background: #e2e8f0;
-      color: #1e293b;
-    }
-    .btn-word-manage.has-hidden {
-      background: #fef2f2;
-      color: #dc2626;
-      border-color: #fca5a5;
+      display: none !important;
     }
 
-    /* 拡大モーダル内非表示ボタン */
+    /* 拡大モーダル内非表示ボタン - 一時的に非表示 */
     .modal-hide-btn {
-      background: #f8fafc;
-      color: #64748b;
-      border: 2px solid #cbd5e1;
-      padding: 10px 20px;
-      font-size: 1.05rem;
-      border-radius: 999px;
-      font-weight: 700;
-      transition: all 0.15s ease;
-      cursor: pointer;
-    }
-    .modal-hide-btn:hover {
-      background: #fef2f2;
-      color: #dc2626;
-      border-color: #fca5a5;
+      display: none !important;
     }
 
     /* 設定画面の単語管理オープンボタン */
@@ -1701,7 +1667,7 @@
       <div class="zukan-tabs-wrapper" id="zukan-tabs-wrapper">
         <!-- JSでタブを動的生成 -->
       </div>
-      <button class="btn btn-word-manage" id="btn-zukan-word-manage" title="ことばの表示・非表示設定">
+      <button class="btn btn-word-manage" id="btn-zukan-word-manage" title="ことばの表示・非表示設定" style="display: none;">
         <span>⚙️</span> かくす
       </button>
       <span class="zukan-count-badge" id="zukan-count-badge">0こ</span>
@@ -1726,7 +1692,7 @@
         <button class="btn modal-speak-btn" id="modal-speak-btn">
           <span>🔊</span> もういちど きく
         </button>
-        <button class="btn modal-hide-btn" id="modal-hide-btn" title="ずかんやクイズでこの単語を非表示にします">
+        <button class="btn modal-hide-btn" id="modal-hide-btn" title="ずかんやクイズでこの単語を非表示にします" style="display: none;">
           <span>👁️</span> かくす
         </button>
       </div>
@@ -1909,8 +1875,8 @@
           </label>
         </div>
 
-        <!-- 8. 単語の表示・非表示設定 -->
-        <div class="setting-section">
+        <!-- 8. 単語の表示・非表示設定（一時的に非表示） -->
+        <div class="setting-section" style="display: none;">
           <div class="setting-label-row">
             <span class="setting-label">8. ことばの ひょうじ・非表示</span>
             <span class="setting-val-display" id="val-hidden-count">0語 非表示</span>
@@ -2054,6 +2020,8 @@
       if (!settings.categories || settings.categories.length === 0) {
         settings.categories = ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi'];
       }
+      // 隠す機能を一時的に無効化し、全て表示
+      settings.hiddenWords = [];
       updateHiddenWordsSet();
     }
 
@@ -2697,28 +2665,12 @@
         return true;
       });
 
-      currentFilteredWords = categoryAllWords.filter(w => !hiddenWordsSet.has(w.id));
+      // 全て表示（隠す機能は一時的に無効化）
+      currentFilteredWords = categoryAllWords;
 
-      const hiddenCountInCat = categoryAllWords.length - currentFilteredWords.length;
       const countBadge = document.getElementById('zukan-count-badge');
       if (countBadge) {
-        if (hiddenCountInCat > 0) {
-          countBadge.textContent = `${currentFilteredWords.length} / ${categoryAllWords.length}こ`;
-        } else {
-          countBadge.textContent = `${currentFilteredWords.length}こ`;
-        }
-      }
-
-      // ナビバーの「かくす」ボタン状態
-      const manageBtn = document.getElementById('btn-zukan-word-manage');
-      if (manageBtn) {
-        if (hiddenCountInCat > 0) {
-          manageBtn.classList.add('has-hidden');
-          manageBtn.innerHTML = `<span>⚙️</span> かくす (${hiddenCountInCat})`;
-        } else {
-          manageBtn.classList.remove('has-hidden');
-          manageBtn.innerHTML = `<span>⚙️</span> かくす`;
-        }
+        countBadge.textContent = `${currentFilteredWords.length}こ`;
       }
 
       if (currentFilteredWords.length === 0) {
