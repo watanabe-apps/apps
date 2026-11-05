@@ -2492,7 +2492,7 @@
   },
   {
     "id": "t_ko-cha",
-    "name": "こーちゃ",
+    "name": "こうちゃ",
     "category": "tabemono",
     "categoryName": "たべもの",
     "image": "images/t_ko-cha.png",
@@ -2558,7 +2558,7 @@
     "image": "images/n_kuruma.png",
     "file": "n_kuruma.png",
     "prompt": "A realistic-leaning educational picture book illustration of compact red passenger car (くるま). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean smooth body, transparent windows, two black wheels, headlights). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
-    "tts_text": "車",
+    "tts_text": \"くるま\",
     "subCategory": "kuruma",
     "subCategoryName": "まちのくるま"
   },

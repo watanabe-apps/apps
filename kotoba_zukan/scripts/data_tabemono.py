@@ -217,7 +217,7 @@ NEW_TABEMONO = [
     ("t_ocha", "おちゃ", "a traditional Japanese ceramic teacup filled with steaming green sencha tea"),
     ("t_mugicha", "むぎちゃ", "a tall glass of cold roasted barley tea (mugicha) with ice cubes"),
     ("t_houjicha", "ほうじちゃ", "a ceramic mug of fragrant warm roasted brown tea (hojicha)"),
-    ("t_ko-cha", "こーちゃ", "a delicate porcelain teacup of clear amber black tea with lemon slice"),
+    ("t_ko-cha", "こうちゃ", "a delicate porcelain teacup of clear amber black tea with lemon slice"),
     ("t_mirukuti-", "みるくてぃー", "a cup of rich creamy British milk tea with soft steam"),
     ("t_ko-hi-", "こーひー", "a classic white ceramic mug filled with aromatic black hot coffee"),
     ("t_kafeore", "かふぇおれ", "a tall glass of iced cafe au lait showing distinct layers of espresso and white milk"),
