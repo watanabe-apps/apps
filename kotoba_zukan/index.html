@@ -361,6 +361,8 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 12px 14px;
+      touch-action: pan-y !important;
+      overscroll-behavior-y: contain;
     }
 
     .zukan-grid {
@@ -371,6 +373,7 @@
       width: 100%;
       margin: 0;
       padding-bottom: 40px;
+      touch-action: pan-y !important;
     }
     @media (min-width: 600px) {
       .zukan-grid-scroll {
@@ -413,18 +416,37 @@
       cursor: pointer;
       aspect-ratio: 1 / 1.15;
       position: relative;
-      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      touch-action: pan-y !important;
+      -webkit-user-drag: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+    /* タッチ時：transform: scale を使うとiOSでスクロールが阻害されるため、色変更のみにする */
     .word-card:active {
-      transform: scale(0.93);
+      border-color: #94a3b8;
+      background-color: #f8fafc;
+    }
+    @media (hover: hover) {
+      .word-card:hover {
+        transform: translateY(-2px);
+        border-color: #cbd5e1;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+      }
+      .word-card:active {
+        transform: scale(0.96);
+      }
+    }
+    .word-card * {
+      pointer-events: none;
     }
     .word-card.bounce {
       animation: cardBounce 0.45s ease-out;
     }
     @keyframes cardBounce {
       0%, 100% { transform: scale(1); }
-      35% { transform: scale(0.9); }
-      70% { transform: scale(1.08); }
+      35% { transform: scale(0.92); }
+      70% { transform: scale(1.06); }
     }
 
     .card-svg-box {
@@ -961,21 +983,24 @@
     }
 
     /* =========================================================
-       3. クイズ画面 (#quiz-screen)
+       3. クイズ画面 (#quiz-screen) - シンプル＆ドラッグ＆ドロップ
        ========================================================= */
     #quiz-screen {
-      padding: 16px;
+      padding: clamp(10px, 2vh, 18px) clamp(14px, 3vw, 28px);
       position: relative;
       display: none;
       flex-direction: column;
       justify-content: space-between;
-      background: radial-gradient(circle at 50% 20%, #f0fdf4 0%, #f8fafc 100%);
+      background: var(--bg-color);
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     #quiz-screen.active {
       display: flex;
     }
 
-    /* フローティング上部ヘッダー（帯なし） */
+    /* 上部ヘッダー */
     .quiz-float-header {
       display: flex;
       align-items: center;
@@ -986,279 +1011,278 @@
     }
     .quiz-float-back {
       background: #ffffff;
-      color: #475569;
+      color: #334155;
       font-size: 1rem;
       font-weight: 700;
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 999px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border: 1px solid #cbd5e1;
+      border: 1.5px solid #cbd5e1;
+      cursor: pointer;
+    }
+    .quiz-float-back:active {
+      background: #f1f5f9;
     }
     .quiz-float-progress {
       background: #ffffff;
-      color: #15803d;
-      font-size: 1.25rem;
+      color: #1e293b;
+      font-size: 1.15rem;
       font-weight: 700;
       padding: 6px 18px;
       border-radius: 999px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border: 2px solid #86efac;
+      border: 1.5px solid #cbd5e1;
     }
 
-    /* 問題提示エリア */
-    /* クイズ画面メインコンテナ（上下2段の直感レイアウト） */
-    .quiz-vertical-layout {
+    /* メインステージ（上下50/50のバランス） */
+    .quiz-stage-container {
       flex: 1;
       width: 100%;
-      max-width: 860px;
+      max-width: 960px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: space-evenly;
-      padding: clamp(8px, 1.8vh, 18px) 16px max(14px, env(safe-area-inset-bottom));
+      align-items: center;
       box-sizing: border-box;
-      gap: clamp(12px, 2.2vh, 24px);
+      padding: clamp(4px, 1vh, 12px) 0;
     }
 
-    /* 1段目: 問題エリア（大きく見やすい出題カード） */
-    .quiz-question-section {
+    /* 上段: お題 ➔ こたえ枠 */
+    .quiz-top-stage {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: clamp(6px, 1.2vh, 12px);
-      flex-shrink: 0;
-    }
-
-    .quiz-prompt-label {
-      font-size: clamp(1.15rem, 2.8vw, 1.45rem);
-      font-weight: 800;
-      color: #15803d;
-      background: #dcfce7;
-      padding: 6px 24px;
-      border-radius: 999px;
-      letter-spacing: 0.04em;
-      box-shadow: 0 2px 6px rgba(22, 101, 52, 0.08);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .quiz-target-card {
-      background: #ffffff;
-      border: 4px solid #86efac;
-      border-radius: 28px;
-      box-shadow: 0 8px 24px rgba(22, 101, 52, 0.08);
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
-    }
-    .quiz-target-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 28px rgba(22, 101, 52, 0.12);
-    }
-    .quiz-target-card:active {
-      transform: scale(0.97);
+      gap: clamp(14px, 3.5vw, 36px);
+      flex-shrink: 0;
     }
 
-    /* パターンA: 文字出題 */
+    /* お題カード */
+    .quiz-target-card {
+      background: #ffffff;
+      border: 3px solid #94a3b8;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      position: relative;
+      box-sizing: border-box;
+    }
     .quiz-target-card.mode-text {
-      padding: clamp(12px, 2.2vh, 20px) clamp(24px, 5vw, 48px);
+      padding: clamp(14px, 2.5vh, 22px) clamp(24px, 4.5vw, 40px);
       gap: 16px;
     }
     .quiz-target-text {
-      font-size: clamp(2.6rem, 7vw, 4.0rem);
+      font-size: clamp(2.8rem, 7vw, 4.2rem);
       font-weight: 800;
       color: #0f172a;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       line-height: 1;
     }
-
-    /* パターンB: 絵出題 */
     .quiz-target-card.mode-pic {
-      padding: clamp(10px, 1.8vh, 16px) clamp(20px, 4vw, 36px);
+      padding: clamp(10px, 1.8vh, 16px);
       flex-direction: column;
       gap: 6px;
     }
     .quiz-target-pic-box {
-      width: clamp(130px, 24vh, 200px);
-      height: clamp(130px, 24vh, 200px);
+      width: clamp(130px, 22vh, 185px);
+      height: clamp(130px, 22vh, 185px);
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .quiz-target-pic-box .k-svg {
-      max-height: 100%;
-      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
-    }
     .quiz-target-pic-box .k-visual-img {
       max-height: 100%;
+      max-width: 100%;
       mix-blend-mode: multiply;
-      filter: none;
       pointer-events: none;
-      -webkit-user-drag: none;
       user-drag: none;
+      -webkit-user-drag: none;
+    }
+    .quiz-target-pic-box .k-svg {
+      max-height: 100%;
     }
 
     .quiz-speak-icon-btn {
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: #eff6ff;
+      background: #f1f5f9;
       color: #2563eb;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+      font-size: 1.25rem;
+      cursor: pointer;
+      border: 1px solid #cbd5e1;
       flex-shrink: 0;
     }
-
-    /* 2段目: 選択肢エリア（横並び / グリッド） */
-    .quiz-choices-container {
-      width: 100%;
-      flex-shrink: 0;
+    .quiz-speak-icon-btn:active {
+      background: #e2e8f0;
     }
 
-    .choices-grid {
-      display: grid;
-      gap: clamp(12px, 2.2vw, 20px);
-      width: 100%;
-      position: relative;
-    }
-    .choices-grid.choices-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .choices-grid.choices-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    .choices-grid.choices-4 {
-      grid-template-columns: repeat(2, 1fr);
+    /* 矢印 */
+    .quiz-stage-arrow {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      color: #94a3b8;
+      user-select: none;
     }
 
-    /* 選択肢ボタン共通 */
-    .choice-btn {
+    /* こたえのドロップ枠 */
+    .quiz-drop-target {
       background: #ffffff;
-      border: 4px solid #cbd5e1;
-      border-radius: 24px;
-      padding: clamp(10px, 1.8vh, 18px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      border: 3.5px dashed #94a3b8;
+      border-radius: 20px;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      position: relative;
-      min-height: clamp(95px, 18vh, 150px);
-      user-select: none;
       box-sizing: border-box;
-      font-family: var(--font-family);
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      position: relative;
+      transition: border-color 0.15s, background-color 0.15s;
     }
-    .choice-btn:hover {
-      transform: translateY(-3px);
-      border-color: #94a3b8;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+    .quiz-drop-target.target-mode-pic {
+      width: clamp(125px, 18vw, 165px);
+      height: clamp(125px, 18vw, 165px);
     }
-    .choice-btn:active {
-      transform: scale(0.95);
+    .quiz-drop-target.target-mode-text {
+      width: clamp(190px, 26vw, 280px);
+      height: clamp(85px, 13vh, 115px);
     }
-
-    /* 正解アニメーション */
-    .choice-btn.is-correct-choice {
+    .quiz-drop-target.drag-hover {
+      border-color: #2563eb !important;
+      background: #eff6ff !important;
+    }
+    .quiz-drop-target.is-correct {
+      border-style: solid !important;
       border-color: #22c55e !important;
       background: #f0fdf4 !important;
-      transform: scale(1.05) !important;
-      box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25) !important;
-      animation: correctPop 0.5s ease-out;
     }
-    @keyframes correctPop {
-      0% { transform: scale(0.95); }
-      50% { transform: scale(1.12); }
-      100% { transform: scale(1.05); }
-    }
-
-    /* 不正解アニメーション（優しい揺れ） */
-    .choice-btn.is-wrong-choice {
-      animation: gentleShake 0.4s ease-in-out;
-      opacity: 0.35;
-      filter: grayscale(0.7);
-      background: #f8fafc;
-      border-color: #e2e8f0;
+    .quiz-drop-target .drop-label {
+      font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+      font-weight: 700;
+      color: #94a3b8;
       pointer-events: none;
-      cursor: not-allowed;
-    }
-    @keyframes gentleShake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-8px); }
-      40%, 80% { transform: translateX(8px); }
+      user-select: none;
     }
 
-    /* 絵を選ぶ選択肢ボタン */
-    .choice-btn .choice-svg-box {
-      width: clamp(75px, 16vw, 115px);
-      height: clamp(75px, 16vw, 115px);
+    /* 下段: 選択肢トレイ */
+    .quiz-bottom-tray {
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .quiz-choices-grid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(12px, 2.5vw, 24px);
+      width: 100%;
+      position: relative;
+      flex-wrap: wrap;
+    }
+
+    /* ドラッグ可能な選択肢カード */
+    .quiz-choice-card {
+      background: #ffffff;
+      border: 3px solid #cbd5e1;
+      border-radius: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      box-sizing: border-box;
+      position: relative;
+      will-change: transform;
+      transition: box-shadow 0.15s, border-color 0.15s;
     }
-    .choice-btn .choice-svg-box .k-svg {
-      max-height: 100%;
+    .quiz-choice-card:active {
+      cursor: grabbing;
     }
-    .choice-btn .choice-svg-box .k-visual-img {
+    .quiz-choice-card.is-dragging {
+      cursor: grabbing;
+      opacity: 0.96;
+      border-color: #2563eb;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+    }
+    .quiz-choice-card.mode-pic {
+      width: clamp(125px, 18vw, 165px);
+      height: clamp(125px, 18vw, 165px);
+      padding: 10px;
+    }
+    .quiz-choice-card.mode-pic .choice-pic-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .quiz-choice-card.mode-pic .choice-pic-box .k-visual-img {
       max-height: 100%;
+      max-width: 100%;
       mix-blend-mode: multiply;
-      filter: none;
       pointer-events: none;
-      -webkit-user-drag: none;
       user-drag: none;
+      -webkit-user-drag: none;
+    }
+    .quiz-choice-card.mode-pic .choice-pic-box .k-svg {
+      max-height: 100%;
     }
 
-    /* 名前を選ぶ選択肢ボタン */
-    .choice-btn .choice-text {
-      font-size: clamp(1.6rem, 4vw, 2.5rem);
+    .quiz-choice-card.mode-text {
+      width: clamp(190px, 26vw, 280px);
+      min-height: clamp(85px, 13vh, 115px);
+      padding: 12px 18px;
+    }
+    .quiz-choice-card.mode-text .choice-card-text {
+      font-size: clamp(2.2rem, 5.2vw, 3.2rem);
       font-weight: 800;
-      color: var(--text-main);
+      color: #0f172a;
+      letter-spacing: 0.04em;
+      line-height: 1;
       text-align: center;
-      line-height: 1.15;
-    }
-    .choice-btn .choice-text.choice-text-long {
-      font-size: clamp(1.2rem, 3.2vw, 1.8rem);
-      letter-spacing: -0.02em;
-    }
-
-    @keyframes shakeAnim {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-12px); }
-      40%, 80% { transform: translateX(12px); }
-    }
-
-    /* 画面中央の巨大正解丸マーク */
-    .correct-center-mark {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: clamp(180px, 45vw, 280px);
-      height: clamp(180px, 45vw, 280px);
-      z-index: 100;
       pointer-events: none;
     }
-    .correct-center-mark.show {
-      display: block;
-      animation: popCircle 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    .quiz-choice-card.mode-text .choice-card-text.is-long {
+      font-size: clamp(1.5rem, 3.6vw, 2.1rem);
+      letter-spacing: -0.01em;
     }
-    @keyframes popCircle {
-      0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
-      60% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 0.95; }
+
+    @media (max-width: 600px) {
+      .quiz-top-stage {
+        gap: 12px;
+      }
+      .quiz-choices-grid {
+        gap: 10px;
+      }
+      .quiz-target-card.mode-text {
+        padding: 10px 18px;
+      }
+      .quiz-target-text {
+        font-size: 2.2rem;
+      }
+      .quiz-stage-arrow {
+        font-size: 1.4rem;
+      }
+      .quiz-choice-card.mode-pic, .quiz-drop-target.target-mode-pic {
+        width: 105px;
+        height: 105px;
+      }
+      .quiz-choice-card.mode-text, .quiz-drop-target.target-mode-text {
+        width: 145px;
+        min-height: 72px;
+        height: 72px;
+        padding: 8px 10px;
+      }
+      .quiz-choice-card.mode-text .choice-card-text {
+        font-size: 1.6rem;
+      }
+      .quiz-choice-card.mode-text .choice-card-text.is-long {
+        font-size: 1.15rem;
+      }
     }
 
     /* =========================================================
@@ -1706,33 +1730,25 @@
        3. クイズ画面 (#quiz-screen)
        ======================================================= -->
   <div id="quiz-screen" class="screen">
-    <!-- フローティングヘッダー -->
+    <!-- 上部ヘッダー -->
     <div class="quiz-float-header">
       <button class="btn quiz-float-back" id="btn-quiz-back">← やめる</button>
-      <div class="quiz-float-progress" id="quiz-progress-badge">⭐ 1 / 5</div>
+      <div class="quiz-float-progress" id="quiz-progress-badge">1 / 5</div>
     </div>
 
-    <!-- クイズメインコンテナ (上下2段の直感レイアウト) -->
-    <div class="quiz-vertical-layout">
-      <!-- 1. 問題エリア (イラスト or 文字) -->
-      <div class="quiz-question-section" id="quiz-question-area">
-        <!-- JSでパターンAまたはBを注入 -->
+    <!-- クイズメインステージコンテナ -->
+    <div class="quiz-stage-container">
+      <!-- 上段: お題カード ＆ ドロップ枠（こたえ）エリア -->
+      <div class="quiz-top-stage" id="quiz-top-stage">
+        <!-- JSでお題カード、矢印、ドロップ枠を注入 -->
       </div>
 
-      <!-- 2. 選択肢エリア (タップで選ぶ大きなカード群) -->
-      <div class="quiz-choices-container">
-        <div class="choices-grid" id="quiz-choices-grid">
-          <!-- JSで選択肢ボタンを注入 -->
+      <!-- 下段: 選択肢トレイ -->
+      <div class="quiz-bottom-tray">
+        <div class="quiz-choices-grid" id="quiz-choices-grid">
+          <!-- JSでドラッグ可能な選択肢カードを注入 -->
         </div>
       </div>
-    </div>
-
-    <!-- 巨大正解丸マーク -->
-    <div class="correct-center-mark" id="correct-center-mark">
-      <svg viewBox="0 0 100 100" style="width: 100%; height: 100%;">
-        <circle cx="50" cy="50" r="42" fill="none" stroke="#22c55e" stroke-width="12" stroke-linecap="round"/>
-        <circle cx="50" cy="50" r="26" fill="none" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
-      </svg>
     </div>
   </div>
 
@@ -2685,7 +2701,34 @@
           <div class="${nameCls}">${word.name}</div>
         `;
 
-        card.addEventListener('click', () => {
+        let startX = 0;
+        let startY = 0;
+        let hasMoved = false;
+
+        card.addEventListener('pointerdown', (e) => {
+          startX = e.clientX;
+          startY = e.clientY;
+          hasMoved = false;
+        }, { passive: true });
+
+        card.addEventListener('pointermove', (e) => {
+          if (!hasMoved) {
+            const dx = Math.abs(e.clientX - startX);
+            const dy = Math.abs(e.clientY - startY);
+            if (dx > 7 || dy > 7) {
+              hasMoved = true;
+            }
+          }
+        }, { passive: true });
+
+        card.addEventListener('click', (e) => {
+          // スクロール操作やスワイプ中（指が動いた場合）はクリックを発火させない
+          if (hasMoved || isZukanScrolling) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+
           card.classList.remove('bounce');
           void card.offsetWidth; // reflow
           card.classList.add('bounce');
@@ -2726,7 +2769,22 @@
       modal.classList.add('active');
     }
 
+    let isZukanScrolling = false;
+    let zukanScrollTimer = null;
+
     function initZukanEvents() {
+      // スクロール検知（スワイプ中のカードクリック防止）
+      const scrollEl = document.querySelector('.zukan-grid-scroll');
+      if (scrollEl) {
+        scrollEl.addEventListener('scroll', () => {
+          isZukanScrolling = true;
+          if (zukanScrollTimer) clearTimeout(zukanScrollTimer);
+          zukanScrollTimer = setTimeout(() => {
+            isZukanScrolling = false;
+          }, 120);
+        }, { passive: true });
+      }
+
       document.getElementById('btn-zukan-back').addEventListener('click', () => {
         playSound('tap');
         showScreen('home-screen');
@@ -2817,11 +2875,10 @@
       document.getElementById('quiz-progress-badge').textContent = `${currentQuizIndex + 1} / ${quizTotal}`;
 
       const targetWord = quizDeck[currentQuizIndex];
-      const qArea = document.getElementById('quiz-question-area');
-      const cGrid = document.getElementById('quiz-choices-grid');
-      qArea.innerHTML = '';
-      cGrid.innerHTML = '';
-      cGrid.className = `choices-grid choices-${settings.choiceCount}`;
+      const stage = document.getElementById('quiz-top-stage');
+      const tray = document.getElementById('quiz-choices-grid');
+      stage.innerHTML = '';
+      tray.innerHTML = '';
 
       // 出題形式決定
       let format = settings.quizFormat;
@@ -2831,7 +2888,6 @@
 
       // 選択肢作成 (正解1 + 誤答 n-1、非表示単語を除外)
       const otherWords = ALL_WORDS.filter(w => w.id !== targetWord.id && settings.categories.includes(w.category) && !hiddenWordsSet.has(w.id));
-      // 同カテゴリ優先で誤答を選ぶ
       const sameCatOthers = otherWords.filter(w => w.category === targetWord.category).sort(() => 0.5 - Math.random());
       const diffCatOthers = otherWords.filter(w => w.category !== targetWord.category).sort(() => 0.5 - Math.random());
       const distractorPool = [...sameCatOthers, ...diffCatOthers];
@@ -2839,313 +2895,176 @@
       const distractors = distractorPool.slice(0, settings.choiceCount - 1);
       const choices = [targetWord, ...distractors].sort(() => 0.5 - Math.random());
 
-      // ドロップゾーン初期状態リセット
-      const dropZone = document.getElementById('quiz-drop-zone');
-      if (dropZone) {
-        dropZone.className = 'quiz-drop-zone';
-        dropZone.innerHTML = `
-          <div class="drop-zone-placeholder">
-            <div class="drop-zone-icon">📥</div>
-            <div class="drop-zone-hint">ここへ ドラッグ</div>
-          </div>
-        `;
-      }
-
       if (format === 'choose-pic') {
-        // パターンA: 名前を見て絵を選ぶ（1:文字出題 -> 2:ドロップ枠 -> 3:絵の選択肢）
-        qArea.innerHTML = `
-          <div class="quiz-prompt-label">えを えらんで わくへ いれてね</div>
-          <div class="quiz-target-card mode-text" id="quiz-speak-target">
+        // パターンA: 名前を見て絵をドラッグ
+        stage.innerHTML = `
+          <div class="quiz-target-card mode-text">
             <span class="quiz-target-text">${targetWord.name}</span>
-            <div class="quiz-speak-icon-btn">🔊</div>
+            <button type="button" class="quiz-speak-icon-btn" id="btn-quiz-speak" title="もういちど きく">🔊</button>
+          </div>
+          <div class="quiz-stage-arrow">➔</div>
+          <div class="quiz-drop-target target-mode-pic" id="quiz-drop-target">
+            <span class="drop-label">こたえ</span>
           </div>
         `;
-        document.getElementById('quiz-speak-target').addEventListener('click', () => {
+        document.getElementById('btn-quiz-speak').addEventListener('click', () => {
           speakText(targetWord.name);
         });
-        // 出題の読み上げは、単語のみ（出題開始時はforce=true）
         speakText(targetWord.name, null, true);
 
         choices.forEach(c => {
-          const btn = document.createElement('div');
-          btn.className = 'choice-btn';
-          btn.innerHTML = `<div class="choice-svg-box">${getWordVisualHtml(c.id, c.name)}</div>`;
-          cGrid.appendChild(btn);
-          setupDragAndDrop(btn, c, c.id === targetWord.id, targetWord.name);
+          const card = document.createElement('div');
+          card.className = 'quiz-choice-card mode-pic';
+          card.innerHTML = `<div class="choice-pic-box">${getWordVisualHtml(c.id, c.name)}</div>`;
+          tray.appendChild(card);
+          attachDragHandler(card, c, targetWord);
         });
       } else {
-        // パターンB: 絵を見て名前を選ぶ（1:絵出題 -> 2:ドロップ枠 -> 3:名前の選択肢）
-        qArea.innerHTML = `
-          <div class="quiz-prompt-label">なまえを えらんで わくへ いれてね</div>
-          <div class="quiz-target-card mode-pic" id="quiz-speak-target">
+        // パターンB: 絵を見て名前をドラッグ
+        stage.innerHTML = `
+          <div class="quiz-target-card mode-pic">
             <div class="quiz-target-pic-box">${getWordVisualHtml(targetWord.id, targetWord.name)}</div>
-            <div class="quiz-speak-icon-btn" style="margin-top:2px;">🔊</div>
+            <button type="button" class="quiz-speak-icon-btn" id="btn-quiz-speak" title="ヒント">🔊</button>
+          </div>
+          <div class="quiz-stage-arrow">➔</div>
+          <div class="quiz-drop-target target-mode-text" id="quiz-drop-target">
+            <span class="drop-label">こたえ</span>
           </div>
         `;
-        document.getElementById('quiz-speak-target').addEventListener('click', () => {
+        document.getElementById('btn-quiz-speak').addEventListener('click', () => {
           speakText(targetWord.name);
         });
-        // 出題の読み上げは、単語のみ（出題開始時はforce=true）
-        speakText(targetWord.name, null, true);
 
         choices.forEach(c => {
-          const btn = document.createElement('div');
-          btn.className = 'choice-btn';
-          btn.innerHTML = `<span class="choice-text">${c.name}</span>`;
-          cGrid.appendChild(btn);
-          setupDragAndDrop(btn, c, c.id === targetWord.id, targetWord.name);
+          const card = document.createElement('div');
+          card.className = 'quiz-choice-card mode-text';
+          const isLong = c.name.length >= 7;
+          card.innerHTML = `<span class="choice-card-text ${isLong ? 'is-long' : ''}">${c.name}</span>`;
+          tray.appendChild(card);
+          attachDragHandler(card, c, targetWord);
         });
       }
-
-      // 選択肢と同サイズの枠（ドロップターゲット）のサイズを正確に同期
-      requestAnimationFrame(() => {
-        syncDropZoneSize();
-      });
     }
 
-    function syncDropZoneSize() {
-      const firstChoice = document.querySelector('#quiz-choices-grid .choice-btn');
-      const dropZone = document.getElementById('quiz-drop-zone');
-      if (firstChoice && dropZone) {
-        const rect = firstChoice.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) {
-          dropZone.style.width = `${rect.width}px`;
-          dropZone.style.height = `${rect.height}px`;
-        }
-      }
-    }
-
-    /* =========================================================
-       ドラッグ＆ドロップ実装（Pointer Events対応）
-       ========================================================= */
-    function setupDragAndDrop(btn, choiceData, isCorrect, targetWordName) {
+    function attachDragHandler(card, choiceWord, targetWord) {
       let isDragging = false;
       let startX = 0, startY = 0;
-      let initialLeft = 0, initialTop = 0;
-      let initialWidth = 0, initialHeight = 0;
-      let placeholder = null;
+      let initialRect = null;
 
-      btn.addEventListener('pointerdown', (e) => {
-        if (isAnswerProcessing || btn.classList.contains('disabled-wrong')) return;
-        btn.setPointerCapture(e.pointerId);
+      card.addEventListener('pointerdown', (e) => {
+        if (isAnswerProcessing) return;
+        e.preventDefault();
+
+        card.setPointerCapture(e.pointerId);
         isDragging = false;
         startX = e.clientX;
         startY = e.clientY;
-        const rect = btn.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-        initialWidth = rect.width;
-        initialHeight = rect.height;
-      });
+        initialRect = card.getBoundingClientRect();
 
-      btn.addEventListener('pointermove', (e) => {
-        if (!btn.hasPointerCapture(e.pointerId)) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+        card.style.transition = 'none';
+        card.style.zIndex = '9999';
+        card.classList.add('is-dragging');
 
-        if (!isDragging && Math.hypot(dx, dy) > 8) {
-          isDragging = true;
-          // グリッド位置保持のためのプレースホルダー
-          placeholder = document.createElement('div');
-          placeholder.className = 'choice-placeholder-slot';
-          placeholder.style.width = `${initialWidth}px`;
-          placeholder.style.height = `${initialHeight}px`;
-          placeholder.style.borderRadius = '24px';
-          placeholder.style.border = '3px dashed #cbd5e1';
-          placeholder.style.boxSizing = 'border-box';
-          placeholder.style.background = '#f1f5f9';
-          btn.parentElement.insertBefore(placeholder, btn);
+        const dropTarget = document.getElementById('quiz-drop-target');
 
-          // ドラッグ中のボタンフローティングスタイル
-          btn.classList.add('is-dragging');
-          btn.style.position = 'fixed';
-          btn.style.width = `${initialWidth}px`;
-          btn.style.height = `${initialHeight}px`;
-          btn.style.left = `${initialLeft}px`;
-          btn.style.top = `${initialTop}px`;
-          btn.style.zIndex = '9999';
-          btn.style.margin = '0';
-          btn.style.pointerEvents = 'none';
-        }
+        function onPointerMove(ev) {
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
 
-        if (isDragging) {
-          btn.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(1.06)`;
-          const dropZone = document.getElementById('quiz-drop-zone');
-          if (dropZone) {
-            const dzRect = dropZone.getBoundingClientRect();
-            const btnRect = btn.getBoundingClientRect();
-            const overlap = !(
-              btnRect.right < dzRect.left ||
-              btnRect.left > dzRect.right ||
-              btnRect.bottom < dzRect.top ||
-              btnRect.top > dzRect.bottom
-            );
-            dropZone.classList.toggle('drag-over', overlap);
+          if (!isDragging && Math.hypot(dx, dy) > 4) {
+            isDragging = true;
+          }
+
+          if (isDragging) {
+            card.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+            if (dropTarget) {
+              const isOver = checkCardDropOverlap(card, dropTarget);
+              dropTarget.classList.toggle('drag-hover', isOver);
+            }
           }
         }
-      });
 
-      const handlePointerEnd = (e) => {
-        if (!btn.hasPointerCapture(e.pointerId)) return;
-        btn.releasePointerCapture(e.pointerId);
+        function onPointerUp(ev) {
+          card.releasePointerCapture(ev.pointerId);
+          card.removeEventListener('pointermove', onPointerMove);
+          card.removeEventListener('pointerup', onPointerUp);
+          card.removeEventListener('pointercancel', onPointerUp);
 
-        const dropZone = document.getElementById('quiz-drop-zone');
-        if (dropZone) dropZone.classList.remove('drag-over');
+          card.classList.remove('is-dragging');
+          if (dropTarget) dropTarget.classList.remove('drag-hover');
 
-        if (!isDragging) {
-          // タップ操作時：枠へスムーズに飛んで解答（特別支援教育アクセシビリティ対応）
-          flyIntoDropZone(btn, isCorrect, targetWordName);
-          return;
-        }
+          if (!isDragging) {
+            card.style.transform = 'translate3d(0, 0, 0)';
+            card.style.zIndex = '';
+            return;
+          }
 
-        // ドラッグ終了時：枠との当たり判定
-        let droppedOnTarget = false;
-        if (dropZone) {
-          const dzRect = dropZone.getBoundingClientRect();
-          const btnRect = btn.getBoundingClientRect();
-          const centerX = btnRect.left + btnRect.width / 2;
-          const centerY = btnRect.top + btnRect.height / 2;
-          droppedOnTarget = (
-            (centerX >= dzRect.left && centerX <= dzRect.right &&
-             centerY >= dzRect.top && centerY <= dzRect.bottom) ||
-            !(btnRect.right < dzRect.left || btnRect.left > dzRect.right ||
-              btnRect.bottom < dzRect.top || btnRect.top > dzRect.bottom)
-          );
-        }
+          const isDropped = dropTarget && checkCardDropOverlap(card, dropTarget);
 
-        if (droppedOnTarget) {
-          executeDropAnswer(btn, placeholder, isCorrect, targetWordName);
-        } else {
-          returnToOriginalSlot(btn, placeholder, initialLeft, initialTop);
-        }
-      };
+          if (isDropped) {
+            if (choiceWord.id === targetWord.id) {
+              // 正解
+              isAnswerProcessing = true;
+              playSound('correct');
 
-      btn.addEventListener('pointerup', handlePointerEnd);
-      btn.addEventListener('pointercancel', handlePointerEnd);
-    }
+              const dRect = dropTarget.getBoundingClientRect();
+              const targetDx = (dRect.left - initialRect.left) + (dRect.width - initialRect.width) / 2;
+              const targetDy = (dRect.top - initialRect.top) + (dRect.height - initialRect.height) / 2;
 
-    function returnToOriginalSlot(btn, placeholder, origLeft, origTop) {
-      if (!placeholder) return;
-      btn.style.transition = 'all 0.25s cubic-bezier(0.2, 0, 0, 1)';
-      btn.style.left = `${origLeft}px`;
-      btn.style.top = `${origTop}px`;
-      btn.style.transform = 'translate3d(0, 0, 0) scale(1)';
+              card.style.transition = 'transform 0.18s cubic-bezier(0.2, 0, 0, 1)';
+              card.style.transform = `translate3d(${targetDx}px, ${targetDy}px, 0)`;
 
-      setTimeout(() => {
-        btn.classList.remove('is-dragging');
-        btn.removeAttribute('style');
-        if (placeholder && placeholder.parentElement) {
-          placeholder.parentElement.replaceChild(btn, placeholder);
-        }
-      }, 260);
-    }
+              dropTarget.classList.add('is-correct');
+              speakText(targetWord.name);
 
-    function flyIntoDropZone(btn, isCorrect, targetWordName) {
-      if (isAnswerProcessing || btn.classList.contains('disabled-wrong')) return;
-      const dropZone = document.getElementById('quiz-drop-zone');
-      if (!dropZone) return;
-
-      const btnRect = btn.getBoundingClientRect();
-      const dzRect = dropZone.getBoundingClientRect();
-
-      const placeholder = document.createElement('div');
-      placeholder.className = 'choice-placeholder-slot';
-      placeholder.style.width = `${btnRect.width}px`;
-      placeholder.style.height = `${btnRect.height}px`;
-      placeholder.style.borderRadius = '24px';
-      placeholder.style.border = '3px dashed #cbd5e1';
-      placeholder.style.boxSizing = 'border-box';
-      placeholder.style.background = '#f1f5f9';
-      btn.parentElement.insertBefore(placeholder, btn);
-
-      btn.classList.add('is-dragging');
-      btn.style.position = 'fixed';
-      btn.style.width = `${btnRect.width}px`;
-      btn.style.height = `${btnRect.height}px`;
-      btn.style.left = `${btnRect.left}px`;
-      btn.style.top = `${btnRect.top}px`;
-      btn.style.zIndex = '9999';
-      btn.style.margin = '0';
-      btn.style.pointerEvents = 'none';
-
-      requestAnimationFrame(() => {
-        const dx = dzRect.left - btnRect.left;
-        const dy = dzRect.top - btnRect.top;
-        btn.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)';
-        btn.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-
-        setTimeout(() => {
-          executeDropAnswer(btn, placeholder, isCorrect, targetWordName);
-        }, 310);
-      });
-    }
-
-    function executeDropAnswer(btn, placeholder, isCorrect, targetWordName) {
-      const dropZone = document.getElementById('quiz-drop-zone');
-      if (!dropZone) return;
-
-      if (isCorrect) {
-        isAnswerProcessing = true;
-        playSound('correct');
-
-        // ドロップ枠に正解アイテムをきれいに配置
-        dropZone.innerHTML = '';
-        dropZone.appendChild(btn);
-        btn.classList.remove('is-dragging');
-        btn.removeAttribute('style');
-        btn.style.width = '100%';
-        btn.style.height = '100%';
-        btn.style.cursor = 'default';
-        dropZone.classList.add('drop-success');
-
-        if (placeholder && placeholder.parentElement) {
-          placeholder.parentElement.removeChild(placeholder);
-        }
-
-        // 巨大正解丸マーク出現
-        const mark = document.getElementById('correct-center-mark');
-        mark.classList.remove('show');
-        void mark.offsetWidth;
-        mark.classList.add('show');
-
-        // 出題単語を読み上げ
-        speakText(targetWordName);
-
-        setTimeout(() => {
-          mark.classList.remove('show');
-          currentQuizIndex++;
-          if (currentQuizIndex >= quizTotal) {
-            showQuizClear();
+              setTimeout(() => {
+                currentQuizIndex++;
+                if (currentQuizIndex >= quizTotal) {
+                  showQuizClear();
+                } else {
+                  loadQuizQuestion();
+                }
+              }, 850);
+            } else {
+              // 不正解：元の位置へ戻る
+              playSound('wrong');
+              card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)';
+              card.style.transform = 'translate3d(0, 0, 0)';
+              setTimeout(() => {
+                card.style.zIndex = '';
+                card.style.transition = '';
+              }, 260);
+            }
           } else {
-            loadQuizQuestion();
+            // 枠外ドロップ：元の位置へ戻る
+            card.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)';
+            card.style.transform = 'translate3d(0, 0, 0)';
+            setTimeout(() => {
+              card.style.zIndex = '';
+              card.style.transition = '';
+            }, 260);
           }
-        }, 1150);
-      } else {
-        // 不正解：ミス音 ＋ 元の場所に戻して無効化（選び直せる安心演出）
-        playSound('wrong');
-        btn.style.transition = 'all 0.25s cubic-bezier(0.2, 0, 0, 1)';
-        const pRect = placeholder ? placeholder.getBoundingClientRect() : null;
-        if (pRect) {
-          btn.style.left = `${pRect.left}px`;
-          btn.style.top = `${pRect.top}px`;
-          btn.style.transform = 'translate3d(0, 0, 0) scale(1)';
         }
 
-        setTimeout(() => {
-          btn.classList.remove('is-dragging');
-          btn.removeAttribute('style');
-          if (placeholder && placeholder.parentElement) {
-            placeholder.parentElement.replaceChild(btn, placeholder);
-          }
-          btn.classList.add('disabled-wrong');
+        card.addEventListener('pointermove', onPointerMove);
+        card.addEventListener('pointerup', onPointerUp);
+        card.addEventListener('pointercancel', onPointerUp);
+      });
+    }
 
-          // ブルブルとシェイク演出
-          btn.style.animation = 'shakeAnim 0.4s ease-in-out';
-          setTimeout(() => { btn.style.animation = ''; }, 420);
+    function checkCardDropOverlap(card, dropTarget) {
+      const cRect = card.getBoundingClientRect();
+      const dRect = dropTarget.getBoundingClientRect();
+      const cX = cRect.left + cRect.width / 2;
+      const cY = cRect.top + cRect.height / 2;
 
-          isAnswerProcessing = false;
-        }, 260);
-      }
+      const centerInside = (cX >= dRect.left && cX <= dRect.right && cY >= dRect.top && cY <= dRect.bottom);
+      const overlapX = Math.max(0, Math.min(cRect.right, dRect.right) - Math.max(cRect.left, dRect.left));
+      const overlapY = Math.max(0, Math.min(cRect.bottom, dRect.bottom) - Math.max(cRect.top, dRect.top));
+      const overlapArea = overlapX * overlapY;
+      const cardArea = cRect.width * cRect.height;
+
+      return centerInside || (overlapArea > cardArea * 0.35);
     }
 
     function showQuizClear() {
@@ -3301,20 +3220,20 @@
         mock.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:11px; font-weight:700; color:#64748b;">← やめる</div>
-            <div style="font-size:11px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:999px;">1 / ${settings.questionCount}</div>
+            <div style="font-size:11px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:2px 8px; border-radius:999px;">1 / ${settings.questionCount}</div>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <div class="quiz-prompt-label" style="font-size:10px; padding:1px 8px;">えを わくへ ドラッグ</div>
-            <div style="background:#fff; border:2px solid #bbf7d0; border-radius:12px; padding:3px 14px;">
-              <span style="font-size:1.15rem; font-weight:700;">${sampleTarget.name}</span>
+          <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin:10px 0;">
+            <div style="background:#fff; border:2px solid #94a3b8; border-radius:12px; padding:4px 12px; display:flex; align-items:center; gap:4px;">
+              <span style="font-size:1.1rem; font-weight:800; color:#0f172a;">${sampleTarget.name}</span>
+              <span style="font-size:10px; color:#2563eb;">🔊</span>
             </div>
-            <div style="color:#94a3b8; font-size:11px; font-weight:bold;">⬇</div>
-            <div style="width:54px; height:46px; border:2px dashed #94a3b8; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; font-size:10px; color:#64748b; font-weight:700;">わく</div>
+            <span style="color:#94a3b8; font-weight:800; font-size:12px;">➔</span>
+            <div style="width:48px; height:48px; border:2px dashed #94a3b8; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; font-size:9px; color:#94a3b8; font-weight:700;">こたえ</div>
           </div>
-          <div class="choices-grid choices-${settings.choiceCount}" style="gap:6px;">
+          <div style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap;">
             ${choices.map(c => `
-              <div class="choice-btn" style="min-height:46px; padding:2px;">
-                <div class="choice-svg-box" style="width:36px; height:36px;">${getWordVisualHtml(c.id, c.name)}</div>
+              <div style="width:46px; height:46px; background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:2px; display:flex; align-items:center; justify-content:center;">
+                <div style="width:36px; height:36px;">${getWordVisualHtml(c.id, c.name)}</div>
               </div>
             `).join('')}
           </div>
@@ -3323,20 +3242,20 @@
         mock.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:11px; font-weight:700; color:#64748b;">← やめる</div>
-            <div style="font-size:11px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:999px;">1 / ${settings.questionCount}</div>
+            <div style="font-size:11px; font-weight:700; color:#1e293b; background:#f1f5f9; padding:2px 8px; border-radius:999px;">1 / ${settings.questionCount}</div>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <div class="quiz-prompt-label" style="font-size:10px; padding:1px 8px;">なまえを わくへ ドラッグ</div>
-            <div style="background:#fff; border:2px solid #bbf7d0; border-radius:12px; padding:3px 8px;">
-              <div style="width:48px; height:48px;">${getWordVisualHtml(sampleTarget.id, sampleTarget.name)}</div>
+          <div style="display:flex; justify-content:center; align-items:center; gap:8px; margin:10px 0;">
+            <div style="background:#fff; border:2px solid #94a3b8; border-radius:12px; padding:4px 8px; display:flex; align-items:center; gap:4px;">
+              <div style="width:44px; height:44px;">${getWordVisualHtml(sampleTarget.id, sampleTarget.name)}</div>
+              <span style="font-size:10px; color:#2563eb;">🔊</span>
             </div>
-            <div style="color:#94a3b8; font-size:11px; font-weight:bold;">⬇</div>
-            <div style="width:54px; height:46px; border:2px dashed #94a3b8; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#fff; font-size:10px; color:#64748b; font-weight:700;">わく</div>
+            <span style="color:#94a3b8; font-weight:800; font-size:12px;">➔</span>
+            <div style="width:64px; height:40px; border:2px dashed #94a3b8; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#fff; font-size:9px; color:#94a3b8; font-weight:700;">こたえ</div>
           </div>
-          <div class="choices-grid choices-${settings.choiceCount}" style="gap:6px;">
+          <div style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap;">
             ${choices.map(c => `
-              <div class="choice-btn" style="min-height:46px; padding:2px;">
-                <span style="font-size:0.95rem; font-weight:700;">${c.name}</span>
+              <div style="width:62px; height:38px; background:#fff; border:2px solid #cbd5e1; border-radius:10px; padding:2px; display:flex; align-items:center; justify-content:center;">
+                <span style="font-size:0.85rem; font-weight:800; color:#0f172a;">${c.name}</span>
               </div>
             `).join('')}
           </div>

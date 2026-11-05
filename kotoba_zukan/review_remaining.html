@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ことばずかん 残り9画像 Gemini生成スタンバイ</title>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --bg-page: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-sub: #64748b;
+      --card-bg: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+      background: var(--bg-page);
+      color: var(--text);
+      padding-bottom: 60px;
+    }
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: 14px 24px;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge-count {
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
+    }
+    .countdown-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #86efac;
+    }
+    .card-top {
+      display: flex;
+      gap: 16px;
+    }
+    .img-wrap {
+      width: 120px;
+      height: 120px;
+      border-radius: 14px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .img-tag {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      right: 4px;
+      background: rgba(15, 23, 42, 0.7);
+      color: #ffffff;
+      font-size: 10px;
+      text-align: center;
+      padding: 2px 4px;
+      border-radius: 6px;
+    }
+    .card-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .word-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .word-id {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .user-feedback-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      color: #b91c1c;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .intent-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: #166534;
+      line-height: 1.4;
+    }
+    .prompt-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.8rem;
+      color: #334155;
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      position: relative;
+    }
+    .btn-copy {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      color: #475569;
+    }
+    .btn-copy:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="title-row">
+        <h1 style="font-size: 1.25rem; font-weight: 800;">🎨 ことばずかん 残り9画像 Gemini生成スタンバイ</h1>
+        <span class="badge-count">全9単語 スタンバイ完了</span>
+      </div>
+      <div class="countdown-box" id="countdown-box">
+        ⏳ クォータ回復まで: <span id="countdown-timer">計算中...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid" id="card-grid"></div>
+  </div>
+
+  <script>
+    const targets = [
+      {
+        id: "m_buranko",
+        name: "ぶらんこ",
+        tts_text: "ブランコ",
+        user_instruction: "ブランコは日本の一般的な公園のブランコに。",
+        reason: "日本の公園で見られるA字型鉄パイプ（黄色や水色）＋黒いゴム座板＋2連の親しみやすいブランコへ刷新",
+        prompt: "An educational picture book watercolor illustration of a classic Japanese neighborhood park swing set (ぶらんこ). Gentle warm Japanese picture book style with delicate watercolor textures and clean pencil contours. Authentic Japanese park playground swing set: a sturdy cheerful A-frame steel pipe frame painted in friendly bright yellow or sky blue, suspending two standard swings with sturdy link chains and flat black rubber swing seats side by side. Entire swing set comfortably contained inside the canvas without touching edges. Solid pure white background (#ffffff), completely isolated, no ground, no park scenery, no children, no text, flashcard quality."
+      },
+      {
+        id: "m_moufu",
+        name: "もうふ",
+        tts_text: "毛布",
+        user_instruction: "毛布は広がってるほうが分かりやすいかな？",
+        reason: "四角く畳まれた状態から、ふんわり広げられて温かみのあるドレープがある毛布へ刷新",
+        prompt: "An educational picture book watercolor illustration of a cozy, soft fleece blanket spread out gently (もうふ). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A warm, fluffy winter blanket softly unfolded and spread out with gentle natural folds and draped curves, clearly showing its large cozy fabric surface and soft rounded stitched edges. Gentle warm pastel color (warm cream yellow or soft pastel peach with subtle cozy texture). NOT folded like a tight brick/towel stack, unmistakably a large cozy blanket spread out for sleeping. Solid pure white background (#ffffff), completely isolated, no bed, no room scenery, no text, flashcard quality."
+      },
+      {
+        id: "m_mafura-",
+        name: "まふらー",
+        tts_text: "マフラー",
+        user_instruction: "マフラーはなぜか実写風だから、イラスト風に。",
+        reason: "写真実写風から、温かい水彩・色鉛筆の手描き絵本イラストへ刷新",
+        prompt: "An educational picture book watercolor illustration of a warm knitted winter scarf (まふらー). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A charming, cozy hand-knitted woolen muffler gently looped in a soft relaxed knot, showing cozy knitted yarn stitches and playful fringe tassels at the ends. Warm cheerful red and soft cream plaid pattern or gentle solid warm red. ABSOLUTELY NOT a realistic photograph, hand-drawn picture book illustration. Solid pure white background (#ffffff), completely isolated, no person, no hanger, no text, flashcard quality."
+      },
+      {
+        id: "t_retasu",
+        name: "れたす",
+        tts_text: "レタス",
+        user_instruction: "レタスを修正。",
+        reason: "みずみずしい緑のフリル葉が重なり合った新鮮な丸ごとレタスへ刷新",
+        prompt: "An educational picture book watercolor illustration of a fresh whole crisp iceberg lettuce (れたす). Gentle warm Japanese picture book style with delicate watercolor washes and clean pencil contours. A whole fresh round head of lettuce with translucent ruffled pale green and leafy light green layered leaves curled organically. Distinctly crisp lettuce with delicate curly leaf edges, clearly distinguishable from cabbage. Solid pure white background (#ffffff), completely isolated, no bowl, no chopping board, no drops, no text, flashcard quality."
+      },
+      {
+        id: "t_satsumaimo",
+        name: "さつまいも",
+        tts_text: "さつまいも",
+        user_instruction: "さつまいもを修正。",
+        reason: "鮮やかな赤紫色の皮と、割った黄金色のホクホク断面が見える日本のさつまいもへ刷新",
+        prompt: "An educational picture book watercolor illustration of authentic Japanese sweet potatoes (さつまいも). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. One whole sweet potato with rich reddish-purple skin and tapered ends, placed next to a neatly broken or cut half revealing sweet, steaming golden-yellow fluffy flesh inside. Distinctive Japanese satsuma-imo. Solid pure white background (#ffffff), completely isolated, no plate, no shadow, no text, flashcard quality."
+      },
+      {
+        id: "v_oriru",
+        name: "おりる",
+        tts_text: "降りる",
+        user_instruction: "おりるを修正。",
+        reason: "幼児が手すりを持って足元を見ながら階段やすべり台から上手に降りる愛らしい姿へ刷新",
+        prompt: "An educational picture book watercolor illustration of a cute toddler carefully stepping down stairs (おりる). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A happy young Japanese child (around 3-4 years old) holding onto a safe low handrail with one hand while stepping down small gentle steps with focused cheerful expression, clearly depicting the action of 'getting down / descending' (おりる). Natural cute proportions, normal 5-fingered hands. Solid pure white background (#ffffff), completely isolated, minimal white step outline, no background room, no text, flashcard quality."
+      },
+      {
+        id: "v_mitsukeru",
+        name: "みつける",
+        tts_text: "見つける",
+        user_instruction: "見つけるを修正。",
+        reason: "幼児が「あ、あった！」と前を指差し、目を輝かせて発見した喜びが伝わるポーズへ刷新",
+        prompt: "An educational picture book watercolor illustration of a cute toddler discovering something exciting (みつける). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A curious, smiling young child kneeling slightly, pointing forward with one index finger with sparkling wide eyes and an open mouth full of joy saying 'Found it!' ('みつけた!'). Expressive discovery body language. Natural cute proportions, normal 5-fingered hands. Solid pure white background (#ffffff), completely isolated, no complex background, no text, flashcard quality."
+      },
+      {
+        id: "v_nigeru",
+        name: "にげる",
+        tts_text: "逃げる",
+        user_instruction: "逃げるを修正。",
+        reason: "鬼ごっこ等で「つかまらないぞ〜！」と笑顔で楽しそうに走って逃げる幼児の躍動感ある姿へ刷新",
+        prompt: "An educational picture book watercolor illustration of a cute toddler running away playfully in tag game (にげる). Gentle warm Japanese picture book style with delicate watercolor textures and clean pencil contours. A lively young child smiling excitedly, glancing back over one shoulder with a happy grin while running forward with arms swinging high, depicting playful escaping/running away ('にげる') like playing chase or tag. Cheerful and positive, NOT frightened. Natural cute proportions, normal hands. Solid pure white background (#ffffff), completely isolated, no ground, no text, flashcard quality."
+      },
+      {
+        id: "v_miru",
+        name: "みる",
+        tts_text: "見る",
+        user_instruction: "見るを修正。",
+        reason: "目を丸くしてキラキラさせながら本や小さな生き物をじっと見つめる集中した愛らしい姿へ刷新",
+        prompt: "An educational picture book watercolor illustration of a cute toddler observing something intently (みる). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A curious young child sitting or standing, holding a colorful picture book open (or leaning forward looking closely at a small cute ladybug on a leaf), with large shining curious eyes gazing forward with fascination, clearly showing the action of 'looking / watching' (みる). Warm, gentle and attentive. Natural cute proportions. Solid pure white background (#ffffff), completely isolated, no background clutter, no text, flashcard quality."
+      }
+    ];
+
+    const grid = document.getElementById('card-grid');
+    targets.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="img-wrap">
+            <img src="../common/images/${item.id}.png?t=${Date.now()}" alt="${item.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><text x=\\'50%\\' y=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%2394a3b8\\'>未生成</text></svg>'">
+            <div class="img-tag">現在の画像</div>
+          </div>
+          <div class="card-meta">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="word-name">${item.name}</span>
+              <span style="font-size:12px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:999px;">${idx + 1} / 9</span>
+            </div>
+            <div class="word-id">${item.id} (${item.tts_text})</div>
+            <div class="user-feedback-box">💬 ${item.user_instruction}</div>
+          </div>
+        </div>
+        <div class="intent-box">🎯 <strong>刷新方針:</strong> ${item.reason}</div>
+        <div class="prompt-box">
+          <button class="btn-copy" onclick="copyPrompt(this, \`${item.prompt.replace(/`/g, '\\`')}\`)">コピー</button>
+          <strong>Prompt:</strong><br>${item.prompt}
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    function copyPrompt(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'コピー完了！';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      });
+    }
+
+    // カウントダウン (2026-11-05 22:19:31 JST)
+    const resetTime = new Date('2026-11-05T13:19:31Z').getTime();
+    function updateCountdown() {
+      const now = Date.now();
+      const diff = resetTime - now;
+      const el = document.getElementById('countdown-timer');
+      if (diff <= 0) {
+        el.textContent = '🎉 クォータ回復済み！生成可能です';
+        document.getElementById('countdown-box').style.background = '#dcfce7';
+        document.getElementById('countdown-box').style.color = '#15803d';
+        document.getElementById('countdown-box').style.borderColor = '#86efac';
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        el.textContent = `あと ${hours}時間 ${mins}分 ${secs}秒 (22:19 JST頃)`;
+      }
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  </script>
+</body>
+</html>
+

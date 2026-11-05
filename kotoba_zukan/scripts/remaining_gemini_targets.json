@@ -1,0 +1,84 @@
+[
+  {
+    "id": "m_buranko",
+    "name": "ぶらんこ",
+    "tts_text": "ブランコ",
+    "category": "midikanamono",
+    "user_instruction": "ブランコは日本の一般的な公園のブランコに。",
+    "reason": "海外風や不自然な形状を排し、日本の公園で見られるA字型スチールパイプ＋黒ゴム座板＋2連の親しみやすいブランコへ刷新",
+    "prompt": "An educational picture book watercolor illustration of a classic Japanese neighborhood park swing set (ぶらんこ). Gentle warm Japanese picture book style with delicate watercolor textures and clean pencil contours. Authentic Japanese park playground swing set: a sturdy cheerful A-frame steel pipe frame painted in friendly bright yellow or sky blue, suspending two standard swings with sturdy link chains and flat black rubber swing seats side by side. Entire swing set comfortably contained inside the canvas without touching edges. Solid pure white background (#ffffff), completely isolated, no ground, no park scenery, no children, no text, flashcard quality."
+  },
+  {
+    "id": "m_moufu",
+    "name": "もうふ",
+    "tts_text": "毛布",
+    "category": "midikanamono",
+    "user_instruction": "毛布は広がってるほうが分かりやすいかな？",
+    "reason": "タオルのように四角く畳まれた状態から、ふんわり広げられて温かみのあるドレープがある毛布へ刷新",
+    "prompt": "An educational picture book watercolor illustration of a cozy, soft fleece blanket spread out gently (もうふ). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A warm, fluffy winter blanket softly unfolded and spread out with gentle natural folds and draped curves, clearly showing its large cozy fabric surface and soft rounded stitched edges. Gentle warm pastel color (warm cream yellow or soft pastel peach with subtle cozy texture). NOT folded like a tight brick/towel stack, unmistakably a large cozy blanket spread out for sleeping. Solid pure white background (#ffffff), completely isolated, no bed, no room scenery, no text, flashcard quality."
+  },
+  {
+    "id": "m_mafura-",
+    "name": "まふらー",
+    "tts_text": "マフラー",
+    "category": "midikanamono",
+    "user_instruction": "マフラーはなぜか実写風だから、イラスト風に。",
+    "reason": "写真実写風から、温かい水彩・色鉛筆の手描き絵本イラストへ刷新",
+    "prompt": "An educational picture book watercolor illustration of a warm knitted winter scarf (まふらー). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A charming, cozy hand-knitted woolen muffler gently looped in a soft relaxed knot, showing cozy knitted yarn stitches and playful fringe tassels at the ends. Warm cheerful red and soft cream plaid pattern or gentle solid warm red. ABSOLUTELY NOT a realistic photograph, hand-drawn picture book illustration. Solid pure white background (#ffffff), completely isolated, no person, no hanger, no text, flashcard quality."
+  },
+  {
+    "id": "t_retasu",
+    "name": "れたす",
+    "tts_text": "レタス",
+    "category": "tabemono",
+    "user_instruction": "レタスを修正。",
+    "reason": "みずみずしい緑のフリル葉が重なり合った新鮮な丸ごとレタスへ刷新",
+    "prompt": "An educational picture book watercolor illustration of a fresh whole crisp iceberg lettuce (れたす). Gentle warm Japanese picture book style with delicate watercolor washes and clean pencil contours. A whole fresh round head of lettuce with translucent ruffled pale green and leafy light green layered leaves curled organically. Distinctly crisp lettuce with delicate curly leaf edges, clearly distinguishable from cabbage. Solid pure white background (#ffffff), completely isolated, no bowl, no chopping board, no drops, no text, flashcard quality."
+  },
+  {
+    "id": "t_satsumaimo",
+    "name": "さつまいも",
+    "tts_text": "さつまいも",
+    "category": "tabemono",
+    "user_instruction": "さつまいもを修正。",
+    "reason": "鮮やかな赤紫色の皮と、割った黄金色のホクホク断面が見える日本のさつまいもへ刷新",
+    "prompt": "An educational picture book watercolor illustration of authentic Japanese sweet potatoes (さつまいも). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. One whole sweet potato with rich reddish-purple skin and tapered ends, placed next to a neatly broken or cut half revealing sweet, steaming golden-yellow fluffy flesh inside. Distinctive Japanese satsuma-imo. Solid pure white background (#ffffff), completely isolated, no plate, no shadow, no text, flashcard quality."
+  },
+  {
+    "id": "v_oriru",
+    "name": "おりる",
+    "tts_text": "降りる",
+    "category": "doushi",
+    "user_instruction": "おりるを修正。",
+    "reason": "幼児が手すりを持って足元を見ながら階段・すべり台から上手に降りる愛らしい姿へ刷新",
+    "prompt": "An educational picture book watercolor illustration of a cute toddler carefully stepping down stairs (おりる). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A happy young Japanese child (around 3-4 years old) holding onto a safe low handrail with one hand while stepping down small gentle steps with focused cheerful expression, clearly depicting the action of 'getting down / descending' (おりる). Natural cute proportions, normal 5-fingered hands. Solid pure white background (#ffffff), completely isolated, minimal white step outline, no background room, no text, flashcard quality."
+  },
+  {
+    "id": "v_mitsukeru",
+    "name": "みつける",
+    "tts_text": "見つける",
+    "category": "doushi",
+    "user_instruction": "見つけるを修正。",
+    "reason": "幼児が「あ、あった！」と前を指差し、目を輝かせて発見した喜びが伝わるポーズへ刷新",
+    "prompt": "An educational picture book watercolor illustration of a cute toddler discovering something exciting (みつける). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A curious, smiling young child kneeling slightly, pointing forward with one index finger with sparkling wide eyes and an open mouth full of joy saying 'Found it!' ('みつけた!'). Expressive discovery body language. Natural cute proportions, normal 5-fingered hands. Solid pure white background (#ffffff), completely isolated, no complex background, no text, flashcard quality."
+  },
+  {
+    "id": "v_nigeru",
+    "name": "にげる",
+    "tts_text": "逃げる",
+    "category": "doushi",
+    "user_instruction": "逃げるを修正。",
+    "reason": "鬼ごっこ等で「つかまらないぞ〜！」と笑顔で楽しそうに走って逃げる幼児の躍動感ある姿へ刷新",
+    "prompt": "An educational picture book watercolor illustration of a cute toddler running away playfully in tag game (にげる). Gentle warm Japanese picture book style with delicate watercolor textures and clean pencil contours. A lively young child smiling excitedly, glancing back over one shoulder with a happy grin while running forward with arms swinging high, depicting playful escaping/running away ('にげる') like playing chase or tag. Cheerful and positive, NOT frightened. Natural cute proportions, normal hands. Solid pure white background (#ffffff), completely isolated, no ground, no text, flashcard quality."
+  },
+  {
+    "id": "v_miru",
+    "name": "みる",
+    "tts_text": "見る",
+    "category": "doushi",
+    "user_instruction": "見るを修正。",
+    "reason": "目を丸くしてキラキラさせながら本や小さな生き物をじっと見つめる集中した愛らしい姿へ刷新",
+    "prompt": "An educational picture book watercolor illustration of a cute toddler observing something intently (みる). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. A curious young child sitting or standing, holding a colorful picture book open (or leaning forward looking closely at a small cute ladybug on a leaf), with large shining curious eyes gazing forward with fascination, clearly showing the action of 'looking / watching' (みる). Warm, gentle and attentive. Natural cute proportions. Solid pure white background (#ffffff), completely isolated, no background clutter, no text, flashcard quality."
+  }
+]
+
