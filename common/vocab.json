@@ -282,8 +282,8 @@
     "categoryName": "いきもの",
     "image": "images/d_sakana.png",
     "file": "d_sakana.png",
-    "prompt": "A realistic-leaning educational picture book illustration of a graceful swimming goldfish / orange fish (さかな). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (vibrant orange-red scales, translucent flowing fins). Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
-    "tts_text": "魚",
+    "prompt": "A realistic-leaning educational picture book illustration of a common swimming fish (さかな - Japanese standard fish, silvery-blue back, white belly, natural fins, NOT a goldfish). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours. Completely isolated on a solid pure white background (#ffffff) with no clutter, suitable for children vocabulary flashcard. NOT a photograph, an illustration.",
+    "tts_text": "さかな",
     "subCategory": "sakana_umi",
     "subCategoryName": "うみ・みずのいきもの"
   },

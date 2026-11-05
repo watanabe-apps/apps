@@ -2281,9 +2281,13 @@
     }
 
     // 表示カテゴリまたは選択肢の音声を事前ロード（初期表示の高速化＆帯域保護）
-    function preloadCategoryAudio(cat) {
-      const words = ((cat === 'all' || !cat) ? ALL_WORDS : ALL_WORDS.filter(w => w.category === cat)).filter(w => !hiddenWordsSet.has(w.id));
-      words.slice(0, 36).forEach(w => {
+    function preloadCategoryAudio(cat, subCat = 'all') {
+      let words = ((cat === 'all' || !cat) ? ALL_WORDS : ALL_WORDS.filter(w => w.category === cat)).filter(w => !hiddenWordsSet.has(w.id));
+      if (subCat && subCat !== 'all') {
+        const subWords = words.filter(w => w.subCategory === subCat);
+        if (subWords.length > 0) words = subWords;
+      }
+      words.slice(0, 64).forEach(w => {
         loadAudioBuffer(`audio/words/${w.id}.mp3`);
       });
     }
@@ -2323,6 +2327,9 @@
         return;
       }
 
+      // ユーザー操作の同期スタック内で直ちにAudioContextをアンロック・復帰
+      const ctx = getAudioContext();
+
       let audioUrl = '';
       let fallbackText = '';
 
@@ -2345,39 +2352,34 @@
 
       const now = Date.now();
 
-      // 連打対策1: 同一単語の連続再生抑制（650ms以内）
-      if (!force && identifier === lastSpokenTarget && (isCurrentlySpeaking || (now - lastSpeakTime < 650))) {
+      // forceでない場合のみ極端な同ミリ秒連打（150ms未満）を抑制
+      if (!force && identifier === lastSpokenTarget && (now - lastSpeakTime < 150)) {
         return;
       }
 
-      // 連打対策2: 別単語連打時のデバウンス制御
       if (speakDebounceTimer) {
         clearTimeout(speakDebounceTimer);
         speakDebounceTimer = null;
       }
 
-      const elapsed = now - lastSpeakTime;
-      const delay = (!force && elapsed < 220) ? 90 : 0;
+      // 既存音声を即座に停止してクリーンなセッションを開始
+      stopAllVoicePlayback();
+      const session = activeAudioSession;
 
-      speakDebounceTimer = setTimeout(async () => {
-        speakDebounceTimer = null;
-        stopAllVoicePlayback();
-        const session = activeAudioSession;
+      lastSpeakTime = Date.now();
+      lastSpokenTarget = identifier;
+      isCurrentlySpeaking = true;
 
-        lastSpeakTime = Date.now();
-        lastSpokenTarget = identifier;
-        isCurrentlySpeaking = true;
+      const triggerEnd = () => {
+        if (session === activeAudioSession) {
+          isCurrentlySpeaking = false;
+          if (onEnd) onEnd();
+        }
+      };
 
-        const triggerEnd = () => {
-          if (session === activeAudioSession) {
-            isCurrentlySpeaking = false;
-            if (onEnd) onEnd();
-          }
-        };
-
-        // 1. Web Audio API による高速低遅延再生
-        if (audioUrl) {
-          const ctx = getAudioContext();
+      // 1. Web Audio API による即時低遅延再生（最優先）
+      if (audioUrl) {
+        try {
           const buffer = await loadAudioBuffer(audioUrl);
           if (session !== activeAudioSession) return;
 
@@ -2396,43 +2398,61 @@
               src.start(0);
               return;
             } catch (e) {
-              console.warn('WebAudio playback error, falling back:', e);
+              console.warn('WebAudio buffer playback error, trying fallback:', e);
             }
           }
+        } catch (e) {
+          console.warn('loadAudioBuffer error:', e);
+        }
 
-          // 2. HTML5 Audio によるフォールバック
+        // 2. HTML5 Audio によるフォールバック
+        if (session === activeAudioSession) {
           try {
-            await new Promise((resolve, reject) => {
-              const audio = new Audio(audioUrl);
-              activeHtmlAudios.push(audio);
-              const cleanup = () => {
-                activeHtmlAudios = activeHtmlAudios.filter(a => a !== audio);
-              };
-              audio.onended = () => { cleanup(); resolve(); };
-              audio.onerror = (err) => { cleanup(); reject(err); };
-              const rate = settings.speechSpeed === 'slow' ? 0.85 : 1.0;
-              audio.playbackRate = rate;
-              const p = audio.play();
-              if (p && typeof p.catch === 'function') p.catch(err => { cleanup(); reject(err); });
-            });
-            triggerEnd();
+            const audio = new Audio(audioUrl);
+            activeHtmlAudios.push(audio);
+            const cleanup = () => {
+              activeHtmlAudios = activeHtmlAudios.filter(a => a !== audio);
+            };
+            audio.onended = () => { cleanup(); triggerEnd(); };
+            audio.onerror = () => {
+              cleanup();
+              // HTML5 Audio failure, fallback to Web Speech
+              if (session === activeAudioSession && fallbackText) {
+                speakTextFallback(fallbackText, () => {}, triggerEnd);
+              } else {
+                triggerEnd();
+              }
+            };
+            const rate = settings.speechSpeed === 'slow' ? 0.85 : 1.0;
+            audio.playbackRate = rate;
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+              p.catch(() => {
+                cleanup();
+                if (session === activeAudioSession && fallbackText) {
+                  speakTextFallback(fallbackText, () => {}, triggerEnd);
+                } else {
+                  triggerEnd();
+                }
+              });
+            }
             return;
           } catch (e) {
-            // HTML5 Audio failure, fallback to Web Speech
+            // HTML5 Audio failed
           }
         }
+      }
 
-        // 3. Web Speech API フォールバック
-        if (fallbackText) {
-          speakTextFallback(fallbackText, () => {}, triggerEnd);
-        } else {
-          triggerEnd();
-        }
-      }, delay);
+      // 3. Web Speech API フォールバック
+      if (fallbackText && session === activeAudioSession) {
+        speakTextFallback(fallbackText, () => {}, triggerEnd);
+      } else {
+        triggerEnd();
+      }
     }
 
     // 互換性のための speakText エイリアス
-    function speakText(text, onEnd, force = false) {
+    function speakText(text, onEnd, force = true) {
       playWordAudio(text, onEnd, force);
     }
 
@@ -2651,7 +2671,7 @@
 
     function renderZukanCards() {
       renderZukanTabs();
-      preloadCategoryAudio(currentCategoryFilter);
+      preloadCategoryAudio(currentCategoryFilter, currentSubCategoryFilter);
       const grid = document.getElementById('zukan-grid');
       grid.innerHTML = '';
 
@@ -2703,36 +2723,39 @@
 
         let startX = 0;
         let startY = 0;
-        let hasMoved = false;
+        let isDrag = false;
 
         card.addEventListener('pointerdown', (e) => {
           startX = e.clientX;
           startY = e.clientY;
-          hasMoved = false;
+          isDrag = false;
+          // タップ瞬間に同期でオーディオロック解除
+          getAudioContext();
         }, { passive: true });
 
         card.addEventListener('pointermove', (e) => {
-          if (!hasMoved) {
+          if (!isDrag) {
             const dx = Math.abs(e.clientX - startX);
             const dy = Math.abs(e.clientY - startY);
-            if (dx > 7 || dy > 7) {
-              hasMoved = true;
+            // 16px以上の移動をドラッグ/スワイプと判定（タップの微小な指ブレを許容）
+            if (dx > 16 || dy > 16) {
+              isDrag = true;
             }
           }
         }, { passive: true });
 
         card.addEventListener('click', (e) => {
-          // スクロール操作やスワイプ中（指が動いた場合）はクリックを発火させない
-          if (hasMoved || isZukanScrolling) {
-            e.preventDefault();
-            e.stopPropagation();
+          // 明確なドラッグ移動（16px超）があった場合はスワイプ優先でスキップ
+          if (isDrag) {
             return;
           }
 
           card.classList.remove('bounce');
           void card.offsetWidth; // reflow
           card.classList.add('bounce');
-          speakText(word.name);
+
+          // 単語IDを直接指定し、force=true で即座に発音
+          playWordAudio(word.id, null, true);
 
           if (settings.modalPreview) {
             modalCurrentWordIndex = index;
@@ -2752,8 +2775,15 @@
       tag.textContent = word.categoryName;
       tag.style.backgroundColor = catDef ? catDef.color : 'var(--primary)';
 
-      document.getElementById('modal-svg-box').innerHTML = getWordVisualHtml(word.id, word.name);
-      document.getElementById('modal-name').textContent = word.name;
+      const svgBox = document.getElementById('modal-svg-box');
+      svgBox.innerHTML = getWordVisualHtml(word.id, word.name);
+      svgBox.style.cursor = 'pointer';
+      svgBox.onclick = () => playWordAudio(word.id, null, true);
+
+      const nameEl = document.getElementById('modal-name');
+      nameEl.textContent = word.name;
+      nameEl.style.cursor = 'pointer';
+      nameEl.onclick = () => playWordAudio(word.id, null, true);
 
       // 個別非表示ボタン
       const hideBtn = document.getElementById('modal-hide-btn');
@@ -2773,7 +2803,7 @@
     let zukanScrollTimer = null;
 
     function initZukanEvents() {
-      // スクロール検知（スワイプ中のカードクリック防止）
+      // スクロール検知
       const scrollEl = document.querySelector('.zukan-grid-scroll');
       if (scrollEl) {
         scrollEl.addEventListener('scroll', () => {
@@ -2781,7 +2811,7 @@
           if (zukanScrollTimer) clearTimeout(zukanScrollTimer);
           zukanScrollTimer = setTimeout(() => {
             isZukanScrolling = false;
-          }, 120);
+          }, 100);
         }, { passive: true });
       }
 
@@ -2815,7 +2845,7 @@
 
       document.getElementById('modal-speak-btn').addEventListener('click', () => {
         const word = currentFilteredWords[modalCurrentWordIndex];
-        if (word) speakText(word.name);
+        if (word) playWordAudio(word.id, null, true);
       });
 
       document.getElementById('modal-prev-btn').addEventListener('click', () => {
@@ -2827,7 +2857,7 @@
         modalCurrentWordIndex = (modalCurrentWordIndex - 1 + currentFilteredWords.length) % currentFilteredWords.length;
         const word = currentFilteredWords[modalCurrentWordIndex];
         openModalForWord(word);
-        speakText(word.name, null, true);
+        playWordAudio(word.id, null, true);
       });
 
       document.getElementById('modal-next-btn').addEventListener('click', () => {
@@ -2839,7 +2869,7 @@
         modalCurrentWordIndex = (modalCurrentWordIndex + 1) % currentFilteredWords.length;
         const word = currentFilteredWords[modalCurrentWordIndex];
         openModalForWord(word);
-        speakText(word.name, null, true);
+        playWordAudio(word.id, null, true);
       });
     }
 
@@ -2908,9 +2938,9 @@
           </div>
         `;
         document.getElementById('btn-quiz-speak').addEventListener('click', () => {
-          speakText(targetWord.name);
+          speakText(targetWord.id, null, true);
         });
-        speakText(targetWord.name, null, true);
+        speakText(targetWord.id, null, true);
 
         choices.forEach(c => {
           const card = document.createElement('div');
@@ -2932,7 +2962,7 @@
           </div>
         `;
         document.getElementById('btn-quiz-speak').addEventListener('click', () => {
-          speakText(targetWord.name);
+          speakText(targetWord.id, null, true);
         });
 
         choices.forEach(c => {
@@ -3015,7 +3045,7 @@
               card.style.transform = `translate3d(${targetDx}px, ${targetDy}px, 0)`;
 
               dropTarget.classList.add('is-correct');
-              speakText(targetWord.name);
+              speakText(targetWord.id, null, true);
 
               setTimeout(() => {
                 currentQuizIndex++;
