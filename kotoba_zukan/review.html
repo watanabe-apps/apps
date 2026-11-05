@@ -33,8 +33,24 @@
       --cat-ugoki: #8b5cf6;
       --cat-kimochi: #ec4899;
 
-      --card-size: 160px;
+      --card-size: 175px;
       --font-family: "Zen Maru Gothic", "UD Digi Kyokasho N-R", "Klee One", sans-serif;
+
+      --type-image: #ef4444;
+      --type-image-bg: #fef2f2;
+      --type-image-border: #fca5a5;
+
+      --type-audio: #2563eb;
+      --type-audio-bg: #eff6ff;
+      --type-audio-border: #93c5fd;
+
+      --type-text: #8b5cf6;
+      --type-text-bg: #f5f3ff;
+      --type-text-border: #c4b5fd;
+
+      --type-other: #64748b;
+      --type-other-bg: #f8fafc;
+      --type-other-border: #cbd5e1;
     }
 
     * {
@@ -204,6 +220,64 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
+    .type-filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .type-filter-btn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      user-select: none;
+      font-family: inherit;
+    }
+    .type-filter-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    .type-filter-btn.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+    }
+    .type-filter-btn.flag-all.active {
+      background: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+    }
+    .type-filter-btn.type-image.active {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #dc2626;
+    }
+    .type-filter-btn.type-audio.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .type-filter-btn.type-text.active {
+      background: #8b5cf6;
+      color: #ffffff;
+      border-color: #7c3aed;
+    }
+    .type-filter-btn.type-other.active {
+      background: #475569;
+      color: #ffffff;
+      border-color: #334155;
+    }
+
     .flag-filter-btn {
       padding: 6px 14px;
       border-radius: 20px;
@@ -310,30 +384,107 @@
 
     /* Flagged State */
     .card.is-flagged {
-      border-color: var(--danger);
-      background-color: #fff5f5;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+      border-color: #f87171;
+      background-color: #fffaf9;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+    .card.has-image-issue {
+      border-color: #ef4444;
+    }
+    .card.has-audio-issue {
+      border-color: #2563eb;
+    }
+    .card.has-text-issue {
+      border-color: #8b5cf6;
+    }
+    .card.has-multi-issues {
+      border-color: #e11d48;
+      box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
     }
 
-    .flag-badge {
-      display: none;
+    .card-issue-badges {
       position: absolute;
       top: 6px;
       left: 6px;
-      background: var(--danger);
-      color: #ffffff;
-      font-size: 0.75rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
       z-index: 10;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
     }
 
-    .card.is-flagged .flag-badge {
-      display: flex;
+    .issue-tag-badge {
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+    .issue-tag-badge.badge-image { background: #ef4444; color: #fff; }
+    .issue-tag-badge.badge-audio { background: #2563eb; color: #fff; }
+    .issue-tag-badge.badge-text  { background: #8b5cf6; color: #fff; }
+    .issue-tag-badge.badge-other { background: #475569; color: #fff; }
+
+    /* Quick Type Buttons on Card */
+    .card-quick-types {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      padding: 6px 6px 6px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .quick-type-btn {
+      padding: 4px 2px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      transition: all 0.15s ease;
+      user-select: none;
+      font-family: inherit;
+    }
+    .quick-type-btn:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+    .quick-type-btn.active.btn-image {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #dc2626;
+      box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
+    }
+    .quick-type-btn.active.btn-audio {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35);
+    }
+    .quick-type-btn.active.btn-text {
+      background: #8b5cf6;
+      color: #ffffff;
+      border-color: #7c3aed;
+      box-shadow: 0 1px 3px rgba(139, 92, 246, 0.35);
+    }
+    .quick-type-btn.active.btn-other {
+      background: #475569;
+      color: #ffffff;
+      border-color: #334155;
+      box-shadow: 0 1px 3px rgba(71, 85, 105, 0.35);
     }
 
     .card-top-actions {
@@ -544,6 +695,64 @@
       object-fit: contain;
     }
 
+    /* Modal Issue Type Selector */
+    .modal-type-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .modal-type-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .modal-type-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .modal-type-btn.active.type-image {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #dc2626;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+
+    .modal-type-btn.active.type-audio {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .modal-type-btn.active.type-text {
+      background: #f5f3ff;
+      border-color: #8b5cf6;
+      color: #6d28d9;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .modal-type-btn.active.type-other {
+      background: #f1f5f9;
+      border-color: #475569;
+      color: #1e293b;
+      box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.2);
+    }
+
     .quick-reasons {
       display: flex;
       flex-wrap: wrap;
@@ -725,9 +934,12 @@
   <header>
     <div class="header-top">
       <div class="title-group">
-        <h1>🔍 ことばずかん 画像レビュー</h1>
+        <h1>🔍 ことばずかん レビュー＆不備指摘ツール</h1>
         <div class="stats-badge" id="stats-badge">
           🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">491</span>
+          <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; margin-left: 4px;">
+            (🖼️ <span id="stat-image">0</span> / 🔊 <span id="stat-audio">0</span> / ✍️ <span id="stat-text">0</span> / 💬 <span id="stat-other">0</span>)
+          </span>
         </div>
       </div>
 
@@ -735,10 +947,10 @@
       <div class="size-control">
         <label>表示サイズ:</label>
         <div class="size-btn-group">
-          <button class="size-btn" onclick="setCardSize(110, this)">小</button>
-          <button class="size-btn active" onclick="setCardSize(160, this)">中</button>
-          <button class="size-btn" onclick="setCardSize(220, this)">大</button>
-          <button class="size-btn" onclick="setCardSize(290, this)">特大</button>
+          <button class="size-btn" onclick="setCardSize(130, this)">小</button>
+          <button class="size-btn active" onclick="setCardSize(175, this)">中</button>
+          <button class="size-btn" onclick="setCardSize(230, this)">大</button>
+          <button class="size-btn" onclick="setCardSize(300, this)">特大</button>
         </div>
       </div>
     </div>
@@ -748,9 +960,26 @@
       <div class="cat-tabs" id="cat-tabs"></div>
 
       <div class="filter-options">
-        <button class="flag-filter-btn" id="filter-flagged-btn" onclick="toggleFlaggedFilter()">
-          🚨 要修正のみ
-        </button>
+        <div class="type-filter-group" id="type-filter-group">
+          <button class="type-filter-btn active" data-type="all" onclick="setTypeFilter('all', this)">
+            すべて
+          </button>
+          <button class="type-filter-btn flag-all" data-type="flagged" onclick="setTypeFilter('flagged', this)">
+            🚨 要修正 (<span id="btn-count-flagged">0</span>)
+          </button>
+          <button class="type-filter-btn type-image" data-type="image" onclick="setTypeFilter('image', this)">
+            🖼️ 画像 (<span id="btn-count-image">0</span>)
+          </button>
+          <button class="type-filter-btn type-audio" data-type="audio" onclick="setTypeFilter('audio', this)">
+            🔊 音声 (<span id="btn-count-audio">0</span>)
+          </button>
+          <button class="type-filter-btn type-text" data-type="text" onclick="setTypeFilter('text', this)">
+            ✍️ 表記 (<span id="btn-count-text">0</span>)
+          </button>
+          <button class="type-filter-btn type-other" data-type="other" onclick="setTypeFilter('other', this)">
+            💬 他 (<span id="btn-count-other">0</span>)
+          </button>
+        </div>
         <input type="text" class="search-input" id="search-input" placeholder="単語・ID・分類で検索...">
       </div>
     </div>
@@ -771,7 +1000,10 @@
     <div class="dock-container">
       <div class="dock-status">
         <div class="dock-count-box">
-          選択中の要修正画像: <span id="dock-flag-count">0</span> 件
+          選択中の不備: <span id="dock-flag-count">0</span> 件
+          <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; margin-left: 6px;">
+            (🖼️ <span id="dock-stat-image">0</span> / 🔊 <span id="dock-stat-audio">0</span> / ✍️ <span id="dock-stat-text">0</span> / 💬 <span id="dock-stat-other">0</span>)
+          </span>
         </div>
       </div>
 
@@ -807,20 +1039,67 @@
         <img id="modal-img" src="" alt="">
       </div>
 
+      <!-- 不備種別セレクター（複数選択可） -->
       <div>
-        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">
-          不備の理由（クイック選択またはメモ入力）:
+        <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+          不備の種別（複数選択可）:
         </label>
-        <div class="quick-reasons">
-          <button class="reason-btn" onclick="addReasonTag('人体・手の奇形/崩れ')">🖐️ 手・人体の崩れ</button>
-          <button class="reason-btn" onclick="addReasonTag('背景が純白でない/黄ばみ')">🎨 背景の黄ばみ/色</button>
-          <button class="reason-btn" onclick="addReasonTag('単語の意味とズレている')">❓ 意味のズレ</button>
-          <button class="reason-btn" onclick="addReasonTag('構図・見切れがおかしい')">✂️ 構図・見切れ</button>
-          <button class="reason-btn" onclick="addReasonTag('旧世代スタイル/画風違い')">📜 旧世代スタイル</button>
+        <div class="modal-type-selector">
+          <button type="button" class="modal-type-btn type-image" id="mtype-image" onclick="toggleModalType('image')">
+            <span style="font-size: 1.25rem;">🖼️</span>
+            <span>画像がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-audio" id="mtype-audio" onclick="toggleModalType('audio')">
+            <span style="font-size: 1.25rem;">🔊</span>
+            <span>音声がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-text" id="mtype-text" onclick="toggleModalType('text')">
+            <span style="font-size: 1.25rem;">✍️</span>
+            <span>表記がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-other" id="mtype-other" onclick="toggleModalType('other')">
+            <span style="font-size: 1.25rem;">💬</span>
+            <span>その他</span>
+          </button>
         </div>
       </div>
 
-      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 腕が浮いている、箸の持ち方が変...）"></textarea>
+      <!-- 単語の現在情報（表記・読み上げテキスト） -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div><strong>表記 (name):</strong> <span id="modal-name-val" style="font-weight: 700; color: #0f172a;"></span></div>
+          <div><strong>音声テキスト (tts_text):</strong> <span id="modal-tts-val" style="font-weight: 700; color: #2563eb;"></span></div>
+        </div>
+        <div style="color: #64748b; font-size: 0.75rem;">
+          <strong>分類:</strong> <span id="modal-cat-val"></span>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">
+          よくある理由（クリックでメモに追加）:
+        </label>
+        <div class="quick-reasons">
+          <!-- 画像 -->
+          <button class="reason-btn" onclick="addReasonTag('【画像】手・人体の崩れ')">🖐️ 手・人体の崩れ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】背景の黄ばみ/色')">🎨 背景の黄ばみ/色</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】意味のズレ')">❓ 意味のズレ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】構図・見切れ')">✂️ 構図・見切れ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】パーツ不足/多すぎ')">🚲 パーツ不足/過剰</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】実写風/画風不揃い')">📷 実写風/画風違い</button>
+          <!-- 音声 -->
+          <button class="reason-btn" onclick="addReasonTag('【音声】読み間違い・誤読')">🗣️ 発音/読み間違い</button>
+          <button class="reason-btn" onclick="addReasonTag('【音声】イントネーション不自然')">🎵 イントネーション</button>
+          <button class="reason-btn" onclick="addReasonTag('【音声】音質・ノイズ・途切れ')">⚠️ 音質/途切れ</button>
+          <!-- 表記 -->
+          <button class="reason-btn" onclick="addReasonTag('【表記】ひらがな表記揺れ')">✍️ ひらがな表記</button>
+          <button class="reason-btn" onclick="addReasonTag('【表記】単語名の変更')">🏷️ 単語名の変更</button>
+          <!-- その他 -->
+          <button class="reason-btn" onclick="addReasonTag('【その他】カテゴリ分類違い')">📁 分類違い</button>
+        </div>
+      </div>
+
+      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 腕が浮いている、発音が「かな」になっている、こーちゃ→こうちゃ...）"></textarea>
 
       <div>
         <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">生成プロンプト:</label>
@@ -829,7 +1108,7 @@
 
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="playAudioFromModal()">🔊 発音を聴く</button>
-        <button class="btn btn-danger" id="modal-flag-toggle-btn" onclick="toggleModalFlag()">🚨 要修正にする</button>
+        <button class="btn btn-danger" id="modal-flag-toggle-btn" onclick="toggleModalFlagAll()">🚨 すべて解除</button>
         <button class="btn btn-primary" onclick="saveModalChanges()">保存して閉じる</button>
       </div>
     </div>
@@ -837,12 +1116,22 @@
 
   <!-- Summary Modal -->
   <div class="modal-overlay" id="summary-modal">
-    <div class="modal-content" style="max-width: 650px;">
+    <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
-        <h2>🚨 要修正として指摘した画像一覧 (<span id="summary-count">0</span>件)</h2>
+        <h2>🚨 要修正として指摘した一覧 (<span id="summary-count">0</span>件)</h2>
         <button class="modal-close" onclick="closeSummaryModal()">&times;</button>
       </div>
-      <div id="summary-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+
+      <!-- 種別絞り込みタブ in Summary Modal -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;" id="summary-filter-pills">
+        <button class="subcat-pill active" data-filter="all" onclick="filterSummaryList('all', this)">すべて</button>
+        <button class="subcat-pill" data-filter="image" onclick="filterSummaryList('image', this)">🖼️ 画像</button>
+        <button class="subcat-pill" data-filter="audio" onclick="filterSummaryList('audio', this)">🔊 音声</button>
+        <button class="subcat-pill" data-filter="text" onclick="filterSummaryList('text', this)">✍️ 表記</button>
+        <button class="subcat-pill" data-filter="other" onclick="filterSummaryList('other', this)">💬 その他</button>
+      </div>
+
+      <div id="summary-list" style="max-height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeSummaryModal()">閉じる</button>
         <button class="btn btn-primary" onclick="copyForChat(); closeSummaryModal();">📋 チャット用にコピー</button>
@@ -862,14 +1151,26 @@
   <script>
     'use strict';
 
-    // State
+    // State & Constants
     const STORAGE_KEY = 'kotoba_zukan_review_flags_v1';
-    let flaggedMap = {}; // { [id]: { id, name, category, categoryName, subCategory, subCategoryName, reason } }
+    
+    // 不備種別の定義
+    const ISSUE_TYPES = [
+      { id: 'image', label: '画像', fullLabel: '画像がダメ', icon: '🖼️', badgeClass: 'badge-image', btnClass: 'btn-image' },
+      { id: 'audio', label: '音声', fullLabel: '音声がダメ', icon: '🔊', badgeClass: 'badge-audio', btnClass: 'btn-audio' },
+      { id: 'text',  label: '表記', fullLabel: '表記がダメ', icon: '✍️', badgeClass: 'badge-text',  btnClass: 'btn-text' },
+      { id: 'other', label: 'その他', fullLabel: 'その他',   icon: '💬', badgeClass: 'badge-other', btnClass: 'btn-other' }
+    ];
+    const ISSUE_TYPE_MAP = new Map(ISSUE_TYPES.map(t => [t.id, t]));
+
+    let flaggedMap = {}; // { [id]: { id, name, category, categoryName, subCategory, subCategoryName, types: [], reason, tts_text } }
     let currentCategory = 'all';
     let currentSubCategory = 'all';
-    let onlyFlagged = false;
+    let currentTypeFilter = 'all'; // 'all' | 'flagged' | 'image' | 'audio' | 'text' | 'other'
     let searchQuery = '';
     let currentModalItem = null;
+    let modalSelectedTypes = new Set();
+    let currentSummaryFilter = 'all';
     let audioPlayer = new Audio();
 
     const CATEGORIES_DEF = [
@@ -911,12 +1212,20 @@
       updateStats();
     });
 
-    // LocalStorage
+    // LocalStorage with Backward Compatibility
     function loadFlagsFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
-          flaggedMap = JSON.parse(raw);
+          const parsed = JSON.parse(raw);
+          // 旧形式（types配列がない場合）の自動マイグレーション
+          Object.keys(parsed).forEach(id => {
+            const item = parsed[id];
+            if (!Array.isArray(item.types) || item.types.length === 0) {
+              item.types = ['image']; // 旧形式は画像として移行
+            }
+          });
+          flaggedMap = parsed;
         }
       } catch (e) {
         console.error('Failed to load review flags:', e);
@@ -941,6 +1250,13 @@
     }
 
     // Filter Controls
+    function setTypeFilter(type, btn) {
+      currentTypeFilter = type;
+      document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderGrid();
+    }
+
     function renderCategoryTabs() {
       const container = document.getElementById('cat-tabs');
       if (!container) return;
@@ -1012,19 +1328,12 @@
       });
       pillsContainer.appendChild(allPill);
 
-      // 望ましいサブカテゴリー表示順序
       const SUBCAT_ORDER = [
-        // いきもの
         'riku_doubutsu', 'tori', 'sakana_umi', 'mushi',
-        // たべもの
         'shushoku', 'niku_okazu', 'sakana_okazu', 'tamago_okazu', 'sonota_okazu', 'yasai', 'kudamono', 'oyatsu', 'nomimono',
-        // のりもの
         'kuruma', 'hatarakukuruma', 'densha', 'sora', 'umi', 'sonota_norimono',
-        // みぢかなもの
         'karada', 'gakkou', 'bunbougu', 'fuku_kougu', 'kagu_kaden', 'seikatsu_seiketsu', 'asobi',
-        // うごき
         'kihon_ugoki', 'seikatsu_habit', 'tesaki_sagyou',
-        // きもち
         'kimochi_hyoujou', 'tsutaeru_aisatsu', 'fureai_nakayoshi'
       ];
 
@@ -1055,13 +1364,6 @@
       });
     }
 
-    function toggleFlaggedFilter() {
-      onlyFlagged = !onlyFlagged;
-      const btn = document.getElementById('filter-flagged-btn');
-      btn.classList.toggle('active', onlyFlagged);
-      renderGrid();
-    }
-
     // Render Grid
     function renderGrid() {
       const container = document.getElementById('vocab-grid');
@@ -1070,13 +1372,25 @@
       const filtered = list.filter(item => {
         if (currentCategory !== 'all' && item.category !== currentCategory) return false;
         if (currentSubCategory !== 'all' && item.subCategory !== currentSubCategory) return false;
-        if (onlyFlagged && !flaggedMap[item.id]) return false;
+
+        const flagInfo = flaggedMap[item.id];
+        const isFlagged = !!flagInfo && (Array.isArray(flagInfo.types) && flagInfo.types.length > 0 || !!flagInfo.reason);
+        const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+
+        // 種別フィルター
+        if (currentTypeFilter === 'flagged' && !isFlagged) return false;
+        if (currentTypeFilter === 'image' && !types.includes('image')) return false;
+        if (currentTypeFilter === 'audio' && !types.includes('audio')) return false;
+        if (currentTypeFilter === 'text'  && !types.includes('text'))  return false;
+        if (currentTypeFilter === 'other' && !types.includes('other')) return false;
+
         if (searchQuery) {
           const matchName = item.name && item.name.toLowerCase().includes(searchQuery);
           const matchId = item.id && item.id.toLowerCase().includes(searchQuery);
           const matchPrompt = item.prompt && item.prompt.toLowerCase().includes(searchQuery);
           const matchSub = item.subCategoryName && item.subCategoryName.toLowerCase().includes(searchQuery);
-          if (!matchName && !matchId && !matchPrompt && !matchSub) return false;
+          const matchReason = flagInfo && flagInfo.reason && flagInfo.reason.toLowerCase().includes(searchQuery);
+          if (!matchName && !matchId && !matchPrompt && !matchSub && !matchReason) return false;
         }
         return true;
       });
@@ -1084,73 +1398,137 @@
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
-            <p style="font-size: 1.2rem; font-weight: 700;">条件に一致する画像がありません</p>
+            <p style="font-size: 1.2rem; font-weight: 700;">条件に一致する単語がありません</p>
           </div>
         `;
         return;
       }
 
       container.innerHTML = filtered.map(item => {
-        const isFlagged = !!flaggedMap[item.id];
-        const reason = isFlagged ? (flaggedMap[item.id].reason || '') : '';
+        const flagInfo = flaggedMap[item.id];
+        const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+        const isFlagged = !!flagInfo && (types.length > 0 || !!flagInfo.reason);
+        const reason = flagInfo ? (flagInfo.reason || '') : '';
         const imgPath = '../common/images/' + (item.file || (item.id + '.png'));
 
+        // バッジHTML
+        const badgesHtml = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          if (!conf) return '';
+          return `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>`;
+        }).join('');
+
+        // クラス
+        const hasMulti = types.length >= 2;
+        const typeClasses = [
+          isFlagged ? 'is-flagged' : '',
+          types.includes('image') ? 'has-image-issue' : '',
+          types.includes('audio') ? 'has-audio-issue' : '',
+          types.includes('text') ? 'has-text-issue' : '',
+          hasMulti ? 'has-multi-issues' : ''
+        ].filter(Boolean).join(' ');
+
         return `
-          <div class="card ${isFlagged ? 'is-flagged' : ''}" 
-               id="card-${item.id}"
-               onclick="handleCardClick(event, '${item.id}')">
-            
-            <div class="flag-badge">🚨 要修正</div>
+          <div class="card ${typeClasses}" id="card-${item.id}">
+            <div class="card-issue-badges" id="badges-${item.id}">
+              ${badgesHtml}
+            </div>
 
             <div class="card-top-actions">
               <button class="icon-btn" title="詳細・理由を編集" onclick="openDetailModal(event, '${item.id}')">🔍</button>
               <button class="icon-btn" title="発音を再生" onclick="playAudio(event, '${item.id}')">🔊</button>
             </div>
 
-            <div class="image-container">
-              <img src="${imgPath}" loading="lazy" alt="${item.name}">
+            <div class="image-container" onclick="openDetailModal(event, '${item.id}')">
+              <img src="${imgPath}" loading="lazy" alt="${escapeHtml(item.name)}">
             </div>
 
-            <div class="card-info">
-              <div class="card-word">${item.name}</div>
+            <div class="card-info" onclick="openDetailModal(event, '${item.id}')">
+              <div class="card-word">${escapeHtml(item.name)}</div>
               <div class="card-meta">
                 <div class="card-tags">
-                  <span class="cat-tag cat-${item.category}">${item.categoryName || item.category}</span>
-                  ${item.subCategoryName ? `<span class="subcat-tag">${item.subCategoryName}</span>` : ''}
+                  <span class="cat-tag cat-${item.category}">${escapeHtml(item.categoryName || item.category)}</span>
+                  ${item.subCategoryName ? `<span class="subcat-tag">${escapeHtml(item.subCategoryName)}</span>` : ''}
                 </div>
                 <span class="card-id">${item.id}</span>
               </div>
               <div class="card-comment ${reason ? 'has-text' : ''}" id="comment-${item.id}">${escapeHtml(reason)}</div>
+            </div>
+
+            <!-- クイック不備選択バー -->
+            <div class="card-quick-types">
+              <button class="quick-type-btn btn-image ${types.includes('image') ? 'active' : ''}" 
+                      title="画像がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'image')">
+                <span>🖼️</span>
+                <span>画像</span>
+              </button>
+              <button class="quick-type-btn btn-audio ${types.includes('audio') ? 'active' : ''}" 
+                      title="音声がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'audio')">
+                <span>🔊</span>
+                <span>音声</span>
+              </button>
+              <button class="quick-type-btn btn-text ${types.includes('text') ? 'active' : ''}" 
+                      title="表記がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'text')">
+                <span>✍️</span>
+                <span>表記</span>
+              </button>
+              <button class="quick-type-btn btn-other ${types.includes('other') ? 'active' : ''}" 
+                      title="その他" 
+                      onclick="toggleQuickType(event, '${item.id}', 'other')">
+                <span>💬</span>
+                <span>他</span>
+              </button>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    // Interactions
-    function handleCardClick(e, id) {
-      if (e.target.closest('.card-top-actions')) return;
-      toggleFlag(id);
-    }
-
-    function toggleFlag(id, reason = '') {
+    // Quick Issue Type Toggle
+    function toggleQuickType(e, id, type) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
       const item = getVocabById(id);
       if (!item) return;
 
-      if (flaggedMap[id]) {
-        delete flaggedMap[id];
-        showToast(`⚪ 「${item.name}」の指摘を解除しました`);
-      } else {
+      const typeConf = ISSUE_TYPE_MAP.get(type);
+      const typeLabel = typeConf ? typeConf.label : type;
+
+      if (!flaggedMap[id]) {
+        // 新規追加
         flaggedMap[id] = {
           id: item.id,
           name: item.name,
           category: item.category,
-          categoryName: item.categoryName,
+          categoryName: item.categoryName || '',
           subCategory: item.subCategory || '',
           subCategoryName: item.subCategoryName || '',
-          reason: reason
+          types: [type],
+          reason: '',
+          tts_text: item.tts_text || item.name
         };
-        showToast(`🚨 「${item.name}」を要修正に追加しました`);
+        showToast(`🚨 「${item.name}」の [${typeLabel}] 不備を追加しました`);
+      } else {
+        const flagInfo = flaggedMap[id];
+        if (!Array.isArray(flagInfo.types)) flagInfo.types = [];
+        const idx = flagInfo.types.indexOf(type);
+        if (idx !== -1) {
+          flagInfo.types.splice(idx, 1);
+          if (flagInfo.types.length === 0 && !flagInfo.reason) {
+            delete flaggedMap[id];
+            showToast(`⚪ 「${item.name}」の指摘をすべて解除しました`);
+          } else {
+            showToast(`⚪ 「${item.name}」の [${typeLabel}] 不備を解除しました`);
+          }
+        } else {
+          flagInfo.types.push(type);
+          showToast(`🚨 「${item.name}」の [${typeLabel}] 不備を追加しました`);
+        }
       }
 
       saveFlagsToStorage();
@@ -1159,36 +1537,126 @@
 
     function updateCardUI(id) {
       const card = document.getElementById('card-' + id);
-      const isFlagged = !!flaggedMap[id];
+      const flagInfo = flaggedMap[id];
+      const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+      const isFlagged = !!flagInfo && (types.length > 0 || !!flagInfo.reason);
+
       if (card) {
         card.classList.toggle('is-flagged', isFlagged);
+        card.classList.toggle('has-image-issue', types.includes('image'));
+        card.classList.toggle('has-audio-issue', types.includes('audio'));
+        card.classList.toggle('has-text-issue', types.includes('text'));
+        card.classList.toggle('has-multi-issues', types.length >= 2);
+
+        // Update Badges
+        const badgesContainer = document.getElementById('badges-' + id);
+        if (badgesContainer) {
+          badgesContainer.innerHTML = types.map(t => {
+            const conf = ISSUE_TYPE_MAP.get(t);
+            if (!conf) return '';
+            return `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>`;
+          }).join('');
+        }
+
+        // Update Quick Buttons
+        const btns = card.querySelectorAll('.quick-type-btn');
+        btns.forEach(btn => {
+          if (btn.classList.contains('btn-image')) btn.classList.toggle('active', types.includes('image'));
+          if (btn.classList.contains('btn-audio')) btn.classList.toggle('active', types.includes('audio'));
+          if (btn.classList.contains('btn-text'))  btn.classList.toggle('active', types.includes('text'));
+          if (btn.classList.contains('btn-other')) btn.classList.toggle('active', types.includes('other'));
+        });
+
+        // Update Comment
         const commentEl = document.getElementById('comment-' + id);
         if (commentEl) {
-          const reason = isFlagged ? (flaggedMap[id].reason || '') : '';
+          const reason = flagInfo ? (flagInfo.reason || '') : '';
           commentEl.textContent = reason;
           commentEl.classList.toggle('has-text', !!reason);
         }
       }
-      if (onlyFlagged && !isFlagged && card) {
-        card.remove();
+
+      // 絞り込み表示中に該当しなくなった場合は再描画
+      if (currentTypeFilter !== 'all') {
+        const matchesFilter = (
+          (currentTypeFilter === 'flagged' && isFlagged) ||
+          (currentTypeFilter === 'image' && types.includes('image')) ||
+          (currentTypeFilter === 'audio' && types.includes('audio')) ||
+          (currentTypeFilter === 'text' && types.includes('text')) ||
+          (currentTypeFilter === 'other' && types.includes('other'))
+        );
+        if (!matchesFilter && card) {
+          card.remove();
+        }
       }
     }
 
     function updateStats() {
-      const count = Object.keys(flaggedMap).length;
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const it = flaggedMap[id];
+        return (it.types && it.types.length > 0) || it.reason;
+      });
+
+      let imgCount = 0, audCount = 0, txtCount = 0, othCount = 0;
+      keys.forEach(id => {
+        const t = flaggedMap[id].types || [];
+        if (t.includes('image')) imgCount++;
+        if (t.includes('audio')) audCount++;
+        if (t.includes('text')) txtCount++;
+        if (t.includes('other')) othCount++;
+      });
+
       const total = getVocabList().length;
+      const count = keys.length;
+
       const totalEl = document.getElementById('total-count');
       if (totalEl) totalEl.textContent = total;
+
       document.getElementById('flagged-count').textContent = count;
       document.getElementById('dock-flag-count').textContent = count;
       document.getElementById('summary-count').textContent = count;
+
+      // 内訳
+      const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      setTxt('stat-image', imgCount);
+      setTxt('stat-audio', audCount);
+      setTxt('stat-text', txtCount);
+      setTxt('stat-other', othCount);
+
+      setTxt('dock-stat-image', imgCount);
+      setTxt('dock-stat-audio', audCount);
+      setTxt('dock-stat-text', txtCount);
+      setTxt('dock-stat-other', othCount);
+
+      setTxt('btn-count-flagged', count);
+      setTxt('btn-count-image', imgCount);
+      setTxt('btn-count-audio', audCount);
+      setTxt('btn-count-text', txtCount);
+      setTxt('btn-count-other', othCount);
     }
 
-    // Audio Playback
+    // Audio Playback with Web Speech Fallback
     function playAudio(e, id) {
       if (e) e.stopPropagation();
-      audioPlayer.src = `audio/words/${id}.mp3`;
-      audioPlayer.play().catch(err => console.log('Audio error:', err));
+      const item = getVocabById(id);
+      const audioUrl = `audio/words/${id}.mp3`;
+
+      audioPlayer.src = audioUrl;
+      const playPromise = audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback to speech synthesis
+          if (window.speechSynthesis && item) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(item.name);
+            utter.lang = 'ja-JP';
+            window.speechSynthesis.speak(utter);
+          }
+        });
+      }
     }
 
     function playAudioFromModal() {
@@ -1197,7 +1665,7 @@
       }
     }
 
-    // Detail Modal
+    // Detail Modal Logic
     function openDetailModal(e, id) {
       if (e) e.stopPropagation();
       const item = getVocabById(id);
@@ -1205,54 +1673,78 @@
       currentModalItem = item;
 
       const subInfo = item.subCategoryName ? ` ＞ ${item.subCategoryName}` : '';
-      document.getElementById('modal-title').textContent = `${item.name} (${item.id}) - ${item.categoryName || item.category}${subInfo}`;
+      document.getElementById('modal-title').textContent = `${item.name} (${item.id})`;
+      document.getElementById('modal-name-val').textContent = item.name;
+      document.getElementById('modal-tts-val').textContent = item.tts_text || item.name;
+      document.getElementById('modal-cat-val').textContent = `${item.categoryName || item.category}${subInfo}`;
+
       const modalImg = document.getElementById('modal-img');
       modalImg.onerror = null;
       modalImg.src = '../common/images/' + (item.file || (item.id + '.png'));
       document.getElementById('modal-prompt').textContent = item.prompt || '（プロンプト情報なし）';
 
       const flagInfo = flaggedMap[id];
-      const isFlagged = !!flagInfo;
-      document.getElementById('modal-reason-input').value = isFlagged ? (flagInfo.reason || '') : '';
+      const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+      modalSelectedTypes = new Set(types);
 
-      updateModalFlagBtn(isFlagged);
+      // 種別ボタンのアクティブ更新
+      updateModalTypeButtons();
+
+      document.getElementById('modal-reason-input').value = flagInfo ? (flagInfo.reason || '') : '';
+      updateModalFlagAllBtn(modalSelectedTypes.size > 0 || (flagInfo && !!flagInfo.reason));
 
       document.getElementById('detail-modal').classList.add('active');
     }
 
-    function updateModalFlagBtn(isFlagged) {
+    function updateModalTypeButtons() {
+      ['image', 'audio', 'text', 'other'].forEach(type => {
+        const btn = document.getElementById('mtype-' + type);
+        if (btn) {
+          btn.classList.toggle('active', modalSelectedTypes.has(type));
+        }
+      });
+    }
+
+    function toggleModalType(type) {
+      if (modalSelectedTypes.has(type)) {
+        modalSelectedTypes.delete(type);
+      } else {
+        modalSelectedTypes.add(type);
+      }
+      updateModalTypeButtons();
+      updateModalFlagAllBtn(modalSelectedTypes.size > 0);
+    }
+
+    function updateModalFlagAllBtn(hasFlags) {
       const btn = document.getElementById('modal-flag-toggle-btn');
-      if (isFlagged) {
-        btn.textContent = '⚪ 指摘を解除する';
+      if (hasFlags) {
+        btn.textContent = '⚪ すべて解除';
         btn.className = 'btn btn-secondary';
       } else {
-        btn.textContent = '🚨 要修正にする';
+        btn.textContent = '🚨 画像を要修正にする';
         btn.className = 'btn btn-danger';
       }
     }
 
-    function toggleModalFlag() {
+    function toggleModalFlagAll() {
       if (!currentModalItem) return;
       const id = currentModalItem.id;
-      const isCurrentlyFlagged = !!flaggedMap[id];
-      const reason = document.getElementById('modal-reason-input').value.trim();
-
-      if (isCurrentlyFlagged) {
+      if (modalSelectedTypes.size > 0 || flaggedMap[id]) {
+        // 全解除
+        modalSelectedTypes.clear();
+        document.getElementById('modal-reason-input').value = '';
         delete flaggedMap[id];
+        updateModalTypeButtons();
+        updateModalFlagAllBtn(false);
+        saveFlagsToStorage();
+        updateCardUI(id);
+        showToast(`⚪ 「${currentModalItem.name}」の指摘を解除しました`);
       } else {
-        flaggedMap[id] = {
-          id: currentModalItem.id,
-          name: currentModalItem.name,
-          category: currentModalItem.category,
-          categoryName: currentModalItem.categoryName,
-          subCategory: currentModalItem.subCategory || '',
-          subCategoryName: currentModalItem.subCategoryName || '',
-          reason: reason
-        };
+        // 画像を要修正にする
+        modalSelectedTypes.add('image');
+        updateModalTypeButtons();
+        updateModalFlagAllBtn(true);
       }
-      saveFlagsToStorage();
-      updateCardUI(id);
-      updateModalFlagBtn(!isCurrentlyFlagged);
     }
 
     function addReasonTag(tag) {
@@ -1269,24 +1761,30 @@
       if (!currentModalItem) return;
       const id = currentModalItem.id;
       const reason = document.getElementById('modal-reason-input').value.trim();
+      const types = Array.from(modalSelectedTypes);
 
-      if (reason) {
-        // Automatically flag if reason provided
+      if (types.length > 0 || reason) {
         flaggedMap[id] = {
           id: currentModalItem.id,
           name: currentModalItem.name,
           category: currentModalItem.category,
-          categoryName: currentModalItem.categoryName,
+          categoryName: currentModalItem.categoryName || '',
           subCategory: currentModalItem.subCategory || '',
           subCategoryName: currentModalItem.subCategoryName || '',
-          reason: reason
+          types: types.length > 0 ? types : ['other'],
+          reason: reason,
+          tts_text: currentModalItem.tts_text || currentModalItem.name
         };
         saveFlagsToStorage();
         updateCardUI(id);
-      } else if (flaggedMap[id]) {
-        flaggedMap[id].reason = '';
-        saveFlagsToStorage();
-        updateCardUI(id);
+        showToast(`💾 「${currentModalItem.name}」の変更を保存しました`);
+      } else {
+        if (flaggedMap[id]) {
+          delete flaggedMap[id];
+          saveFlagsToStorage();
+          updateCardUI(id);
+          showToast(`⚪ 「${currentModalItem.name}」の指摘を解除しました`);
+        }
       }
 
       closeModal();
@@ -1299,33 +1797,80 @@
 
     // Summary Modal
     function showSummaryModal() {
-      const listEl = document.getElementById('summary-list');
-      const keys = Object.keys(flaggedMap);
+      currentSummaryFilter = 'all';
+      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === 'all');
+      });
+      renderSummaryList();
+      document.getElementById('summary-modal').classList.add('active');
+    }
 
-      if (keys.length === 0) {
-        listEl.innerHTML = '<p style="padding: 20px; text-align: center; color: #64748b;">要修正として指摘された画像はまだありません。</p>';
-      } else {
-        listEl.innerHTML = keys.map(id => {
-          const item = flaggedMap[id];
-          const subInfo = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
-          const imgFile = item.file || (item.id + '.png');
-          return `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <img src="../common/images/${imgFile}" style="width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; border: 1px solid #cbd5e1;">
-                <div>
-                  <strong style="font-size: 0.95rem;">${item.name}</strong>
-                  <span style="font-size: 0.75rem; color: #64748b; margin-left: 6px;">(${item.id}) [${item.categoryName || ''}${subInfo}]</span>
-                  ${item.reason ? `<div style="font-size: 0.8rem; color: #dc2626; margin-top: 2px;">💬 ${escapeHtml(item.reason)}</div>` : ''}
-                </div>
-              </div>
-              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleFlag('${item.id}'); showSummaryModal();">解除</button>
-            </div>
-          `;
-        }).join('');
+    function filterSummaryList(filter, btn) {
+      currentSummaryFilter = filter;
+      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderSummaryList();
+    }
+
+    function renderSummaryList() {
+      const listEl = document.getElementById('summary-list');
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const it = flaggedMap[id];
+        return (it.types && it.types.length > 0) || it.reason;
+      });
+
+      const filteredKeys = keys.filter(id => {
+        if (currentSummaryFilter === 'all') return true;
+        const types = flaggedMap[id].types || [];
+        return types.includes(currentSummaryFilter);
+      });
+
+      if (filteredKeys.length === 0) {
+        listEl.innerHTML = '<p style="padding: 24px; text-align: center; color: #64748b;">該当する指摘はありません。</p>';
+        return;
       }
 
-      document.getElementById('summary-modal').classList.add('active');
+      listEl.innerHTML = filteredKeys.map(id => {
+        const item = flaggedMap[id];
+        const subInfo = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
+        const imgFile = item.file || (item.id + '.png');
+        const types = item.types || [];
+
+        const badgesHtml = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          if (!conf) return '';
+          return `<span class="issue-tag-badge ${conf.badgeClass}" style="box-shadow:none;">${conf.icon} ${conf.label}</span>`;
+        }).join(' ');
+
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+              <img src="../common/images/${imgFile}" style="width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 1rem; color: #0f172a;">${escapeHtml(item.name)}</strong>
+                  <span style="font-size: 0.75rem; color: #64748b;">(${item.id}) [${escapeHtml(item.categoryName || '')}${escapeHtml(subInfo)}]</span>
+                  <div style="display: inline-flex; gap: 4px;">${badgesHtml}</div>
+                </div>
+                ${item.reason ? `<div style="font-size: 0.82rem; color: #dc2626; margin-top: 3px; word-break: break-all;">💬 ${escapeHtml(item.reason)}</div>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-shrink: 0;">
+              <button class="icon-btn" title="発音" onclick="playAudio(event, '${item.id}')">🔊</button>
+              <button class="icon-btn" title="編集" onclick="openDetailModal(event, '${item.id}'); closeSummaryModal();">🔍</button>
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleModalFlagAllExternal('${item.id}')">解除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleModalFlagAllExternal(id) {
+      delete flaggedMap[id];
+      saveFlagsToStorage();
+      updateCardUI(id);
+      renderSummaryList();
+      showToast('⚪ 指摘を解除しました');
     }
 
     function closeSummaryModal() {
@@ -1334,24 +1879,50 @@
 
     // Export & Copy
     function copyForChat() {
-      const keys = Object.keys(flaggedMap);
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const item = flaggedMap[id];
+        return (item.types && item.types.length > 0) || item.reason;
+      });
+
       if (keys.length === 0) {
-        alert('要修正として指摘された画像がまだありません。画像をタップして指摘を追加してください。');
+        alert('要修正として指摘された単語がまだありません。');
         return;
       }
 
-      let text = `【ことばずかん 画像修正指摘リスト (計 ${keys.length} 件)】\n`;
+      let imgCount = 0, audCount = 0, txtCount = 0, othCount = 0;
+      keys.forEach(id => {
+        const t = flaggedMap[id].types || [];
+        if (t.includes('image')) imgCount++;
+        if (t.includes('audio')) audCount++;
+        if (t.includes('text')) txtCount++;
+        if (t.includes('other')) othCount++;
+      });
+
+      let text = `【ことばずかん レビュー不備指摘リスト (計 ${keys.length} 件)】\n`;
+      text += `・🖼️ 画像がダメ: ${imgCount} 件\n`;
+      text += `・🔊 音声がダメ: ${audCount} 件\n`;
+      text += `・✍️ 表記がダメ: ${txtCount} 件\n`;
+      text += `・💬 その他: ${othCount} 件\n\n`;
+
       keys.forEach((id, idx) => {
         const item = flaggedMap[id];
         const sub = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
-        const reason = item.reason ? `: ${item.reason}` : '';
-        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}${sub}]${reason}\n`;
+        const types = item.types || [];
+        const typeLabels = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          return conf ? `${conf.icon} ${conf.fullLabel}` : t;
+        }).join(', ') || '未指定';
+
+        const ttsInfo = item.tts_text ? ` [tts_text: "${item.tts_text}"]` : '';
+        const reasonInfo = item.reason ? `\n   【理由/メモ】 ${item.reason}` : '';
+
+        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}${sub}]${ttsInfo}\n`;
+        text += `   【不備種別】 ${typeLabels}${reasonInfo}\n\n`;
       });
 
       navigator.clipboard.writeText(text).then(() => {
         showToast('📋 チャット用テキストをコピーしました！そのまま貼り付けてください');
-      }).catch(err => {
-        // Fallback prompt
+      }).catch(() => {
         window.prompt('コピーしてください:', text);
       });
     }
@@ -1359,7 +1930,7 @@
     function exportJSON() {
       const keys = Object.keys(flaggedMap);
       if (keys.length === 0) {
-        alert('要修正の画像がありません。');
+        alert('要修正の単語がありません。');
         return;
       }
 
@@ -1386,6 +1957,12 @@
         try {
           const imported = JSON.parse(e.target.result);
           if (typeof imported === 'object' && imported !== null) {
+            // マイグレーション
+            Object.keys(imported).forEach(id => {
+              if (!Array.isArray(imported[id].types)) {
+                imported[id].types = ['image'];
+              }
+            });
             flaggedMap = Object.assign({}, flaggedMap, imported);
             saveFlagsToStorage();
             renderGrid();

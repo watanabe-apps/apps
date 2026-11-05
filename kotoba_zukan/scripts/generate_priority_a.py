@@ -16,11 +16,11 @@ import shutil
 
 API_URL = "http://127.0.0.1:7860/sdapi/v1/txt2img"
 MANIFEST_PATH = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/prompts_manifest.json"
-KZ_IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/kotoba_zukan/images"
+# KZ_IMAGES_DIR removed
 COMMON_IMAGES_DIR = "/Users/watanabetatsuki/Documents/GitHub/apps/common/images"
 
 PRIORITY_A_IDS = [
-    "v_oru", "d_batta", "d_katatsumuri", "t_edamame", "t_kaki",
+    "t_edamame", "t_kaki",
     "m_reizouko", "m_yakan", "m_manaita", "m_handoso-pu", "m_shanpu-",
     "m_bandoeido", "m_tsumiki", "m_nawatobi"
 ]
@@ -36,10 +36,22 @@ def is_api_running():
     except Exception:
         return False
 
-def generate(item):
-    wid = item['id']
-    name = item['name']
-    prompt = item.get('prompt', '')
+# Exact custom prompts optimized for Draw Things (Flux/SD) picture-book flashcards
+CUSTOM_PROMPTS = {
+    "t_edamame": "An educational picture book watercolor illustration of Japanese green edamame soybeans in pod (えだまめ). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. Fresh green fuzzy pods with 3 plump round soybeans nestled inside. Authentic Japanese edamame, NOT sweet peas. Completely isolated on a solid pure white background (#ffffff), no bowl, no shadow, no text, flashcard quality.",
+    "t_kaki": "An educational picture book watercolor illustration of a single ripe Japanese persimmon fruit (かき). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, gentle contour lines. A whole bright glossy orange persimmon with its characteristic green four-lobed calyx and short brown stem on top. Completely isolated on a solid pure white background (#ffffff), no other fruit, no slice, no plate, no shadow, no text, flashcard quality.",
+    "m_reizouko": "An educational picture book watercolor illustration of a Japanese home refrigerator (れいぞうこ). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Soft pastel light-blue or white clean refrigerator with upper fridge door and lower freezer drawer, charming and friendly design suitable for children picture book. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no kitchen, no floor, no text, flashcard quality.",
+    "m_yakan": "An educational picture book watercolor illustration of a cute kitchen kettle (やかん). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Charming kettle with spout, arched handle, and lid, painted in warm friendly yellow or red watercolor wash. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no stove, no clutter, no text, flashcard quality.",
+    "m_manaita": "An educational picture book watercolor illustration of a wooden cutting board (まないた). Gentle warm Japanese picture book style with delicate watercolor and soft wood grain pencil textures. A clean rectangular wooden cutting board with smooth rounded corners, warm natural wood tone. NOT a photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no table, no food scraps, no knife, no text, flashcard quality.",
+    "m_handoso-pu": "An educational picture book watercolor illustration of a foaming hand soap dispenser bottle (はんどそーぷ). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Friendly pastel pump bottle with a pump head dispensing a tiny cloud of white bubbly foam, cute clean design. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no sink, no text, flashcard quality.",
+    "m_shanpu-": "An educational picture book watercolor illustration of a shampoo pump bottle (しゃんぷー). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Friendly pastel pump bottle for hair shampoo, cute tear-drop droplet icon or soap bubble decoration on bottle, warm bathroom essential illustration. NOT a 3D render, NOT a photograph. Solid pure white background (#ffffff), completely isolated, no bathroom, no text, flashcard quality.",
+    "m_bandoeido": "An educational picture book watercolor illustration of cute adhesive bandage strips (ばんどえいど). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Two cute flexible bandages with small colorful stars or pastel polka dot pattern, neat gauze pad in the center. NOT a realistic medical photo, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no skin, no clutter, no text, flashcard quality.",
+    "m_tsumiki": "An educational picture book watercolor illustration of colorful wooden building blocks (つみき). Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures. A neat little set of wooden toy blocks (red cube, blue cylinder, yellow triangle roof) arranged playfully. Hand-painted wooden textures with soft contours. NOT a realistic photograph, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no floor shadow, no text, flashcard quality.",
+    "m_nawatobi": "An educational picture book watercolor illustration of a children jump rope (なわとび). Gentle warm Japanese picture book style with delicate watercolor and clean pencil contours. Cute jump rope loosely looped in a neat oval, with colorful plastic handles (blue and red). NOT a photo, hand-drawn illustration. Solid pure white background (#ffffff), completely isolated, no floor, no text, flashcard quality."
+}
+
+def generate(wid, name):
+    prompt = CUSTOM_PROMPTS.get(wid, '')
     full_prompt = f"{prompt}{STYLE_SUFFIX}"
     
     payload = {
@@ -60,17 +72,15 @@ def generate(item):
     )
     
     try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with urllib.request.urlopen(req, timeout=180) as resp:
             res_json = json.loads(resp.read().decode('utf-8'))
             img_b64 = res_json['images'][0]
             img_data = base64.b64decode(img_b64)
             
-            kz_path = os.path.join(KZ_IMAGES_DIR, f"{wid}.png")
             common_path = os.path.join(COMMON_IMAGES_DIR, f"{wid}.png")
             
-            with open(kz_path, 'wb') as f:
+            with open(common_path, 'wb') as f:
                 f.write(img_data)
-            shutil.copyfile(kz_path, common_path)
             
             print(f"[SUCCESS] Generated & Synchronized: {wid} ({name}) -> {len(img_data)} bytes")
             return True
@@ -87,16 +97,19 @@ def main():
     with open(MANIFEST_PATH, 'r', encoding='utf-8') as f:
         manifest = json.load(f)
     
-    item_map = {item['id']: item for item in manifest}
-    target_items = [item_map[wid] for wid in PRIORITY_A_IDS if wid in item_map]
+    name_map = {item['id']: item['name'] for item in manifest}
     
-    print(f"Starting Priority A generation for {len(target_items)} items...")
-    for idx, item in enumerate(target_items, 1):
-        print(f"[{idx}/{len(target_items)}] Processing {item['id']} ({item['name']})...")
-        generate(item)
+    print(f"Starting Priority A batch generation for {len(PRIORITY_A_IDS)} items...")
+    success_count = 0
+    for idx, wid in enumerate(PRIORITY_A_IDS, 1):
+        name = name_map.get(wid, wid)
+        print(f"[{idx}/{len(PRIORITY_A_IDS)}] Generating {wid} ({name})...")
+        ok = generate(wid, name)
+        if ok:
+            success_count += 1
         time.sleep(1.0)
     
-    print("Priority A batch process finished!")
+    print(f"Priority A batch process finished! Success: {success_count}/{len(PRIORITY_A_IDS)}")
 
 if __name__ == '__main__':
     main()
