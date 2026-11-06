@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>YouTube 360° プロジェクター・ビューアー</title>
+  <style>
+    :root {
+      --primary: #ff0033;
+      --primary-hover: #cc0029;
+      --bg-dark: #0f0f14;
+      --panel-bg: rgba(22, 22, 30, 0.85);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f0f0f5;
+      --text-sub: #a0a0b0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    }
+
+    /* ビデオ表示コンテナ (疑似フルスクリーン) */
+    #video-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      z-index: 1;
+    }
+
+    #player {
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+    }
+
+    /* 上部ヘッダー / URL入力バー */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 12px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .top-bar.hidden {
+      opacity: 0;
+      transform: translateY(-100%);
+      pointer-events: none;
+    }
+
+    .app-title {
+      font-size: 15px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      color: #fff;
+    }
+
+    .app-title span.badge {
+      background: var(--primary);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .url-input-group {
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .url-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      outline: none;
+      backdrop-filter: blur(8px);
+      user-select: text;
+    }
+
+    .url-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-primary:active {
+      background: var(--primary-hover);
+    }
+
+    /* プリセット動画セレクター */
+    .presets-container {
+      width: 100%;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .presets-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .preset-chip {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ddd;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .preset-chip:active, .preset-chip.active {
+      background: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      border-color: #fff;
+    }
+
+    /* UI表示切替ボタン（常に隅に小さく常駐） */
+    #ui-toggle-btn {
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top));
+      right: 12px;
+      z-index: 20;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: all 0.25s ease;
+    }
+
+    /* 操作用HUDパネル (手元コントローラー) */
+    .hud-controls {
+      position: absolute;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      right: 16px;
+      z-index: 10;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      touch-action: none;
+    }
+
+    .hud-controls.hidden {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+      pointer-events: none;
+    }
+
+    .hud-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-sub);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* 十字キー / パン・チルト */
+    .d-pad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: repeat(3, 44px);
+      gap: 4px;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .d-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .d-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.92);
+    }
+
+    .d-btn.center-btn {
+      background: rgba(255, 0, 51, 0.25);
+      border-color: rgba(255, 0, 51, 0.5);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* コントロールボタングループ */
+    .hud-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hud-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .toggle-btn.active {
+      background: rgba(46, 204, 113, 0.25);
+      border-color: #2ecc71;
+      color: #2ecc71;
+      font-weight: bold;
+    }
+
+    /* FOV（画角/ズーム）スライダー */
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* 左下：プロジェクター投影ガイダンス */
+    .projector-guide {
+      position: absolute;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: 16px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .projector-guide.hidden {
+      opacity: 0;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2ecc71;
+      box-shadow: 0 0 8px #2ecc71;
+    }
+
+    /* タッチ・スワイプ操作エリア（iframe上の直接スワイプの感度を補助するレイヤー） */
+    #touch-surface {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 5;
+      pointer-events: none; /* デフォルトはオフ。パッドモード時にON */
+      touch-action: none;
+    }
+    #touch-surface.interactive {
+      pointer-events: auto;
+      cursor: grab;
+    }
+    #touch-surface.interactive:active {
+      cursor: grabbing;
+    }
+
+    /* お知らせトースト */
+    #toast {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(30, 30, 40, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ビデオ再生エリア (CSS疑似フルスクリーン) -->
+  <div id="video-wrapper">
+    <div id="player"></div>
+  </div>
+
+  <!-- タッチ・ジェスチャー操作レイヤー（オプション） -->
+  <div id="touch-surface"></div>
+
+  <!-- UIトグルボタン（右上） -->
+  <button id="ui-toggle-btn" title="UIの表示/非表示">👁️</button>
+
+  <!-- 上部バー：URL入力＆プリセット -->
+  <div id="top-bar" class="top-bar">
+    <div class="app-title">
+      <span>360° Viewer</span>
+      <span class="badge">Projector Fit</span>
+    </div>
+
+    <div class="url-input-group">
+      <input type="text" id="url-input" class="url-input" placeholder="YouTube URL または 動画ID を入力..." />
+      <button id="load-btn" class="btn btn-primary">再生</button>
+    </div>
+
+    <button id="fullscreen-btn" class="btn">⛶ 全画面</button>
+
+    <!-- プリセット動画リスト -->
+    <div class="presets-container">
+      <div class="preset-chip" data-id="8lsB-P8nGSM">🎢 ジェットコースター</div>
+      <div class="preset-chip" data-id="rG4jSz_2HDY">🦈 海中・サメ</div>
+      <div class="preset-chip" data-id="s-s4rG2y7v4">🚀 宇宙ステーション(ISS)</div>
+      <div class="preset-chip" data-id="sPyAQQklc1s">🦁 アフリカサファリ</div>
+      <div class="preset-chip" data-id="_VGgV1K2U80">🎈 熱気球パノラマ</div>
+      <button id="help-btn" class="preset-chip" style="border-color:#4a90e2; color:#70b0ff;">❓ 使い方</button>
+    </div>
+  </div>
+
+  <!-- ヘルプモーダル -->
+  <div id="help-modal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1a1a24; border:1px solid rgba(255,255,255,0.2); border-radius:18px; max-width:540px; width:100%; max-height:85vh; overflow-y:auto; padding:24px; color:#eee; font-size:14px; line-height:1.7;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:18px; color:#fff;">💡 プロジェクターでの投影方法</h3>
+        <button id="close-help-btn" style="background:none; border:none; color:#aaa; font-size:24px; cursor:pointer;">&times;</button>
+      </div>
+      <p style="margin-bottom:12px;"><strong>【接続方法】</strong><br>iPadを有線（HDMI）またはAirPlayでプロジェクターに接続し、iPadのコントロールセンターから<strong>「画面ミラーリング」</strong>を選択してください。</p>
+      <p style="margin-bottom:12px;"><strong>【なぜ歪まないのか】</strong><br>通常のYouTubeアプリだと「ビデオ出力モード」になり、360度が展開された平面パノラマ映像が送られてしまいます。このビューアーは<strong>Web画面ごとミラーリング</strong>するため、iPad手元の360度映像がそのままプロジェクターに映ります。</p>
+      <p style="margin-bottom:12px;"><strong>【操作方法】</strong><br>
+      ・<strong>十字キー / 視点リセット</strong>：右下のパネルでパン・チルトができます。<br>
+      ・<strong>ズーム（画角）</strong>：広角〜望遠をスライダーで変更できます。<br>
+      ・<strong>🖐️ スワイプ補助</strong>：ONにすると、画面全体をドラッグして滑らかに視点を動かせます。<br>
+      ・<strong>📱 ジャイロ</strong>：iPadを向けた方向に映像が連動します。<br>
+      ・<strong>🔄 自動回転</strong>：ゆっくり360度見回す上映モードです。<br>
+      ・<strong>👁️ UI非表示</strong>：右上のボタンで操作枠を隠せます（タップで復活）。
+      </p>
+      <div style="text-align:center; margin-top:20px;">
+        <button id="close-help-btn-2" class="btn btn-primary" style="padding:8px 28px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手元コントローラー HUD（右下） -->
+  <div id="hud-controls" class="hud-controls">
+    <div class="hud-title">360° Controller</div>
+
+    <!-- 十字キー操作（視点パン/チルト） -->
+    <div class="d-pad-grid">
+      <div></div>
+      <button class="d-btn" id="btn-up" title="上を見る">▲</button>
+      <div></div>
+
+      <button class="d-btn" id="btn-left" title="左を向く">◀</button>
+      <button class="d-btn center-btn" id="btn-reset" title="正面にリセット">RESET</button>
+      <button class="d-btn" id="btn-right" title="右を向く">▶</button>
+
+      <div></div>
+      <button class="d-btn" id="btn-down" title="下を見る">▼</button>
+      <div></div>
+    </div>
+
+    <!-- FOV (ズーム/画角) -->
+    <div class="slider-container">
+      <div class="slider-label">
+        <span>ズーム (画角)</span>
+        <span id="fov-val">100°</span>
+      </div>
+      <input type="range" id="fov-slider" min="50" max="120" value="100" step="1">
+    </div>
+
+    <!-- 各種トグルアクション -->
+    <div class="hud-actions">
+      <div class="hud-row">
+        <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
+        <button id="toggle-gyro" class="toggle-btn">📱 ジャイロ: OFF</button>
+      </div>
+      <div class="hud-row">
+        <button id="toggle-touchpad" class="toggle-btn">🖐️ スワイプ補助: OFF</button>
+        <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 左下：プロジェクター投影ガイダンス -->
+  <div id="projector-guide" class="projector-guide">
+    <div class="status-dot"></div>
+    <span id="status-text">ミラーリング準備完了（playsinline mode）</span>
+  </div>
+
+  <!-- file:// プロトコル警告バナー -->
+  <div id="file-protocol-warning" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background:rgba(30, 20, 25, 0.96); border:2px solid #ff3344; border-radius:18px; padding:24px; max-width:520px; width:90%; color:#fff; box-shadow:0 10px 40px rgba(0,0,0,0.8); line-height:1.7;">
+    <h3 style="color:#ff4d5a; font-size:18px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+      ⚠️ エラー153の原因：直接ファイルを開いています
+    </h3>
+    <p style="font-size:13px; color:#ddd; margin-bottom:14px;">
+      現在アドレスバーが <code>file:///...</code> になっています。<br>
+      YouTubeのセキュリティ仕様により、<strong>ローカルのHTMLファイルを直接ダブルクリックして開くと動画の再生がブロック（エラー153）</strong>されます。
+    </p>
+    <div style="background:rgba(0,0,0,0.4); border-radius:10px; padding:12px; font-size:13px; margin-bottom:14px;">
+      <strong>【解決方法】Webサーバー経由で開いてください：</strong><br>
+      ① <strong>Macの場合</strong>: ターミナルで <code>python3 -m http.server 8000</code> を実行し、<br>
+      <a href="http://localhost:8000/youtube_360_viewer/" style="color:#60a5fa; text-decoration:underline;">http://localhost:8000/youtube_360_viewer/</a> で開く<br>
+      ② <strong>iPadの場合</strong>: Macと同じWi-Fiから <br>
+      <code id="suggested-ip-url" style="color:#34d399;">http://[MacのIP]:8000/youtube_360_viewer/</code> で開く<br>
+      ③ <strong>GitHub Pagesにpush</strong> して公開URLで開く
+    </div>
+    <div style="text-align:right;">
+      <button onclick="document.getElementById('file-protocol-warning').style.display='none'" class="btn" style="padding:6px 16px; font-size:12px;">閉じる</button>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast"></div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    // State
+    let player = null;
+    let isApiReady = false;
+    let currentVideoId = '8lsB-P8nGSM'; // デフォルト：ジェットコースター
+
+    // 視点パラメータ (YouTube Spherical Properties)
+    let spherical = {
+      yaw: 0,      // 水平回転 (-180 ~ 180 or 0 ~ 360)
+      pitch: 0,    // 垂直回転 (-90 ~ 90)
+      roll: 0,
+      fov: 100     // 視野角 (30 ~ 120)
+    };
+
+    // 機能フラグ
+    let autoPanActive = false;
+    let autoPanSpeed = 0.4;
+    let autoPanAnimId = null;
+
+    let gyroActive = false;
+    let gyroBaseline = null;
+
+    let touchPadActive = false;
+    let isUiHidden = false;
+
+    // DOM要素
+    const topBar = document.getElementById('top-bar');
+    const hudControls = document.getElementById('hud-controls');
+    const projectorGuide = document.getElementById('projector-guide');
+    const uiToggleBtn = document.getElementById('ui-toggle-btn');
+    const urlInput = document.getElementById('url-input');
+    const loadBtn = document.getElementById('load-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const touchSurface = document.getElementById('touch-surface');
+    const toastEl = document.getElementById('toast');
+    const fovSlider = document.getElementById('fov-slider');
+    const fovValText = document.getElementById('fov-val');
+
+    // トースト表示
+    function showToast(msg, duration = 2500) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, duration);
+    }
+
+    // YouTube URLから動画IDを抽出
+    function extractVideoId(urlOrId) {
+      if (!urlOrId) return null;
+      urlOrId = urlOrId.trim();
+      
+      // すでに11文字のIDの場合
+      if (/^[a-zA-Z0-9_-]{11}$/.test(urlOrId)) {
+        return urlOrId;
+      }
+      
+      // URL解析
+      try {
+        const url = new URL(urlOrId.startsWith('http') ? urlOrId : 'https://' + urlOrId);
+        if (url.hostname.includes('youtu.be')) {
+          return url.pathname.slice(1);
+        }
+        if (url.searchParams.has('v')) {
+          return url.searchParams.get('v');
+        }
+        const paths = url.pathname.split('/');
+        const embedIdx = paths.indexOf('embed');
+        if (embedIdx !== -1 && paths[embedIdx + 1]) {
+          return paths[embedIdx + 1];
+        }
+      } catch (e) {
+        console.warn('URL parsing failed', e);
+      }
+      return null;
+    }
+
+    // YouTube API Ready
+    window.onYouTubeIframeAPIReady = function() {
+      // file:// プロトコルチェック
+      if (window.location.protocol === 'file:') {
+        const warnEl = document.getElementById('file-protocol-warning');
+        if (warnEl) warnEl.style.display = 'block';
+        showToast('⚠️ file:// ではYouTubeがブロックされます。サーバー経由で開いてください', 5000);
+      }
+
+      isApiReady = true;
+      initPlayer(currentVideoId);
+    };
+
+    function initPlayer(videoId) {
+      if (player) {
+        player.loadVideoById(videoId);
+        return;
+      }
+
+      const origin = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : undefined;
+
+      // iOSで「外部出力モード（AVPlayer）」に取られないための設定：
+      // - playsinline: 1 (必須: ネイティブフルスクリーンをブロック)
+      // - fs: 0 (フルスクリーンボタンを出さない)
+      player = new YT.Player('player', {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          playsinline: 1,
+          fs: 0,
+          rel: 0,
+          modestbranding: 1,
+          enablejsapi: 1,
+          ...(origin ? { origin } : {})
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      showToast('360°プレーヤー準備完了');
+      syncSphericalFromPlayer();
+      // 一定時間後にUI自動非表示の案内
+      setTimeout(() => {
+        showToast('右上の👁️ボタンで操作UIを非表示にできます');
+      }, 3500);
+    }
+
+    function onPlayerStateChange(event) {
+      const playPauseBtn = document.getElementById('btn-playpause');
+      if (event.data === YT.PlayerState.PLAYING) {
+        playPauseBtn.textContent = '⏸️ 一時停止';
+        syncSphericalFromPlayer();
+      } else if (event.data === YT.PlayerState.PAUSED) {
+        playPauseBtn.textContent = '▶️ 再生';
+      }
+    }
+
+    // YouTubeプレーヤーから現在の視点を読み出し
+    function syncSphericalFromPlayer() {
+      if (!player || typeof player.getSphericalProperties !== 'function') return;
+      try {
+        const props = player.getSphericalProperties();
+        if (props && typeof props.yaw === 'number') {
+          spherical.yaw = props.yaw;
+          spherical.pitch = props.pitch;
+          spherical.roll = props.roll || 0;
+          spherical.fov = props.fov || 100;
+          fovSlider.value = Math.round(spherical.fov);
+          fovValText.textContent = `${Math.round(spherical.fov)}°`;
+        }
+      } catch (e) {
+        // まだ動画の360メタデータがロードされていない場合は無視
+      }
+    }
+
+    // YouTubeプレーヤーへ視点を反映
+    function updateSpherical() {
+      if (!player || typeof player.setSphericalProperties !== 'function') return;
+      try {
+        // yaw を -180 ~ 180 に正規化
+        while (spherical.yaw > 180) spherical.yaw -= 360;
+        while (spherical.yaw < -180) spherical.yaw += 360;
+        
+        // pitch を -85 ~ 85 に制限
+        spherical.pitch = Math.max(-85, Math.min(85, spherical.pitch));
+
+        player.setSphericalProperties({
+          yaw: spherical.yaw,
+          pitch: spherical.pitch,
+          roll: spherical.roll,
+          fov: spherical.fov
+        });
+      } catch (e) {
+        console.warn('setSphericalProperties failed', e);
+      }
+    }
+
+    // 十字キーの連続移動処理
+    let moveInterval = null;
+    function startMoving(dYaw, dPitch) {
+      stopMoving();
+      syncSphericalFromPlayer();
+      const step = () => {
+        spherical.yaw += dYaw;
+        spherical.pitch += dPitch;
+        updateSpherical();
+      };
+      step();
+      moveInterval = setInterval(step, 40);
+    }
+
+    function stopMoving() {
+      if (moveInterval) {
+        clearInterval(moveInterval);
+        moveInterval = null;
+      }
+    }
+
+    // ボタンイベント紐付け
+    function bindDPadButton(btnId, dYaw, dPitch) {
+      const btn = document.getElementById(btnId);
+      const start = (e) => {
+        e.preventDefault();
+        startMoving(dYaw, dPitch);
+      };
+      const end = (e) => {
+        e.preventDefault();
+        stopMoving();
+      };
+
+      btn.addEventListener('touchstart', start, { passive: false });
+      btn.addEventListener('touchend', end, { passive: false });
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('mouseup', end);
+      btn.addEventListener('mouseleave', end);
+    }
+
+    bindDPadButton('btn-up', 0, 3.5);
+    bindDPadButton('btn-down', 0, -3.5);
+    bindDPadButton('btn-left', -4, 0);
+    bindDPadButton('btn-right', 4, 0);
+
+    // リセットボタン
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      spherical.yaw = 0;
+      spherical.pitch = 0;
+      spherical.roll = 0;
+      spherical.fov = 100;
+      fovSlider.value = 100;
+      fovValText.textContent = '100°';
+      updateSpherical();
+      showToast('正面にリセットしました');
+    });
+
+    // FOV (画角) スライダー
+    fovSlider.addEventListener('input', (e) => {
+      spherical.fov = parseFloat(e.target.value);
+      fovValText.textContent = `${Math.round(spherical.fov)}°`;
+      updateSpherical();
+    });
+
+    // 自動回転モード
+    const toggleAutopanBtn = document.getElementById('toggle-autopan');
+    toggleAutopanBtn.addEventListener('click', () => {
+      autoPanActive = !autoPanActive;
+      toggleAutopanBtn.classList.toggle('active', autoPanActive);
+      toggleAutopanBtn.textContent = autoPanActive ? '🔄 自動回転: ON' : '🔄 自動回転: OFF';
+
+      if (autoPanActive) {
+        syncSphericalFromPlayer();
+        const panLoop = () => {
+          if (!autoPanActive) return;
+          spherical.yaw += autoPanSpeed;
+          updateSpherical();
+          autoPanAnimId = requestAnimationFrame(panLoop);
+        };
+        autoPanAnimId = requestAnimationFrame(panLoop);
+        showToast('自動回転を開始しました');
+      } else {
+        if (autoPanAnimId) cancelAnimationFrame(autoPanAnimId);
+        showToast('自動回転を停止しました');
+      }
+    });
+
+    // ジャイロセンサー連動
+    const toggleGyroBtn = document.getElementById('toggle-gyro');
+    toggleGyroBtn.addEventListener('click', async () => {
+      if (gyroActive) {
+        gyroActive = false;
+        toggleGyroBtn.classList.toggle('active', false);
+        toggleGyroBtn.textContent = '📱 ジャイロ: OFF';
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+        showToast('ジャイロ連動をOFFにしました');
+        return;
+      }
+
+      // iOS 13+ での DeviceOrientation 許可要求
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') {
+            alert('ジャイロセンサーの利用が拒否されました。設定から許可してください。');
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert('ジャイロの許可リクエストに失敗しました: ' + err);
+          return;
+        }
+      }
+
+      gyroActive = true;
+      gyroBaseline = null;
+      toggleGyroBtn.classList.toggle('active', true);
+      toggleGyroBtn.textContent = '📱 ジャイロ: ON';
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
+      showToast('ジャイロ連動中（iPadを向けた方向に連動）');
+    });
+
+    function handleDeviceOrientation(e) {
+      if (!gyroActive) return;
+      if (gyroBaseline === null) {
+        gyroBaseline = {
+          alpha: e.alpha || 0,
+          beta: e.beta || 0,
+          gamma: e.gamma || 0,
+          baseYaw: spherical.yaw,
+          basePitch: spherical.pitch
+        };
+        return;
+      }
+
+      // 差分計算
+      const deltaAlpha = (e.alpha || 0) - gyroBaseline.alpha;
+      const deltaBeta = (e.beta || 0) - gyroBaseline.beta;
+
+      spherical.yaw = gyroBaseline.baseYaw - deltaAlpha;
+      spherical.pitch = gyroBaseline.basePitch + deltaBeta;
+      updateSpherical();
+    }
+
+    // スワイプ補助タッチサーフェス
+    const toggleTouchpadBtn = document.getElementById('toggle-touchpad');
+    toggleTouchpadBtn.addEventListener('click', () => {
+      touchPadActive = !touchPadActive;
+      toggleTouchpadBtn.classList.toggle('active', touchPadActive);
+      toggleTouchpadBtn.textContent = touchPadActive ? '🖐️ スワイプ補助: ON' : '🖐️ スワイプ補助: OFF';
+      touchSurface.classList.toggle('interactive', touchPadActive);
+      showToast(touchPadActive ? '画面スワイプで視点操作が可能になりました' : 'スワイプ補助OFF（標準操作へ）');
+    });
+
+    let touchStart = null;
+    touchSurface.addEventListener('touchstart', (e) => {
+      if (!touchPadActive || e.touches.length === 0) return;
+      syncSphericalFromPlayer();
+      touchStart = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        yaw: spherical.yaw,
+        pitch: spherical.pitch
+      };
+    }, { passive: true });
+
+    touchSurface.addEventListener('touchmove', (e) => {
+      if (!touchPadActive || !touchStart || e.touches.length === 0) return;
+      const dx = e.touches[0].clientX - touchStart.x;
+      const dy = e.touches[0].clientY - touchStart.y;
+
+      const sensitivity = 0.3; // スワイプ感度
+      spherical.yaw = touchStart.yaw - dx * sensitivity;
+      spherical.pitch = touchStart.pitch + dy * sensitivity;
+      updateSpherical();
+    }, { passive: true });
+
+    touchSurface.addEventListener('touchend', () => {
+      touchStart = null;
+    });
+
+    // 再生 / 一時停止ボタン
+    document.getElementById('btn-playpause').addEventListener('click', () => {
+      if (!player) return;
+      const state = player.getPlayerState();
+      if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+      } else {
+        player.playVideo();
+      }
+    });
+
+    // UI表示 / 非表示トグル
+    function setUiVisible(visible) {
+      isUiHidden = !visible;
+      topBar.classList.toggle('hidden', !visible);
+      hudControls.classList.toggle('hidden', !visible);
+      projectorGuide.classList.toggle('hidden', !visible);
+      uiToggleBtn.textContent = visible ? '👁️' : '⚙️';
+      uiToggleBtn.title = visible ? 'UIを非表示にする' : 'UIを表示する';
+    }
+
+    uiToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setUiVisible(isUiHidden);
+    });
+
+    // 画面タップでUIが非表示のときに復帰
+    window.addEventListener('click', (e) => {
+      if (isUiHidden) {
+        // UIが隠れている時に画面端などをタップしたら再表示
+        setUiVisible(true);
+      }
+    });
+
+    // URL / ID ロード
+    function loadVideoFromInput() {
+      const val = urlInput.value;
+      const videoId = extractVideoId(val);
+      if (videoId) {
+        currentVideoId = videoId;
+        if (player) {
+          player.loadVideoById(videoId);
+        } else if (isApiReady) {
+          initPlayer(videoId);
+        }
+        showToast('動画をロード中...');
+      } else {
+        alert('有効なYouTubeのURLまたは動画IDを入力してください');
+      }
+    }
+
+    loadBtn.addEventListener('click', loadVideoFromInput);
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') loadVideoFromInput();
+    });
+
+    // プリセットクリック
+    document.querySelectorAll('.preset-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const id = chip.getAttribute('data-id');
+        urlInput.value = id;
+        loadVideoFromInput();
+      });
+    });
+
+    // ヘルプモーダル
+    const helpBtn = document.getElementById('help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeHelpBtn = document.getElementById('close-help-btn');
+    const closeHelpBtn2 = document.getElementById('close-help-btn-2');
+
+    if (helpBtn && helpModal) {
+      helpBtn.addEventListener('click', () => {
+        helpModal.style.display = 'flex';
+      });
+      const closeHelp = () => { helpModal.style.display = 'none'; };
+      if (closeHelpBtn) closeHelpBtn.addEventListener('click', closeHelp);
+      if (closeHelpBtn2) closeHelpBtn2.addEventListener('click', closeHelp);
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) closeHelp();
+      });
+    }
+
+    // 全画面ボタン (ブラウザのFullscreen API)
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          showToast('全画面表示: iPadではホーム画面追加がおすすめです');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
