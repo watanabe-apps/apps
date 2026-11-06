@@ -47,7 +47,25 @@
     #player {
       width: 100%;
       height: 100%;
-      pointer-events: auto;
+      pointer-events: none; /* 下のiframeにはイベントを渡さず、上のドラッグレイヤーで一括制御 */
+    }
+
+    /* 全画面ドラッグ操作レイヤー (PCマウスドラッグ & iPadタッチスワイプ) */
+    #drag-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 3;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #drag-layer.grabbing {
+      cursor: grabbing;
     }
 
     /* 上部ヘッダー / URL入力バー */
@@ -198,7 +216,7 @@
       transition: all 0.25s ease;
     }
 
-    /* 操作用HUDパネル (手元コントローラー) */
+    /* 操作用HUDパネル (手元コントローラー：初期状態はコンパクト) */
     .hud-controls {
       position: absolute;
       bottom: calc(16px + env(safe-area-inset-bottom));
@@ -206,15 +224,16 @@
       z-index: 10;
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
-      border-radius: 20px;
-      padding: 12px 14px;
+      border-radius: 16px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       backdrop-filter: blur(14px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       transition: opacity 0.3s ease, transform 0.3s ease;
       touch-action: none;
+      max-width: 240px;
     }
 
     .hud-controls.hidden {
@@ -230,61 +249,29 @@
       color: var(--text-sub);
       text-align: center;
       font-weight: 700;
-    }
-
-    /* 十字キー / パン・チルト */
-    .d-pad-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 44px);
-      grid-template-rows: repeat(3, 44px);
-      gap: 4px;
-      justify-content: center;
-      margin: 0 auto;
-    }
-
-    .d-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 18px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.1s ease;
-    }
-
-    .d-btn:active {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(0.92);
-    }
-
-    .d-btn.center-btn {
-      background: rgba(255, 0, 51, 0.25);
-      border-color: rgba(255, 0, 51, 0.5);
-      font-size: 12px;
-      font-weight: bold;
     }
 
     /* コントロールボタングループ */
     .hud-actions {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .hud-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       font-size: 12px;
     }
 
     .toggle-btn {
       flex: 1;
-      padding: 6px 10px;
+      padding: 8px 10px;
       font-size: 11px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -295,12 +282,41 @@
       justify-content: center;
       gap: 4px;
       cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .toggle-btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.2);
     }
     .toggle-btn.active {
       background: rgba(46, 204, 113, 0.25);
       border-color: #2ecc71;
       color: #2ecc71;
       font-weight: bold;
+    }
+
+    /* 中央ドラッグガイドヒント */
+    .drag-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.5s ease;
+    }
+    .drag-hint.fadeout {
+      opacity: 0;
     }
 
     /* FOV（画角/ズーム）スライダー */
@@ -413,8 +429,13 @@
     <div id="player"></div>
   </div>
 
-  <!-- タッチ・ジェスチャー操作レイヤー（オプション） -->
-  <div id="touch-surface"></div>
+  <!-- 全画面ドラッグ操作レイヤー (PCマウスドラッグ & iPadタッチスワイプ) -->
+  <div id="drag-layer"></div>
+
+  <!-- 操作ヒントバナー（初回操作で消える） -->
+  <div id="drag-hint" class="drag-hint">
+    <span>👆 画面をドラッグ / スワイプして自由に見渡せます</span>
+  </div>
 
   <!-- UIトグルボタン（右上） -->
   <button id="ui-toggle-btn" title="UIの表示/非表示">👁️</button>
