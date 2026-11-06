@@ -379,24 +379,7 @@
       box-shadow: 0 0 8px #2ecc71;
     }
 
-    /* タッチ・スワイプ操作エリア（iframe上の直接スワイプの感度を補助するレイヤー） */
-    #touch-surface {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 5;
-      pointer-events: none; /* デフォルトはオフ。パッドモード時にON */
-      touch-action: none;
-    }
-    #touch-surface.interactive {
-      pointer-events: auto;
-      cursor: grab;
-    }
-    #touch-surface.interactive:active {
-      cursor: grabbing;
-    }
+
 
     /* お知らせトースト */
     #toast {
@@ -475,12 +458,13 @@
       <p style="margin-bottom:12px;"><strong>【接続方法】</strong><br>iPadを有線（HDMI）またはAirPlayでプロジェクターに接続し、iPadのコントロールセンターから<strong>「画面ミラーリング」</strong>を選択してください。</p>
       <p style="margin-bottom:12px;"><strong>【なぜ歪まないのか】</strong><br>通常のYouTubeアプリだと「ビデオ出力モード」になり、360度が展開された平面パノラマ映像が送られてしまいます。このビューアーは<strong>Web画面ごとミラーリング</strong>するため、iPad手元の360度映像がそのままプロジェクターに映ります。</p>
       <p style="margin-bottom:12px;"><strong>【操作方法】</strong><br>
-      ・<strong>十字キー / 視点リセット</strong>：右下のパネルでパン・チルトができます。<br>
-      ・<strong>ズーム（画角）</strong>：広角〜望遠をスライダーで変更できます。<br>
-      ・<strong>🖐️ スワイプ補助</strong>：ONにすると、画面全体をドラッグして滑らかに視点を動かせます。<br>
-      ・<strong>📱 ジャイロ</strong>：iPadを向けた方向に映像が連動します。<br>
-      ・<strong>🔄 自動回転</strong>：ゆっくり360度見回す上映モードです。<br>
-      ・<strong>👁️ UI非表示</strong>：右上のボタンで操作枠を隠せます（タップで復活）。
+      ・<strong>画面ドラッグ / スワイプ</strong>：画面上のどこでもドラッグ・スワイプして自由に見渡せます（慣性付き）。<br>
+      ・<strong>画面タップ</strong>：動画の再生 / 一時停止を切り替えます。<br>
+      ・<strong>ズーム（画角）</strong>：スライダー、マウスホイール、またはiPadの2本指ピンチでズーム可能。<br>
+      ・<strong>🎯 正面リセット</strong>：いつでも最初の正面の向きに戻せます。<br>
+      ・<strong>📱 ジャイロ</strong>：iPad本体を向けた方向に映像が連動します。<br>
+      ・<strong>🔄 自動回転</strong>：ゆっくり周囲を360度見回す上映モードです。<br>
+      ・<strong>👁️ UI非表示</strong>：右上のボタンで操作枠を隠して大画面上映できます。
       </p>
       <div style="text-align:center; margin-top:20px;">
         <button id="close-help-btn-2" class="btn btn-primary" style="padding:8px 28px;">閉じる</button>
@@ -488,29 +472,17 @@
     </div>
   </div>
 
-  <!-- 手元コントローラー HUD（右下） -->
+  <!-- 手元コントローラー HUD（右下：補助用） -->
   <div id="hud-controls" class="hud-controls">
-    <div class="hud-title">360° Controller</div>
-
-    <!-- 十字キー操作（視点パン/チルト） -->
-    <div class="d-pad-grid">
-      <div></div>
-      <button class="d-btn" id="btn-up" title="上を見る">▲</button>
-      <div></div>
-
-      <button class="d-btn" id="btn-left" title="左を向く">◀</button>
-      <button class="d-btn center-btn" id="btn-reset" title="正面にリセット">RESET</button>
-      <button class="d-btn" id="btn-right" title="右を向く">▶</button>
-
-      <div></div>
-      <button class="d-btn" id="btn-down" title="下を見る">▼</button>
-      <div></div>
+    <div class="hud-title">
+      <span>360° Controls</span>
+      <span style="font-size:10px; color:#38bdf8;">画面ドラッグ対応</span>
     </div>
 
     <!-- FOV (ズーム/画角) -->
     <div class="slider-container">
       <div class="slider-label">
-        <span>ズーム (画角)</span>
+        <span>ズーム (ホイール対応)</span>
         <span id="fov-val">100°</span>
       </div>
       <input type="range" id="fov-slider" min="50" max="120" value="100" step="1">
@@ -519,12 +491,12 @@
     <!-- 各種トグルアクション -->
     <div class="hud-actions">
       <div class="hud-row">
-        <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
-        <button id="toggle-gyro" class="toggle-btn">📱 ジャイロ: OFF</button>
+        <button id="btn-reset" class="toggle-btn" style="background:rgba(255,255,255,0.15); font-weight:bold;">🎯 正面リセット</button>
+        <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
       </div>
       <div class="hud-row">
-        <button id="toggle-touchpad" class="toggle-btn">🖐️ スワイプ補助: OFF</button>
-        <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
+        <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
+        <button id="toggle-gyro" class="toggle-btn">📱 ジャイロ: OFF</button>
       </div>
     </div>
   </div>
@@ -741,53 +713,197 @@
       }
     }
 
-    // 十字キーの連続移動処理
-    let moveInterval = null;
-    function startMoving(dYaw, dPitch) {
-      stopMoving();
-      syncSphericalFromPlayer();
-      const step = () => {
-        spherical.yaw += dYaw;
-        spherical.pitch += dPitch;
-        updateSpherical();
-      };
-      step();
-      moveInterval = setInterval(step, 40);
+    // ==========================================
+    // 直感的な全画面ドラッグ＆スワイプ操作 (Pointer Events)
+    // ==========================================
+    const dragLayer = document.getElementById('drag-layer');
+    const dragHint = document.getElementById('drag-hint');
+
+    let isPointerDown = false;
+    let didMove = false;
+    let startX = 0, startY = 0;
+    let lastX = 0, lastY = 0;
+    let velX = 0, velY = 0;
+    let activePointerId = null;
+
+    // 二本指ピンチズーム用 (iPad / タッチ)
+    const activeTouches = new Map();
+    let initialPinchDist = null;
+    let initialPinchFov = 100;
+
+    function getPinchDistance(touches) {
+      const arr = Array.from(touches.values());
+      if (arr.length < 2) return 0;
+      const dx = arr[0].clientX - arr[1].clientX;
+      const dy = arr[0].clientY - arr[1].clientY;
+      return Math.hypot(dx, dy);
     }
 
-    function stopMoving() {
-      if (moveInterval) {
-        clearInterval(moveInterval);
-        moveInterval = null;
+    // Pointer Down (マウス押し下げ / タッチ開始)
+    dragLayer.addEventListener('pointerdown', (e) => {
+      // 慣性アニメーションを即停止
+      stopInertia();
+
+      activeTouches.set(e.pointerId, e);
+
+      // 二本指ピンチ開始
+      if (activeTouches.size === 2) {
+        initialPinchDist = getPinchDistance(activeTouches);
+        initialPinchFov = spherical.fov;
+        return;
+      }
+
+      if (activeTouches.size > 2) return;
+
+      isPointerDown = true;
+      didMove = false;
+      activePointerId = e.pointerId;
+      startX = lastX = e.clientX;
+      startY = lastY = e.clientY;
+      velX = 0;
+      velY = 0;
+
+      dragLayer.classList.add('grabbing');
+      try {
+        dragLayer.setPointerCapture(e.pointerId);
+      } catch (err) {}
+
+      syncSphericalFromPlayer();
+    });
+
+    // Pointer Move (マウスドラッグ / タッチスワイプ)
+    dragLayer.addEventListener('pointermove', (e) => {
+      if (activeTouches.has(e.pointerId)) {
+        activeTouches.set(e.pointerId, e);
+      }
+
+      // 二本指ピンチズーム処理
+      if (activeTouches.size === 2 && initialPinchDist) {
+        const currentDist = getPinchDistance(activeTouches);
+        if (currentDist > 0 && initialPinchDist > 0) {
+          const ratio = initialPinchDist / currentDist;
+          spherical.fov = Math.max(40, Math.min(120, initialPinchFov * ratio));
+          fovSlider.value = Math.round(spherical.fov);
+          fovValText.textContent = `${Math.round(spherical.fov)}°`;
+          updateSpherical();
+        }
+        return;
+      }
+
+      if (!isPointerDown || e.pointerId !== activePointerId) return;
+
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+
+      // わずかなブレはタップとして扱うため閾値を設ける
+      if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) {
+        didMove = true;
+        // 初回操作でヒントを消す
+        if (dragHint && !dragHint.classList.contains('fadeout')) {
+          dragHint.classList.add('fadeout');
+        }
+      }
+
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      // 画角（FOV）に応じた感度調整（ズーム時は細かく、広角時はダイナミックに）
+      const factor = (spherical.fov / 100) * 0.22;
+
+      // スワイプ方向：画面をつかんで引っ張る直感的操作（YouTube / ストリートビュー標準）
+      const dYaw = -dx * factor;
+      const dPitch = dy * factor;
+
+      spherical.yaw += dYaw;
+      spherical.pitch += dPitch;
+
+      // 慣性（イナーシャ）用の速度を蓄積
+      velX = dYaw;
+      velY = dPitch;
+
+      updateSpherical();
+    });
+
+    // Pointer Up (離したとき)
+    function onPointerUp(e) {
+      activeTouches.delete(e.pointerId);
+      if (activeTouches.size < 2) {
+        initialPinchDist = null;
+      }
+
+      if (e.pointerId !== activePointerId) return;
+
+      isPointerDown = false;
+      dragLayer.classList.remove('grabbing');
+      try {
+        dragLayer.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+
+      // ドラッグせずに単にクリック/タップした場合は「再生/一時停止」または「UI復帰」
+      if (!didMove) {
+        if (isUiHidden) {
+          setUiVisible(true);
+        } else {
+          togglePlayPause();
+        }
+        return;
+      }
+
+      // フリックした時の慣性スクロール開始
+      startInertia();
+    }
+
+    dragLayer.addEventListener('pointerup', onPointerUp);
+    dragLayer.addEventListener('pointercancel', onPointerUp);
+
+    // 慣性スクロール（スーッと滑らかに止まる）
+    let inertiaAnimId = null;
+    function startInertia() {
+      stopInertia();
+      if (Math.abs(velX) < 0.08 && Math.abs(velY) < 0.08) return;
+
+      const friction = 0.93; // 減衰率
+      function step() {
+        if (isPointerDown) return;
+
+        velX *= friction;
+        velY *= friction;
+
+        if (Math.abs(velX) < 0.01 && Math.abs(velY) < 0.01) {
+          stopInertia();
+          return;
+        }
+
+        spherical.yaw += velX;
+        spherical.pitch += velY;
+        updateSpherical();
+
+        inertiaAnimId = requestAnimationFrame(step);
+      }
+      inertiaAnimId = requestAnimationFrame(step);
+    }
+
+    function stopInertia() {
+      if (inertiaAnimId) {
+        cancelAnimationFrame(inertiaAnimId);
+        inertiaAnimId = null;
       }
     }
 
-    // ボタンイベント紐付け
-    function bindDPadButton(btnId, dYaw, dPitch) {
-      const btn = document.getElementById(btnId);
-      const start = (e) => {
-        e.preventDefault();
-        startMoving(dYaw, dPitch);
-      };
-      const end = (e) => {
-        e.preventDefault();
-        stopMoving();
-      };
+    // マウスホイールによるズーム (FOV調整)
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY * 0.05;
+      spherical.fov = Math.max(40, Math.min(120, spherical.fov + delta));
+      fovSlider.value = Math.round(spherical.fov);
+      fovValText.textContent = `${Math.round(spherical.fov)}°`;
+      updateSpherical();
+    }, { passive: false });
 
-      btn.addEventListener('touchstart', start, { passive: false });
-      btn.addEventListener('touchend', end, { passive: false });
-      btn.addEventListener('mousedown', start);
-      btn.addEventListener('mouseup', end);
-      btn.addEventListener('mouseleave', end);
-    }
-
-    bindDPadButton('btn-up', 0, 3.5);
-    bindDPadButton('btn-down', 0, -3.5);
-    bindDPadButton('btn-left', -4, 0);
-    bindDPadButton('btn-right', 4, 0);
-
-    // リセットボタン
-    document.getElementById('btn-reset').addEventListener('click', () => {
+    // リセットボタン (正面に戻す)
+    document.getElementById('btn-reset').addEventListener('click', (e) => {
+      e.stopPropagation();
+      stopInertia();
       spherical.yaw = 0;
       spherical.pitch = 0;
       spherical.roll = 0;
@@ -798,7 +914,7 @@
       showToast('正面にリセットしました');
     });
 
-    // FOV (画角) スライダー
+    // FOV スライダー操作
     fovSlider.addEventListener('input', (e) => {
       spherical.fov = parseFloat(e.target.value);
       fovValText.textContent = `${Math.round(spherical.fov)}°`;
@@ -807,12 +923,14 @@
 
     // 自動回転モード
     const toggleAutopanBtn = document.getElementById('toggle-autopan');
-    toggleAutopanBtn.addEventListener('click', () => {
+    toggleAutopanBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       autoPanActive = !autoPanActive;
       toggleAutopanBtn.classList.toggle('active', autoPanActive);
       toggleAutopanBtn.textContent = autoPanActive ? '🔄 自動回転: ON' : '🔄 自動回転: OFF';
 
       if (autoPanActive) {
+        stopInertia();
         syncSphericalFromPlayer();
         const panLoop = () => {
           if (!autoPanActive) return;
@@ -828,9 +946,10 @@
       }
     });
 
-    // ジャイロセンサー連動
+    // ジャイロセンサー連動 (iPadの傾き連動)
     const toggleGyroBtn = document.getElementById('toggle-gyro');
-    toggleGyroBtn.addEventListener('click', async () => {
+    toggleGyroBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       if (gyroActive) {
         gyroActive = false;
         toggleGyroBtn.classList.toggle('active', false);
@@ -840,7 +959,6 @@
         return;
       }
 
-      // iOS 13+ での DeviceOrientation 許可要求
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           const permission = await DeviceOrientationEvent.requestPermission();
@@ -860,7 +978,7 @@
       toggleGyroBtn.classList.toggle('active', true);
       toggleGyroBtn.textContent = '📱 ジャイロ: ON';
       window.addEventListener('deviceorientation', handleDeviceOrientation);
-      showToast('ジャイロ連動中（iPadを向けた方向に連動）');
+      showToast('ジャイロ連動中（iPadの向きに視点が追従）');
     });
 
     function handleDeviceOrientation(e) {
@@ -876,7 +994,6 @@
         return;
       }
 
-      // 差分計算
       const deltaAlpha = (e.alpha || 0) - gyroBaseline.alpha;
       const deltaBeta = (e.beta || 0) - gyroBaseline.beta;
 
@@ -885,52 +1002,22 @@
       updateSpherical();
     }
 
-    // スワイプ補助タッチサーフェス
-    const toggleTouchpadBtn = document.getElementById('toggle-touchpad');
-    toggleTouchpadBtn.addEventListener('click', () => {
-      touchPadActive = !touchPadActive;
-      toggleTouchpadBtn.classList.toggle('active', touchPadActive);
-      toggleTouchpadBtn.textContent = touchPadActive ? '🖐️ スワイプ補助: ON' : '🖐️ スワイプ補助: OFF';
-      touchSurface.classList.toggle('interactive', touchPadActive);
-      showToast(touchPadActive ? '画面スワイプで視点操作が可能になりました' : 'スワイプ補助OFF（標準操作へ）');
-    });
+    // 再生 / 一時停止トグル
+    function togglePlayPause() {
+      if (!player || typeof player.getPlayerState !== 'function') return;
+      try {
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
+      } catch (err) {}
+    }
 
-    let touchStart = null;
-    touchSurface.addEventListener('touchstart', (e) => {
-      if (!touchPadActive || e.touches.length === 0) return;
-      syncSphericalFromPlayer();
-      touchStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        yaw: spherical.yaw,
-        pitch: spherical.pitch
-      };
-    }, { passive: true });
-
-    touchSurface.addEventListener('touchmove', (e) => {
-      if (!touchPadActive || !touchStart || e.touches.length === 0) return;
-      const dx = e.touches[0].clientX - touchStart.x;
-      const dy = e.touches[0].clientY - touchStart.y;
-
-      const sensitivity = 0.3; // スワイプ感度
-      spherical.yaw = touchStart.yaw - dx * sensitivity;
-      spherical.pitch = touchStart.pitch + dy * sensitivity;
-      updateSpherical();
-    }, { passive: true });
-
-    touchSurface.addEventListener('touchend', () => {
-      touchStart = null;
-    });
-
-    // 再生 / 一時停止ボタン
-    document.getElementById('btn-playpause').addEventListener('click', () => {
-      if (!player) return;
-      const state = player.getPlayerState();
-      if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
-      } else {
-        player.playVideo();
-      }
+    document.getElementById('btn-playpause').addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlayPause();
     });
 
     // UI表示 / 非表示トグル
