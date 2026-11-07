@@ -618,7 +618,7 @@
       <div style="display:flex; gap:8px; margin-bottom:8px;">
         <input type="text" id="modal-search-input" class="url-input" placeholder="見たいキーワード（例：火事、地震、津波、VR...）" style="flex:1;" />
         <button id="modal-open-yt-btn" class="btn btn-primary" style="background:#ff0033; border-color:#ff0033; font-weight:bold; white-space:nowrap;">
-          🔗 YouTube公式で360°検索
+          🔗 YouTube公式で360検索
         </button>
       </div>
 
@@ -1905,10 +1905,12 @@
     if (btnHudPaste) btnHudPaste.addEventListener('click', handlePasteAndLoad);
     if (btnHudHistory) btnHudHistory.addEventListener('click', () => openSearchModal(''));
 
-    // YouTube公式の360°検索結果ページを開く（360度フィルター sp=EgJAAQ%3D%3D 付き）
+    // YouTube公式の360検索結果ページを開く（360フィルター sp=EgJAAQ%3D%3D 付き）
     function openYouTubeSearchExternal(keyword) {
-      const q = (keyword || (modalSearchInput ? modalSearchInput.value : '') || urlInput.value || '360').trim();
-      const cleanQ = q.includes('360') ? q : `${q} 360`;
+      let raw = (keyword || (modalSearchInput ? modalSearchInput.value : '') || urlInput.value || '').trim();
+      // 「360度」や「360°」があれば「360」に正規化
+      let q = raw.replace(/360[度°]?/g, '360').trim();
+      const cleanQ = q ? (q.includes('360') ? q : `${q} 360`) : '360';
       const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(cleanQ)}&sp=EgJAAQ%3D%3D`;
       window.open(ytSearchUrl, '_blank');
       showToast('🔗 YouTube公式を開きました。動画の「共有➔リンクをコピー」して戻ってください', 4500);
