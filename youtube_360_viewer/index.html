@@ -1069,6 +1069,7 @@
     document.getElementById('btn-reset').addEventListener('click', (e) => {
       e.stopPropagation();
       stopInertia();
+      gyroBaseline = null; // ジャイロの基準点を現在向いている方向にリセット
       spherical.yaw = 0;
       spherical.pitch = 0;
       spherical.roll = 0;
@@ -1156,48 +1157,62 @@
       showToast('ジャイロ連動中（iPadを向けた方向に視点が追従）');
     });
 
+    // 角度の最短差分を計算（0度と360度の境界をスムーズに通過）
+    function getShortestAngleDiff(curr, base) {
+      let diff = (curr - base) % 360;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      return diff;
+    }
+
     function handleDeviceOrientation(e) {
       if (!gyroActive) return;
 
-      // 画面の向き（iPadを横持ちにしている場合を考慮）
+      // 水平方向（方位角）: iOS Safariの webkitCompassHeading を最優先、なければ e.alpha
+      const compass = (typeof e.webkitCompassHeading !== 'undefined') ? e.webkitCompassHeading : e.alpha;
+      const beta = e.beta;   // 前後チルト (-180 ~ 180)
+      const gamma = e.gamma; // 左右ロール (-90 ~ 90)
+
+      if (compass === null || typeof compass === 'undefined' || beta === null || gamma === null) return;
+
+      // 画面の向き（iPadを横持ちにしている場合を考慮: 0: 縦, 90: 横右, -90/270: 横左）
       const orientation = (typeof window.orientation !== 'undefined') 
         ? window.orientation 
         : (screen.orientation ? (screen.orientation.angle || 0) : 0);
 
-      const alpha = e.alpha || 0;
-      const beta = e.beta || 0;
-      const gamma = e.gamma || 0;
-
       if (gyroBaseline === null) {
         gyroBaseline = {
-          alpha, beta, gamma,
+          compass: compass,
+          beta: beta,
+          gamma: gamma,
           baseYaw: spherical.yaw,
           basePitch: spherical.pitch,
-          orientation
+          orientation: orientation
         };
         return;
       }
 
-      let deltaYaw = 0;
-      let deltaPitch = 0;
+      // 1. 【水平方向（左右・Yaw）】:
+      // iPadを左右に旋回させた時、縦持ちでも横持ちでも方位角（compass）が変化します！
+      const compassDiff = getShortestAngleDiff(compass, gyroBaseline.compass);
 
-      // iPadの向きに応じた軸変換
+      // 2. 【垂直方向（上下・Pitch）】:
+      // 縦持ちと横持ちで端末の倒れ軸が入れ替わるため補正
+      let pitchDiff = 0;
       if (orientation === 90) {
-        // 横向き（右倒し）
-        deltaYaw = (beta - gyroBaseline.beta);
-        deltaPitch = -(gamma - gyroBaseline.gamma);
+        // iPad横持ち（ホームボタン右 / カメラ左）: 上下チルトは gamma で検出
+        pitchDiff = -(gamma - gyroBaseline.gamma);
       } else if (orientation === -90 || orientation === 270) {
-        // 横向き（左倒し）
-        deltaYaw = -(beta - gyroBaseline.beta);
-        deltaPitch = (gamma - gyroBaseline.gamma);
+        // iPad横持ち（ホームボタン左 / カメラ右）: 上下チルトは -gamma で検出
+        pitchDiff = (gamma - gyroBaseline.gamma);
       } else {
-        // 縦向き
-        deltaYaw = -(alpha - gyroBaseline.alpha);
-        deltaPitch = (beta - gyroBaseline.beta);
+        // iPad縦持ち: 上下チルトは beta で検出
+        pitchDiff = (beta - gyroBaseline.beta);
       }
 
-      spherical.yaw = gyroBaseline.baseYaw + deltaYaw;
-      spherical.pitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + deltaPitch));
+      // 視点に反映（compassHeadingは時計回りなのでマイナスで左右一致）
+      spherical.yaw = gyroBaseline.baseYaw - compassDiff;
+      spherical.pitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + pitchDiff));
       updateSpherical();
     }
 
