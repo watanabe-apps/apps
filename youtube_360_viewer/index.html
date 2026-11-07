@@ -599,7 +599,7 @@
 
     <button id="history-btn" class="btn" style="background:rgba(147,51,234,0.25); border-color:#a855f7; color:#d8b4fe;" title="過去に再生した360°動画を表示">🕒 履歴</button>
     <button id="open-file-btn" class="btn" style="background:rgba(16,185,129,0.28); border-color:#10b981;" title="iPad内の360°動画ファイル(MP4/MOV)を再生">📁 MP4</button>
-    <button id="fullscreen-btn" class="btn" title="動画を止めずに操作枠をすべて消して全画面投影します">⛶ 全画面</button>
+    <button id="fullscreen-btn" class="btn" title="ブラウザを全画面表示にして操作枠を隠します">⛶ 全画面</button>
     <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="プロジェクター用ウィンドウを別画面で開く">📺 2画面</button>
     <button id="help-btn" class="btn" style="border-color:#4a90e2; color:#70b0ff;">❓ 使い方</button>
   </div>
@@ -2153,11 +2153,11 @@
     }
 
     // ==========================================
-    // 11. 真のネイティブ全画面（ブラウザUIごと全画面化 ＆ 再生中断の自動復帰）
+    // 11. 全画面切り替え (ブラウザのFullscreen API)
     // ==========================================
     function resumePlaybackAfterResize() {
-      // 全画面移行に伴いWebKit/Safariが動画を一時停止(PAUSED)にする場合があるため、即座に再開
-      [100, 350, 700].forEach(delay => {
+      // 全画面移行に伴いWebKit/Safariが一瞬ポーズを発行する場合があるため、自動で即座に再開
+      [150, 400, 800].forEach(delay => {
         setTimeout(() => {
           if (currentEngine === 'youtube' && player && typeof player.playVideo === 'function') {
             try {
@@ -2174,44 +2174,36 @@
       });
     }
 
-    async function toggleNativeFullscreen() {
-      const doc = document;
-      const isFullscreen = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
-
-      // アプリ内の操作枠・バーも同時にすべて非表示
-      setUiVisible(false);
-
-      if (!isFullscreen) {
-        const el = document.documentElement;
-        const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-        if (rfs) {
-          try {
-            await rfs.call(el);
-            showToast('⛶ 全画面モード（右上の⚙️で操作枠を再表示）', 2500);
-          } catch (err) {
-            // iPadOSのSafariでrequestFullscreenが許可されない場合のフォールバック案内
-            showToast('💡 Safariの「共有(📤)」➔「ホーム画面に追加」でブラウザ枠なしの完全全画面になります', 5000);
-          }
-        } else {
-          showToast('💡 Safariの「共有(📤)」➔「ホーム画面に追加」でブラウザ枠なしの完全全画面になります', 5000);
-        }
-      } else {
-        const efs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
-        if (efs) {
-          try {
-            await efs.call(doc);
-            setUiVisible(true);
-          } catch (err) {}
-        }
-      }
-
-      // 全画面切り替えで止まった場合でも自動で再生を再開
-      resumePlaybackAfterResize();
-    }
-
     fullscreenBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleNativeFullscreen();
+      setUiVisible(false); // アプリ内ツールバーを非表示にする
+
+      const el = document.documentElement;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+      if (!isFs) {
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(() => {
+            if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+          });
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.webkitRequestFullScreen) {
+          el.webkitRequestFullScreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {
+            if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          });
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+        setUiVisible(true);
+      }
+
+      // 全画面切り替えで動画が止まるのを防ぐ自動再開
+      resumePlaybackAfterResize();
     });
 
     ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
