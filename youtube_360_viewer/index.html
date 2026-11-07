@@ -47,7 +47,7 @@
     #player {
       width: 100%;
       height: 100%;
-      pointer-events: none; /* 下のiframeにはイベントを渡さず、上のドラッグレイヤーで一括制御 */
+      pointer-events: auto; /* YouTube iframe自体にタッチイベントを通す (iOSのAirPlayブロック回避に必須) */
     }
 
     /* 全画面ドラッグ操作レイヤー (PCマウスドラッグ & iPadタッチスワイプ) */
@@ -57,11 +57,16 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      z-index: 3;
+      z-index: 2;
       touch-action: none;
       cursor: grab;
       user-select: none;
       -webkit-user-select: none;
+      pointer-events: none; /* デフォルトは透過させ、スワイプ操作有効時のみONにする */
+    }
+
+    #drag-layer.active {
+      pointer-events: auto;
     }
 
     #drag-layer.grabbing {
@@ -436,6 +441,7 @@
     </div>
 
     <button id="fullscreen-btn" class="btn">⛶ 全画面</button>
+    <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="iPadをリモコンにしてプロジェクター画面を遠隔操作するモード">📺 2画面リモコン</button>
 
     <!-- プリセット動画リスト -->
     <div class="presets-container">
@@ -653,9 +659,26 @@
         },
         events: {
           onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange
+          onStateChange: onPlayerStateChange,
+          onError: onPlayerError
         }
       });
+    }
+
+    // エラーハンドラー
+    function onPlayerError(event) {
+      console.error('YouTube Player Error:', event.data);
+      const errMap = {
+        2: 'リクエストパラメータが無効です (code: 2)',
+        5: 'HTML5プレーヤーエラー / 外部ディスプレイ競合 (code: 5)',
+        100: '動画が見つかりません (code: 100)',
+        101: '動画の埋め込みが許可されていません (code: 101)',
+        150: '動画の著作権者により外部再生が禁止されています (code: 150)',
+        153: 'セキュリティ制限により再生できません (code: 153)'
+      };
+      const msg = errMap[event.data] || `再生エラーが発生しました (code: ${event.data})`;
+      showToast(`⚠️ ${msg}`, 6000);
+      alert(`【YouTube再生エラー】\n${msg}\n\n「再生リトライ」を押すか、別のプリセット動画をお試しください。`);
     }
 
     // iframe要素にAirPlay横取り防止属性を強制付与
@@ -710,29 +733,89 @@
       }
     }
 
-    // 再生リトライ（外部ディスプレイ接続で止まった時に強制再同期）
+    // 再生リトライ（外部ディスプレイ接続で止まった時にDOMごと完全再構築）
     function forceRetryVideo() {
-      if (!player) return;
-      showToast('🔄 動画を再キック中...');
-      hardenIframe();
-      try {
-        const curTime = (typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
-        player.loadVideoById({
-          videoId: currentVideoId,
-          startSeconds: Math.max(0, curTime - 0.5)
-        });
-        setTimeout(() => {
-          try { player.playVideo(); } catch (e) {}
-        }, 300);
-      } catch (err) {
-        initPlayer(currentVideoId);
+      showToast('🔄 プレーヤーを完全再構築中...');
+      if (player && typeof player.destroy === 'function') {
+        try { player.destroy(); } catch (e) {}
       }
+      player = null;
+
+      // 壊れたIframeをDOMから完全消去して新規作成
+      const wrapper = document.getElementById('video-wrapper');
+      wrapper.innerHTML = '<div id="player"></div>';
+
+      setTimeout(() => {
+        initPlayer(currentVideoId);
+      }, 300);
     }
 
     document.getElementById('btn-retry').addEventListener('click', (e) => {
       e.stopPropagation();
       forceRetryVideo();
     });
+
+    // ==========================================
+    // 2画面リモコンモード (BroadcastChannel 同期)
+    // ==========================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDisplayMode = urlParams.get('mode') === 'display';
+
+    let syncChannel = null;
+    try {
+      syncChannel = new BroadcastChannel('yt360_projector_sync');
+    } catch (e) {
+      console.warn('BroadcastChannel not supported', e);
+    }
+
+    // 表示専用モード（プロジェクター画面側）の場合
+    if (isDisplayMode) {
+      document.body.classList.add('display-mode');
+      const topBarEl = document.getElementById('top-bar');
+      const hudEl = document.getElementById('hud-controls');
+      const statusText = document.getElementById('status-text');
+      if (statusText) statusText.textContent = '📺 プロジェクター大画面モード（手元iPadから操作中）';
+      if (topBarEl) topBarEl.classList.add('hidden');
+      if (hudEl) hudEl.classList.add('hidden');
+
+      if (syncChannel) {
+        syncChannel.onmessage = (e) => {
+          const msg = e.data;
+          if (!msg) return;
+          if (msg.type === 'spherical') {
+            spherical = Object.assign({}, msg.data);
+            updateSpherical();
+          } else if (msg.type === 'load') {
+            currentVideoId = msg.videoId;
+            forceRetryVideo();
+          } else if (msg.type === 'play') {
+            if (player && player.playVideo) player.playVideo();
+          } else if (msg.type === 'pause') {
+            if (player && player.pauseVideo) player.pauseVideo();
+          }
+        };
+      }
+    }
+
+    // 2画面ボタンクリック時：プロジェクター用ウィンドウを開く
+    const dualScreenBtn = document.getElementById('mode-dualscreen-btn');
+    if (dualScreenBtn) {
+      dualScreenBtn.addEventListener('click', () => {
+        const displayUrl = window.location.pathname + '?mode=display';
+        window.open(displayUrl, 'ProjectorDisplayWindow', 'width=1280,height=720');
+        showToast('📺 プロジェクター用の大画面ウィンドウを開きました！');
+      });
+    }
+
+    // 手元操作を外部画面へブロードキャスト
+    function broadcastSpherical() {
+      if (syncChannel && !isDisplayMode) {
+        syncChannel.postMessage({
+          type: 'spherical',
+          data: spherical
+        });
+      }
+    }
 
     // 画面解像度変化（HDMI接続・画面回転）時にAirPlay属性を再適用
     window.addEventListener('resize', () => {
@@ -762,6 +845,7 @@
 
     // YouTubeプレーヤーへ視点を反映
     function updateSpherical() {
+      broadcastSpherical();
       if (!player || typeof player.setSphericalProperties !== 'function') return;
       try {
         // yaw を -180 ~ 180 に正規化
@@ -1124,8 +1208,10 @@
         const state = player.getPlayerState();
         if (state === YT.PlayerState.PLAYING) {
           player.pauseVideo();
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'pause' });
         } else {
           player.playVideo();
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'play' });
         }
       } catch (err) {}
     }
@@ -1164,11 +1250,8 @@
       const videoId = extractVideoId(val);
       if (videoId) {
         currentVideoId = videoId;
-        if (player) {
-          player.loadVideoById(videoId);
-        } else if (isApiReady) {
-          initPlayer(videoId);
-        }
+        if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'load', videoId });
+        forceRetryVideo();
         showToast('動画をロード中...');
       } else {
         alert('有効なYouTubeのURLまたは動画IDを入力してください');
