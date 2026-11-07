@@ -2063,8 +2063,10 @@
     }
 
     async function searchWithYouTubeDataApi(query, apiKey) {
-      const q = query.includes('360') ? query : `${query} 360`;
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&videoDimension=3d&maxResults=20&key=${encodeURIComponent(apiKey)}`;
+      let raw = (query || '').trim();
+      let q = raw.replace(/360[度°]?/g, '360').trim();
+      const cleanQ = q ? (q.includes('360') ? q : `${q} 360`) : '360';
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(cleanQ)}&type=video&videoDimension=3d&maxResults=20&key=${encodeURIComponent(apiKey)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('API Error: ' + res.status);
       const data = await res.json();
