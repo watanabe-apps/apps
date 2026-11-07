@@ -264,8 +264,10 @@
 
     // --- Three.js Setup ---
     const scene = new THREE.Scene();
+    // 地平線の輝きと大地が溶け込む大気フォグ
+    const HORIZON_MIST_COLOR = new THREE.Color(0x163b50);
     scene.background = new THREE.Color(0x070b14);
-    scene.fog = new THREE.FogExp2(0x070b14, 0.015);
+    scene.fog = new THREE.FogExp2(HORIZON_MIST_COLOR, 0.0048);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -274,16 +276,65 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1600);
     camera.position.set(24, 22, 26);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.04;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02;
     controls.minDistance = 8;
-    controls.maxDistance = 65;
+    controls.maxDistance = 80;
     controls.target.set(0, 0, 0);
+
+    // --- 『あの地平線 輝くのは』スカイドーム ---
+    const skyGeo = new THREE.SphereGeometry(900, 64, 40);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {
+        uZenithColor: { value: new THREE.Color(0x060913) },
+        uMidSkyColor: { value: new THREE.Color(0x0c213b) },
+        uHorizonMist: { value: HORIZON_MIST_COLOR },
+        uHorizonGlow: { value: new THREE.Color(0xdcfce7) },
+        uGoldGlow:    { value: new THREE.Color(0xfef08a) }
+      },
+      vertexShader: `
+        varying vec3 vWorldPos;
+        void main() {
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorldPos = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uZenithColor;
+        uniform vec3 uMidSkyColor;
+        uniform vec3 uHorizonMist;
+        uniform vec3 uHorizonGlow;
+        uniform vec3 uGoldGlow;
+        varying vec3 vWorldPos;
+
+        void main() {
+          vec3 dir = normalize(vWorldPos);
+          float h = clamp(dir.y, 0.0, 1.0);
+
+          // 天頂の深い夜空から地平線の大気色へのグラデーション
+          vec3 col = mix(uHorizonMist, uMidSkyColor, smoothstep(0.0, 0.16, h));
+          col = mix(col, uZenithColor, smoothstep(0.16, 0.68, h));
+
+          // 地平線（dir.y ≈ 0）で輝く光の帯（「あの地平線 輝くのは」）
+          float horizonBand = exp(-abs(dir.y) * 32.0);
+          float softBand = exp(-abs(dir.y) * 10.0);
+          col = mix(col, uHorizonGlow, softBand * 0.28);
+          col = mix(col, uGoldGlow, horizonBand * 0.65);
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+    const skyDome = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(skyDome);
 
     // --- Lighting ---
     const hemiLight = new THREE.HemisphereLight(0xf0fdf4, 0x0f172a, 0.7);
@@ -296,7 +347,7 @@
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 90;
-    const d = 18;
+    const d = 24;
     dirLight.shadow.camera.left = -d;
     dirLight.shadow.camera.right = d;
     dirLight.shadow.camera.top = d;
@@ -339,25 +390,68 @@
       return col;
     }
 
-    const GRID_SIZE = 28;
-    const GRID_SEGS = 58;
-    const terrainGeo = new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE, GRID_SEGS, GRID_SEGS);
+    // 中央の操作領域は従来と全く同じ頂点密度を保ち、外周のみ地平線（半径550）まで非線形に広げることで
+    // 描画負荷を増やさずに「四角い板の切れ目」を完全に消去する
+    const INNER_SIZE = 28;
+    const INNER_SEGS = 58;
+    const OUTER_RINGS = 28;
+    const TOTAL_SEGS = INNER_SEGS + OUTER_RINGS * 2;
+    const OUTER_MAX_DIST = 550;
+
+    const terrainGeo = new THREE.PlaneGeometry(INNER_SIZE, INNER_SIZE, TOTAL_SEGS, TOTAL_SEGS);
     terrainGeo.rotateX(-Math.PI / 2);
 
     const posAttr = terrainGeo.attributes.position;
     const count = posAttr.count;
     const colors = new Float32Array(count * 3);
-    const initialPositions = new Float32Array(posAttr.array);
 
-    // 自然な起伏
-    for (let i = 0; i < count; i++) {
-      const vx = posAttr.getX(i);
-      const vz = posAttr.getZ(i);
-      const h = Math.sin(vx * 0.26) * Math.cos(vz * 0.26) * 0.24 +
-                Math.sin(vx * 0.52 + 1.2) * Math.cos(vz * 0.52) * 0.12;
-      posAttr.setY(i, h);
-      initialPositions[i * 3 + 1] = h;
+    function mapGridCoord(idx) {
+      const halfInner = INNER_SEGS / 2;
+      const centerIdx = TOTAL_SEGS / 2;
+      const delta = idx - centerIdx;
+      const absDelta = Math.abs(delta);
+      const sign = Math.sign(delta);
+      const step = INNER_SIZE / INNER_SEGS; // 元の 28 / 58 と完全一致
+
+      if (absDelta <= halfInner) {
+        return delta * step;
+      } else {
+        const extra = (absDelta - halfInner) / OUTER_RINGS; // 0..1
+        const base = halfInner * step; // 14
+        // 内側から外側へ滑らかに間隔を広げて地平線まで伸ばす
+        return sign * (base + extra * step * OUTER_RINGS + Math.pow(extra, 2.75) * (OUTER_MAX_DIST - base));
+      }
     }
+
+    const rowCols = TOTAL_SEGS + 1;
+    for (let iz = 0; iz < rowCols; iz++) {
+      for (let ix = 0; ix < rowCols; ix++) {
+        const i = iz * rowCols + ix;
+        let vx = mapGridCoord(ix);
+        let vz = mapGridCoord(iz);
+
+        // 外周に行くほど正方形から円形へ丸めて全方位の地平線を均一にする
+        const maxC = Math.max(Math.abs(vx), Math.abs(vz));
+        if (maxC > 20) {
+          const blend = Math.min(1.0, (maxC - 20) / 120);
+          const len = Math.hypot(vx, vz) || 1;
+          const circleX = (vx / len) * maxC;
+          const circleZ = (vz / len) * maxC;
+          vx = THREE.MathUtils.lerp(vx, circleX, blend);
+          vz = THREE.MathUtils.lerp(vz, circleZ, blend);
+        }
+
+        // 自然な起伏（遠景に向かうにつれて穏やかな平原へフェード）
+        const distFromCenter = Math.hypot(vx, vz);
+        const waveFade = 1.0 / (1.0 + Math.pow(Math.max(0, distFromCenter - 18) / 45, 1.5));
+        const h = (Math.sin(vx * 0.26) * Math.cos(vz * 0.26) * 0.24 +
+                   Math.sin(vx * 0.52 + 1.2) * Math.cos(vz * 0.52) * 0.12) * waveFade;
+
+        posAttr.setXYZ(i, vx, h, vz);
+      }
+    }
+
+    const initialPositions = new Float32Array(posAttr.array);
     terrainGeo.computeVertexNormals();
 
     function updateTerrainColors() {
@@ -403,12 +497,16 @@
     const mouse = new THREE.Vector2();
 
     function getTerrainHeightAt(x, z) {
-      let closestDist = Infinity;
+      let closestDistSq = Infinity;
       let closestHeight = 0;
       for (let i = 0; i < count; i++) {
-        const dist = Math.hypot(posAttr.getX(i) - x, posAttr.getZ(i) - z);
-        if (dist < closestDist) {
-          closestDist = dist;
+        const dx = posAttr.getX(i) - x;
+        if (Math.abs(dx) > 6) continue;
+        const dz = posAttr.getZ(i) - z;
+        if (Math.abs(dz) > 6) continue;
+        const distSq = dx * dx + dz * dz;
+        if (distSq < closestDistSq) {
+          closestDistSq = distSq;
           closestHeight = posAttr.getY(i);
         }
       }
@@ -416,20 +514,27 @@
     }
 
     function sculptTerrain(centerPoint, power, updateColor = true) {
+      const colAttr = terrainGeo.attributes.color;
       for (let i = 0; i < count; i++) {
         const vx = posAttr.getX(i);
+        if (Math.abs(vx - centerPoint.x) >= SCULPT_RADIUS) continue;
         const vz = posAttr.getZ(i);
-        const dist = Math.hypot(vx - centerPoint.x, vz - centerPoint.z);
+        if (Math.abs(vz - centerPoint.z) >= SCULPT_RADIUS) continue;
 
+        const dist = Math.hypot(vx - centerPoint.x, vz - centerPoint.z);
         if (dist < SCULPT_RADIUS) {
           const falloff = 0.5 * (1 + Math.cos((dist / SCULPT_RADIUS) * Math.PI));
-          const currentY = posAttr.getY(i);
-          posAttr.setY(i, currentY + power * falloff);
+          const newY = posAttr.getY(i) + power * falloff;
+          posAttr.setY(i, newY);
+          if (updateColor) {
+            const c = getTerrainColor(newY);
+            colAttr.setXYZ(i, c.r, c.g, c.b);
+          }
         }
       }
       posAttr.needsUpdate = true;
+      if (updateColor) colAttr.needsUpdate = true;
       terrainGeo.computeVertexNormals();
-      if (updateColor) updateTerrainColors();
     }
 
     // --- 自然な山形（立体的な峰と岩盤底面）の浮島ジオメトリ ---
@@ -723,10 +828,11 @@
         }
       }
 
-      // 地面判定
+      // 地面判定（中央エリア内で隆起・浮島追加）
       const intersects = raycaster.intersectObject(terrain);
       if (intersects.length > 0) {
         const p = intersects[0].point;
+        if (Math.hypot(p.x, p.z) > 32) return;
         if (currentMode === 'bottomup') {
           sound.sculpt();
           sculptTerrain(p, isClick ? CLICK_SCULPT_POWER : DRAG_SCULPT_POWER, true);
@@ -765,6 +871,10 @@
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.1);
       const t = clock.getElapsedTime();
+
+      // スカイドームをカメラ位置に追従させ、常に無限遠の地平線を維持
+      skyDome.position.x = camera.position.x;
+      skyDome.position.z = camera.position.z;
 
       // 各浮島の更新
       islands.forEach(isl => {
@@ -871,5 +981,4 @@
     };
   </script>
 </body>
-</html>
 </html>
