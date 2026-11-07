@@ -478,7 +478,7 @@
   <div id="top-bar" class="top-bar">
     <div class="app-title">
       <span>360° Viewer</span>
-      <span class="badge">Projector Fit</span>
+      <span class="badge">v2.2 AirPlay対応</span>
     </div>
 
     <div class="url-input-group">
@@ -721,16 +721,15 @@
 
     function initPlayer(videoId) {
       clearStuckWatchdog();
-      // 重要: ミラーリング中は autoplay:1 だとiOSが自動再生をブロックし「無限読み込み中」に陥るため、
-      // autoplay: 0 で赤い再生ボタンを表示し、ユーザーに直接タップさせてiOSのロックを解除する
+      // 重要: ミラーリング中は autoplay:1 だとiOSが自動再生をブロックし「画面真っ黒・無限読み込み中」に陥るため、
+      // 常にクリーンな iframe を autoplay: 0 で生成し、赤いYouTube再生ボタンを中央に表示して直接タップさせる
       setDragLayerActive(false, '画面中央のYouTube再生ボタンをタップしてください');
 
-      if (player && typeof player.cueVideoById === 'function') {
-        try {
-          player.cueVideoById(videoId);
-          return;
-        } catch (err) {}
+      if (player && typeof player.destroy === 'function') {
+        try { player.destroy(); } catch (err) {}
       }
+      player = null;
+      videoWrapper.innerHTML = '<div id="player"></div>';
 
       const origin = (window.location.origin && window.location.origin !== 'null' && window.location.protocol !== 'file:')
         ? window.location.origin
