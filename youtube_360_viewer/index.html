@@ -588,40 +588,75 @@
   <div id="top-bar" class="top-bar">
     <div class="app-title">
       <span>360° Viewer</span>
-      <span class="badge">v2.6</span>
+      <span class="badge">v2.7</span>
     </div>
 
     <div class="url-input-group">
-      <input type="text" id="url-input" class="url-input" placeholder="キーワード検索 (例: 火事, 地震) または YouTube URL..." />
+      <input type="text" id="url-input" class="url-input" placeholder="キーワード (例: 火事, 地震) または YouTube URL..." />
       <button id="load-btn" class="btn btn-primary">🔍 検索 / 読込</button>
+      <button id="paste-btn" class="btn" style="background:rgba(234,179,8,0.22); border-color:#eab308; color:#fde047;" title="コピーしたYouTube URLをワンタップで貼り付けて再生">📋 貼付して再生</button>
     </div>
 
+    <button id="history-btn" class="btn" style="background:rgba(147,51,234,0.25); border-color:#a855f7; color:#d8b4fe;" title="過去に再生した360°動画を表示">🕒 履歴</button>
     <button id="open-file-btn" class="btn" style="background:rgba(16,185,129,0.28); border-color:#10b981;" title="iPad内の360°動画ファイル(MP4/MOV)を再生">📁 MP4</button>
     <button id="fullscreen-btn" class="btn" title="動画を止めずに操作枠をすべて消して全画面投影します">⛶ 全画面</button>
     <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="プロジェクター用ウィンドウを別画面で開く">📺 2画面</button>
     <button id="help-btn" class="btn" style="border-color:#4a90e2; color:#70b0ff;">❓ 使い方</button>
   </div>
 
-  <!-- YouTube 360° 検索モーダル -->
+  <!-- YouTube 360° 動画選択・検索モーダル -->
   <div id="search-modal" class="search-modal-backdrop">
     <div class="search-modal-box">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3 style="font-size:16px; color:#fff; display:flex; align-items:center; gap:8px;">
-          <span>🔍 YouTube 360° 動画検索</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:17px; color:#fff; display:flex; align-items:center; gap:8px; margin:0;">
+          <span>🔍 YouTube 360° 動画の選択・検索</span>
         </h3>
         <button id="close-search-btn" style="background:none; border:none; color:#aaa; font-size:26px; cursor:pointer; line-height:1;">&times;</button>
       </div>
 
-      <div style="display:flex; gap:8px; margin-bottom:10px;">
-        <input type="text" id="modal-search-input" class="url-input" placeholder="検索ワードを入力（例：火事、地震、防災...）" style="flex:1;" />
-        <button id="modal-search-btn" class="btn btn-primary">🔍 検索</button>
+      <!-- 1. キーワード入力とYouTube公式検索連携 -->
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input type="text" id="modal-search-input" class="url-input" placeholder="見たいキーワード（例：火事、地震、津波、VR...）" style="flex:1;" />
+        <button id="modal-open-yt-btn" class="btn btn-primary" style="background:#ff0033; border-color:#ff0033; font-weight:bold; white-space:nowrap;">
+          🔗 YouTube公式で360°検索
+        </button>
       </div>
 
-      <div id="search-status-bar" style="font-size:12px; color:#38bdf8; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-        <span id="search-status-msg">キーワードを入力して検索してください</span>
-        <button id="open-yt-external-btn" class="btn" style="padding:4px 10px; font-size:11px; background:rgba(255,255,255,0.1);">🔗 YouTube公式で開く</button>
+      <!-- 2. ワンタップ貼付ボタンと3ステップガイド -->
+      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+          <strong>💡 確実な動画の読み込み手順：</strong><br>
+          ① 上のボタンでYouTubeを開く ➔ ②「共有」➔「リンクをコピー」 ➔ ③ 右のボタンを押すだけ
+        </div>
+        <button id="modal-paste-btn" class="btn" style="background:rgba(234,179,8,0.28); border-color:#eab308; color:#fde047; font-weight:bold; padding:8px 16px;">
+          📋 貼付して再生
+        </button>
       </div>
 
+      <!-- 3. タブ切り替え（🕒 最近再生した動画 / ⚙️ API設定） -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:8px;">
+        <div style="font-size:13px; font-weight:bold; color:#a855f7; display:flex; align-items:center; gap:6px;">
+          <span>🕒 最近再生した動画 (履歴)</span>
+          <span id="history-count" style="font-size:11px; background:rgba(168,85,247,0.2); padding:2px 6px; border-radius:10px; color:#d8b4fe;">0件</span>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button id="clear-history-btn" class="btn" style="padding:2px 8px; font-size:11px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15);">🗑️ 履歴クリア</button>
+          <button id="toggle-api-settings-btn" class="btn" style="padding:2px 8px; font-size:11px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15);">⚙️ API設定</button>
+        </div>
+      </div>
+
+      <!-- API設定アコーディオン（任意） -->
+      <div id="api-settings-box" style="display:none; background:rgba(0,0,0,0.3); border:1px dashed rgba(255,255,255,0.2); border-radius:10px; padding:10px; margin-bottom:10px; font-size:12px;">
+        <div style="color:#94a3b8; margin-bottom:6px;">
+          Google Cloudの「YouTube Data API v3」キーをお持ちの場合、入力するとアプリ内完全検索が利用できます（※通常は空欄のままで問題ありません）。
+        </div>
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="yt-api-key-input" class="url-input" placeholder="YouTube Data API Key (任意)" style="font-size:12px; flex:1;" />
+          <button id="save-api-key-btn" class="btn" style="font-size:12px; padding:4px 12px;">保存</button>
+        </div>
+      </div>
+
+      <!-- 動画カードグリッド（履歴またはAPI検索結果） -->
       <div id="search-results-grid" class="search-results-grid"></div>
     </div>
   </div>
@@ -638,8 +673,11 @@
       そのため本アプリは<strong>自動再生をOFFにし、最初は画面中央の赤いYouTube再生ボタンを直接タップできる状態</strong>にしています。赤い再生ボタンを1回タップすると確実に再生が始まり、<strong>再生開始と同時に自動で「360°画面ドラッグ操作」に切り替わります</strong>。</p>
       <p style="margin-bottom:12px;"><strong>② もしミラーリング切替で止まったら</strong><br>
       右下の<strong>「🔄 再生リトライ」</strong>を押すと読み込み中ループを解除して赤いYouTube再生ボタンが再表示されるので、中央をタップしてください。</p>
-      <p style="margin-bottom:12px;"><strong>③ 100%制限を受けない「📁 MP4ファイル / 🌌 360°ドーム」モード</strong><br>
-      上部の「📁 MP4ファイル」からiPad内の360°動画（MP4/MOV）を開くか、「🌌 360°ドーム検証」を選ぶと、Three.js WebGLエンジンで描画されるため、AirPlay・HDMIミラーリングの制限を100%受けずに投影できます。</p>
+      <p style="margin-bottom:12px;"><strong>③ ブラウザの枠やアドレスバーを100%消して完全全画面で投影する方法</strong><br>
+      iPadのSafariで上部または共有メニュー（📤）から<strong>「ホーム画面に追加」</strong>をしてください。<br>
+      ホーム画面に作成されたアイコンから開くと、Safariのアドレスバー・タブ・戻る進むボタンが一切表示されず、<strong>プロジェクターに一切ブラウザのUIが映らない完全全画面アプリ</strong>として起動します。</p>
+      <p style="margin-bottom:12px;"><strong>④ 100%制限を受けない「📁 MP4ファイル / 🌌 360°ドーム」モード</strong><br>
+      上部の「📁 MP4」からiPad内の360°動画（MP4/MOV）を開くと、Three.js WebGLエンジンで直接描画されるため、AirPlay・HDMIミラーリングの制限を100%受けずに投影できます。</p>
       <div style="text-align:center; margin-top:20px;">
         <button id="close-help-btn-2" class="btn btn-primary" style="padding:8px 28px;">閉じる</button>
       </div>
@@ -681,6 +719,10 @@
       </div>
       <div class="hud-row">
         <button id="toggle-invert-x" class="toggle-btn">↔️ ドラッグ左右: 正方向</button>
+      </div>
+      <div class="hud-row">
+        <button id="btn-hud-paste" class="toggle-btn" style="background:rgba(234,179,8,0.22); border-color:#eab308; color:#fde047;">📋 貼付して再生</button>
+        <button id="btn-hud-history" class="toggle-btn" style="background:rgba(147,51,234,0.22); border-color:#a855f7; color:#d8b4fe;">🕒 動画履歴</button>
       </div>
     </div>
   </div>
@@ -1216,7 +1258,7 @@
       setDragLayerActive(true, `🎬 360°動画再生中 (${label || 'WebGL mode'})`);
     }
 
-    function switchToYouTubeVideo(videoId) {
+    function switchToYouTubeVideo(videoId, title) {
       currentEngine = 'youtube';
       isDemoPlanetarium = false;
       if (threeAnimId) {
@@ -1228,7 +1270,9 @@
       videoWrapper.style.display = 'block';
 
       currentVideoId = videoId;
+      urlInput.value = videoId;
       initPlayer(videoId);
+      saveVideoToHistory(videoId, title);
       showToast('▶️ 画面中央の赤いYouTube再生ボタンをタップしてください', 3500);
     }
 
@@ -1802,24 +1846,151 @@
     });
 
     // ==========================================
-    // 10. YouTube 360° キーワード検索機能
+    // 10. YouTube 360° 動画選択・履歴・公式連携
     // ==========================================
     const searchModal = document.getElementById('search-modal');
     const closeSearchBtn = document.getElementById('close-search-btn');
     const modalSearchInput = document.getElementById('modal-search-input');
-    const modalSearchBtn = document.getElementById('modal-search-btn');
+    const modalOpenYtBtn = document.getElementById('modal-open-yt-btn');
+    const modalPasteBtn = document.getElementById('modal-paste-btn');
+    const pasteBtn = document.getElementById('paste-btn');
+    const historyBtn = document.getElementById('history-btn');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const toggleApiSettingsBtn = document.getElementById('toggle-api-settings-btn');
+    const apiSettingsBox = document.getElementById('api-settings-box');
+    const ytApiKeyInput = document.getElementById('yt-api-key-input');
+    const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+    const historyCount = document.getElementById('history-count');
     const searchResultsGrid = document.getElementById('search-results-grid');
-    const searchStatusMsg = document.getElementById('search-status-msg');
-    const openYtExternalBtn = document.getElementById('open-yt-external-btn');
 
-    function renderSearchCards(items) {
+    // クリップボード内のURLまたはIDを読み取って即再生
+    async function handlePasteAndLoad() {
+      try {
+        let text = '';
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          text = await navigator.clipboard.readText();
+        } else {
+          text = prompt('YouTubeの動画URLを貼り付けてください:');
+        }
+
+        if (!text || !text.trim()) {
+          showToast('⚠️ クリップボードが空です');
+          return;
+        }
+
+        const clean = text.trim();
+        const videoId = extractVideoId(clean);
+        if (videoId) {
+          if (searchModal) searchModal.style.display = 'none';
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'load', videoId });
+          switchToYouTubeVideo(videoId);
+          showToast('📋 コピーした動画を読み込みました！');
+        } else if (/\.(mp4|webm|mov|m3u8)(\?.*)?$/i.test(clean)) {
+          if (searchModal) searchModal.style.display = 'none';
+          switchToWebGLVideo(clean, '外部360°動画');
+        } else {
+          urlInput.value = clean;
+          openSearchModal(clean);
+          showToast('⚠️ 有効なYouTube URLではありませんでした');
+        }
+      } catch (err) {
+        showToast('⚠️ 貼り付け権限が必要です。URL入力欄に直接ペーストしてください', 3500);
+      }
+    }
+
+    const btnHudPaste = document.getElementById('btn-hud-paste');
+    const btnHudHistory = document.getElementById('btn-hud-history');
+    if (pasteBtn) pasteBtn.addEventListener('click', handlePasteAndLoad);
+    if (modalPasteBtn) modalPasteBtn.addEventListener('click', handlePasteAndLoad);
+    if (btnHudPaste) btnHudPaste.addEventListener('click', handlePasteAndLoad);
+    if (btnHudHistory) btnHudHistory.addEventListener('click', () => openSearchModal(''));
+
+    // YouTube公式の360°検索結果ページを開く（360度フィルター sp=EgJAAQ%3D%3D 付き）
+    function openYouTubeSearchExternal(keyword) {
+      const q = (keyword || (modalSearchInput ? modalSearchInput.value : '') || urlInput.value || '360度').trim();
+      const cleanQ = q.includes('360') ? q : `${q} 360度`;
+      const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(cleanQ)}&sp=EgJAAQ%3D%3D`;
+      window.open(ytSearchUrl, '_blank');
+      showToast('🔗 YouTube公式を開きました。動画の「共有➔リンクをコピー」して戻ってください', 4500);
+    }
+
+    if (modalOpenYtBtn) {
+      modalOpenYtBtn.addEventListener('click', () => {
+        openYouTubeSearchExternal(modalSearchInput.value);
+      });
+    }
+
+    // ------------------------------------------
+    // 履歴（LocalStorage）管理
+    // ------------------------------------------
+    const STORAGE_KEY_HISTORY = 'yt360_recent_videos_v1';
+    const STORAGE_KEY_API = 'yt360_api_key_v1';
+
+    function getHistoryList() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    async function saveVideoToHistory(videoId, initialTitle) {
+      if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) return;
+      let history = getHistoryList().filter(item => item.videoId !== videoId);
+      let title = initialTitle || videoId;
+      let author = 'YouTube 360°';
+      const thumb = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+
+      // YouTube公式CORS対応oEmbedから動画タイトルとチャンネル名を補完
+      try {
+        const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + videoId)}&format=json`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.title) title = data.title;
+          if (data.author_name) author = data.author_name;
+        }
+      } catch (e) {}
+
+      history.unshift({ videoId, title, author, thumbnail: thumb, time: Date.now() });
+      if (history.length > 40) history = history.slice(0, 40);
+      try {
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+      } catch (e) {}
+      updateHistoryBadge();
+    }
+
+    function removeHistoryItem(videoId) {
+      const history = getHistoryList().filter(it => it.videoId !== videoId);
+      try {
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+      } catch (e) {}
+      renderHistoryGrid();
+      updateHistoryBadge();
+    }
+
+    function updateHistoryBadge() {
+      const history = getHistoryList();
+      if (historyCount) historyCount.textContent = `${history.length}件`;
+    }
+
+    function renderHistoryGrid(items) {
+      const list = items || getHistoryList();
       searchResultsGrid.innerHTML = '';
-      if (!items || items.length === 0) {
-        searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;">該当する動画が見つかりませんでした。別のキーワードをお試しください。</div>';
+      updateHistoryBadge();
+
+      if (!list || list.length === 0) {
+        searchResultsGrid.innerHTML = `
+          <div style="grid-column:1/-1; text-align:center; padding:36px 16px; color:#94a3b8; font-size:13px; line-height:1.7;">
+            まだ履歴がありません。<br>
+            上の「🔗 YouTube公式で360°検索」で見つけた動画のURLをコピーし、<br>
+            「📋 貼付して再生」を押すと、ここに履歴カードが自動保存されます。
+          </div>
+        `;
         return;
       }
 
-      items.forEach(item => {
+      list.forEach(item => {
         const card = document.createElement('div');
         card.className = 'search-card';
         const thumbUrl = item.thumbnail || `https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg`;
@@ -1827,7 +1998,7 @@
           <div class="search-thumb-wrap">
             <img src="${thumbUrl}" alt="" loading="lazy" />
             <span class="search-360-badge">360° VR</span>
-            ${item.duration ? `<span class="search-duration-badge">${item.duration}</span>` : ''}
+            <button class="delete-history-btn" title="履歴から削除" style="position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.65); border:none; color:#ff4d4d; border-radius:50%; width:24px; height:24px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2;">&times;</button>
           </div>
           <div class="search-card-body">
             <div class="search-card-title"></div>
@@ -1837,302 +2008,95 @@
         card.querySelector('.search-card-title').textContent = item.title || item.videoId;
         card.querySelector('.search-card-meta').textContent = item.author ? `📺 ${item.author}` : `ID: ${item.videoId}`;
 
+        const delBtn = card.querySelector('.delete-history-btn');
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeHistoryItem(item.videoId);
+        });
+
         card.addEventListener('click', () => {
           searchModal.style.display = 'none';
           if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'load', videoId: item.videoId });
-          switchToYouTubeVideo(item.videoId);
+          switchToYouTubeVideo(item.videoId, item.title);
         });
         searchResultsGrid.appendChild(card);
       });
     }
 
-    // 文字列内の開始位置から対応する閉じ括弧 '}' まで正確にJSONオブジェクトを切り出す
-    function extractBalancedJson(str, startBraceIdx) {
-      let depth = 0;
-      let inStr = false;
-      let esc = false;
-      for (let i = startBraceIdx; i < str.length; i++) {
-        const ch = str[i];
-        if (inStr) {
-          if (esc) {
-            esc = false;
-          } else if (ch === '\\') {
-            esc = true;
-          } else if (ch === '"') {
-            inStr = false;
-          }
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => {
+        if (confirm('再生履歴をすべて消去しますか？')) {
+          localStorage.removeItem(STORAGE_KEY_HISTORY);
+          renderHistoryGrid();
+          showToast('🗑️ 履歴を消去しました');
+        }
+      });
+    }
+
+    // ------------------------------------------
+    // YouTube Data API v3（任意キー設定）
+    // ------------------------------------------
+    if (toggleApiSettingsBtn && apiSettingsBox) {
+      toggleApiSettingsBtn.addEventListener('click', () => {
+        const isHidden = apiSettingsBox.style.display === 'none';
+        apiSettingsBox.style.display = isHidden ? 'block' : 'none';
+        if (isHidden && ytApiKeyInput) {
+          ytApiKeyInput.value = localStorage.getItem(STORAGE_KEY_API) || '';
+        }
+      });
+    }
+
+    if (saveApiKeyBtn && ytApiKeyInput) {
+      saveApiKeyBtn.addEventListener('click', () => {
+        const key = ytApiKeyInput.value.trim();
+        if (key) {
+          localStorage.setItem(STORAGE_KEY_API, key);
+          showToast('✅ YouTube APIキーを保存しました');
         } else {
-          if (ch === '"') {
-            inStr = true;
-          } else if (ch === '{') {
-            depth++;
-          } else if (ch === '}') {
-            depth--;
-            if (depth === 0) {
-              return str.slice(startBraceIdx, i + 1);
-            }
-          }
+          localStorage.removeItem(STORAGE_KEY_API);
+          showToast('YouTube APIキーを解除しました');
         }
-      }
-      return null;
+        apiSettingsBox.style.display = 'none';
+      });
     }
 
-    function extractTextFromNode(node) {
-      if (!node) return '';
-      if (typeof node === 'string') return node;
-      if (node.simpleText) return node.simpleText;
-      if (Array.isArray(node.runs)) return node.runs.map(r => r.text || '').join('');
-      if (node.content) return node.content;
-      return '';
-    }
-
-    // YouTube検索結果HTML内の ytInitialData (PC/モバイル/16進エスケープ対応) から動画リストを抽出
-    function parseYouTubeSearchHtml(rawHtml) {
-      const results = [];
-      const seen = new Set();
-      if (!rawHtml || typeof rawHtml !== 'string') return results;
-
-      // モバイル版などで \x22 や \x7b にエスケープされている場合はデコード
-      let html = rawHtml;
-      if (html.includes('\\x22') || html.includes('\\x7b')) {
-        html = html.replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
-      }
-
-      // 重要: <head>内の "INITIAL_DATA_NAME":"ytInitialData" に誤マッチしないよう、代入式を厳密に検索する
-      const assignRegex = /(?:var\s+ytInitialData|window\[["']ytInitialData["']\])\s*=\s*\{/g;
-      let match;
-      while ((match = assignRegex.exec(html)) !== null) {
-        const startBrace = html.indexOf('{', match.index);
-        if (startBrace === -1) continue;
-        const jsonStr = extractBalancedJson(html, startBrace);
-        if (!jsonStr) continue;
-        try {
-          const data = JSON.parse(jsonStr);
-          const walk = (obj) => {
-            if (!obj || typeof obj !== 'object') return;
-            const vr = obj.videoRenderer || obj.videoWithContextRenderer || obj.compactVideoRenderer || obj.gridVideoRenderer;
-            if (vr && vr.videoId && /^[a-zA-Z0-9_-]{11}$/.test(vr.videoId)) {
-              const id = vr.videoId;
-              if (!seen.has(id)) {
-                seen.add(id);
-                const title = extractTextFromNode(vr.title) || extractTextFromNode(vr.headline) || id;
-                const duration = extractTextFromNode(vr.lengthText) || '';
-                const author = extractTextFromNode(vr.ownerText) || extractTextFromNode(vr.shortBylineText) || extractTextFromNode(vr.longBylineText) || '';
-                results.push({ videoId: id, title, duration, author });
-              }
-              return;
-            }
-            for (const k of Object.keys(obj)) {
-              walk(obj[k]);
-            }
-          };
-          walk(data);
-          if (results.length > 0) return results;
-        } catch (e) {}
-      }
-
-      // フォールバック1: JSON構造内の videoId と近傍の title を抽出
-      const blockRegex = /"(?:videoRenderer|videoWithContextRenderer|compactVideoRenderer)"\s*:\s*\{[^{}]*?"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"[\s\S]{0,1800}?(?:"title"|"headline")\s*:\s*\{(?:"runs"\s*:\s*\[\s*\{\s*"text"\s*:\s*"((?:[^"\\]|\\.)*)"|"simpleText"\s*:\s*"((?:[^"\\]|\\.)*)")/g;
-      let bm;
-      while ((bm = blockRegex.exec(html)) !== null && results.length < 24) {
-        const id = bm[1];
-        if (!seen.has(id)) {
-          seen.add(id);
-          const rawTitle = bm[2] || bm[3] || id;
-          let title = rawTitle;
-          try { title = JSON.parse(`"${rawTitle}"`); } catch (e) {}
-          results.push({ videoId: id, title, duration: '', author: 'YouTube 360°' });
-        }
-      }
-
-      // フォールバック2: 任意の videoId または watch?v= から11文字IDを抽出（タイトルは後段のYouTube公式oEmbedで補完）
-      if (results.length === 0) {
-        const idRegex = /(?:watch\?v=|\\?"videoId\\?"\s*:\s*\\?"|youtu\.be\/)([a-zA-Z0-9_-]{11})/g;
-        let im;
-        while ((im = idRegex.exec(html)) !== null && results.length < 16) {
-          const id = im[1];
-          if (!seen.has(id)) {
-            seen.add(id);
-            results.push({ videoId: id, title: '', duration: '', author: '' });
-          }
-        }
-      }
-
-      return results;
-    }
-
-    // タイトル未取得の動画IDに対して、YouTube公式CORS対応oEmbed APIから正確なタイトルと投稿者名を補完
-    async function enrichWithOEmbed(items) {
-      if (!items || items.length === 0) return [];
-      const subset = items.slice(0, 16);
-      const enriched = await Promise.all(subset.map(async (item) => {
-        if (item.title && item.title !== item.videoId) return item;
-        try {
-          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + item.videoId)}&format=json`;
-          const res = await fetchWithTimeout(oembedUrl, 4000);
-          const data = await res.json();
-          if (data && data.title) {
-            return {
-              videoId: item.videoId,
-              title: data.title,
-              author: data.author_name || item.author || 'YouTube',
-              duration: item.duration || '',
-              thumbnail: data.thumbnail_url || `https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg`
-            };
-          }
-        } catch (e) {}
-        return item.title ? item : null;
+    async function searchWithYouTubeDataApi(query, apiKey) {
+      const q = query.includes('360') ? query : `${query} 360度`;
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&videoDimension=3d&maxResults=20&key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('API Error: ' + res.status);
+      const data = await res.json();
+      return (data.items || []).map(item => ({
+        videoId: item.id.videoId,
+        title: item.snippet.title,
+        author: item.snippet.channelTitle,
+        thumbnail: item.snippet.thumbnails && item.snippet.thumbnails.medium && item.snippet.thumbnails.medium.url
       }));
-      return enriched.filter(Boolean);
-    }
-
-    async function fetchWithTimeout(url, timeoutMs = 7500) {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-      try {
-        const res = await fetch(url, { signal: ctrl.signal });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res;
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
-    // 複数の公開プロキシ・APIを並列試行してYouTubeの360°動画を確実に検索
-    async function fetchLiveYouTube360Search(query) {
-      // 日本語動画（「火事」「地震」等）も確実にヒットするよう「360度」と公式360°フィルター(sp=EgJAAQ%3D%3D)を併用
-      const q360Ja = `${query} 360度`;
-      const q360En = `${query} 360`;
-      const ytFilteredUrlJa = `https://www.youtube.com/results?search_query=${encodeURIComponent(q360Ja)}&sp=EgJAAQ%3D%3D&hl=ja&gl=JP`;
-      const ytFilteredUrlEn = `https://www.youtube.com/results?search_query=${encodeURIComponent(q360En)}&sp=EgJAAQ%3D%3D&hl=ja&gl=JP`;
-      // CodeTabs等はクエリ内の '&' 以降を切り捨てる場合があるため単一パラメータURLも用意
-      const ytSingleParamUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(q360Ja + ' VR')}`;
-
-      const parseAndValidate = async (htmlText) => {
-        const rawItems = parseYouTubeSearchHtml(htmlText);
-        if (rawItems.length === 0) throw new Error('no_items');
-        const finalItems = await enrichWithOEmbed(rawItems);
-        if (finalItems.length === 0) throw new Error('no_enriched_items');
-        return finalItems;
-      };
-
-      const parseInvidious = (data) => {
-        if (!Array.isArray(data)) throw new Error('not_array');
-        const items = data
-          .filter(v => v && v.videoId && /^[a-zA-Z0-9_-]{11}$/.test(v.videoId))
-          .map(v => ({
-            videoId: v.videoId,
-            title: v.title || v.videoId,
-            author: v.author || '',
-            duration: v.lengthSeconds > 0 ? `${Math.floor(v.lengthSeconds / 60)}:${String(v.lengthSeconds % 60).padStart(2, '0')}` : ''
-          }));
-        if (items.length === 0) throw new Error('empty_invidious');
-        return items;
-      };
-
-      const parsePiped = (data) => {
-        const list = (data && data.items) || [];
-        const items = list.filter(v => v && v.url && v.url.includes('v=')).map(v => {
-          const id = new URL('https://youtube.com' + v.url).searchParams.get('v');
-          return {
-            videoId: id,
-            title: v.title || id,
-            author: v.uploaderName || '',
-            duration: v.duration > 0 ? `${Math.floor(v.duration / 60)}:${String(v.duration % 60).padStart(2, '0')}` : ''
-          };
-        }).filter(v => v.videoId && /^[a-zA-Z0-9_-]{11}$/.test(v.videoId));
-        if (items.length === 0) throw new Error('empty_piped');
-        return items;
-      };
-
-      const tasks = [
-        // 1. AllOrigins Raw (360°フィルター付き)
-        (async () => {
-          const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(ytFilteredUrlJa)}`);
-          return await parseAndValidate(await res.text());
-        })(),
-        // 2. AllOrigins JSON Wrapper (360°フィルター付き)
-        (async () => {
-          const res = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(ytFilteredUrlEn)}`);
-          const json = await res.json();
-          return await parseAndValidate(json && json.contents);
-        })(),
-        // 3. CodeTabs Proxy (単一パラメータで確実に検索ワードを渡す)
-        (async () => {
-          const res = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(ytSingleParamUrl)}`);
-          return await parseAndValidate(await res.text());
-        })(),
-        // 4. CorsProxy.io
-        (async () => {
-          const res = await fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(ytFilteredUrlJa)}`);
-          return await parseAndValidate(await res.text());
-        })(),
-        // 5. Invidious Public API Mirrors
-        (async () => {
-          const res = await fetchWithTimeout(`https://inv.nadeko.net/api/v1/search?q=${encodeURIComponent(q360Ja)}&type=video&region=JP`);
-          return parseInvidious(await res.json());
-        })(),
-        (async () => {
-          const res = await fetchWithTimeout(`https://invidious.nerdvpn.de/api/v1/search?q=${encodeURIComponent(q360Ja)}&type=video&region=JP`);
-          return parseInvidious(await res.json());
-        })(),
-        (async () => {
-          const res = await fetchWithTimeout(`https://yewtu.be/api/v1/search?q=${encodeURIComponent(q360Ja)}&type=video&region=JP`);
-          return parseInvidious(await res.json());
-        })(),
-        // 6. Piped Public API Mirrors
-        (async () => {
-          const res = await fetchWithTimeout(`https://pipedapi.kavin.rocks/search?q=${encodeURIComponent(q360Ja)}&filter=videos`);
-          return parsePiped(await res.json());
-        })(),
-        // 7. DuckDuckGo HTML 検索経由でYouTubeのwatch?v=を抽出し、YouTube公式oEmbedでタイトル取得
-        (async () => {
-          const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent('site:youtube.com/watch ' + q360Ja)}`;
-          const res = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(ddgUrl)}`);
-          const text = decodeURIComponent((await res.text()).replace(/\+/g, ' '));
-          return await parseAndValidate(text);
-        })()
-      ];
-
-      return await Promise.any(tasks);
-    }
-
-    async function executeModalSearch(query) {
-      const q = (query || '').trim();
-      modalSearchInput.value = q;
-
-      if (!q) {
-        searchStatusMsg.textContent = 'キーワード（例：火事、地震、津波、宇宙など）を入力して「🔍 検索」を押してください';
-        searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:36px 20px; color:#94a3b8;">上の入力欄に検索したいキーワードを入力して検索してください。</div>';
-        setTimeout(() => modalSearchInput.focus(), 50);
-        return;
-      }
-
-      urlInput.value = q;
-      searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:36px 20px; color:#38bdf8;">🔄 YouTubeから「' + q + '」の360°動画を検索中...</div>';
-      searchStatusMsg.textContent = `🔄 YouTubeから「${q}」の360°動画を検索中...`;
-
-      try {
-        const liveItems = await fetchLiveYouTube360Search(q);
-        const unique = [];
-        const seen = new Set();
-        liveItems.forEach(it => {
-          if (it && it.videoId && !seen.has(it.videoId)) {
-            seen.add(it.videoId);
-            unique.push(it);
-          }
-        });
-        renderSearchCards(unique.slice(0, 24));
-        searchStatusMsg.textContent = `✅ 「${q}」の360°動画検索結果 (${unique.length}件) - タップすると読み込まれます`;
-      } catch (err) {
-        searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#f87171;">⚠️ 検索結果を取得できませんでした。もう一度「🔍 検索」を押すか、右上の「🔗 YouTube公式で開く」から動画URLをコピーして貼り付けてください。</div>';
-        searchStatusMsg.textContent = `⚠️ 「${q}」の検索に失敗しました（通信状況をご確認の上、再試行してください）`;
-      }
     }
 
     function openSearchModal(initialQuery) {
       searchModal.style.display = 'flex';
-      executeModalSearch(initialQuery || '');
+      if (initialQuery) {
+        modalSearchInput.value = initialQuery;
+      }
+      const savedKey = localStorage.getItem(STORAGE_KEY_API);
+      if (savedKey && initialQuery) {
+        searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#38bdf8;">🔄 公式APIで検索中...</div>';
+        searchWithYouTubeDataApi(initialQuery, savedKey).then(items => {
+          renderHistoryGrid(items);
+        }).catch(() => {
+          renderHistoryGrid();
+        });
+      } else {
+        renderHistoryGrid();
+      }
+    }
+
+    if (historyBtn) {
+      historyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSearchModal('');
+      });
     }
 
     if (closeSearchBtn) {
@@ -2145,24 +2109,29 @@
         if (e.target === searchModal) searchModal.style.display = 'none';
       });
     }
-    if (modalSearchBtn) {
-      modalSearchBtn.addEventListener('click', () => {
-        executeModalSearch(modalSearchInput.value);
-      });
-    }
+
     if (modalSearchInput) {
       modalSearchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') executeModalSearch(modalSearchInput.value);
+        if (e.key === 'Enter') {
+          const q = modalSearchInput.value.trim();
+          const savedKey = localStorage.getItem(STORAGE_KEY_API);
+          if (savedKey && q) {
+            searchResultsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:#38bdf8;">🔄 公式APIで検索中...</div>';
+            searchWithYouTubeDataApi(q, savedKey).then(items => {
+              renderHistoryGrid(items);
+            }).catch(err => {
+              showToast('⚠️ API検索に失敗しました。YouTube公式検索を開きます');
+              openYouTubeSearchExternal(q);
+            });
+          } else {
+            openYouTubeSearchExternal(q);
+          }
+        }
       });
     }
 
-    if (openYtExternalBtn) {
-      openYtExternalBtn.addEventListener('click', () => {
-        const q = (modalSearchInput.value || urlInput.value || '').trim();
-        const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent((q ? q + ' ' : '') + '360度')}&sp=EgJAAQ%3D%3D`;
-        window.open(ytSearchUrl, '_blank');
-      });
-    }
+    // 初回バッジ更新
+    updateHistoryBadge();
 
     // ヘルプモーダル
     const helpBtn = document.getElementById('help-btn');
@@ -2183,13 +2152,76 @@
       });
     }
 
-    // iPadのAirPlayミラーリング中にブラウザのネイティブ requestFullscreen() を呼ぶと、
-    // WebKitが別ウィンドウ(WKFullScreenWindow)へレイヤーを移動して動画が強制停止するため、
-    // 動画を一切止めずに全画面化する「CSS没入フルスクリーン（UI枠すべて非表示）」に切り替える
+    // ==========================================
+    // 11. 真のネイティブ全画面（ブラウザUIごと全画面化 ＆ 再生中断の自動復帰）
+    // ==========================================
+    function resumePlaybackAfterResize() {
+      // 全画面移行に伴いWebKit/Safariが動画を一時停止(PAUSED)にする場合があるため、即座に再開
+      [100, 350, 700].forEach(delay => {
+        setTimeout(() => {
+          if (currentEngine === 'youtube' && player && typeof player.playVideo === 'function') {
+            try {
+              const state = player.getPlayerState();
+              if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.BUFFERING) {
+                player.playVideo();
+                setDragLayerActive(true);
+              }
+            } catch (e) {}
+          } else if (currentEngine === 'webgl' && nativeVideo && nativeVideo.paused && !isDemoPlanetarium) {
+            nativeVideo.play().catch(() => {});
+          }
+        }, delay);
+      });
+    }
+
+    async function toggleNativeFullscreen() {
+      const doc = document;
+      const isFullscreen = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+
+      // アプリ内の操作枠・バーも同時にすべて非表示
+      setUiVisible(false);
+
+      if (!isFullscreen) {
+        const el = document.documentElement;
+        const rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (rfs) {
+          try {
+            await rfs.call(el);
+            showToast('⛶ 全画面モード（右上の⚙️で操作枠を再表示）', 2500);
+          } catch (err) {
+            // iPadOSのSafariでrequestFullscreenが許可されない場合のフォールバック案内
+            showToast('💡 Safariの「共有(📤)」➔「ホーム画面に追加」でブラウザ枠なしの完全全画面になります', 5000);
+          }
+        } else {
+          showToast('💡 Safariの「共有(📤)」➔「ホーム画面に追加」でブラウザ枠なしの完全全画面になります', 5000);
+        }
+      } else {
+        const efs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+        if (efs) {
+          try {
+            await efs.call(doc);
+            setUiVisible(true);
+          } catch (err) {}
+        }
+      }
+
+      // 全画面切り替えで止まった場合でも自動で再生を再開
+      resumePlaybackAfterResize();
+    }
+
     fullscreenBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      setUiVisible(false);
-      showToast('⛶ 全画面モード（画面タップまたは右上の⚙️で操作枠を再表示）', 2500);
+      toggleNativeFullscreen();
+    });
+
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        if (fullscreenBtn) {
+          fullscreenBtn.textContent = isFs ? '⛶ 解除' : '⛶ 全画面';
+        }
+        resumePlaybackAfterResize();
+      });
     });
   </script>
 </body>
