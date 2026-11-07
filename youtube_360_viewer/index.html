@@ -492,7 +492,11 @@
     <div class="hud-actions">
       <div class="hud-row">
         <button id="btn-reset" class="toggle-btn" style="background:rgba(255,255,255,0.15); font-weight:bold;">🎯 正面リセット</button>
+        <button id="btn-retry" class="toggle-btn" style="background:rgba(245,158,11,0.25); border-color:#f59e0b;" title="外部ディスプレイ接続等で動画が止まった時に再起動">🔄 再生リトライ</button>
+      </div>
+      <div class="hud-row">
         <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
+        <button id="toggle-invert-x" class="toggle-btn">↔️ 左右: 正方向</button>
       </div>
       <div class="hud-row">
         <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
@@ -654,24 +658,89 @@
       });
     }
 
+    // iframe要素にAirPlay横取り防止属性を強制付与
+    function hardenIframe() {
+      if (!player || typeof player.getIframe !== 'function') return;
+      try {
+        const iframe = player.getIframe();
+        if (iframe) {
+          iframe.setAttribute('x-webkit-airplay', 'deny');
+          iframe.setAttribute('data-airplay', 'deny');
+          iframe.setAttribute('webkit-playsinline', 'true');
+          iframe.setAttribute('playsinline', 'true');
+          iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+        }
+      } catch (err) {
+        console.warn('hardenIframe error', err);
+      }
+    }
+
     function onPlayerReady(event) {
+      hardenIframe();
       showToast('360°プレーヤー準備完了');
       syncSphericalFromPlayer();
-      // 一定時間後にUI自動非表示の案内
       setTimeout(() => {
         showToast('右上の👁️ボタンで操作UIを非表示にできます');
       }, 3500);
     }
 
+    // バッファリング無限スタック対策（ミラーリング接続時のデッドロック脱出）
+    let bufferingTimer = null;
     function onPlayerStateChange(event) {
       const playPauseBtn = document.getElementById('btn-playpause');
       if (event.data === YT.PlayerState.PLAYING) {
         playPauseBtn.textContent = '⏸️ 一時停止';
+        hardenIframe();
+        if (bufferingTimer) {
+          clearTimeout(bufferingTimer);
+          bufferingTimer = null;
+        }
         syncSphericalFromPlayer();
       } else if (event.data === YT.PlayerState.PAUSED) {
         playPauseBtn.textContent = '▶️ 再生';
+      } else if (event.data === YT.PlayerState.BUFFERING) {
+        // ミラーリング開始時にiOSのAirPlay切替で3秒以上バッファリングが続いたら、自動再キック
+        if (bufferingTimer) clearTimeout(bufferingTimer);
+        bufferingTimer = setTimeout(() => {
+          console.warn('Auto-recovering from stuck buffer (AirPlay/Mirroring workaround)...');
+          try {
+            player.playVideo();
+          } catch (err) {}
+        }, 2500);
       }
     }
+
+    // 再生リトライ（外部ディスプレイ接続で止まった時に強制再同期）
+    function forceRetryVideo() {
+      if (!player) return;
+      showToast('🔄 動画を再キック中...');
+      hardenIframe();
+      try {
+        const curTime = (typeof player.getCurrentTime === 'function') ? player.getCurrentTime() : 0;
+        player.loadVideoById({
+          videoId: currentVideoId,
+          startSeconds: Math.max(0, curTime - 0.5)
+        });
+        setTimeout(() => {
+          try { player.playVideo(); } catch (e) {}
+        }, 300);
+      } catch (err) {
+        initPlayer(currentVideoId);
+      }
+    }
+
+    document.getElementById('btn-retry').addEventListener('click', (e) => {
+      e.stopPropagation();
+      forceRetryVideo();
+    });
+
+    // 画面解像度変化（HDMI接続・画面回転）時にAirPlay属性を再適用
+    window.addEventListener('resize', () => {
+      hardenIframe();
+    });
+    window.addEventListener('orientationchange', () => {
+      hardenIframe();
+    });
 
     // YouTubeプレーヤーから現在の視点を読み出し
     function syncSphericalFromPlayer() {
@@ -771,6 +840,18 @@
       syncSphericalFromPlayer();
     });
 
+    // ドラッグ左右方向の設定 (true: 右ドラッグで右を見る、false: 右ドラッグで左を見る)
+    let invertX = true;
+    const toggleInvertXBtn = document.getElementById('toggle-invert-x');
+    if (toggleInvertXBtn) {
+      toggleInvertXBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        invertX = !invertX;
+        toggleInvertXBtn.textContent = invertX ? '↔️ 左右: 正方向' : '↔️ 左右: 逆方向';
+        showToast(invertX ? '右ドラッグで右を向きます' : '右ドラッグで左を向きます');
+      });
+    }
+
     // Pointer Move (マウスドラッグ / タッチスワイプ)
     dragLayer.addEventListener('pointermove', (e) => {
       if (activeTouches.has(e.pointerId)) {
@@ -810,8 +891,8 @@
       // 画角（FOV）に応じた感度調整（ズーム時は細かく、広角時はダイナミックに）
       const factor = (spherical.fov / 100) * 0.22;
 
-      // スワイプ方向：画面をつかんで引っ張る直感的操作（YouTube / ストリートビュー標準）
-      const dYaw = -dx * factor;
+      // スワイプ方向：invertXがtrueのときは右ドラッグで右を向く（+dx）
+      const dYaw = (invertX ? dx : -dx) * factor;
       const dPitch = dy * factor;
 
       spherical.yaw += dYaw;
@@ -959,11 +1040,18 @@
         return;
       }
 
+      // Appleのセキュリティ仕様：HTTP(平文)ではジャイロAPIがブラウザによって完全に封殺されます
+      if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        alert('⚠️ ジャイロセンサーはAppleのセキュリティ仕様上、HTTPS（GitHub Pagesなど）でのみ動作します。\n\n現在「http://」で開かれているため、Safariの仕様によりセンサーの許可ダイアログが出せません。\n\nGitHub Pages（https://watanabe-apps.github.io/apps/...）にpushして開いてください。');
+        return;
+      }
+
+      // iOS 13+ での DeviceOrientation 許可要求 (HTTPS必須)
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           const permission = await DeviceOrientationEvent.requestPermission();
           if (permission !== 'granted') {
-            alert('ジャイロセンサーの利用が拒否されました。設定から許可してください。');
+            alert('ジャイロセンサーの利用が拒否されました。Safariの設定から許可してください。');
             return;
           }
         } catch (err) {
@@ -971,6 +1059,9 @@
           alert('ジャイロの許可リクエストに失敗しました: ' + err);
           return;
         }
+      } else if (!window.DeviceOrientationEvent) {
+        alert('お使いの環境ではジャイロセンサー（DeviceOrientation）がサポートされていません。');
+        return;
       }
 
       gyroActive = true;
@@ -978,27 +1069,51 @@
       toggleGyroBtn.classList.toggle('active', true);
       toggleGyroBtn.textContent = '📱 ジャイロ: ON';
       window.addEventListener('deviceorientation', handleDeviceOrientation);
-      showToast('ジャイロ連動中（iPadの向きに視点が追従）');
+      showToast('ジャイロ連動中（iPadを向けた方向に視点が追従）');
     });
 
     function handleDeviceOrientation(e) {
       if (!gyroActive) return;
+
+      // 画面の向き（iPadを横持ちにしている場合を考慮）
+      const orientation = (typeof window.orientation !== 'undefined') 
+        ? window.orientation 
+        : (screen.orientation ? (screen.orientation.angle || 0) : 0);
+
+      const alpha = e.alpha || 0;
+      const beta = e.beta || 0;
+      const gamma = e.gamma || 0;
+
       if (gyroBaseline === null) {
         gyroBaseline = {
-          alpha: e.alpha || 0,
-          beta: e.beta || 0,
-          gamma: e.gamma || 0,
+          alpha, beta, gamma,
           baseYaw: spherical.yaw,
-          basePitch: spherical.pitch
+          basePitch: spherical.pitch,
+          orientation
         };
         return;
       }
 
-      const deltaAlpha = (e.alpha || 0) - gyroBaseline.alpha;
-      const deltaBeta = (e.beta || 0) - gyroBaseline.beta;
+      let deltaYaw = 0;
+      let deltaPitch = 0;
 
-      spherical.yaw = gyroBaseline.baseYaw - deltaAlpha;
-      spherical.pitch = gyroBaseline.basePitch + deltaBeta;
+      // iPadの向きに応じた軸変換
+      if (orientation === 90) {
+        // 横向き（右倒し）
+        deltaYaw = (beta - gyroBaseline.beta);
+        deltaPitch = -(gamma - gyroBaseline.gamma);
+      } else if (orientation === -90 || orientation === 270) {
+        // 横向き（左倒し）
+        deltaYaw = -(beta - gyroBaseline.beta);
+        deltaPitch = (gamma - gyroBaseline.gamma);
+      } else {
+        // 縦向き
+        deltaYaw = -(alpha - gyroBaseline.alpha);
+        deltaPitch = (beta - gyroBaseline.beta);
+      }
+
+      spherical.yaw = gyroBaseline.baseYaw + deltaYaw;
+      spherical.pitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + deltaPitch));
       updateSpherical();
     }
 
