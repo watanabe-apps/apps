@@ -1907,8 +1907,8 @@
 
     // YouTube公式の360°検索結果ページを開く（360度フィルター sp=EgJAAQ%3D%3D 付き）
     function openYouTubeSearchExternal(keyword) {
-      const q = (keyword || (modalSearchInput ? modalSearchInput.value : '') || urlInput.value || '360度').trim();
-      const cleanQ = q.includes('360') ? q : `${q} 360度`;
+      const q = (keyword || (modalSearchInput ? modalSearchInput.value : '') || urlInput.value || '360').trim();
+      const cleanQ = q.includes('360') ? q : `${q} 360`;
       const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(cleanQ)}&sp=EgJAAQ%3D%3D`;
       window.open(ytSearchUrl, '_blank');
       showToast('🔗 YouTube公式を開きました。動画の「共有➔リンクをコピー」して戻ってください', 4500);
@@ -2061,7 +2061,7 @@
     }
 
     async function searchWithYouTubeDataApi(query, apiKey) {
-      const q = query.includes('360') ? query : `${query} 360度`;
+      const q = query.includes('360') ? query : `${query} 360`;
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&videoDimension=3d&maxResults=20&key=${encodeURIComponent(apiKey)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('API Error: ' + res.status);
