@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>YouTube 360° プロジェクター・ビューアー</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
@@ -478,7 +480,7 @@
   <div id="top-bar" class="top-bar">
     <div class="app-title">
       <span>360° Viewer</span>
-      <span class="badge">v2.2 AirPlay対応</span>
+      <span class="badge">v2.4 全画面対応</span>
     </div>
 
     <div class="url-input-group">
@@ -487,7 +489,7 @@
     </div>
 
     <button id="open-file-btn" class="btn" style="background:rgba(16,185,129,0.28); border-color:#10b981;" title="iPad内の360°動画ファイル(MP4/MOV)をミラーリング100%確実モードで再生">📁 MP4ファイル</button>
-    <button id="fullscreen-btn" class="btn">⛶ 全画面</button>
+    <button id="fullscreen-btn" class="btn" title="動画を止めずに操作枠をすべて消して全画面投影します">⛶ 全画面</button>
     <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="プロジェクター用ウィンドウを別画面で開く">📺 2画面</button>
 
     <!-- プリセット動画リスト -->
@@ -719,17 +721,21 @@
       initPlayer(currentVideoId);
     };
 
+    let hasPlaybackStarted = false;
+
     function initPlayer(videoId) {
       clearStuckWatchdog();
+      hasPlaybackStarted = false;
       // 重要: ミラーリング中は autoplay:1 だとiOSが自動再生をブロックし「画面真っ黒・無限読み込み中」に陥るため、
-      // 常にクリーンな iframe を autoplay: 0 で生成し、赤いYouTube再生ボタンを中央に表示して直接タップさせる
-      setDragLayerActive(false, '画面中央のYouTube再生ボタンをタップしてください');
+      // autoplay: 0 かつ mute: 1 で赤いYouTube再生ボタンを表示し、直接タップで確実に再生開始させる
+      setDragLayerActive(false, '①先に動画を再生 ➔ ②ミラーリングON の順で操作してください');
 
-      if (player && typeof player.destroy === 'function') {
-        try { player.destroy(); } catch (err) {}
+      if (player && typeof player.cueVideoById === 'function') {
+        try {
+          player.cueVideoById(videoId);
+          return;
+        } catch (err) {}
       }
-      player = null;
-      videoWrapper.innerHTML = '<div id="player"></div>';
 
       const origin = (window.location.origin && window.location.origin !== 'null' && window.location.protocol !== 'file:')
         ? window.location.origin
@@ -739,6 +745,7 @@
         videoId: videoId,
         playerVars: {
           autoplay: 0,
+          mute: 1,
           controls: 1,
           playsinline: 1,
           fs: 0,
@@ -772,8 +779,8 @@
 
     function onPlayerReady() {
       hardenIframe();
-      setDragLayerActive(false, '準備完了：画面中央の赤いYouTube再生ボタンをタップしてください');
-      showToast('▶️ 画面中央のYouTube再生ボタンをタップしてください', 3500);
+      setDragLayerActive(false, '①先に赤い再生ボタンで再生開始 ➔ ②iPadの画面ミラーリングをONにしてください');
+      showToast('▶️ ①先に再生開始 ➔ ②ミラーリングON の順で投影してください', 4000);
     }
 
     function clearStuckWatchdog() {
@@ -790,16 +797,16 @@
 
       if (state === YT.PlayerState.PLAYING) {
         clearStuckWatchdog();
+        hasPlaybackStarted = true;
         playPauseBtn.textContent = '⏸️ 一時停止';
-        hardenIframe();
         // 再生が始まった瞬間に360°ドラッグレイヤーを自動でONにする
-        setDragLayerActive(true, '360°再生中：画面ドラッグ・ジャイロで自由に見渡せます');
-        syncSphericalFromPlayer();
+        setDragLayerActive(true, '360°再生中：そのままミラーリング＆「⛶ 全画面」で投影できます');
         setTimeout(() => {
-          updateSpherical();
-        }, 150);
+          syncSphericalFromPlayer();
+        }, 300);
       } else if (state === YT.PlayerState.PAUSED) {
         clearStuckWatchdog();
+        hasPlaybackStarted = false;
         playPauseBtn.textContent = '▶️ 再生';
         try {
           lastKnownTime = player.getCurrentTime() || lastKnownTime;
@@ -808,26 +815,16 @@
         setDragLayerActive(false, '一時停止中：画面中央をタップすると再開します');
       } else if (state === YT.PlayerState.CUED || state === YT.PlayerState.ENDED) {
         clearStuckWatchdog();
+        hasPlaybackStarted = false;
         playPauseBtn.textContent = '▶️ 再生';
         setDragLayerActive(false, '待機中：画面中央の赤いYouTube再生ボタンをタップしてください');
       } else if (state === YT.PlayerState.BUFFERING || state === -1) {
-        // バッファリング中はまず透過にしておく
-        setDragLayerActive(false, '読み込み中...（止まる場合は画面中央をタップまたは再生リトライ）');
         clearStuckWatchdog();
-        // ミラーリング開始・解除の瞬間にiOSが自動再生をブロックして無限スピナーになった場合、
-        // 4秒後に自動で cueVideoById に切り替えて赤い再生ボタンを復活させる
-        stuckWatchdogTimer = setTimeout(() => {
-          if (!player || typeof player.getPlayerState !== 'function') return;
-          const st = player.getPlayerState();
-          if (st === YT.PlayerState.BUFFERING || st === -1) {
-            try {
-              const resumeSec = Math.floor(player.getCurrentTime() || lastKnownTime || 0);
-              player.cueVideoById({ videoId: currentVideoId, startSeconds: resumeSec });
-              setDragLayerActive(false, 'ミラーリング待機解除：画面中央の赤い再生ボタンをタップしてください');
-              showToast('▶️ 中央の赤い再生ボタンをタップして再生してください', 4000);
-            } catch (e) {}
-          }
-        }, 4000);
+        // すでに一度再生が始まっている場合（視点移動中の画質切替バッファリング等）は、
+        // ドラッグレイヤーを維持して誤タップによる一時停止・全画面暴発を防ぐ
+        if (!hasPlaybackStarted) {
+          setDragLayerActive(false, '読み込み中...');
+        }
       }
     }
 
@@ -1636,7 +1633,11 @@
       topBar.classList.toggle('hidden', !visible);
       hudControls.classList.toggle('hidden', !visible);
       projectorGuide.classList.toggle('hidden', !visible);
+      if (!visible && dragHint) {
+        dragHint.classList.add('fadeout');
+      }
       uiToggleBtn.textContent = visible ? '👁️' : '⚙️';
+      uiToggleBtn.style.opacity = visible ? '1' : '0.35';
     }
 
     uiToggleBtn.addEventListener('click', (e) => {
@@ -1705,14 +1706,13 @@
       });
     }
 
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {
-          showToast('iPadでは「ホーム画面に追加」すると完全フルスクリーンになります');
-        });
-      } else {
-        document.exitFullscreen();
-      }
+    // iPadのAirPlayミラーリング中にブラウザのネイティブ requestFullscreen() を呼ぶと、
+    // WebKitが別ウィンドウ(WKFullScreenWindow)へレイヤーを移動して動画が強制停止するため、
+    // 動画を一切止めずに全画面化する「CSS没入フルスクリーン（UI枠すべて非表示）」に切り替える
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setUiVisible(false);
+      showToast('⛶ 全画面モード（画面タップまたは右上の⚙️で操作枠を再表示）', 2500);
     });
   </script>
 </body>
