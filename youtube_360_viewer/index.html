@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>YouTube 360° プロジェクター・ビューアー</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --primary: #ff0033;
       --primary-hover: #cc0029;
       --bg-dark: #0f0f14;
-      --panel-bg: rgba(22, 22, 30, 0.85);
-      --panel-border: rgba(255, 255, 255, 0.12);
+      --panel-bg: rgba(22, 22, 30, 0.88);
+      --panel-border: rgba(255, 255, 255, 0.14);
       --text-main: #f0f0f5;
       --text-sub: #a0a0b0;
     }
@@ -21,6 +22,7 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      -webkit-user-select: none;
     }
 
     html, body {
@@ -47,10 +49,22 @@
     #player {
       width: 100%;
       height: 100%;
-      pointer-events: auto; /* YouTube iframe自体にタッチイベントを通す (iOSのAirPlayブロック回避に必須) */
+      pointer-events: auto;
     }
 
-    /* 全画面ドラッグ操作レイヤー (PCマウスドラッグ & iPadタッチスワイプ) */
+    /* WebGL 360° エンジン用コンテナ (ミラーリング100%確実モード) */
+    #webgl-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      display: none;
+      background: #000;
+    }
+
+    /* 全画面ドラッグ操作レイヤー (再生中のみ pointer-events: auto に自動切替) */
     #drag-layer {
       position: absolute;
       top: 0;
@@ -62,7 +76,7 @@
       cursor: grab;
       user-select: none;
       -webkit-user-select: none;
-      pointer-events: none; /* デフォルトは透過させ、スワイプ操作有効時のみONにする */
+      pointer-events: none; /* 停止・待機中はYouTube自身の再生ボタンを直接タップさせるため透過 */
     }
 
     #drag-layer.active {
@@ -80,13 +94,13 @@
       left: 0;
       right: 0;
       z-index: 10;
-      padding: 12px 16px;
+      padding: 12px 62px 12px 16px;
       padding-top: calc(12px + env(safe-area-inset-top));
-      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+      background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 75%, transparent 100%);
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
@@ -116,7 +130,7 @@
 
     .url-input-group {
       flex: 1;
-      min-width: 260px;
+      min-width: 220px;
       display: flex;
       gap: 6px;
     }
@@ -132,6 +146,7 @@
       outline: none;
       backdrop-filter: blur(8px);
       user-select: text;
+      -webkit-user-select: text;
     }
 
     .url-input::placeholder {
@@ -142,17 +157,18 @@
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fff;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       backdrop-filter: blur(8px);
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
     .btn:active {
@@ -183,10 +199,10 @@
     }
 
     .preset-chip {
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.55);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #ddd;
-      padding: 4px 10px;
+      padding: 5px 11px;
       border-radius: 12px;
       font-size: 12px;
       cursor: pointer;
@@ -198,8 +214,18 @@
       color: #fff;
       border-color: #fff;
     }
+    .preset-chip.webgl-chip {
+      border-color: #10b981;
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.15);
+    }
+    .preset-chip.webgl-chip.active {
+      background: rgba(16, 185, 129, 0.4);
+      color: #fff;
+      border-color: #34d399;
+    }
 
-    /* UI表示切替ボタン（常に隅に小さく常駐） */
+    /* UI表示切替ボタン（常に右上に常駐） */
     #ui-toggle-btn {
       position: absolute;
       top: calc(12px + env(safe-area-inset-top));
@@ -221,7 +247,7 @@
       transition: all 0.25s ease;
     }
 
-    /* 操作用HUDパネル (手元コントローラー：初期状態はコンパクト) */
+    /* 操作用HUDパネル (手元コントローラー) */
     .hud-controls {
       position: absolute;
       bottom: calc(16px + env(safe-area-inset-bottom));
@@ -230,15 +256,15 @@
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
       border-radius: 16px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       backdrop-filter: blur(14px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.5);
       transition: opacity 0.3s ease, transform 0.3s ease;
       touch-action: none;
-      max-width: 240px;
+      width: 260px;
     }
 
     .hud-controls.hidden {
@@ -252,14 +278,12 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-sub);
-      text-align: center;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* コントロールボタングループ */
     .hud-actions {
       display: flex;
       flex-direction: column;
@@ -276,7 +300,7 @@
 
     .toggle-btn {
       flex: 1;
-      padding: 8px 10px;
+      padding: 8px 8px;
       font-size: 11px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -288,6 +312,7 @@
       gap: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
+      white-space: nowrap;
     }
     .toggle-btn:active {
       transform: scale(0.96);
@@ -300,25 +325,31 @@
       font-weight: bold;
     }
 
-    /* 中央ドラッグガイドヒント */
+    /* 下部ガイドヒント (中央の再生ボタンを決して隠さない位置に配置) */
     .drag-hint {
       position: absolute;
-      top: 50%;
+      bottom: calc(82px + env(safe-area-inset-bottom));
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       z-index: 4;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(56, 189, 248, 0.45);
       color: #fff;
       padding: 10px 18px;
       border-radius: 24px;
       font-size: 13px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 8px;
       pointer-events: none;
       backdrop-filter: blur(8px);
-      transition: opacity 0.5s ease;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      transition: opacity 0.4s ease;
+      white-space: nowrap;
+      max-width: 92vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .drag-hint.fadeout {
       opacity: 0;
@@ -360,7 +391,7 @@
       bottom: calc(16px + env(safe-area-inset-bottom));
       left: 16px;
       z-index: 10;
-      background: rgba(0, 0, 0, 0.65);
+      background: rgba(0, 0, 0, 0.72);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
       padding: 8px 12px;
@@ -372,6 +403,7 @@
       backdrop-filter: blur(10px);
       pointer-events: none;
       transition: opacity 0.3s ease;
+      max-width: calc(100vw - 300px);
     }
     .projector-guide.hidden {
       opacity: 0;
@@ -382,18 +414,17 @@
       border-radius: 50%;
       background: #2ecc71;
       box-shadow: 0 0 8px #2ecc71;
+      flex-shrink: 0;
     }
-
-
 
     /* お知らせトースト */
     #toast {
       position: absolute;
-      top: 70px;
+      top: 76px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
-      background: rgba(30, 30, 40, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(20, 24, 34, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
       padding: 8px 16px;
       border-radius: 20px;
@@ -403,6 +434,7 @@
       pointer-events: none;
       transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      white-space: nowrap;
     }
     #toast.show {
       opacity: 1;
@@ -412,17 +444,31 @@
 </head>
 <body>
 
-  <!-- ビデオ再生エリア (CSS疑似フルスクリーン) -->
+  <!-- YouTube 360° 再生エリア -->
   <div id="video-wrapper">
     <div id="player"></div>
   </div>
 
-  <!-- 全画面ドラッグ操作レイヤー (PCマウスドラッグ & iPadタッチスワイプ) -->
+  <!-- WebGL 360° 再生エリア (iPadミラーリング100%確実エンジン) -->
+  <div id="webgl-container"></div>
+  <video id="native-video"
+    playsinline
+    webkit-playsinline="true"
+    disableRemotePlayback
+    x-webkit-airplay="deny"
+    x-webkit-wirelessvideoplaybackdisabled="true"
+    crossorigin="anonymous"
+    loop
+    preload="auto"
+    style="position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0.01; pointer-events:none;"></video>
+  <input type="file" id="local-file-input" accept="video/*,.mp4,.mov,.webm" style="display:none;" />
+
+  <!-- 全画面ドラッグ操作レイヤー (動画再生開始と同時に自動で有効化) -->
   <div id="drag-layer"></div>
 
-  <!-- 操作ヒントバナー（初回操作で消える） -->
+  <!-- 状態連動ガイドバナー（中央のYouTube再生ボタンを邪魔しない下部配置） -->
   <div id="drag-hint" class="drag-hint">
-    <span>👆 画面をドラッグ / スワイプして自由に見渡せます</span>
+    <span id="drag-hint-text">▶️ 画面中央の赤いYouTube再生ボタンをタップして再生開始</span>
   </div>
 
   <!-- UIトグルボタン（右上） -->
@@ -436,104 +482,101 @@
     </div>
 
     <div class="url-input-group">
-      <input type="text" id="url-input" class="url-input" placeholder="YouTube URL または 動画ID を入力..." />
-      <button id="load-btn" class="btn btn-primary">再生</button>
+      <input type="text" id="url-input" class="url-input" placeholder="YouTube URL / ID または MP4 URL を入力..." />
+      <button id="load-btn" class="btn btn-primary">読込</button>
     </div>
 
+    <button id="open-file-btn" class="btn" style="background:rgba(16,185,129,0.28); border-color:#10b981;" title="iPad内の360°動画ファイル(MP4/MOV)をミラーリング100%確実モードで再生">📁 MP4ファイル</button>
     <button id="fullscreen-btn" class="btn">⛶ 全画面</button>
-    <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="iPadをリモコンにしてプロジェクター画面を遠隔操作するモード">📺 2画面リモコン</button>
+    <button id="mode-dualscreen-btn" class="btn" style="background:rgba(59,130,246,0.3); border-color:#3b82f6;" title="プロジェクター用ウィンドウを別画面で開く">📺 2画面</button>
 
     <!-- プリセット動画リスト -->
     <div class="presets-container">
-      <div class="preset-chip" data-id="8lsB-P8nGSM">🎢 ジェットコースター</div>
-      <div class="preset-chip" data-id="rG4jSz_2HDY">🦈 海中・サメ</div>
-      <div class="preset-chip" data-id="s-s4rG2y7v4">🚀 宇宙ステーション(ISS)</div>
-      <div class="preset-chip" data-id="sPyAQQklc1s">🦁 アフリカサファリ</div>
-      <div class="preset-chip" data-id="_VGgV1K2U80">🎈 熱気球パノラマ</div>
+      <div class="preset-chip active" data-type="youtube" data-id="8lsB-P8nGSM">🎢 ジェットコースター</div>
+      <div class="preset-chip" data-type="youtube" data-id="rG4jSz_2HDY">🦈 海中・サメ</div>
+      <div class="preset-chip" data-type="youtube" data-id="s-s4rG2y7v4">🚀 宇宙ステーション(ISS)</div>
+      <div class="preset-chip" data-type="youtube" data-id="sPyAQQklc1s">🦁 アフリカサファリ</div>
+      <div class="preset-chip" data-type="youtube" data-id="_VGgV1K2U80">🎈 熱気球パノラマ</div>
+      <div class="preset-chip webgl-chip" data-type="webgl-demo" data-id="planetarium">🌌 360°ドーム検証(ミラーリング100%確実)</div>
       <button id="help-btn" class="preset-chip" style="border-color:#4a90e2; color:#70b0ff;">❓ 使い方</button>
     </div>
   </div>
 
   <!-- ヘルプモーダル -->
   <div id="help-modal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); align-items:center; justify-content:center; padding:20px;">
-    <div style="background:#1a1a24; border:1px solid rgba(255,255,255,0.2); border-radius:18px; max-width:540px; width:100%; max-height:85vh; overflow-y:auto; padding:24px; color:#eee; font-size:14px; line-height:1.7;">
+    <div style="background:#1a1a24; border:1px solid rgba(255,255,255,0.2); border-radius:18px; max-width:560px; width:100%; max-height:85vh; overflow-y:auto; padding:24px; color:#eee; font-size:14px; line-height:1.7;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:18px; color:#fff;">💡 プロジェクターでの投影方法</h3>
+        <h3 style="font-size:18px; color:#fff;">💡 iPadミラーリングでの再生・操作ガイド</h3>
         <button id="close-help-btn" style="background:none; border:none; color:#aaa; font-size:24px; cursor:pointer;">&times;</button>
       </div>
-      <p style="margin-bottom:12px;"><strong>【接続方法】</strong><br>iPadを有線（HDMI）またはAirPlayでプロジェクターに接続し、iPadのコントロールセンターから<strong>「画面ミラーリング」</strong>を選択してください。</p>
-      <p style="margin-bottom:12px;"><strong>【なぜ歪まないのか】</strong><br>通常のYouTubeアプリだと「ビデオ出力モード」になり、360度が展開された平面パノラマ映像が送られてしまいます。このビューアーは<strong>Web画面ごとミラーリング</strong>するため、iPad手元の360度映像がそのままプロジェクターに映ります。</p>
-      <p style="margin-bottom:12px;"><strong>【操作方法】</strong><br>
-      ・<strong>画面ドラッグ / スワイプ</strong>：画面上のどこでもドラッグ・スワイプして自由に見渡せます（慣性付き）。<br>
-      ・<strong>画面タップ</strong>：動画の再生 / 一時停止を切り替えます。<br>
-      ・<strong>ズーム（画角）</strong>：スライダー、マウスホイール、またはiPadの2本指ピンチでズーム可能。<br>
-      ・<strong>🎯 正面リセット</strong>：いつでも最初の正面の向きに戻せます。<br>
-      ・<strong>📱 ジャイロ</strong>：iPad本体を向けた方向に映像が連動します。<br>
-      ・<strong>🔄 自動回転</strong>：ゆっくり周囲を360度見回す上映モードです。<br>
-      ・<strong>👁️ UI非表示</strong>：右上のボタンで操作枠を隠して大画面上映できます。
-      </p>
+      <p style="margin-bottom:12px;"><strong>① ミラーリング中にYouTubeを確実に再生する手順</strong><br>
+      iPadOSの仕様上、ミラーリング中は「自動再生（autoplay）」がブロックされ無限読み込みになります。<br>
+      そのため本アプリは<strong>自動再生をOFFにし、最初は画面中央の赤いYouTube再生ボタンを直接タップできる状態</strong>にしています。赤い再生ボタンを1回タップすると確実に再生が始まり、<strong>再生開始と同時に自動で「360°画面ドラッグ操作」に切り替わります</strong>。</p>
+      <p style="margin-bottom:12px;"><strong>② もしミラーリング切替で止まったら</strong><br>
+      右下の<strong>「🔄 再生リトライ」</strong>を押すと読み込み中ループを解除して赤いYouTube再生ボタンが再表示されるので、中央をタップしてください。</p>
+      <p style="margin-bottom:12px;"><strong>③ 100%制限を受けない「📁 MP4ファイル / 🌌 360°ドーム」モード</strong><br>
+      上部の「📁 MP4ファイル」からiPad内の360°動画（MP4/MOV）を開くか、「🌌 360°ドーム検証」を選ぶと、Three.js WebGLエンジンで描画されるため、AirPlay・HDMIミラーリングの制限を100%受けずに投影できます。</p>
       <div style="text-align:center; margin-top:20px;">
         <button id="close-help-btn-2" class="btn btn-primary" style="padding:8px 28px;">閉じる</button>
       </div>
     </div>
   </div>
 
-  <!-- 手元コントローラー HUD（右下：補助用） -->
+  <!-- 手元コントローラー HUD（右下） -->
   <div id="hud-controls" class="hud-controls">
     <div class="hud-title">
       <span>360° Controls</span>
-      <span style="font-size:10px; color:#38bdf8;">画面ドラッグ対応</span>
+      <span id="hud-mode-badge" style="font-size:10px; color:#fbbf24;">待機中(YouTubeタップ可)</span>
     </div>
 
     <!-- FOV (ズーム/画角) -->
     <div class="slider-container">
       <div class="slider-label">
-        <span>ズーム (ホイール対応)</span>
+        <span>ズーム (ピンチ/ホイール可)</span>
         <span id="fov-val">100°</span>
       </div>
-      <input type="range" id="fov-slider" min="50" max="120" value="100" step="1">
+      <input type="range" id="fov-slider" min="40" max="120" value="100" step="1">
     </div>
 
     <!-- 各種トグルアクション -->
     <div class="hud-actions">
       <div class="hud-row">
+        <button id="btn-touch-mode" class="toggle-btn" title="360°視点ドラッグとYouTubeプレーヤー直接操作を手動で切り替えます">📺 操作: YouTube直接タップ</button>
+      </div>
+      <div class="hud-row">
         <button id="btn-reset" class="toggle-btn" style="background:rgba(255,255,255,0.15); font-weight:bold;">🎯 正面リセット</button>
-        <button id="btn-retry" class="toggle-btn" style="background:rgba(245,158,11,0.25); border-color:#f59e0b;" title="外部ディスプレイ接続等で動画が止まった時に再起動">🔄 再生リトライ</button>
+        <button id="btn-retry" class="toggle-btn" style="background:rgba(245,158,11,0.25); border-color:#f59e0b;" title="ミラーリング接続等で動画が読み込み中のまま止まった時にリセット">🔄 再生リトライ</button>
       </div>
       <div class="hud-row">
-        <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
-        <button id="btn-mute" class="toggle-btn">🔇 消音解除</button>
+        <button id="btn-playpause" class="toggle-btn">▶️ 再生 / 一時停止</button>
+        <button id="btn-mute" class="toggle-btn">🔊 音声切替</button>
       </div>
       <div class="hud-row">
-        <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
         <button id="toggle-gyro" class="toggle-btn">📱 ジャイロ: OFF</button>
+        <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
+      </div>
+      <div class="hud-row">
+        <button id="toggle-invert-x" class="toggle-btn">↔️ ドラッグ左右: 正方向</button>
       </div>
     </div>
   </div>
 
   <!-- 左下：プロジェクター投影ガイダンス -->
   <div id="projector-guide" class="projector-guide">
-    <div class="status-dot"></div>
-    <span id="status-text">ミラーリング準備完了（playsinline mode）</span>
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">準備完了：画面中央の再生ボタンをタップしてください</span>
   </div>
 
   <!-- file:// プロトコル警告バナー -->
   <div id="file-protocol-warning" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background:rgba(30, 20, 25, 0.96); border:2px solid #ff3344; border-radius:18px; padding:24px; max-width:520px; width:90%; color:#fff; box-shadow:0 10px 40px rgba(0,0,0,0.8); line-height:1.7;">
-    <h3 style="color:#ff4d5a; font-size:18px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+    <h3 style="color:#ff4d5a; font-size:18px; margin-bottom:12px;">
       ⚠️ エラー153の原因：直接ファイルを開いています
     </h3>
     <p style="font-size:13px; color:#ddd; margin-bottom:14px;">
       現在アドレスバーが <code>file:///...</code> になっています。<br>
-      YouTubeのセキュリティ仕様により、<strong>ローカルのHTMLファイルを直接ダブルクリックして開くと動画の再生がブロック（エラー153）</strong>されます。
+      YouTubeの仕様によりローカルHTMLの直接起動ではYouTube再生がブロックされます（エラー153）。<br>
+      GitHub PagesのURL（https://...）またはローカルサーバー経由で開いてください。（※上部の「🌌 360°ドーム検証」や「📁 MP4ファイル」はこのままでも動作します）
     </p>
-    <div style="background:rgba(0,0,0,0.4); border-radius:10px; padding:12px; font-size:13px; margin-bottom:14px;">
-      <strong>【解決方法】Webサーバー経由で開いてください：</strong><br>
-      ① <strong>Macの場合</strong>: ターミナルで <code>python3 -m http.server 8000</code> を実行し、<br>
-      <a href="http://localhost:8000/youtube_360_viewer/" style="color:#60a5fa; text-decoration:underline;">http://localhost:8000/youtube_360_viewer/</a> で開く<br>
-      ② <strong>iPadの場合</strong>: Macと同じWi-Fiから <br>
-      <code id="suggested-ip-url" style="color:#34d399;">http://[MacのIP]:8000/youtube_360_viewer/</code> で開く<br>
-      ③ <strong>GitHub Pagesにpush</strong> して公開URLで開く
-    </div>
     <div style="text-align:right;">
       <button onclick="document.getElementById('file-protocol-warning').style.display='none'" class="btn" style="padding:6px 16px; font-size:12px;">閉じる</button>
     </div>
@@ -546,31 +589,50 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-    // State
+    // ==========================================
+    // 1. アプリケーション状態管理
+    // ==========================================
+    let currentEngine = 'youtube'; // 'youtube' | 'webgl'
     let player = null;
     let isApiReady = false;
-    let currentVideoId = '8lsB-P8nGSM'; // デフォルト：ジェットコースター
+    let currentVideoId = '8lsB-P8nGSM';
+    let lastKnownTime = 0;
+    let stuckWatchdogTimer = null;
 
-    // 視点パラメータ (YouTube Spherical Properties)
+    // 視点パラメータ (Yaw: 水平角度, Pitch: 垂直角度, Roll: 傾き, FOV: 画角)
     let spherical = {
-      yaw: 0,      // 水平回転 (-180 ~ 180 or 0 ~ 360)
-      pitch: 0,    // 垂直回転 (-90 ~ 90)
+      yaw: 0,
+      pitch: 0,
       roll: 0,
-      fov: 100     // 視野角 (30 ~ 120)
+      fov: 100
     };
 
     // 機能フラグ
+    let isDragLayerEnabled = false;
     let autoPanActive = false;
-    let autoPanSpeed = 0.4;
+    let autoPanSpeed = 0.35;
     let autoPanAnimId = null;
 
     let gyroActive = false;
     let gyroBaseline = null;
-
-    let touchPadActive = false;
+    let invertX = true; // デフォルト: 右ドラッグで右を向く
     let isUiHidden = false;
 
     // DOM要素
+    const videoWrapper = document.getElementById('video-wrapper');
+    const webglContainer = document.getElementById('webgl-container');
+    const nativeVideo = document.getElementById('native-video');
+    const localFileInput = document.getElementById('local-file-input');
+    const openFileBtn = document.getElementById('open-file-btn');
+
+    const dragLayer = document.getElementById('drag-layer');
+    const dragHint = document.getElementById('drag-hint');
+    const dragHintText = document.getElementById('drag-hint-text');
+    const hudModeBadge = document.getElementById('hud-mode-badge');
+    const btnTouchMode = document.getElementById('btn-touch-mode');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+
     const topBar = document.getElementById('top-bar');
     const hudControls = document.getElementById('hud-controls');
     const projectorGuide = document.getElementById('projector-guide');
@@ -578,80 +640,107 @@
     const urlInput = document.getElementById('url-input');
     const loadBtn = document.getElementById('load-btn');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const touchSurface = document.getElementById('touch-surface');
     const toastEl = document.getElementById('toast');
     const fovSlider = document.getElementById('fov-slider');
     const fovValText = document.getElementById('fov-val');
 
-    // トースト表示
-    function showToast(msg, duration = 2500) {
+    let toastTimeout = null;
+    function showToast(msg, duration = 2600) {
       toastEl.textContent = msg;
       toastEl.classList.add('show');
-      setTimeout(() => {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         toastEl.classList.remove('show');
       }, duration);
     }
 
-    // YouTube URLから動画IDを抽出
+    // ==========================================
+    // 2. ドラッグレイヤー透過・有効化の自動ステートマシン
+    // (iPadミラーリング時の直接タップ許可に不可欠)
+    // ==========================================
+    function setDragLayerActive(enabled, reasonText) {
+      isDragLayerEnabled = enabled;
+      if (enabled) {
+        dragLayer.classList.add('active');
+        hudModeBadge.textContent = '360°ドラッグ有効';
+        hudModeBadge.style.color = '#34d399';
+        btnTouchMode.textContent = '👆 操作: 360°視点ドラッグ中';
+        btnTouchMode.classList.add('active');
+        dragHintText.textContent = '👆 画面をドラッグ / スワイプして360°自由に見渡せます';
+        dragHint.classList.remove('fadeout');
+        statusDot.style.background = '#2ecc71';
+        statusDot.style.boxShadow = '0 0 8px #2ecc71';
+        statusText.textContent = reasonText || '再生中：画面スワイプ・ジャイロで360°視点操作が可能';
+      } else {
+        dragLayer.classList.remove('active');
+        hudModeBadge.textContent = 'YouTubeタップ待機';
+        hudModeBadge.style.color = '#fbbf24';
+        btnTouchMode.textContent = '📺 操作: YouTube直接タップ';
+        btnTouchMode.classList.remove('active');
+        dragHintText.textContent = '▶️ 画面中央の赤いYouTube再生ボタンをタップして再生開始';
+        dragHint.classList.remove('fadeout');
+        statusDot.style.background = '#fbbf24';
+        statusDot.style.boxShadow = '0 0 8px #fbbf24';
+        statusText.textContent = reasonText || '画面中央のYouTube再生ボタンを直接タップしてください（ミラーリング対応）';
+      }
+    }
+
+    // 手動で360°ドラッグとYouTube直接操作を切り替えるボタン
+    btnTouchMode.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setDragLayerActive(!isDragLayerEnabled);
+      showToast(isDragLayerEnabled ? '👆 360°ドラッグ操作を有効にしました' : '📺 YouTubeプレーヤーを直接タップできます');
+    });
+
+    // ==========================================
+    // 3. YouTube 360° エンジン (ミラーリング対策済)
+    // ==========================================
     function extractVideoId(urlOrId) {
       if (!urlOrId) return null;
       urlOrId = urlOrId.trim();
-      
-      // すでに11文字のIDの場合
-      if (/^[a-zA-Z0-9_-]{11}$/.test(urlOrId)) {
-        return urlOrId;
-      }
-      
-      // URL解析
+      if (/^[a-zA-Z0-9_-]{11}$/.test(urlOrId)) return urlOrId;
       try {
         const url = new URL(urlOrId.startsWith('http') ? urlOrId : 'https://' + urlOrId);
-        if (url.hostname.includes('youtu.be')) {
-          return url.pathname.slice(1);
-        }
-        if (url.searchParams.has('v')) {
-          return url.searchParams.get('v');
-        }
+        if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
+        if (url.searchParams.has('v')) return url.searchParams.get('v');
         const paths = url.pathname.split('/');
         const embedIdx = paths.indexOf('embed');
-        if (embedIdx !== -1 && paths[embedIdx + 1]) {
-          return paths[embedIdx + 1];
-        }
-      } catch (e) {
-        console.warn('URL parsing failed', e);
-      }
+        if (embedIdx !== -1 && paths[embedIdx + 1]) return paths[embedIdx + 1];
+      } catch (e) {}
       return null;
     }
 
-    // YouTube API Ready
     window.onYouTubeIframeAPIReady = function() {
-      // file:// プロトコルチェック
       if (window.location.protocol === 'file:') {
         const warnEl = document.getElementById('file-protocol-warning');
         if (warnEl) warnEl.style.display = 'block';
-        showToast('⚠️ file:// ではYouTubeがブロックされます。サーバー経由で開いてください', 5000);
       }
-
       isApiReady = true;
       initPlayer(currentVideoId);
     };
 
     function initPlayer(videoId) {
-      if (player) {
-        player.loadVideoById(videoId);
-        return;
+      clearStuckWatchdog();
+      // 重要: ミラーリング中は autoplay:1 だとiOSが自動再生をブロックし「無限読み込み中」に陥るため、
+      // autoplay: 0 で赤い再生ボタンを表示し、ユーザーに直接タップさせてiOSのロックを解除する
+      setDragLayerActive(false, '画面中央のYouTube再生ボタンをタップしてください');
+
+      if (player && typeof player.cueVideoById === 'function') {
+        try {
+          player.cueVideoById(videoId);
+          return;
+        } catch (err) {}
       }
 
-      const origin = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : undefined;
+      const origin = (window.location.origin && window.location.origin !== 'null' && window.location.protocol !== 'file:')
+        ? window.location.origin
+        : undefined;
 
-      // iOSで「外部出力モード（AVPlayer）」に取られないための設定：
-      // - playsinline: 1 (必須: ネイティブフルスクリーンをブロック)
-      // - fs: 0 (フルスクリーンボタンを出さない)
-      // - mute: 1 (必須: iOSで外部ディスプレイ接続時の自動再生ブロックを回避)
       player = new YT.Player('player', {
         videoId: videoId,
         playerVars: {
-          autoplay: 1,
-          mute: 1,
+          autoplay: 0,
+          controls: 1,
           playsinline: 1,
           fs: 0,
           rel: 0,
@@ -667,23 +756,6 @@
       });
     }
 
-    // エラーハンドラー
-    function onPlayerError(event) {
-      console.error('YouTube Player Error:', event.data);
-      const errMap = {
-        2: 'リクエストパラメータが無効です (code: 2)',
-        5: 'HTML5プレーヤーエラー / 外部ディスプレイ競合 (code: 5)',
-        100: '動画が見つかりません (code: 100)',
-        101: '動画の埋め込みが許可されていません (code: 101)',
-        150: '動画の著作権者により外部再生が禁止されています (code: 150)',
-        153: 'セキュリティ制限により再生できません (code: 153)'
-      };
-      const msg = errMap[event.data] || `再生エラーが発生しました (code: ${event.data})`;
-      showToast(`⚠️ ${msg}`, 6000);
-      alert(`【YouTube再生エラー】\n${msg}\n\n「再生リトライ」を押すか、別のプリセット動画をお試しください。`);
-    }
-
-    // iframe要素にAirPlay横取り防止属性を強制付与
     function hardenIframe() {
       if (!player || typeof player.getIframe !== 'function') return;
       try {
@@ -691,65 +763,112 @@
         if (iframe) {
           iframe.setAttribute('x-webkit-airplay', 'deny');
           iframe.setAttribute('data-airplay', 'deny');
+          iframe.setAttribute('disableRemotePlayback', 'true');
           iframe.setAttribute('webkit-playsinline', 'true');
           iframe.setAttribute('playsinline', 'true');
           iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
         }
-      } catch (err) {
-        console.warn('hardenIframe error', err);
+      } catch (err) {}
+    }
+
+    function onPlayerReady() {
+      hardenIframe();
+      setDragLayerActive(false, '準備完了：画面中央の赤いYouTube再生ボタンをタップしてください');
+      showToast('▶️ 画面中央のYouTube再生ボタンをタップしてください', 3500);
+    }
+
+    function clearStuckWatchdog() {
+      if (stuckWatchdogTimer) {
+        clearTimeout(stuckWatchdogTimer);
+        stuckWatchdogTimer = null;
       }
     }
 
-    function onPlayerReady(event) {
-      hardenIframe();
-      showToast('360°プレーヤー準備完了');
-      syncSphericalFromPlayer();
-      setTimeout(() => {
-        showToast('右上の👁️ボタンで操作UIを非表示にできます');
-      }, 3500);
-    }
-
-    // バッファリング無限スタック対策（ミラーリング接続時のデッドロック脱出）
-    let bufferingTimer = null;
     function onPlayerStateChange(event) {
+      if (currentEngine !== 'youtube') return;
       const playPauseBtn = document.getElementById('btn-playpause');
-      if (event.data === YT.PlayerState.PLAYING) {
+      const state = event.data;
+
+      if (state === YT.PlayerState.PLAYING) {
+        clearStuckWatchdog();
         playPauseBtn.textContent = '⏸️ 一時停止';
         hardenIframe();
-        if (bufferingTimer) {
-          clearTimeout(bufferingTimer);
-          bufferingTimer = null;
-        }
+        // 再生が始まった瞬間に360°ドラッグレイヤーを自動でONにする
+        setDragLayerActive(true, '360°再生中：画面ドラッグ・ジャイロで自由に見渡せます');
         syncSphericalFromPlayer();
-      } else if (event.data === YT.PlayerState.PAUSED) {
+        setTimeout(() => {
+          updateSpherical();
+        }, 150);
+      } else if (state === YT.PlayerState.PAUSED) {
+        clearStuckWatchdog();
         playPauseBtn.textContent = '▶️ 再生';
-      } else if (event.data === YT.PlayerState.BUFFERING) {
-        // ミラーリング開始時にiOSのAirPlay切替で3秒以上バッファリングが続いたら、自動再キック
-        if (bufferingTimer) clearTimeout(bufferingTimer);
-        bufferingTimer = setTimeout(() => {
-          console.warn('Auto-recovering from stuck buffer (AirPlay/Mirroring workaround)...');
-          try {
-            player.playVideo();
-          } catch (err) {}
-        }, 2500);
+        try {
+          lastKnownTime = player.getCurrentTime() || lastKnownTime;
+        } catch (e) {}
+        // 一時停止中はYouTube画面を直接タップして再開できるように透過する
+        setDragLayerActive(false, '一時停止中：画面中央をタップすると再開します');
+      } else if (state === YT.PlayerState.CUED || state === YT.PlayerState.ENDED) {
+        clearStuckWatchdog();
+        playPauseBtn.textContent = '▶️ 再生';
+        setDragLayerActive(false, '待機中：画面中央の赤いYouTube再生ボタンをタップしてください');
+      } else if (state === YT.PlayerState.BUFFERING || state === -1) {
+        // バッファリング中はまず透過にしておく
+        setDragLayerActive(false, '読み込み中...（止まる場合は画面中央をタップまたは再生リトライ）');
+        clearStuckWatchdog();
+        // ミラーリング開始・解除の瞬間にiOSが自動再生をブロックして無限スピナーになった場合、
+        // 4秒後に自動で cueVideoById に切り替えて赤い再生ボタンを復活させる
+        stuckWatchdogTimer = setTimeout(() => {
+          if (!player || typeof player.getPlayerState !== 'function') return;
+          const st = player.getPlayerState();
+          if (st === YT.PlayerState.BUFFERING || st === -1) {
+            try {
+              const resumeSec = Math.floor(player.getCurrentTime() || lastKnownTime || 0);
+              player.cueVideoById({ videoId: currentVideoId, startSeconds: resumeSec });
+              setDragLayerActive(false, 'ミラーリング待機解除：画面中央の赤い再生ボタンをタップしてください');
+              showToast('▶️ 中央の赤い再生ボタンをタップして再生してください', 4000);
+            } catch (e) {}
+          }
+        }, 4000);
       }
     }
 
-    // 再生リトライ（外部ディスプレイ接続で止まった時にDOMごと完全再構築）
+    function onPlayerError(event) {
+      clearStuckWatchdog();
+      setDragLayerActive(false);
+      const errMap = {
+        2: '動画IDが無効です (code: 2)',
+        5: 'HTML5プレーヤーエラー (code: 5)',
+        100: '動画が見つかりません (code: 100)',
+        101: '埋め込み再生が許可されていません (code: 101)',
+        150: '埋め込み再生が許可されていません (code: 150)',
+        153: 'file:// 直接起動のためブロックされました (code: 153)'
+      };
+      const msg = errMap[event.data] || `再生エラー (code: ${event.data})`;
+      showToast(`⚠️ ${msg}`, 5000);
+    }
+
+    // 再生リトライ（setTimeoutを使わず同期的に再構築し、autoplay:0 で確実に赤いボタンを出す）
     function forceRetryVideo() {
-      showToast('🔄 プレーヤーを完全再構築中...');
+      clearStuckWatchdog();
+      if (currentEngine === 'webgl') {
+        if (nativeVideo.src) {
+          nativeVideo.currentTime = 0;
+          nativeVideo.play().catch(() => {});
+        }
+        setDragLayerActive(true, 'WebGL 360°再生中');
+        showToast('🔄 360°映像を再開しました');
+        return;
+      }
+
+      showToast('🔄 読み込みロックを解除しました。中央の再生ボタンをタップしてください', 3500);
+      setDragLayerActive(false, '画面中央の赤いYouTube再生ボタンをタップしてください');
+
       if (player && typeof player.destroy === 'function') {
         try { player.destroy(); } catch (e) {}
       }
       player = null;
-
-      // 壊れたIframeをDOMから完全消去して新規作成
-      const wrapper = document.getElementById('video-wrapper');
-      wrapper.innerHTML = '<div id="player"></div>';
-
-      setTimeout(() => {
-        initPlayer(currentVideoId);
-      }, 300);
+      videoWrapper.innerHTML = '<div id="player"></div>';
+      initPlayer(currentVideoId);
     }
 
     document.getElementById('btn-retry').addEventListener('click', (e) => {
@@ -758,7 +877,250 @@
     });
 
     // ==========================================
-    // 2画面リモコンモード (BroadcastChannel 同期)
+    // 4. WebGL 360° エンジン (Three.js: ミラーリング100%確実モード)
+    // ==========================================
+    let threeRenderer = null;
+    let threeScene = null;
+    let threeCamera = null;
+    let threeSphereMesh = null;
+    let threeAnimId = null;
+    let demoCanvas = null;
+    let demoCtx = null;
+    let demoTexture = null;
+    let isDemoPlanetarium = false;
+    let demoStartTime = Date.now();
+
+    function initWebGLEngine() {
+      if (threeRenderer) return;
+      threeScene = new THREE.Scene();
+      threeCamera = new THREE.PerspectiveCamera(spherical.fov, window.innerWidth / window.innerHeight, 0.1, 1100);
+      threeCamera.target = new THREE.Vector3(0, 0, 0);
+
+      const geometry = new THREE.SphereGeometry(500, 64, 48);
+      geometry.scale(-1, 1, 1); // 球体の内側にテクスチャを貼る
+
+      const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      threeSphereMesh = new THREE.Mesh(geometry, material);
+      threeScene.add(threeSphereMesh);
+
+      threeRenderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      threeRenderer.setSize(window.innerWidth, window.innerHeight);
+      webglContainer.innerHTML = '';
+      webglContainer.appendChild(threeRenderer.domElement);
+    }
+
+    // 360°プラネタリウム・ドーム検証テクスチャ描画（外部通信・YouTube制限に一切依存しない360°空間）
+    function initDemoPlanetariumTexture() {
+      if (!demoCanvas) {
+        demoCanvas = document.createElement('canvas');
+        demoCanvas.width = 2048;
+        demoCanvas.height = 1024;
+        demoCtx = demoCanvas.getContext('2d');
+      }
+      if (!demoTexture) {
+        demoTexture = new THREE.CanvasTexture(demoCanvas);
+        demoTexture.minFilter = THREE.LinearFilter;
+        demoTexture.magFilter = THREE.LinearFilter;
+      }
+      isDemoPlanetarium = true;
+      threeSphereMesh.material.map = demoTexture;
+      threeSphereMesh.material.needsUpdate = true;
+    }
+
+    function renderDemoPlanetariumFrame() {
+      if (!isDemoPlanetarium || !demoCtx) return;
+      const w = demoCanvas.width;
+      const h = demoCanvas.height;
+      const t = (Date.now() - demoStartTime) * 0.001;
+
+      // 背景グラデーション（宇宙〜地平線〜グリッドフロア）
+      const grad = demoCtx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#020617');
+      grad.addColorStop(0.45, '#0f172a');
+      grad.addColorStop(0.5, '#0284c7');
+      grad.addColorStop(0.55, '#0f172a');
+      grad.addColorStop(1, '#020617');
+      demoCtx.fillStyle = grad;
+      demoCtx.fillRect(0, 0, w, h);
+
+      // 経度・緯度グリッド線
+      demoCtx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+      demoCtx.lineWidth = 2;
+      for (let i = 0; i <= 12; i++) {
+        const x = (w / 12) * i;
+        demoCtx.beginPath();
+        demoCtx.moveTo(x, 0);
+        demoCtx.lineTo(x, h);
+        demoCtx.stroke();
+      }
+      for (let j = 1; j < 6; j++) {
+        const y = (h / 6) * j;
+        demoCtx.beginPath();
+        demoCtx.moveTo(0, y);
+        demoCtx.lineTo(w, y);
+        demoCtx.stroke();
+      }
+
+      // 地平線ライン
+      demoCtx.strokeStyle = '#38bdf8';
+      demoCtx.lineWidth = 4;
+      demoCtx.beginPath();
+      demoCtx.moveTo(0, h / 2);
+      demoCtx.lineTo(w, h / 2);
+      demoCtx.stroke();
+
+      // 移動する360°光のオーブ＆リング
+      for (let k = 0; k < 8; k++) {
+        const px = ((k * 256 + t * (90 + k * 15)) % w);
+        const py = h * 0.5 + Math.sin(t * 1.5 + k) * 220;
+        const radius = 26 + (k % 3) * 12;
+        const orbGrad = demoCtx.createRadialGradient(px, py, 2, px, py, radius);
+        orbGrad.addColorStop(0, '#ffffff');
+        orbGrad.addColorStop(0.4, k % 2 === 0 ? '#38bdf8' : '#f43f5e');
+        orbGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        demoCtx.fillStyle = orbGrad;
+        demoCtx.beginPath();
+        demoCtx.arc(px, py, radius, 0, Math.PI * 2);
+        demoCtx.fill();
+      }
+
+      // 方位ラベル（正面・右・背面・左）
+      const dirs = [
+        { label: '🎯 正面 (FRONT 0°)', x: w * 0.5, color: '#34d399' },
+        { label: '➡️ 右側 (RIGHT 90°)', x: w * 0.75, color: '#38bdf8' },
+        { label: '⬇️ 背面 (BACK 180°)', x: w * 0.0, color: '#f43f5e' },
+        { label: '⬇️ 背面 (BACK 180°)', x: w * 1.0, color: '#f43f5e' },
+        { label: '⬅️ 左側 (LEFT 90°)', x: w * 0.25, color: '#fbbf24' }
+      ];
+      demoCtx.font = 'bold 42px -apple-system, sans-serif';
+      demoCtx.textAlign = 'center';
+      dirs.forEach(d => {
+        demoCtx.fillStyle = d.color;
+        demoCtx.fillText(d.label, d.x, h * 0.5 - 30);
+      });
+
+      demoCtx.fillStyle = '#e2e8f0';
+      demoCtx.font = 'bold 34px -apple-system, sans-serif';
+      demoCtx.fillText('⬆️ 天頂 (UP +60°) - ジャイロ・上下ドラッグ確認', w * 0.5, h * 0.2);
+      demoCtx.fillText('⬇️ 足元 (DOWN -60°) - ミラーリング100%対応 WebGL 360°', w * 0.5, h * 0.82);
+
+      demoTexture.needsUpdate = true;
+    }
+
+    function startWebGLLoop() {
+      if (threeAnimId) cancelAnimationFrame(threeAnimId);
+      const renderLoop = () => {
+        if (currentEngine !== 'webgl') return;
+        if (isDemoPlanetarium) {
+          renderDemoPlanetariumFrame();
+        }
+        if (threeCamera && threeRenderer && threeScene) {
+          threeCamera.fov = spherical.fov;
+          threeCamera.updateProjectionMatrix();
+
+          // YouTubeのSpherical座標系 (yaw: 左が+ / 右が-, pitch: 上が+ / 下が-) と完全一致させる
+          const lat = Math.max(-85, Math.min(85, spherical.pitch));
+          const phi = THREE.Math.degToRad(90 - lat);
+          const theta = THREE.Math.degToRad(spherical.yaw);
+
+          threeCamera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+          threeCamera.target.y = 500 * Math.cos(phi);
+          threeCamera.target.z = -500 * Math.sin(phi) * Math.sin(theta);
+          threeCamera.lookAt(threeCamera.target);
+
+          threeRenderer.render(threeScene, threeCamera);
+        }
+        threeAnimId = requestAnimationFrame(renderLoop);
+      };
+      threeAnimId = requestAnimationFrame(renderLoop);
+    }
+
+    function switchToWebGLDemo() {
+      currentEngine = 'webgl';
+      clearStuckWatchdog();
+      if (player && typeof player.pauseVideo === 'function') {
+        try { player.pauseVideo(); } catch (e) {}
+      }
+      nativeVideo.pause();
+      videoWrapper.style.display = 'none';
+      webglContainer.style.display = 'block';
+
+      initWebGLEngine();
+      initDemoPlanetariumTexture();
+      startWebGLLoop();
+      setDragLayerActive(true, '🌌 WebGL 360°ドーム稼働中（ミラーリング100%確実モード）');
+      showToast('🌌 360°ドーム検証モードを開始しました（ミラーリング完全対応）');
+    }
+
+    function switchToWebGLVideo(videoUrl, label) {
+      currentEngine = 'webgl';
+      isDemoPlanetarium = false;
+      clearStuckWatchdog();
+      if (player && typeof player.pauseVideo === 'function') {
+        try { player.pauseVideo(); } catch (e) {}
+      }
+      videoWrapper.style.display = 'none';
+      webglContainer.style.display = 'block';
+
+      initWebGLEngine();
+      nativeVideo.src = videoUrl;
+      nativeVideo.muted = false;
+      nativeVideo.setAttribute('playsinline', 'true');
+      nativeVideo.setAttribute('webkit-playsinline', 'true');
+      nativeVideo.setAttribute('disableRemotePlayback', 'true');
+      nativeVideo.setAttribute('x-webkit-airplay', 'deny');
+
+      const vidTex = new THREE.VideoTexture(nativeVideo);
+      vidTex.minFilter = THREE.LinearFilter;
+      vidTex.magFilter = THREE.LinearFilter;
+      threeSphereMesh.material.map = vidTex;
+      threeSphereMesh.material.needsUpdate = true;
+
+      nativeVideo.play().then(() => {
+        document.getElementById('btn-playpause').textContent = '⏸️ 一時停止';
+        showToast(`🎬 再生開始: ${label || '360° MP4動画'}`);
+      }).catch(() => {
+        nativeVideo.muted = true;
+        nativeVideo.play().catch(() => {});
+        showToast('🔇 消音で再生を開始しました（音声切替でONにできます）');
+      });
+
+      startWebGLLoop();
+      setDragLayerActive(true, `🎬 360°動画再生中 (${label || 'WebGL mode'})`);
+    }
+
+    function switchToYouTubeVideo(videoId) {
+      currentEngine = 'youtube';
+      isDemoPlanetarium = false;
+      if (threeAnimId) {
+        cancelAnimationFrame(threeAnimId);
+        threeAnimId = null;
+      }
+      nativeVideo.pause();
+      webglContainer.style.display = 'none';
+      videoWrapper.style.display = 'block';
+
+      currentVideoId = videoId;
+      urlInput.value = videoId;
+      initPlayer(videoId);
+      showToast('▶️ 画面中央の赤いYouTube再生ボタンをタップしてください', 3500);
+    }
+
+    // ローカルMP4/MOVファイルの読み込み
+    openFileBtn.addEventListener('click', () => {
+      localFileInput.click();
+    });
+    localFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const objUrl = URL.createObjectURL(file);
+      document.querySelectorAll('.preset-chip[data-id]').forEach(c => c.classList.remove('active'));
+      switchToWebGLVideo(objUrl, file.name);
+    });
+
+    // ==========================================
+    // 5. 2画面リモコンモード (BroadcastChannel 同期)
     // ==========================================
     const urlParams = new URLSearchParams(window.location.search);
     const isDisplayMode = urlParams.get('mode') === 'display';
@@ -766,19 +1128,13 @@
     let syncChannel = null;
     try {
       syncChannel = new BroadcastChannel('yt360_projector_sync');
-    } catch (e) {
-      console.warn('BroadcastChannel not supported', e);
-    }
+    } catch (e) {}
 
-    // 表示専用モード（プロジェクター画面側）の場合
     if (isDisplayMode) {
       document.body.classList.add('display-mode');
-      const topBarEl = document.getElementById('top-bar');
-      const hudEl = document.getElementById('hud-controls');
-      const statusText = document.getElementById('status-text');
       if (statusText) statusText.textContent = '📺 プロジェクター大画面モード（手元iPadから操作中）';
-      if (topBarEl) topBarEl.classList.add('hidden');
-      if (hudEl) hudEl.classList.add('hidden');
+      if (topBar) topBar.classList.add('hidden');
+      if (hudControls) hudControls.classList.add('hidden');
 
       if (syncChannel) {
         syncChannel.onmessage = (e) => {
@@ -788,47 +1144,49 @@
             spherical = Object.assign({}, msg.data);
             updateSpherical();
           } else if (msg.type === 'load') {
-            currentVideoId = msg.videoId;
-            forceRetryVideo();
+            switchToYouTubeVideo(msg.videoId);
+          } else if (msg.type === 'webgl-demo') {
+            switchToWebGLDemo();
           } else if (msg.type === 'play') {
-            if (player && player.playVideo) player.playVideo();
+            if (currentEngine === 'youtube' && player && player.playVideo) player.playVideo();
+            if (currentEngine === 'webgl') nativeVideo.play().catch(() => {});
           } else if (msg.type === 'pause') {
-            if (player && player.pauseVideo) player.pauseVideo();
+            if (currentEngine === 'youtube' && player && player.pauseVideo) player.pauseVideo();
+            if (currentEngine === 'webgl') nativeVideo.pause();
           }
         };
       }
     }
 
-    // 2画面ボタンクリック時：プロジェクター用ウィンドウを開く
     const dualScreenBtn = document.getElementById('mode-dualscreen-btn');
     if (dualScreenBtn) {
       dualScreenBtn.addEventListener('click', () => {
         const displayUrl = window.location.pathname + '?mode=display';
         window.open(displayUrl, 'ProjectorDisplayWindow', 'width=1280,height=720');
-        showToast('📺 プロジェクター用の大画面ウィンドウを開きました！');
+        showToast('📺 プロジェクター用の別ウィンドウを開きました');
       });
     }
 
-    // 手元操作を外部画面へブロードキャスト
     function broadcastSpherical() {
       if (syncChannel && !isDisplayMode) {
-        syncChannel.postMessage({
-          type: 'spherical',
-          data: spherical
-        });
+        syncChannel.postMessage({ type: 'spherical', data: spherical });
       }
     }
 
-    // 画面解像度変化（HDMI接続・画面回転）時にAirPlay属性を再適用
     window.addEventListener('resize', () => {
       hardenIframe();
-    });
-    window.addEventListener('orientationchange', () => {
-      hardenIframe();
+      if (threeRenderer && threeCamera) {
+        threeCamera.aspect = window.innerWidth / window.innerHeight;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(window.innerWidth, window.innerHeight);
+      }
     });
 
-    // YouTubeプレーヤーから現在の視点を読み出し
+    // ==========================================
+    // 6. 視点 (Spherical) 同期・更新
+    // ==========================================
     function syncSphericalFromPlayer() {
+      if (currentEngine !== 'youtube') return;
       if (!player || typeof player.getSphericalProperties !== 'function') return;
       try {
         const props = player.getSphericalProperties();
@@ -840,40 +1198,31 @@
           fovSlider.value = Math.round(spherical.fov);
           fovValText.textContent = `${Math.round(spherical.fov)}°`;
         }
-      } catch (e) {
-        // まだ動画の360メタデータがロードされていない場合は無視
-      }
+      } catch (e) {}
     }
 
-    // YouTubeプレーヤーへ視点を反映
     function updateSpherical() {
-      broadcastSpherical();
-      if (!player || typeof player.setSphericalProperties !== 'function') return;
-      try {
-        // yaw を -180 ~ 180 に正規化
-        while (spherical.yaw > 180) spherical.yaw -= 360;
-        while (spherical.yaw < -180) spherical.yaw += 360;
-        
-        // pitch を -85 ~ 85 に制限
-        spherical.pitch = Math.max(-85, Math.min(85, spherical.pitch));
+      while (spherical.yaw > 180) spherical.yaw -= 360;
+      while (spherical.yaw < -180) spherical.yaw += 360;
+      spherical.pitch = Math.max(-85, Math.min(85, spherical.pitch));
 
-        player.setSphericalProperties({
-          yaw: spherical.yaw,
-          pitch: spherical.pitch,
-          roll: spherical.roll,
-          fov: spherical.fov
-        });
-      } catch (e) {
-        console.warn('setSphericalProperties failed', e);
+      broadcastSpherical();
+
+      if (currentEngine === 'youtube' && player && typeof player.setSphericalProperties === 'function') {
+        try {
+          player.setSphericalProperties({
+            yaw: spherical.yaw,
+            pitch: spherical.pitch,
+            roll: spherical.roll,
+            fov: spherical.fov
+          });
+        } catch (e) {}
       }
     }
 
     // ==========================================
-    // 直感的な全画面ドラッグ＆スワイプ操作 (Pointer Events)
+    // 7. 全画面ドラッグ＆ピンチ操作 (Pointer Events)
     // ==========================================
-    const dragLayer = document.getElementById('drag-layer');
-    const dragHint = document.getElementById('drag-hint');
-
     let isPointerDown = false;
     let didMove = false;
     let startX = 0, startY = 0;
@@ -881,7 +1230,6 @@
     let velX = 0, velY = 0;
     let activePointerId = null;
 
-    // 二本指ピンチズーム用 (iPad / タッチ)
     const activeTouches = new Map();
     let initialPinchDist = null;
     let initialPinchFov = 100;
@@ -889,25 +1237,18 @@
     function getPinchDistance(touches) {
       const arr = Array.from(touches.values());
       if (arr.length < 2) return 0;
-      const dx = arr[0].clientX - arr[1].clientX;
-      const dy = arr[0].clientY - arr[1].clientY;
-      return Math.hypot(dx, dy);
+      return Math.hypot(arr[0].clientX - arr[1].clientX, arr[0].clientY - arr[1].clientY);
     }
 
-    // Pointer Down (マウス押し下げ / タッチ開始)
     dragLayer.addEventListener('pointerdown', (e) => {
-      // 慣性アニメーションを即停止
       stopInertia();
-
       activeTouches.set(e.pointerId, e);
 
-      // 二本指ピンチ開始
       if (activeTouches.size === 2) {
         initialPinchDist = getPinchDistance(activeTouches);
         initialPinchFov = spherical.fov;
         return;
       }
-
       if (activeTouches.size > 2) return;
 
       isPointerDown = true;
@@ -919,32 +1260,24 @@
       velY = 0;
 
       dragLayer.classList.add('grabbing');
-      try {
-        dragLayer.setPointerCapture(e.pointerId);
-      } catch (err) {}
-
-      syncSphericalFromPlayer();
+      try { dragLayer.setPointerCapture(e.pointerId); } catch (err) {}
     });
 
-    // ドラッグ左右方向の設定 (true: 右ドラッグで右を見る、false: 右ドラッグで左を見る)
-    let invertX = true;
     const toggleInvertXBtn = document.getElementById('toggle-invert-x');
     if (toggleInvertXBtn) {
       toggleInvertXBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         invertX = !invertX;
-        toggleInvertXBtn.textContent = invertX ? '↔️ 左右: 正方向' : '↔️ 左右: 逆方向';
+        toggleInvertXBtn.textContent = invertX ? '↔️ ドラッグ左右: 正方向' : '↔️ ドラッグ左右: 逆方向';
         showToast(invertX ? '右ドラッグで右を向きます' : '右ドラッグで左を向きます');
       });
     }
 
-    // Pointer Move (マウスドラッグ / タッチスワイプ)
     dragLayer.addEventListener('pointermove', (e) => {
       if (activeTouches.has(e.pointerId)) {
         activeTouches.set(e.pointerId, e);
       }
 
-      // 二本指ピンチズーム処理
       if (activeTouches.size === 2 && initialPinchDist) {
         const currentDist = getPinchDistance(activeTouches);
         if (currentDist > 0 && initialPinchDist > 0) {
@@ -962,10 +1295,8 @@
       const dx = e.clientX - lastX;
       const dy = e.clientY - lastY;
 
-      // わずかなブレはタップとして扱うため閾値を設ける
       if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) {
         didMove = true;
-        // 初回操作でヒントを消す
         if (dragHint && !dragHint.classList.contains('fadeout')) {
           dragHint.classList.add('fadeout');
         }
@@ -974,77 +1305,69 @@
       lastX = e.clientX;
       lastY = e.clientY;
 
-      // 画角（FOV）に応じた感度調整（ズーム時は細かく、広角時はダイナミックに）
-      const factor = (spherical.fov / 100) * 0.22;
-
-      // スワイプ方向：invertXがtrueのときは右ドラッグで右を向く（+dx）
+      const factor = (spherical.fov / 100) * 0.24;
       const dYaw = (invertX ? dx : -dx) * factor;
       const dPitch = dy * factor;
 
       spherical.yaw += dYaw;
       spherical.pitch += dPitch;
 
-      // 慣性（イナーシャ）用の速度を蓄積
+      // ジャイロON中に手動ドラッグした場合はジャイロ基準角度も追従させる
+      if (gyroActive && gyroBaseline) {
+        gyroBaseline.baseYaw += dYaw;
+        gyroBaseline.basePitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + dPitch));
+      }
+
       velX = dYaw;
       velY = dPitch;
 
       updateSpherical();
     });
 
-    // Pointer Up (離したとき)
     function onPointerUp(e) {
       activeTouches.delete(e.pointerId);
       if (activeTouches.size < 2) {
         initialPinchDist = null;
       }
-
       if (e.pointerId !== activePointerId) return;
 
       isPointerDown = false;
       dragLayer.classList.remove('grabbing');
-      try {
-        dragLayer.releasePointerCapture(e.pointerId);
-      } catch (err) {}
+      try { dragLayer.releasePointerCapture(e.pointerId); } catch (err) {}
 
-      // ドラッグせずに単にクリック/タップした場合は「再生/一時停止」または「UI復帰」
+      // 誤タップで動画が一時停止してミラーリングロックが再発するのを防ぐため、
+      // タップ時はUIが非表示の時のみUIを表示復帰させる
       if (!didMove) {
-        if (isUiHidden) {
-          setUiVisible(true);
-        } else {
-          togglePlayPause();
-        }
+        if (isUiHidden) setUiVisible(true);
         return;
       }
 
-      // フリックした時の慣性スクロール開始
       startInertia();
     }
 
     dragLayer.addEventListener('pointerup', onPointerUp);
     dragLayer.addEventListener('pointercancel', onPointerUp);
 
-    // 慣性スクロール（スーッと滑らかに止まる）
     let inertiaAnimId = null;
     function startInertia() {
       stopInertia();
       if (Math.abs(velX) < 0.08 && Math.abs(velY) < 0.08) return;
-
-      const friction = 0.93; // 減衰率
+      const friction = 0.93;
       function step() {
         if (isPointerDown) return;
-
         velX *= friction;
         velY *= friction;
-
         if (Math.abs(velX) < 0.01 && Math.abs(velY) < 0.01) {
           stopInertia();
           return;
         }
-
         spherical.yaw += velX;
         spherical.pitch += velY;
+        if (gyroActive && gyroBaseline) {
+          gyroBaseline.baseYaw += velX;
+          gyroBaseline.basePitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + velY));
+        }
         updateSpherical();
-
         inertiaAnimId = requestAnimationFrame(step);
       }
       inertiaAnimId = requestAnimationFrame(step);
@@ -1057,7 +1380,6 @@
       }
     }
 
-    // マウスホイールによるズーム (FOV調整)
     window.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY * 0.05;
@@ -1067,11 +1389,149 @@
       updateSpherical();
     }, { passive: false });
 
-    // リセットボタン (正面に戻す)
+    // ==========================================
+    // 8. 3D回転行列による高精度ジャイロセンサー連動
+    // (縦持ち・横持ち自動判定、ジンバルロック完全排除)
+    // ==========================================
+    function degToRad(d) { return d * Math.PI / 180; }
+    function radToDeg(r) { return r * 180 / Math.PI; }
+
+    function getShortestAngleDiff(curr, base) {
+      let diff = (curr - base) % 360;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      return diff;
+    }
+
+    // 重力ベクトルからiPadの物理的な持ち方（0:縦, 90:横左, -90:横右, 180:逆さ）を自動検出
+    function detectPhysicalOrientation(betaDeg, gammaDeg) {
+      const b = degToRad(betaDeg);
+      const g = degToRad(gammaDeg);
+      const m20 = -Math.cos(b) * Math.sin(g);
+      const m21 = Math.sin(b);
+      if (Math.hypot(m20, m21) < 0.2) {
+        return (typeof window.orientation === 'number') ? window.orientation : 0;
+      }
+      const angle = radToDeg(Math.atan2(m20, m21));
+      return Math.round(angle / 90) * 90;
+    }
+
+    // W3Cオイラー角 (alpha, beta, gamma) から画面向き補正済みの3D回転行列を構築し、
+    // ジンバルロックのない水平方位角 (worldYaw) と垂直仰角 (worldPitch) を算出
+    function computeGyroAngles(alphaDeg, betaDeg, gammaDeg, screenOrientDeg) {
+      const a = degToRad(alphaDeg);
+      const b = degToRad(betaDeg);
+      const g = degToRad(gammaDeg);
+      const o = degToRad(screenOrientDeg || 0);
+
+      const ca = Math.cos(a), sa = Math.sin(a);
+      const cb = Math.cos(b), sb = Math.sin(b);
+      const cg = Math.cos(g), sg = Math.sin(g);
+      const co = Math.cos(-o), so = Math.sin(-o);
+
+      // R_device = Rz(alpha) * Rx(beta) * Ry(gamma)
+      const m00 = ca * cg - sa * sb * sg;
+      const m01 = -sa * cb;
+      const m10 = sa * cg + ca * sb * sg;
+      const m11 = ca * cb;
+      const m20 = -cb * sg;
+      const m21 = sb;
+      const m22 = cb * cg;
+
+      // 画面の右方向ベクトル r_right = R_device * Rz(-o) の第1列 (常に水平面内にあり特異点なし)
+      const rx = m00 * co + m01 * so;
+      const ry = m10 * co + m11 * so;
+
+      // 画面の上方向ベクトルのZ成分 uz と、画面法線ベクトルのZ成分 bz
+      const uz = -m20 * so + m21 * co;
+      const bz = m22;
+
+      const worldYaw = radToDeg(Math.atan2(ry, rx));
+      const worldPitch = radToDeg(Math.atan2(-bz, uz));
+      return { worldYaw, worldPitch };
+    }
+
+    const toggleGyroBtn = document.getElementById('toggle-gyro');
+    toggleGyroBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (gyroActive) {
+        gyroActive = false;
+        toggleGyroBtn.classList.toggle('active', false);
+        toggleGyroBtn.textContent = '📱 ジャイロ: OFF';
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+        showToast('ジャイロ連動をOFFにしました');
+        return;
+      }
+
+      if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        alert('⚠️ ジャイロセンサーはiOSのセキュリティ仕様上、HTTPS（GitHub Pagesなど）でのみ動作します。');
+        return;
+      }
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') {
+            alert('ジャイロセンサーの利用が拒否されました。Safariの設定から許可してください。');
+            return;
+          }
+        } catch (err) {
+          alert('ジャイロの許可リクエストに失敗しました: ' + err);
+          return;
+        }
+      } else if (!window.DeviceOrientationEvent) {
+        alert('お使いの端末ではジャイロセンサーがサポートされていません。');
+        return;
+      }
+
+      gyroActive = true;
+      gyroBaseline = null;
+      toggleGyroBtn.classList.toggle('active', true);
+      toggleGyroBtn.textContent = '📱 ジャイロ: ON';
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
+      showToast('📱 ジャイロON：iPadを上下左右に向けると視点が動きます');
+    });
+
+    function handleDeviceOrientation(e) {
+      if (!gyroActive) return;
+
+      const alpha = (typeof e.alpha === 'number')
+        ? e.alpha
+        : (typeof e.webkitCompassHeading === 'number' ? (360 - e.webkitCompassHeading) % 360 : null);
+      const beta = e.beta;
+      const gamma = e.gamma;
+
+      if (alpha === null || beta === null || gamma === null) return;
+
+      if (gyroBaseline === null) {
+        const detectedOrient = detectPhysicalOrientation(beta, gamma);
+        const initAngles = computeGyroAngles(alpha, beta, gamma, detectedOrient);
+        gyroBaseline = {
+          orient: detectedOrient,
+          worldYaw: initAngles.worldYaw,
+          worldPitch: initAngles.worldPitch,
+          baseYaw: spherical.yaw,
+          basePitch: spherical.pitch
+        };
+        return;
+      }
+
+      const currAngles = computeGyroAngles(alpha, beta, gamma, gyroBaseline.orient);
+      const yawDelta = getShortestAngleDiff(currAngles.worldYaw, gyroBaseline.worldYaw);
+      const pitchDelta = getShortestAngleDiff(currAngles.worldPitch, gyroBaseline.worldPitch);
+
+      spherical.yaw = gyroBaseline.baseYaw + yawDelta;
+      spherical.pitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + pitchDelta));
+      updateSpherical();
+    }
+
+    // ==========================================
+    // 9. 各種コントロールボタンイベント
+    // ==========================================
     document.getElementById('btn-reset').addEventListener('click', (e) => {
       e.stopPropagation();
       stopInertia();
-      gyroBaseline = null; // ジャイロの基準点を現在向いている方向にリセット
+      gyroBaseline = null;
       spherical.yaw = 0;
       spherical.pitch = 0;
       spherical.roll = 0;
@@ -1079,17 +1539,15 @@
       fovSlider.value = 100;
       fovValText.textContent = '100°';
       updateSpherical();
-      showToast('正面にリセットしました');
+      showToast('🎯 正面にリセットしました');
     });
 
-    // FOV スライダー操作
     fovSlider.addEventListener('input', (e) => {
       spherical.fov = parseFloat(e.target.value);
       fovValText.textContent = `${Math.round(spherical.fov)}°`;
       updateSpherical();
     });
 
-    // 自動回転モード
     const toggleAutopanBtn = document.getElementById('toggle-autopan');
     toggleAutopanBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1099,7 +1557,6 @@
 
       if (autoPanActive) {
         stopInertia();
-        syncSphericalFromPlayer();
         const panLoop = () => {
           if (!autoPanActive) return;
           spherical.yaw += autoPanSpeed;
@@ -1114,112 +1571,24 @@
       }
     });
 
-    // ジャイロセンサー連動 (iPadの傾き連動)
-    const toggleGyroBtn = document.getElementById('toggle-gyro');
-    toggleGyroBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (gyroActive) {
-        gyroActive = false;
-        toggleGyroBtn.classList.toggle('active', false);
-        toggleGyroBtn.textContent = '📱 ジャイロ: OFF';
-        window.removeEventListener('deviceorientation', handleDeviceOrientation);
-        showToast('ジャイロ連動をOFFにしました');
-        return;
-      }
-
-      // Appleのセキュリティ仕様：HTTP(平文)ではジャイロAPIがブラウザによって完全に封殺されます
-      if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        alert('⚠️ ジャイロセンサーはAppleのセキュリティ仕様上、HTTPS（GitHub Pagesなど）でのみ動作します。\n\n現在「http://」で開かれているため、Safariの仕様によりセンサーの許可ダイアログが出せません。\n\nGitHub Pages（https://watanabe-apps.github.io/apps/...）にpushして開いてください。');
-        return;
-      }
-
-      // iOS 13+ での DeviceOrientation 許可要求 (HTTPS必須)
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        try {
-          const permission = await DeviceOrientationEvent.requestPermission();
-          if (permission !== 'granted') {
-            alert('ジャイロセンサーの利用が拒否されました。Safariの設定から許可してください。');
-            return;
-          }
-        } catch (err) {
-          console.error(err);
-          alert('ジャイロの許可リクエストに失敗しました: ' + err);
+    function togglePlayPause() {
+      if (currentEngine === 'webgl') {
+        if (isDemoPlanetarium) {
+          showToast('🌌 360°ドーム検証モード稼働中です');
           return;
         }
-      } else if (!window.DeviceOrientationEvent) {
-        alert('お使いの環境ではジャイロセンサー（DeviceOrientation）がサポートされていません。');
+        if (nativeVideo.paused) {
+          nativeVideo.play().catch(() => {});
+          document.getElementById('btn-playpause').textContent = '⏸️ 一時停止';
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'play' });
+        } else {
+          nativeVideo.pause();
+          document.getElementById('btn-playpause').textContent = '▶️ 再生';
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'pause' });
+        }
         return;
       }
 
-      gyroActive = true;
-      gyroBaseline = null;
-      toggleGyroBtn.classList.toggle('active', true);
-      toggleGyroBtn.textContent = '📱 ジャイロ: ON';
-      window.addEventListener('deviceorientation', handleDeviceOrientation);
-      showToast('ジャイロ連動中（iPadを向けた方向に視点が追従）');
-    });
-
-    // 角度の最短差分を計算（0度と360度の境界をスムーズに通過）
-    function getShortestAngleDiff(curr, base) {
-      let diff = (curr - base) % 360;
-      if (diff > 180) diff -= 360;
-      if (diff < -180) diff += 360;
-      return diff;
-    }
-
-    function handleDeviceOrientation(e) {
-      if (!gyroActive) return;
-
-      // 水平方向（方位角）: iOS Safariの webkitCompassHeading を最優先、なければ e.alpha
-      const compass = (typeof e.webkitCompassHeading !== 'undefined') ? e.webkitCompassHeading : e.alpha;
-      const beta = e.beta;   // 前後チルト (-180 ~ 180)
-      const gamma = e.gamma; // 左右ロール (-90 ~ 90)
-
-      if (compass === null || typeof compass === 'undefined' || beta === null || gamma === null) return;
-
-      // 画面の向き（iPadを横持ちにしている場合を考慮: 0: 縦, 90: 横右, -90/270: 横左）
-      const orientation = (typeof window.orientation !== 'undefined') 
-        ? window.orientation 
-        : (screen.orientation ? (screen.orientation.angle || 0) : 0);
-
-      if (gyroBaseline === null) {
-        gyroBaseline = {
-          compass: compass,
-          beta: beta,
-          gamma: gamma,
-          baseYaw: spherical.yaw,
-          basePitch: spherical.pitch,
-          orientation: orientation
-        };
-        return;
-      }
-
-      // 1. 【水平方向（左右・Yaw）】:
-      // iPadを左右に旋回させた時、縦持ちでも横持ちでも方位角（compass）が変化します！
-      const compassDiff = getShortestAngleDiff(compass, gyroBaseline.compass);
-
-      // 2. 【垂直方向（上下・Pitch）】:
-      // 縦持ちと横持ちで端末の倒れ軸が入れ替わるため補正
-      let pitchDiff = 0;
-      if (orientation === 90) {
-        // iPad横持ち（ホームボタン右 / カメラ左）: 上下チルトは gamma で検出
-        pitchDiff = -(gamma - gyroBaseline.gamma);
-      } else if (orientation === -90 || orientation === 270) {
-        // iPad横持ち（ホームボタン左 / カメラ右）: 上下チルトは -gamma で検出
-        pitchDiff = (gamma - gyroBaseline.gamma);
-      } else {
-        // iPad縦持ち: 上下チルトは beta で検出
-        pitchDiff = (beta - gyroBaseline.beta);
-      }
-
-      // 視点に反映（compassHeadingは時計回りなのでマイナスで左右一致）
-      spherical.yaw = gyroBaseline.baseYaw - compassDiff;
-      spherical.pitch = Math.max(-85, Math.min(85, gyroBaseline.basePitch + pitchDiff));
-      updateSpherical();
-    }
-
-    // 再生 / 一時停止トグル
-    function togglePlayPause() {
       if (!player || typeof player.getPlayerState !== 'function') return;
       try {
         const state = player.getPlayerState();
@@ -1227,6 +1596,8 @@
           player.pauseVideo();
           if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'pause' });
         } else {
+          // ミラーリング中はpostMessage経由のplayVideoがブロックされる場合があるため、透過も同時に有効化
+          setDragLayerActive(false, '画面中央のYouTube再生ボタンをタップしてください');
           player.playVideo();
           if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'play' });
         }
@@ -1238,11 +1609,16 @@
       togglePlayPause();
     });
 
-    // ミュート切替
     const muteBtn = document.getElementById('btn-mute');
     if (muteBtn) {
       muteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (currentEngine === 'webgl') {
+          nativeVideo.muted = !nativeVideo.muted;
+          muteBtn.textContent = nativeVideo.muted ? '🔇 消音中' : '🔊 音声: ON';
+          showToast(nativeVideo.muted ? '消音にしました' : '音声を有効にしました');
+          return;
+        }
         if (!player || typeof player.isMuted !== 'function') return;
         if (player.isMuted()) {
           player.unMute();
@@ -1256,14 +1632,12 @@
       });
     }
 
-    // UI表示 / 非表示トグル
     function setUiVisible(visible) {
       isUiHidden = !visible;
       topBar.classList.toggle('hidden', !visible);
       hudControls.classList.toggle('hidden', !visible);
       projectorGuide.classList.toggle('hidden', !visible);
       uiToggleBtn.textContent = visible ? '👁️' : '⚙️';
-      uiToggleBtn.title = visible ? 'UIを非表示にする' : 'UIを表示する';
     }
 
     uiToggleBtn.addEventListener('click', (e) => {
@@ -1271,25 +1645,22 @@
       setUiVisible(isUiHidden);
     });
 
-    // 画面タップでUIが非表示のときに復帰
-    window.addEventListener('click', (e) => {
-      if (isUiHidden) {
-        // UIが隠れている時に画面端などをタップしたら再表示
-        setUiVisible(true);
-      }
-    });
-
-    // URL / ID ロード
     function loadVideoFromInput() {
-      const val = urlInput.value;
+      const val = urlInput.value.trim();
+      if (!val) return;
+
+      // 直接MP4/WebM/MOVのURLが入力された場合はWebGL 360°エンジンで再生
+      if (/\.(mp4|webm|mov|m3u8)(\?.*)?$/i.test(val)) {
+        switchToWebGLVideo(val, 'カスタム360°ストリーム');
+        return;
+      }
+
       const videoId = extractVideoId(val);
       if (videoId) {
-        currentVideoId = videoId;
         if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'load', videoId });
-        forceRetryVideo();
-        showToast('動画をロード中...');
+        switchToYouTubeVideo(videoId);
       } else {
-        alert('有効なYouTubeのURLまたは動画IDを入力してください');
+        alert('有効なYouTubeのURL / 動画ID、またはMP4動画のURLを入力してください');
       }
     }
 
@@ -1298,14 +1669,21 @@
       if (e.key === 'Enter') loadVideoFromInput();
     });
 
-    // プリセットクリック
-    document.querySelectorAll('.preset-chip').forEach(chip => {
+    // プリセットチップのクリック処理 (#help-btnを除外するため [data-id] で指定)
+    document.querySelectorAll('.preset-chip[data-id]').forEach(chip => {
       chip.addEventListener('click', () => {
-        document.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.preset-chip[data-id]').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
+        const type = chip.getAttribute('data-type');
         const id = chip.getAttribute('data-id');
-        urlInput.value = id;
-        loadVideoFromInput();
+
+        if (type === 'webgl-demo') {
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'webgl-demo' });
+          switchToWebGLDemo();
+        } else {
+          if (syncChannel && !isDisplayMode) syncChannel.postMessage({ type: 'load', videoId: id });
+          switchToYouTubeVideo(id);
+        }
       });
     });
 
@@ -1316,7 +1694,8 @@
     const closeHelpBtn2 = document.getElementById('close-help-btn-2');
 
     if (helpBtn && helpModal) {
-      helpBtn.addEventListener('click', () => {
+      helpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         helpModal.style.display = 'flex';
       });
       const closeHelp = () => { helpModal.style.display = 'none'; };
@@ -1327,11 +1706,10 @@
       });
     }
 
-    // 全画面ボタン (ブラウザのFullscreen API)
     fullscreenBtn.addEventListener('click', () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          showToast('全画面表示: iPadではホーム画面追加がおすすめです');
+        document.documentElement.requestFullscreen().catch(() => {
+          showToast('iPadでは「ホーム画面に追加」すると完全フルスクリーンになります');
         });
       } else {
         document.exitFullscreen();
