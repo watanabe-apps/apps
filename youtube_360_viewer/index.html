@@ -502,7 +502,7 @@
       </div>
       <div class="hud-row">
         <button id="btn-playpause" class="toggle-btn">⏯️ 一時停止</button>
-        <button id="toggle-invert-x" class="toggle-btn">↔️ 左右: 正方向</button>
+        <button id="btn-mute" class="toggle-btn">🔇 消音解除</button>
       </div>
       <div class="hud-row">
         <button id="toggle-autopan" class="toggle-btn">🔄 自動回転: OFF</button>
@@ -646,10 +646,12 @@
       // iOSで「外部出力モード（AVPlayer）」に取られないための設定：
       // - playsinline: 1 (必須: ネイティブフルスクリーンをブロック)
       // - fs: 0 (フルスクリーンボタンを出さない)
+      // - mute: 1 (必須: iOSで外部ディスプレイ接続時の自動再生ブロックを回避)
       player = new YT.Player('player', {
         videoId: videoId,
         playerVars: {
           autoplay: 1,
+          mute: 1,
           playsinline: 1,
           fs: 0,
           rel: 0,
@@ -1235,6 +1237,24 @@
       e.stopPropagation();
       togglePlayPause();
     });
+
+    // ミュート切替
+    const muteBtn = document.getElementById('btn-mute');
+    if (muteBtn) {
+      muteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!player || typeof player.isMuted !== 'function') return;
+        if (player.isMuted()) {
+          player.unMute();
+          muteBtn.textContent = '🔊 音声: ON';
+          showToast('音声を有効にしました');
+        } else {
+          player.mute();
+          muteBtn.textContent = '🔇 消音中';
+          showToast('消音にしました');
+        }
+      });
+    }
 
     // UI表示 / 非表示トグル
     function setUiVisible(visible) {
