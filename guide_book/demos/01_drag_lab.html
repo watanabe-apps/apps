@@ -3,421 +3,658 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>デモA：ドラッグ操作ラボ - 特別支援教育 アプリ開発ハンドブック</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <title>デモA：ドラッグ＆ドロップ挙動比較ラボ（1〜3数字カード）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    :root {
+      --primary: #0284c7;
+      --primary-focus: #0369a1;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
       touch-action: none;
     }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
 
-    .demo-app-header {
-      background-color: #1e293b;
-      padding: 0.75rem 1.5rem;
+    header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #334155;
       flex-shrink: 0;
+      z-index: 100;
     }
-
-    .demo-app-title {
-      font-size: 1.05rem;
+    .back-link {
+      color: #64748b;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .header-links-group {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .nav-back-link {
-      background: #334155;
-      color: #38bdf8;
-      font-size: 0.82rem;
-      font-weight: 700;
-      padding: 0.4rem 0.8rem;
+      text-decoration: none;
+      padding: 6px 12px;
       border-radius: 6px;
-      text-decoration: none;
-      transition: background-color 0.2s;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      touch-action: manipulation;
     }
-    .nav-back-link:hover {
-      background: #475569;
-      color: #fff;
-      text-decoration: none;
+    .back-link:hover {
+      background: #e2e8f0;
+      color: #0f172a;
     }
-
-    .config-bar {
-      background-color: #1e293b;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.85rem;
-      align-items: center;
-      border-bottom: 2px solid #334155;
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    .config-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .config-item label {
-      color: #94a3b8;
-      font-weight: 600;
-    }
-
-    .config-select {
-      background-color: #0f172a;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 4px;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    .btn-reset-app {
-      background-color: var(--primary);
-      color: #fff;
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
       border: none;
+      padding: 6px 16px;
+      font-size: 0.88rem;
       font-weight: 700;
-      padding: 0.4rem 1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.85rem;
-      margin-left: auto;
+      touch-action: manipulation;
     }
-    .btn-reset-app:active {
-      background-color: var(--primary-focus);
-    }
-
-    /* メイン操作ステージ */
-    .viewport-stage {
-      flex: 1;
-      position: relative;
-      background-color: #ffffff;
-      margin: 1rem;
-      border-radius: 12px;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      touch-action: none;
+    .btn-reset:hover {
+      background: var(--primary-focus);
     }
 
-    /* 100px ドラッグブロック */
-    .drag-box-100 {
-      width: 100px;
-      height: 100px;
-      border-radius: 12px;
-      background-color: var(--primary);
-      color: #ffffff;
+    /* コンパクトなコントロールバー（ドロップダウンメニュー） */
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 2px solid var(--border);
+      padding: 6px 14px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 0.92rem;
-      font-weight: 700;
-      cursor: grab;
-      position: absolute;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      touch-action: none;
-      -webkit-user-drag: none;
-      z-index: 10;
-      transition: transform 0.08s ease, background-color 0.2s ease;
-    }
-
-    .drag-box-100:active {
-      cursor: grabbing;
-      transform: scale(1.04);
-    }
-
-    .drag-box-100.is-locked {
-      background-color: #64748b !important;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    /* 100px ドロップ枠 */
-    .target-slot-100 {
-      width: 100px;
-      height: 100px;
-      border: 3px dashed var(--primary);
-      background-color: var(--primary-soft);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--primary-focus);
-      position: absolute;
-      z-index: 1;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
-    }
-
-    .target-slot-100.snapped {
-      background-color: var(--success-soft);
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .status-toast {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(15, 23, 42, 0.85);
-      color: #f8fafc;
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      flex-shrink: 0;
       font-size: 0.82rem;
+    }
+    .select-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .select-item label {
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+      font-size: 0.8rem;
+    }
+    .compact-select {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0f172a;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .compact-select:hover {
+      border-color: #94a3b8;
+    }
+    .compact-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+
+    /* 現在の設定解説バナー */
+    .status-summary {
+      background: #e0f2fe;
+      border-bottom: 1px solid #bae6fd;
+      padding: 4px 16px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* プレイステージ */
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      padding: 16px;
+      position: relative;
+      background: #ffffff;
+    }
+
+    /* 上部：□枠 */
+    .slot-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .section-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    #slot-container {
+      display: flex;
+      gap: 20px;
+      padding: 12px 24px;
+      background: #f8fafc;
+      border-radius: 14px;
+      border: 2px dashed #94a3b8;
+    }
+    .slot-box {
+      width: 90px;
+      height: 90px;
+      border: 3px solid #94a3b8;
+      border-radius: 12px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      position: relative;
+    }
+    .slot-box::before {
+      content: attr(data-num);
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    /* 下部：数字カード置き場 */
+    .card-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #card-container {
+      display: flex;
+      gap: 20px;
+      padding: 12px 24px;
+      background: #e2e8f0;
+      border-radius: 14px;
+      border: 2px solid #cbd5e1;
+      min-height: 114px;
+      min-width: 330px;
+    }
+
+    /* 数字カード（90px） */
+    .card-block {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      background: #ffffff;
+      border: 3px solid #0284c7;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #0284c7;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+    }
+    .card-block.dragging {
+      cursor: grabbing;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+      transform: scale(1.08);
+      z-index: 999;
+      opacity: 0.95;
+    }
+    .card-block.animating {
+      transition: left 0.2s ease-out, top 0.2s ease-out, transform 0.15s ease;
+    }
+    .card-block.is-locked {
+      background: #f0fdf4 !important;
+      border-color: #15803d !important;
+      color: #15803d !important;
+      cursor: not-allowed;
+      box-shadow: 0 2px 4px rgba(21, 128, 61, 0.15);
+    }
+
+    /* 正解エフェクト */
+    #correct-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: clamp(140px, 35vw, 220px);
+      color: #ef4444;
+      font-weight: bold;
+      z-index: 1000;
       pointer-events: none;
-      z-index: 50;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #correct-banner.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.85;
     }
   </style>
 </head>
-<body class="no-select">
+<body>
 
-  <!-- ヘッダー（目次リンク追加） -->
-  <header class="demo-app-header">
-    <div class="demo-app-title">
-      <span>🧪 デモA：ドラッグ挙動パラメータ比較ラボ</span>
-    </div>
-    <div class="header-links-group">
-      <a href="../index.html" class="nav-back-link">🏠 全体目次</a>
-      <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
-    </div>
+  <header>
+    <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">4.2 ② いろいろなドラッグ挙動 比較ラボ</span>
+    <button class="btn-reset" onclick="initLab()">もう一度（シャッフル）</button>
   </header>
 
-  <!-- パラメータ操作パネル -->
-  <div class="config-bar">
-    <div class="config-item">
-      <label>判定方式:</label>
-      <select id="cfgTrigger" class="config-select" onchange="resetLab()">
-        <option value="release">離した時に判定（ドロップ判定）</option>
-        <option value="proximity">近づいた瞬間に吸着（近接判定）</option>
+  <!-- ドロップダウンメニューによるコンパクト設定バー -->
+  <div class="settings-bar">
+    <div class="select-item">
+      <label for="sel-drag">① ドラッグ:</label>
+      <select id="sel-drag" class="compact-select" onchange="setDragMode(this.value)">
+        <option value="single" selected>② 一般的（単一操作）</option>
+        <option value="center">① 指中心（端触るとズレる）</option>
+        <option value="multi">③ 複数同時（マルチタッチ）</option>
       </select>
     </div>
 
-    <div class="config-item">
-      <label>吸着後:</label>
-      <select id="cfgRedrag" class="config-select" onchange="resetLab()">
-        <option value="allow">再度ドラッグ可能（やり直し可）</option>
-        <option value="lock">枠に固定（やり直し不可）</option>
+    <div class="select-item">
+      <label for="sel-drop">② ドロップ:</label>
+      <select id="sel-drop" class="compact-select" onchange="setDropMode(this.value)">
+        <option value="release" selected>② 指を離した時 吸着</option>
+        <option value="approach">① 近づいた時 自動吸着</option>
       </select>
     </div>
 
-    <div class="config-item">
-      <label>運ぶ方向:</label>
-      <select id="cfgDirection" class="config-select" onchange="resetLab()">
-        <option value="bottom-top">下から上へ（手で隠れない原則）</option>
-        <option value="top-bottom">上から下へ（教科書レイアウト）</option>
-        <option value="left-right">左から右へ</option>
+    <div class="select-item">
+      <label for="sel-target">吸着先:</label>
+      <select id="sel-target" class="compact-select" onchange="setTargetMode(this.value)">
+        <option value="correct" selected>正解枠のみ</option>
+        <option value="any">どの枠でも</option>
       </select>
     </div>
 
-    <div class="config-item">
-      <label>判定範囲:</label>
-      <select id="cfgRadius" class="config-select">
-        <option value="generous">広め（タブレット推奨・手前で吸着）</option>
-        <option value="strict">厳密（完全な重なり判定）</option>
+    <div class="select-item">
+      <label for="sel-wrong">枠外:</label>
+      <select id="sel-wrong" class="compact-select" onchange="setWrongMode(this.value)">
+        <option value="return" selected>元に戻る</option>
+        <option value="stay">その場に留まる</option>
       </select>
     </div>
 
-    <button class="btn-reset-app" onclick="resetLab()">初期位置にリセット</button>
+    <div class="select-item">
+      <label for="sel-lock">③ 吸着後:</label>
+      <select id="sel-lock" class="compact-select" onchange="setLockMode(this.value)">
+        <option value="locked" selected>① 正解後はドラッグ不能</option>
+        <option value="unlocked">② 正解後もドラッグ可能</option>
+      </select>
+    </div>
   </div>
 
-  <!-- ステージ -->
-  <div class="viewport-stage" id="labStage">
-    <div class="target-slot-100" id="labTarget">
-      <span>枠</span>
-      <span style="font-size: 0.72rem; font-weight: normal;">100px</span>
+  <main id="stage">
+    <!-- 上部：□枠 -->
+    <div class="slot-section">
+      <div id="slot-container"></div>
     </div>
-    <div class="drag-box-100" id="labBlock">
-      <span>100px</span>
-      <span style="font-size: 0.72rem; font-weight: normal;">ドラッグ</span>
+
+    <!-- 下部：数字カード置き場 -->
+    <div class="card-section">
+      <div id="card-container"></div>
     </div>
-    <div class="status-toast" id="statusToast">ブロックを枠まで運んでください</div>
-  </div>
+
+    <div id="correct-banner">◯</div>
+  </main>
 
   <script>
-    // --- Web Audio API（効果音） ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(freq, dur = 0.15) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + dur);
-    }
+    const TOTAL_CARDS = 3;
+    const CARD_SIZE = 90;
+    let slots = [];
+    let cards = [];
+    let zIndexCounter = 10;
+    let audioCtx = null;
 
-    // --- 要素と状態 ---
-    const stage = document.getElementById("labStage");
-    const block = document.getElementById("labBlock");
-    const target = document.getElementById("labTarget");
-    const toast = document.getElementById("statusToast");
+    // パラメータ状態（本文の項目に対応）
+    let dragMode = 'single';   // 'center' | 'single' | 'multi'
+    let dropMode = 'release';  // 'approach' | 'release'
+    let targetMode = 'correct';// 'correct' | 'any'
+    let wrongMode = 'return';  // 'return' | 'stay'
+    let lockMode = 'locked';   // 'locked' | 'unlocked'
 
-    let isDragging = false;
-    let isSnapped = false;
-    let startPointer = { x: 0, y: 0 };
-    let blockStartPos = { x: 0, y: 0 };
+    // アクティブなドラッグを管理（マルチタッチ対応用: pointerId -> dragInfo）
+    const activeDrags = new Map();
 
-    function resetLab() {
-      isDragging = false;
-      isSnapped = false;
-      block.classList.remove("is-locked");
-      block.style.pointerEvents = "auto";
-      block.style.zIndex = "10";
-      target.classList.remove("snapped");
-      target.innerHTML = '<span>枠</span><span style="font-size: 0.72rem; font-weight: normal;">100px</span>';
-      toast.textContent = "ブロックを枠まで運んでください";
-
-      const dir = document.getElementById("cfgDirection").value;
-      const stageW = stage.clientWidth;
-      const stageH = stage.clientHeight;
-
-      if (dir === "bottom-top") {
-        target.style.left = `${(stageW - 100) / 2}px`;
-        target.style.top = `40px`;
-        block.style.left = `${(stageW - 100) / 2}px`;
-        block.style.top = `${stageH - 140}px`;
-      } else if (dir === "top-bottom") {
-        target.style.left = `${(stageW - 100) / 2}px`;
-        target.style.top = `${stageH - 140}px`;
-        block.style.left = `${(stageW - 100) / 2}px`;
-        block.style.top = `40px`;
-      } else { // left-right
-        target.style.left = `${stageW - 140}px`;
-        target.style.top = `${(stageH - 100) / 2}px`;
-        block.style.left = `40px`;
-        block.style.top = `${(stageH - 100) / 2}px`;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
       }
     }
-
-    block.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      if (isSnapped && document.getElementById("cfgRedrag").value === "lock") return;
-
-      isDragging = true;
-      block.setPointerCapture(e.pointerId);
-      block.style.zIndex = "100";
-
-      startPointer = { x: e.clientX, y: e.clientY };
-      const bRect = block.getBoundingClientRect();
-      const sRect = stage.getBoundingClientRect();
-      blockStartPos = { x: bRect.left - sRect.left, y: bRect.top - sRect.top };
-
-      if (isSnapped) {
-        isSnapped = false;
-        target.classList.remove("snapped");
-        target.innerHTML = '<span>枠</span><span style="font-size: 0.72rem; font-weight: normal;">100px</span>';
-      }
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      window.addEventListener(evt, initAudio, { once: true });
     });
 
-    block.addEventListener("pointermove", (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
+    function playSound() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+        osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime + 0.15);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(audioCtx.currentTime);
+        osc1.stop(audioCtx.currentTime + 0.15);
+        osc2.start(audioCtx.currentTime + 0.15);
+        osc2.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {}
+    }
 
-      const dx = e.clientX - startPointer.x;
-      const dy = e.clientY - startPointer.y;
-      const curX = blockStartPos.x + dx;
-      const curY = blockStartPos.y + dy;
+    function updateStatusText() {
+      // 選択ボックス自体に値が表示されるため不要
+    }
 
-      block.style.left = `${curX}px`;
-      block.style.top = `${curY}px`;
+    function setDragMode(mode) {
+      dragMode = mode;
+      const el = document.getElementById('sel-drag');
+      if (el) el.value = mode;
+      updateStatusText();
+    }
+    function setDropMode(mode) {
+      dropMode = mode;
+      const el = document.getElementById('sel-drop');
+      if (el) el.value = mode;
+      updateStatusText();
+    }
+    function setTargetMode(mode) {
+      targetMode = mode;
+      const el = document.getElementById('sel-target');
+      if (el) el.value = mode;
+      updateStatusText();
+    }
+    function setWrongMode(mode) {
+      wrongMode = mode;
+      const el = document.getElementById('sel-wrong');
+      if (el) el.value = mode;
+      updateStatusText();
+    }
+    function setLockMode(mode) {
+      lockMode = mode;
+      const el = document.getElementById('sel-lock');
+      if (el) el.value = mode;
+      updateStatusText();
+    }
 
-      if (document.getElementById("cfgTrigger").value === "proximity") {
-        if (checkCollision()) {
-          executeSnap(e.pointerId);
+    function initLab() {
+      document.getElementById('correct-banner').classList.remove('show');
+      activeDrags.clear();
+
+      cards.forEach(c => {
+        if (c.el && c.el.parentNode) c.el.parentNode.removeChild(c.el);
+      });
+      cards = [];
+      slots = [];
+
+      // 1. スロット枠の構築（上部）
+      const slotContainer = document.getElementById('slot-container');
+      slotContainer.innerHTML = '';
+      for (let i = 1; i <= TOTAL_CARDS; i++) {
+        const slotEl = document.createElement('div');
+        slotEl.className = 'slot-box';
+        slotEl.dataset.num = `枠 ${i}`;
+        slotContainer.appendChild(slotEl);
+        slots.push({ num: i, el: slotEl, answer: null });
+      }
+
+      // 2. カードトレイのプレースホルダー構築（下部）
+      const cardContainer = document.getElementById('card-container');
+      cardContainer.innerHTML = '';
+      for (let i = 1; i <= TOTAL_CARDS; i++) {
+        const ph = document.createElement('div');
+        ph.style.width = `${CARD_SIZE}px`;
+        ph.style.height = `${CARD_SIZE}px`;
+        ph.style.opacity = '0';
+        cardContainer.appendChild(ph);
+      }
+
+      requestAnimationFrame(() => {
+        slots.forEach(s => {
+          const rect = s.el.getBoundingClientRect();
+          s.x = rect.left;
+          s.y = rect.top;
+        });
+
+        // シャッフル（最初から1,2,3で並ばないようにする）
+        let order = [1, 2, 3];
+        do {
+          order.sort(() => Math.random() - 0.5);
+        } while (order[0] === 1 && order[1] === 2 && order[2] === 3);
+
+        const phs = cardContainer.children;
+        for (let i = 0; i < TOTAL_CARDS; i++) {
+          const num = order[i];
+          const slotRect = phs[i].getBoundingClientRect();
+
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card-block animating';
+          cardEl.innerText = num;
+          cardEl.style.left = `${slotRect.left}px`;
+          cardEl.style.top = `${slotRect.top}px`;
+          document.body.appendChild(cardEl);
+
+          const cardObj = {
+            num: num,
+            el: cardEl,
+            startX: slotRect.left,
+            startY: slotRect.top,
+            currentX: slotRect.left,
+            currentY: slotRect.top,
+            isLocked: false
+          };
+          cards.push(cardObj);
+          setupDrag(cardObj);
         }
-      }
-    });
+      });
+      updateStatusText();
+    }
 
-    function onPointerUp(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      try { block.releasePointerCapture(e.pointerId); } catch(err) {}
+    function setupDrag(card) {
+      card.el.addEventListener('pointerdown', (e) => {
+        // 吸着後ロック判定
+        if (card.isLocked && lockMode === 'locked') return;
 
-      if (document.getElementById("cfgTrigger").value === "release") {
-        if (checkCollision()) {
-          executeSnap();
+        // 単一操作対象モード時、既に他のカードをドラッグ中なら無視
+        if (dragMode === 'single' && activeDrags.size > 0) return;
+
+        initAudio();
+        card.el.setPointerCapture(e.pointerId);
+        card.el.classList.remove('animating');
+        card.el.classList.add('dragging');
+        card.el.style.zIndex = ++zIndexCounter;
+
+        const rect = card.el.getBoundingClientRect();
+        let offsetX, offsetY;
+
+        if (dragMode === 'center') {
+          // ① 指を中心として追従（端を触っても中心にジャンプする）
+          offsetX = CARD_SIZE / 2;
+          offsetY = CARD_SIZE / 2;
+          card.currentX = e.clientX - offsetX;
+          card.currentY = e.clientY - offsetY;
+          card.el.style.left = `${card.currentX}px`;
+          card.el.style.top = `${card.currentY}px`;
         } else {
-          returnToOrigin();
+          // ② 一般的なドラッグ（触れた位置を維持）
+          offsetX = e.clientX - rect.left;
+          offsetY = e.clientY - rect.top;
+        }
+
+        // スロットから外す
+        const assigned = slots.find(s => s.answer === card.num);
+        if (assigned) assigned.answer = null;
+        card.isLocked = false;
+        card.el.classList.remove('is-locked');
+
+        activeDrags.set(e.pointerId, {
+          card: card,
+          offsetX: offsetX,
+          offsetY: offsetY
+        });
+      });
+
+      card.el.addEventListener('pointermove', (e) => {
+        const dragInfo = activeDrags.get(e.pointerId);
+        if (!dragInfo || dragInfo.card !== card) return;
+
+        const newX = e.clientX - dragInfo.offsetX;
+        const newY = e.clientY - dragInfo.offsetY;
+        card.currentX = newX;
+        card.currentY = newY;
+        card.el.style.left = `${newX}px`;
+        card.el.style.top = `${newY}px`;
+
+        // ① 終点に近づいた時、自動で吸着（スナップ）する
+        if (dropMode === 'approach') {
+          const cardCenterX = newX + CARD_SIZE / 2;
+          const cardCenterY = newY + CARD_SIZE / 2;
+          const threshold = CARD_SIZE * 0.7;
+
+          for (let slot of slots) {
+            const slotCenterX = slot.x + CARD_SIZE / 2;
+            const slotCenterY = slot.y + CARD_SIZE / 2;
+            const dist = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
+
+            // 正解枠のみ吸着 or どの枠でも吸着
+            const canSnap = (targetMode === 'any' || slot.num === card.num) && slot.answer === null;
+
+            if (dist < threshold && canSnap) {
+              // 自動吸着！ドラッグ終了
+              try { card.el.releasePointerCapture(e.pointerId); } catch(err){}
+              activeDrags.delete(e.pointerId);
+              card.el.classList.remove('dragging');
+              card.el.classList.add('animating');
+              snapToSlot(card, slot);
+              return;
+            }
+          }
+        }
+      });
+
+      const handlePointerUp = (e) => {
+        const dragInfo = activeDrags.get(e.pointerId);
+        if (!dragInfo || dragInfo.card !== card) return;
+
+        activeDrags.delete(e.pointerId);
+        try { card.el.releasePointerCapture(e.pointerId); } catch(err){}
+        card.el.classList.remove('dragging');
+        card.el.classList.add('animating');
+
+        // ② 終点に近づいた時、指を離すと吸着する
+        const cardCenterX = card.currentX + CARD_SIZE / 2;
+        const cardCenterY = card.currentY + CARD_SIZE / 2;
+        const threshold = CARD_SIZE * 0.75;
+        let snapped = false;
+
+        for (let slot of slots) {
+          const slotCenterX = slot.x + CARD_SIZE / 2;
+          const slotCenterY = slot.y + CARD_SIZE / 2;
+          const dist = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
+
+          const canSnap = (targetMode === 'any' || slot.num === card.num) && slot.answer === null;
+
+          if (dist < threshold && canSnap) {
+            snapToSlot(card, slot);
+            snapped = true;
+            break;
+          }
+        }
+
+        // 枠に吸着しなかった場合
+        if (!snapped) {
+          if (wrongMode === 'return') {
+            // 元の位置に戻る
+            card.currentX = card.startX;
+            card.currentY = card.startY;
+            card.el.style.left = `${card.startX}px`;
+            card.el.style.top = `${card.startY}px`;
+          }
+          // stay の場合は指を離したその場に留まる
+        }
+      };
+
+      card.el.addEventListener('pointerup', handlePointerUp);
+      card.el.addEventListener('pointercancel', handlePointerUp);
+    }
+
+    function snapToSlot(card, slot) {
+      card.currentX = slot.x;
+      card.currentY = slot.y;
+      card.el.style.left = `${slot.x}px`;
+      card.el.style.top = `${slot.y}px`;
+      slot.answer = card.num;
+
+      // 正解判定
+      if (slot.num === card.num) {
+        if (lockMode === 'locked') {
+          // ① 正解後はドラッグ不能にする
+          card.isLocked = true;
+          card.el.classList.add('is-locked');
         }
       } else {
-        if (!isSnapped) returnToOrigin();
+        // 不正解の枠に入った場合
+        if (wrongMode === 'return') {
+          setTimeout(() => {
+            slot.answer = null;
+            card.currentX = card.startX;
+            card.currentY = card.startY;
+            card.el.style.left = `${card.startX}px`;
+            card.el.style.top = `${card.startY}px`;
+          }, 400);
+        }
+      }
+
+      setTimeout(checkAllCleared, 200);
+    }
+
+    function checkAllCleared() {
+      const allCorrect = slots.every(s => s.answer === s.num);
+      if (allCorrect) {
+        playSound();
+        document.getElementById('correct-banner').classList.add('show');
       }
     }
 
-    block.addEventListener("pointerup", onPointerUp);
-    block.addEventListener("pointercancel", onPointerUp);
-
-    function checkCollision() {
-      const b = block.getBoundingClientRect();
-      const t = target.getBoundingClientRect();
-      const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
-      const tCenter = { x: t.left + t.width / 2, y: t.top + t.height / 2 };
-      const dist = Math.hypot(bCenter.x - tCenter.x, bCenter.y - tCenter.y);
-
-      const isGenerous = document.getElementById("cfgRadius").value === "generous";
-      const threshold = isGenerous ? 85 : 45;
-      return dist < threshold;
-    }
-
-    function executeSnap(pointerId) {
-      isSnapped = true;
-      isDragging = false;
-      if (pointerId) {
-        try { block.releasePointerCapture(pointerId); } catch(err) {}
-      }
-
-      playBeep(659.25, 0.2);
-
-      const tRect = target.getBoundingClientRect();
-      const sRect = stage.getBoundingClientRect();
-
-      block.style.left = `${tRect.left - sRect.left}px`;
-      block.style.top = `${tRect.top - sRect.top}px`;
-      block.style.zIndex = "10";
-
-      target.classList.add("snapped");
-      target.innerHTML = '<span>ぴったり!</span>';
-      toast.textContent = "吸着成功（正解判定）";
-
-      if (document.getElementById("cfgRedrag").value === "lock") {
-        block.classList.add("is-locked");
-        toast.textContent = "吸着成功（固定・やり直し不可）";
-      }
-    }
-
-    function returnToOrigin() {
-      block.style.zIndex = "10";
-      toast.textContent = "枠から外れたため初期位置に戻りました";
-      resetLab();
-    }
-
-    window.addEventListener("DOMContentLoaded", resetLab);
-    window.addEventListener("resize", resetLab);
+    window.addEventListener('resize', initLab);
+    window.addEventListener('load', initLab);
   </script>
 </body>
 </html>

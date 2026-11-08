@@ -3,493 +3,494 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>デモB：数の学習ラボ - 特別支援教育 アプリ開発ハンドブック</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <title>デモB：数の学習（演出比較ラボ）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    :root {
+      --primary: #0284c7;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
       touch-action: none;
     }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
 
-    .demo-app-header {
-      background-color: #1e293b;
-      padding: 0.75rem 1.5rem;
+    header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 6px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #334155;
       flex-shrink: 0;
+      z-index: 100;
     }
-
-    .demo-app-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .header-links-group {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    .nav-back-link {
-      background: #334155;
-      color: #38bdf8;
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 4px 12px;
       font-size: 0.82rem;
       font-weight: 700;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      text-decoration: none;
-      transition: background-color 0.2s;
-    }
-    .nav-back-link:hover {
-      background: #475569;
-      color: #fff;
-      text-decoration: none;
-    }
-
-    .config-bar {
-      background-color: #1e293b;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      align-items: center;
-      border-bottom: 2px solid #334155;
-      font-size: 0.88rem;
-      flex-shrink: 0;
-    }
-
-    .config-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .config-select {
-      background-color: #0f172a;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 4px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.88rem;
-      outline: none;
-    }
-
-    .btn-reset-app {
-      background-color: var(--primary);
-      color: #fff;
-      border: none;
-      font-weight: 700;
-      padding: 0.4rem 1.1rem;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.85rem;
-      margin-left: auto;
+      touch-action: manipulation;
     }
 
-    /* メインステージ */
-    .viewport-stage {
-      flex: 1;
-      position: relative;
-      background-color: #ffffff;
-      margin: 1rem;
-      border-radius: 12px;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      touch-action: none;
-    }
-
-    /* 上部ターゲット枠コンテナ */
-    .target-slots-container {
-      width: 320px;
-      height: 96px;
-      border: 3px dashed #64748b;
-      background: #f8fafc;
-      border-radius: 14px;
-      position: absolute;
-      top: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      z-index: 1;
-    }
-
-    .target-slot {
-      width: 70px;
-      height: 70px;
-      border: 2px dashed #94a3b8;
-      border-radius: 12px;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #94a3b8;
-      transition: all 0.2s ease;
-    }
-
-    .target-slot.filled-clean {
-      background-color: var(--success-soft);
-      border-color: var(--success);
-      color: var(--success);
-      font-size: 1.4rem;
-    }
-
-    .target-slot.filled-noisy {
-      background-color: var(--danger-soft);
-      border-color: var(--danger);
-      color: var(--danger);
-      font-size: 0.9rem;
-    }
-
-    /* 下部トレイ */
-    .source-tray {
-      width: 100%;
-      height: 100px;
+    .settings-bar {
       background: #f1f5f9;
-      border-top: 2px solid #cbd5e1;
-      position: absolute;
-      bottom: 0;
-      left: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 36px;
-      z-index: 2;
+      gap: 12px;
+      flex-shrink: 0;
+      font-size: 0.82rem;
     }
-
-    /* 円オブジェクト（ノイズ除去モード） */
-    .circle-token {
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      background-color: #1e293b;
-      color: #ffffff;
+    .pill-group {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      cursor: grab;
-      touch-action: none;
-      -webkit-user-drag: none;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-      z-index: 10;
+      background: #e2e8f0;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
     }
-    .circle-token:active { cursor: grabbing; }
-
-    /* 車オブジェクト（過剰演出モード） */
-    .car-token {
-      width: 78px;
-      height: 65px;
-      border-radius: 12px;
-      background-color: #ef4444;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.1rem;
-      cursor: grab;
-      touch-action: none;
-      -webkit-user-drag: none;
-      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.4);
-      z-index: 10;
-      position: relative;
-      animation: carFlasher 0.6s infinite alternate;
-    }
-    .car-token:active { cursor: grabbing; }
-
-    @keyframes carFlasher {
-      from { transform: scale(1); filter: drop-shadow(0 0 4px #fbbf24); }
-      to { transform: scale(1.08) rotate(3deg); filter: drop-shadow(0 0 16px #ef4444); }
-    }
-
-    .feedback-toast {
-      position: absolute;
-      top: 140px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(15, 23, 42, 0.9);
-      color: #f8fafc;
-      padding: 0.6rem 1.4rem;
-      border-radius: 20px;
-      font-size: 0.92rem;
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.82rem;
       font-weight: 700;
+      color: #475569;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s ease;
+      touch-action: manipulation;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      padding: 16px;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    /* 車モード時の画面揺れ */
+    @keyframes stage-shake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-4px, 3px); }
+      40% { transform: translate(4px, -3px); }
+      60% { transform: translate(-3px, -2px); }
+      80% { transform: translate(3px, 2px); }
+    }
+    #stage.shaking {
+      animation: stage-shake 0.35s ease;
+    }
+
+    .row-slots {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+    }
+    .slot-box {
+      width: 90px;
+      height: 90px;
+      border: 1.5px solid #000000;
+      border-radius: 12px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      position: relative;
+    }
+    .slot-box::before {
+      content: attr(data-label);
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+
+    .pos-anchor {
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 操作ピース（円 または 車） */
+    .count-piece {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      transition: transform 0.15s ease;
+    }
+    .count-piece.dragging {
+      cursor: grabbing;
+      transform: scale(1.1);
+      z-index: 999;
+    }
+    .count-piece.animating {
+      transition: left 0.2s ease-out, top 0.2s ease-out, transform 0.15s ease;
+    }
+    .count-piece.is-locked {
+      cursor: default;
+    }
+
+    /* 1. シンプルな円 */
+    .piece-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+    }
+    .piece-circle::after {
+      content: "";
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      opacity: 0.35;
+    }
+
+    /* 2. 車（過剰な演出） */
+    .piece-car {
+      font-size: 3.4rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    }
+    @keyframes car-bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.25) rotate(10deg); }
+    }
+    .piece-car.snapped-effect {
+      animation: car-bounce 0.4s ease;
+    }
+
+    /* カウント数表示（画面中央） */
+    .count-badge {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #64748b;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #correct-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: clamp(120px, 30vw, 180px);
+      color: #ef4444;
+      font-weight: bold;
+      z-index: 1000;
       pointer-events: none;
-      text-align: center;
-      z-index: 50;
-      white-space: nowrap;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #correct-banner.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.85;
     }
   </style>
 </head>
-<body class="no-select">
+<body>
 
-  <!-- ヘッダー（目次リンク追加） -->
-  <header class="demo-app-header">
-    <div class="demo-app-title">
-      <span>🔢 デモB：数の学習（ノイズ除去 vs 過剰演出）ラボ</span>
-    </div>
-    <div class="header-links-group">
-      <a href="../index.html" class="nav-back-link">🏠 全体目次</a>
-      <a href="../chapters/04_principles.html" class="nav-back-link">⬅ 第4章の解説に戻る</a>
-    </div>
+  <header>
+    <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">4.5 ノイズ除去・演出比較ラボ（数の学習）</span>
+    <button class="btn-reset" onclick="initCountLab()">もう一度</button>
   </header>
 
-  <!-- コントロールバー -->
-  <div class="config-bar">
-    <div class="config-item">
-      <label>表示・演出モード:</label>
-      <select id="cfgNoiseMode" class="config-select" onchange="initCountLab()">
-        <option value="clean">【適切】ノイズ除去（シンプルな円・「いち、に、さん」の数唱）</option>
-        <option value="noisy">【不適切】過剰な演出（自動車・派手なエンジン音と振動）</option>
-      </select>
+  <div class="settings-bar">
+    <span style="font-weight:700; color:#475569;">演出モード:</span>
+    <div class="pill-group">
+      <button class="pill-btn active" id="btn-circle" onclick="setMode('circle')">① シンプル（円・数唱音声）</button>
+      <button class="pill-btn" id="btn-car" onclick="setMode('car')">② 演出多め（車・エンジン音と振動）</button>
     </div>
-    <button class="btn-reset-app" onclick="initCountLab()">リセット</button>
   </div>
 
-  <!-- ステージ -->
-  <div class="viewport-stage" id="countStage">
-    <div class="target-slots-container">
-      <div class="target-slot" id="slot-0">枠 1</div>
-      <div class="target-slot" id="slot-1">枠 2</div>
-      <div class="target-slot" id="slot-2">枠 3</div>
+  <main id="stage">
+    <!-- 上段：受け皿枠 -->
+    <div class="row-slots" id="slotsRow">
+      <div class="slot-box" data-label="1"></div>
+      <div class="slot-box" data-label="2"></div>
+      <div class="slot-box" data-label="3"></div>
     </div>
 
-    <div class="feedback-toast" id="countToast">下から1つずつ上の枠へ運んでください</div>
-    <div class="source-tray" id="countTray"></div>
-  </div>
+    <!-- カウント状況 -->
+    <div class="count-badge" id="countBadge"></div>
+
+    <!-- 下段：操作対象アンカー -->
+    <div class="row-slots" id="trayRow">
+      <div class="pos-anchor"></div>
+      <div class="pos-anchor"></div>
+      <div class="pos-anchor"></div>
+    </div>
+
+    <div id="correct-banner">◯</div>
+  </main>
 
   <script>
-    // --- 音声・音響制御 ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const TOTAL = 3;
+    const BOX_SIZE = 90;
+    let mode = 'circle'; // 'circle' | 'car'
+    let snappedCount = 0;
+    let pieces = [];
+    let slots = [];
+    let zIndexCounter = 10;
+    let audioCtx = null;
 
-    function playTone(freq, dur = 0.15) {
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      window.addEventListener(evt, initAudio, { once: true });
+    });
+
+    // シンプル音（数唱音階：ド・レ・ミ）
+    function playSimpleBeep(count) {
+      initAudio();
+      if (!audioCtx) return;
+      const pitches = [523.25, 587.33, 659.25]; // C5, D5, E5
+      const freq = pitches[count - 1] || 659.25;
+
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = "sine";
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + dur);
+      osc.stop(audioCtx.currentTime + 0.25);
     }
 
+    // 過剰なエンジン音
     function playEngineSound() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      initAudio();
+      if (!audioCtx) return;
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = "sawtooth";
+      osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(110, now);
-      osc.frequency.linearRampToValueAtTime(420, now + 0.18);
-      osc.frequency.linearRampToValueAtTime(85, now + 0.38);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 0.42);
+      osc.frequency.linearRampToValueAtTime(440, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.45);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start(now);
-      osc.stop(now + 0.42);
+      osc.stop(now + 0.45);
     }
 
-    function speakNumber(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
-      u.rate = 1.0;
-      window.speechSynthesis.speak(u);
+    function setMode(newMode) {
+      mode = newMode;
+      document.getElementById('btn-circle').classList.toggle('active', mode === 'circle');
+      document.getElementById('btn-car').classList.toggle('active', mode === 'car');
+      initCountLab();
     }
-
-    // --- ゲーム状態 ---
-    const stage = document.getElementById("countStage");
-    const tray = document.getElementById("countTray");
-    const toast = document.getElementById("countToast");
-    const numberWords = ["いち", "に", "さん"];
-
-    let itemStates = [
-      { id: 0, isPlaced: false, slotIdx: -1 },
-      { id: 1, isPlaced: false, slotIdx: -1 },
-      { id: 2, isPlaced: false, slotIdx: -1 }
-    ];
 
     function initCountLab() {
-      stage.querySelectorAll('.circle-token, .car-token').forEach(el => el.remove());
-      tray.innerHTML = "";
-      toast.textContent = "下から1つずつ上の枠へ運んでください";
+      snappedCount = 0;
+      document.getElementById('correct-banner').classList.remove('show');
+      document.getElementById('stage').classList.remove('shaking');
+      document.getElementById('countBadge').innerText = '';
 
-      for (let i = 0; i < 3; i++) {
-        const slot = document.getElementById(`slot-${i}`);
-        slot.className = "target-slot";
-        slot.textContent = `枠 ${i + 1}`;
-      }
+      pieces.forEach(p => {
+        if (p.el && p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      });
+      pieces = [];
+      slots = [];
 
-      itemStates = [
-        { id: 0, isPlaced: false, slotIdx: -1 },
-        { id: 1, isPlaced: false, slotIdx: -1 },
-        { id: 2, isPlaced: false, slotIdx: -1 }
-      ];
+      const slotBoxes = document.querySelectorAll('.slot-box');
+      slotBoxes.forEach((sEl, idx) => {
+        slots.push({ el: sEl, occupant: null, num: idx + 1 });
+      });
 
-      const mode = document.getElementById("cfgNoiseMode").value;
+      const anchors = document.querySelectorAll('.pos-anchor');
 
-      for (let i = 0; i < 3; i++) {
-        const item = document.createElement("div");
-        item.id = `token-${i}`;
+      requestAnimationFrame(() => {
+        slots.forEach(s => {
+          const rect = s.el.getBoundingClientRect();
+          s.x = rect.left;
+          s.y = rect.top;
+        });
 
-        if (mode === "clean") {
-          item.className = "circle-token";
-          item.textContent = "●";
-        } else {
-          item.className = "car-token";
-          item.textContent = "🚗";
+        for (let i = 0; i < TOTAL; i++) {
+          const rect = anchors[i].getBoundingClientRect();
+          const pEl = document.createElement('div');
+          pEl.className = 'count-piece animating';
+          pEl.style.left = `${rect.left}px`;
+          pEl.style.top = `${rect.top}px`;
+
+          if (mode === 'circle') {
+            pEl.innerHTML = `<div class="piece-circle"></div>`;
+          } else {
+            pEl.innerHTML = `<div class="piece-car">🚗</div>`;
+          }
+          document.body.appendChild(pEl);
+
+          const pieceObj = {
+            id: i,
+            el: pEl,
+            startX: rect.left,
+            startY: rect.top,
+            currentX: rect.left,
+            currentY: rect.top,
+            isLocked: false
+          };
+          pieces.push(pieceObj);
+          setupDrag(pieceObj);
         }
-
-        tray.appendChild(item);
-        setupDraggableItem(item, i);
-      }
+      });
     }
 
-    function setupDraggableItem(el, index) {
+    function setupDrag(piece) {
       let isDragging = false;
-      let startClient = { x: 0, y: 0 };
-      let initialStagePos = { x: 0, y: 0 };
+      let offsetX = 0;
+      let offsetY = 0;
 
-      el.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        if (itemStates[index].isPlaced) return;
-
+      piece.el.addEventListener('pointerdown', (e) => {
+        if (piece.isLocked) return;
+        initAudio();
         isDragging = true;
-        el.setPointerCapture(e.pointerId);
+        piece.el.setPointerCapture(e.pointerId);
+        piece.el.classList.remove('animating');
+        piece.el.classList.add('dragging');
+        piece.el.style.zIndex = ++zIndexCounter;
 
-        const mode = document.getElementById("cfgNoiseMode").value;
-        if (mode === "noisy") {
-          playEngineSound();
-        }
-
-        const rect = el.getBoundingClientRect();
-        const stageRect = stage.getBoundingClientRect();
-        initialStagePos = {
-          x: rect.left - stageRect.left,
-          y: rect.top - stageRect.top
-        };
-
-        el.style.position = "absolute";
-        el.style.left = `${initialStagePos.x}px`;
-        el.style.top = `${initialStagePos.y}px`;
-        el.style.zIndex = "150";
-        stage.appendChild(el);
-
-        startClient = { x: e.clientX, y: e.clientY };
+        const rect = piece.el.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
       });
 
-      el.addEventListener("pointermove", (e) => {
+      piece.el.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        e.preventDefault();
-
-        const dx = e.clientX - startClient.x;
-        const dy = e.clientY - startClient.y;
-        el.style.left = `${initialStagePos.x + dx}px`;
-        el.style.top = `${initialStagePos.y + dy}px`;
-
-        const mode = document.getElementById("cfgNoiseMode").value;
-        if (mode === "noisy") {
-          el.style.transform = `scale(1.15) rotate(${Math.sin(Date.now() / 40) * 12}deg)`;
-        }
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        piece.currentX = newX;
+        piece.currentY = newY;
+        piece.el.style.left = `${newX}px`;
+        piece.el.style.top = `${newY}px`;
       });
 
-      const onEnd = (e) => {
+      const handlePointerUp = (e) => {
         if (!isDragging) return;
         isDragging = false;
-        try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+        try { piece.el.releasePointerCapture(e.pointerId); } catch(err){}
+        piece.el.classList.remove('dragging');
+        piece.el.classList.add('animating');
 
-        const b = el.getBoundingClientRect();
-        const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+        const pCenterX = piece.currentX + BOX_SIZE / 2;
+        const pCenterY = piece.currentY + BOX_SIZE / 2;
 
-        let targetSlotIdx = -1;
-        for (let i = 0; i < 3; i++) {
-          const slot = document.getElementById(`slot-${i}`);
-          const s = slot.getBoundingClientRect();
-          if (bCenter.x >= s.left && bCenter.x <= s.right &&
-              bCenter.y >= s.top && bCenter.y <= s.bottom) {
-            const isOccupied = itemStates.some(item => item.slotIdx === i);
-            if (!isOccupied) {
-              targetSlotIdx = i;
+        // 空いているスロットを探す
+        let targetSlot = null;
+        for (let s of slots) {
+          if (!s.occupant) {
+            const sCenterX = s.x + BOX_SIZE / 2;
+            const sCenterY = s.y + BOX_SIZE / 2;
+            const dist = Math.hypot(pCenterX - sCenterX, pCenterY - sCenterY);
+            if (dist < BOX_SIZE * 0.75) {
+              targetSlot = s;
               break;
             }
           }
         }
 
-        const mode = document.getElementById("cfgNoiseMode").value;
+        if (targetSlot) {
+          // 吸着
+          piece.currentX = targetSlot.x;
+          piece.currentY = targetSlot.y;
+          piece.el.style.left = `${targetSlot.x}px`;
+          piece.el.style.top = `${targetSlot.y}px`;
+          piece.isLocked = true;
+          piece.el.classList.add('is-locked');
+          targetSlot.occupant = piece;
 
-        if (targetSlotIdx !== -1) {
-          itemStates[index].isPlaced = true;
-          itemStates[index].slotIdx = targetSlotIdx;
+          snappedCount++;
+          document.getElementById('countBadge').innerText = `${snappedCount} こ`;
 
-          const slot = document.getElementById(`slot-${targetSlotIdx}`);
-          const s = slot.getBoundingClientRect();
-          const stageRect = stage.getBoundingClientRect();
-
-          el.style.left = `${s.left - stageRect.left + (s.width - b.width) / 2}px`;
-          el.style.top = `${s.top - stageRect.top + (s.height - b.height) / 2}px`;
-          el.style.transform = "none";
-          el.style.cursor = "default";
-
-          const placedCount = itemStates.filter(t => t.isPlaced).length;
-
-          if (mode === "clean") {
-            playTone(440 + placedCount * 110, 0.15);
-            speakNumber(numberWords[placedCount - 1]);
-
-            slot.classList.add("filled-clean");
-            slot.textContent = `${placedCount}`;
-            toast.textContent = `いま ${placedCount} こ 入りました（音声：「${numberWords[placedCount - 1]}」）`;
+          if (mode === 'circle') {
+            playSimpleBeep(snappedCount);
           } else {
             playEngineSound();
-            slot.classList.add("filled-noisy");
-            slot.textContent = "🚗 ブブン!";
-            toast.textContent = "🚗 けたたましい音で「いくつ数えたか」が曖昧になります";
+            const stage = document.getElementById('stage');
+            stage.classList.remove('shaking');
+            void stage.offsetWidth;
+            stage.classList.add('shaking');
+            const carEl = piece.el.querySelector('.piece-car');
+            if (carEl) carEl.classList.add('snapped-effect');
           }
 
-          if (placedCount === 3) {
+          if (snappedCount === TOTAL) {
             setTimeout(() => {
-              if (mode === "clean") {
-                playTone(880, 0.35);
-                toast.textContent = "🎉 3つ全部入りました！（「できた」達成感）";
-              } else {
-                toast.textContent = "⚠️ 演出に気を取られ、数の概念定着が阻害されます";
-              }
-            }, 450);
+              document.getElementById('correct-banner').classList.add('show');
+            }, 300);
           }
         } else {
-          el.style.position = "";
-          el.style.left = "";
-          el.style.top = "";
-          el.style.transform = "none";
-          el.style.zIndex = "";
-          tray.appendChild(el);
+          // 枠外なら元に戻る
+          piece.currentX = piece.startX;
+          piece.currentY = piece.startY;
+          piece.el.style.left = `${piece.startX}px`;
+          piece.el.style.top = `${piece.startY}px`;
         }
       };
 
-      el.addEventListener("pointerup", onEnd);
-      el.addEventListener("pointercancel", onEnd);
+      piece.el.addEventListener('pointerup', handlePointerUp);
+      piece.el.addEventListener('pointercancel', handlePointerUp);
     }
 
-    window.addEventListener("DOMContentLoaded", initCountLab);
+    window.addEventListener('resize', initCountLab);
+    window.addEventListener('load', initCountLab);
   </script>
 </body>
 </html>

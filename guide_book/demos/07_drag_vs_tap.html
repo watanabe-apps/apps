@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモG：型はめ操作比較（ドラッグ vs タップ）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-focus: #0369a1;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .back-link {
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      touch-action: manipulation;
+    }
+    .back-link:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 6px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-reset:hover {
+      background: var(--primary-focus);
+    }
+
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 2px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .pill-group {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 3px;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .status-summary {
+      background: #e0f2fe;
+      border-bottom: 1px solid #bae6fd;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      padding: 16px;
+      position: relative;
+      background: #ffffff;
+    }
+
+    /* 上部：見本枠（1つだけ表示） */
+    .slot-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .section-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    #slot-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 36px;
+      background: #f8fafc;
+      border-radius: 18px;
+      border: 2px dashed #94a3b8;
+      min-width: 170px;
+      min-height: 140px;
+    }
+    .shape-slot {
+      width: 110px;
+      height: 110px;
+      border: 3px dashed #94a3b8;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .shape-slot[data-shape="circle"] { border-radius: 50%; }
+    .shape-slot[data-shape="square"] { border-radius: 14px; }
+    .shape-slot[data-shape="triangle"] {
+      border: none;
+      background: transparent;
+      width: 110px;
+      height: 110px;
+    }
+    .shape-slot[data-shape="triangle"] svg {
+      width: 100%;
+      height: 100%;
+      stroke: #94a3b8;
+      stroke-width: 3;
+      stroke-dasharray: 6 6;
+      fill: none;
+    }
+
+    /* 進捗インジケーター */
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transition: background 0.2s ease;
+    }
+    .dot.cleared {
+      background: #15803d;
+    }
+    .dot.current {
+      background: var(--primary);
+    }
+
+    /* 下部：図形選択肢置き場 */
+    .piece-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #piece-container {
+      display: flex;
+      gap: 28px;
+      padding: 16px 28px;
+      background: #e2e8f0;
+      border-radius: 16px;
+      border: 2px solid #cbd5e1;
+      min-height: 142px;
+      min-width: 380px;
+      justify-content: center;
+    }
+
+    /* 図形ピース */
+    .shape-piece {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+      transition: filter 0.15s ease;
+    }
+    .shape-piece.tap-mode {
+      cursor: pointer;
+    }
+    .shape-piece.dragging {
+      cursor: grabbing;
+      filter: drop-shadow(0 14px 24px rgba(0,0,0,0.25));
+      transform: scale(1.08);
+      z-index: 999;
+      opacity: 0.95;
+    }
+    .shape-piece.animating {
+      transition: left 0.25s ease-out, top 0.25s ease-out, transform 0.2s ease;
+    }
+    .shape-piece.is-locked {
+      cursor: default;
+      filter: drop-shadow(0 2px 4px rgba(21, 128, 61, 0.2));
+    }
+
+    /* 不正解タップ時のプルプル揺れ */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .shape-piece.shake {
+      animation: shake 0.35s ease-in-out;
+    }
+
+    /* 図形デザイン */
+    .shape-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #ef4444; /* 赤マル */
+      border: 3px solid #b91c1c;
+    }
+    .shape-square {
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      background: #0284c7; /* 青シカク */
+      border: 3px solid #0369a1;
+    }
+    .shape-triangle {
+      width: 100%;
+      height: 100%;
+    }
+    .shape-triangle polygon {
+      fill: #eab308; /* 黄サンカク */
+      stroke: #ca8a04;
+      stroke-width: 4;
+    }
+
+    /* 正解エフェクト */
+    #correct-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: clamp(140px, 35vw, 220px);
+      color: #ef4444;
+      font-weight: bold;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #correct-banner.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">4.2 ① 型はめ操作比較ラボ（ドラッグ vs タップ）</span>
+    <button class="btn-reset" onclick="resetAll()">最初から（シャッフル）</button>
+  </header>
+
+  <div class="settings-bar">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-weight:700; color:#475569; font-size:0.82rem;">操作モード:</span>
+      <div class="pill-group">
+        <button class="pill-btn active" id="btn-mode-drag" onclick="setMode('drag')">✋ ドラッグ操作（掴んで運ぶ）</button>
+        <button class="pill-btn" id="btn-mode-tap" onclick="setMode('tap')">👆 タップ操作（触れて選ぶ）</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="stage">
+    <!-- 上部：見本枠（1つだけ提示） -->
+    <div class="slot-section">
+      <div class="section-label">画面上部の見本（これと同じ形を下に探そう）</div>
+      <div id="slot-container">
+        <div id="target-slot" class="shape-slot"></div>
+      </div>
+      <div class="progress-bar">
+        <span id="progress-text">もんだい 1 / 3</span>
+        <div class="progress-dots">
+          <div class="dot current" id="dot-0"></div>
+          <div class="dot" id="dot-1"></div>
+          <div class="dot" id="dot-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下部：3つの図形選択肢 -->
+    <div class="piece-section">
+      <div class="section-label">画面下部の選択肢（同じ形を選ぼう）</div>
+      <div id="piece-container"></div>
+    </div>
+
+    <div id="correct-banner">◯</div>
+  </main>
+
+  <script>
+    const SHAPES = [
+      { id: 'circle', name: 'まる' },
+      { id: 'triangle', name: 'さんかく' },
+      { id: 'square', name: 'しかく' }
+    ];
+    const PIECE_SIZE = 110;
+
+    let mode = 'drag'; // 'drag' | 'tap'
+    let questionSequence = [];
+    let currentQuestionIndex = 0;
+    let targetShape = null;
+    let targetSlotPos = { x: 0, y: 0 };
+    let pieces = [];
+    let zIndexCounter = 10;
+    let audioCtx = null;
+    let isTransitioning = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      window.addEventListener(evt, initAudio, { once: true });
+    });
+
+    function playSoundCorrect() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+        osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime + 0.15);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(audioCtx.currentTime);
+        osc1.stop(audioCtx.currentTime + 0.15);
+        osc2.start(audioCtx.currentTime + 0.15);
+        osc2.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    function playSoundWrong() {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    function setMode(newMode) {
+      mode = newMode;
+      document.getElementById('btn-mode-drag').classList.toggle('active', mode === 'drag');
+      document.getElementById('btn-mode-tap').classList.toggle('active', mode === 'tap');
+
+      pieces.forEach(p => {
+        if (mode === 'tap') {
+          p.el.classList.add('tap-mode');
+        } else {
+          p.el.classList.remove('tap-mode');
+        }
+      });
+    }
+
+    function resetAll() {
+      document.getElementById('correct-banner').classList.remove('show');
+      isTransitioning = false;
+
+      // 3問の出題順をシャッフル
+      questionSequence = ['circle', 'triangle', 'square'].sort(() => Math.random() - 0.5);
+      currentQuestionIndex = 0;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      isTransitioning = false;
+      targetShape = questionSequence[currentQuestionIndex];
+
+      // 進捗表示
+      document.getElementById('progress-text').innerText = `もんだい ${currentQuestionIndex + 1} / ${questionSequence.length}`;
+      for (let i = 0; i < 3; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        dot.className = 'dot';
+        if (i < currentQuestionIndex) dot.classList.add('cleared');
+        else if (i === currentQuestionIndex) dot.classList.add('current');
+      }
+
+      // 上部の見本枠を更新（1つだけ）
+      const slotEl = document.getElementById('target-slot');
+      slotEl.dataset.shape = targetShape;
+      slotEl.innerHTML = '';
+      if (targetShape === 'triangle') {
+        slotEl.innerHTML = `
+          <svg viewBox="0 0 110 110">
+            <polygon points="55,8 104,102 6,102" />
+          </svg>
+        `;
+      }
+
+      // 下部の既存ピースを削除
+      pieces.forEach(p => {
+        if (p.el && p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      });
+      pieces = [];
+
+      // プレースホルダー作成
+      const pieceContainer = document.getElementById('piece-container');
+      pieceContainer.innerHTML = '';
+      for (let i = 0; i < SHAPES.length; i++) {
+        const ph = document.createElement('div');
+        ph.style.width = `${PIECE_SIZE}px`;
+        ph.style.height = `${PIECE_SIZE}px`;
+        ph.style.opacity = '0';
+        pieceContainer.appendChild(ph);
+      }
+
+      requestAnimationFrame(() => {
+        const slotRect = slotEl.getBoundingClientRect();
+        targetSlotPos = { x: slotRect.left, y: slotRect.top };
+
+        // 選択肢のシャッフル
+        let order = [...SHAPES].sort(() => Math.random() - 0.5);
+        const phs = pieceContainer.children;
+
+        for (let i = 0; i < order.length; i++) {
+          const s = order[i];
+          const rect = phs[i].getBoundingClientRect();
+
+          const pieceEl = document.createElement('div');
+          pieceEl.className = 'shape-piece animating';
+          if (mode === 'tap') pieceEl.classList.add('tap-mode');
+          pieceEl.dataset.shape = s.id;
+          pieceEl.style.left = `${rect.left}px`;
+          pieceEl.style.top = `${rect.top}px`;
+
+          if (s.id === 'circle') {
+            pieceEl.innerHTML = `<div class="shape-circle"></div>`;
+          } else if (s.id === 'square') {
+            pieceEl.innerHTML = `<div class="shape-square"></div>`;
+          } else if (s.id === 'triangle') {
+            pieceEl.innerHTML = `
+              <svg viewBox="0 0 110 110" class="shape-triangle">
+                <polygon points="55,8 104,102 6,102" />
+              </svg>
+            `;
+          }
+          document.body.appendChild(pieceEl);
+
+          const pieceObj = {
+            shape: s.id,
+            el: pieceEl,
+            startX: rect.left,
+            startY: rect.top,
+            currentX: rect.left,
+            currentY: rect.top,
+            isLocked: false
+          };
+          pieces.push(pieceObj);
+          setupInteraction(pieceObj);
+        }
+      });
+    }
+
+    function setupInteraction(piece) {
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      piece.el.addEventListener('pointerdown', (e) => {
+        if (piece.isLocked || isTransitioning) return;
+        initAudio();
+
+        if (mode === 'tap') {
+          // タップモード：正解か不正解かを判定
+          if (piece.shape === targetShape) {
+            // 正解！見本枠へ吸い込まれる
+            isTransitioning = true;
+            playSoundCorrect();
+            snapToSlot(piece);
+          } else {
+            // 不正解！ブルブル揺れてその場に留まる
+            playSoundWrong();
+            piece.el.classList.remove('shake');
+            void piece.el.offsetWidth; // リフロー発生させてアニメ再適用
+            piece.el.classList.add('shake');
+            setTimeout(() => {
+              piece.el.classList.remove('shake');
+            }, 400);
+          }
+          return;
+        }
+
+        // ドラッグモード
+        isDragging = true;
+        piece.el.setPointerCapture(e.pointerId);
+        piece.el.classList.remove('animating');
+        piece.el.classList.add('dragging');
+        piece.el.style.zIndex = ++zIndexCounter;
+
+        const rect = piece.el.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      });
+
+      piece.el.addEventListener('pointermove', (e) => {
+        if (!isDragging || mode === 'tap') return;
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        piece.currentX = newX;
+        piece.currentY = newY;
+        piece.el.style.left = `${newX}px`;
+        piece.el.style.top = `${newY}px`;
+      });
+
+      const handlePointerUp = (e) => {
+        if (!isDragging || mode === 'tap') return;
+        isDragging = false;
+        try { piece.el.releasePointerCapture(e.pointerId); } catch(err){}
+        piece.el.classList.remove('dragging');
+        piece.el.classList.add('animating');
+
+        // 見本枠に近づいているか判定
+        const pCenterX = piece.currentX + PIECE_SIZE / 2;
+        const pCenterY = piece.currentY + PIECE_SIZE / 2;
+        const sCenterX = targetSlotPos.x + PIECE_SIZE / 2;
+        const sCenterY = targetSlotPos.y + PIECE_SIZE / 2;
+        const dist = Math.hypot(pCenterX - sCenterX, pCenterY - sCenterY);
+
+        // 距離が近くて、かつ形が一致している場合のみ正解吸着！
+        if (dist < PIECE_SIZE * 0.8 && piece.shape === targetShape) {
+          isTransitioning = true;
+          playSoundCorrect();
+          snapToSlot(piece);
+        } else {
+          // 不正解、または枠外なら元の位置に戻る
+          if (dist < PIECE_SIZE * 0.8 && piece.shape !== targetShape) {
+            playSoundWrong();
+          }
+          piece.currentX = piece.startX;
+          piece.currentY = piece.startY;
+          piece.el.style.left = `${piece.startX}px`;
+          piece.el.style.top = `${piece.startY}px`;
+        }
+      };
+
+      piece.el.addEventListener('pointerup', handlePointerUp);
+      piece.el.addEventListener('pointercancel', handlePointerUp);
+    }
+
+    function snapToSlot(piece) {
+      piece.el.classList.add('animating');
+      piece.currentX = targetSlotPos.x;
+      piece.currentY = targetSlotPos.y;
+      piece.el.style.left = `${targetSlotPos.x}px`;
+      piece.el.style.top = `${targetSlotPos.y}px`;
+      piece.isLocked = true;
+      piece.el.classList.add('is-locked');
+
+      // 他の選択肢は非活性化
+      pieces.forEach(p => p.isLocked = true);
+
+      // 次の問題へ、または終了
+      setTimeout(() => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questionSequence.length) {
+          loadQuestion();
+        } else {
+          // 全問クリア
+          for (let i = 0; i < 3; i++) {
+            document.getElementById(`dot-${i}`).className = 'dot cleared';
+          }
+          document.getElementById('correct-banner').classList.add('show');
+        }
+      }, 700);
+    }
+
+    window.addEventListener('resize', () => {
+      loadQuestion();
+    });
+    window.addEventListener('load', resetAll);
+  </script>
+</body>
+</html>

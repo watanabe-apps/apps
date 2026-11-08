@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモI：背景色＆コントラスト比較ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 2px solid #e5e5e5;
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .btn-reset {
+      background: #171717;
+      color: #ffffff;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .settings-bar {
+      background: #f5f5f5;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      font-size: 0.82rem;
+    }
+    .pill-group {
+      display: flex;
+      background: #e5e5e5;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #525252;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s ease;
+      touch-action: manipulation;
+    }
+    .pill-btn.active {
+      background: #171717;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    #stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .anchor-row {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 24px;
+      pointer-events: none;
+    }
+    .card-anchor {
+      width: 120px;
+      height: 120px;
+    }
+
+    /* ドラッグ可能なカード（吸着なし・自由移動） */
+    .demo-card {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .demo-card.dragging {
+      cursor: grabbing;
+      transform: scale(1.08);
+      z-index: 999;
+    }
+    .demo-card.animating {
+      transition: left 0.25s ease-out, top 0.25s ease-out, transform 0.15s ease;
+    }
+
+    .demo-icon { font-size: 2.8rem; pointer-events: none; }
+    .demo-text { font-size: 1.15rem; font-weight: 700; pointer-events: none; }
+
+    /* 背景色ごとのスタイル（青み完全ゼロの無彩色グレースケール） */
+    /* 1. 白背景（#ffffff） */
+    body.bg-white {
+      background-color: #ffffff !important;
+      color: #171717;
+    }
+    body.bg-white #stage { background-color: #ffffff !important; }
+    body.bg-white .demo-card {
+      background: #ffffff;
+      border: 2px solid #a3a3a3;
+      color: #171717;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    body.bg-white .demo-card.dragging {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    /* 2. 黒背景（#000000） */
+    body.bg-black {
+      background-color: #000000 !important;
+      color: #ffffff;
+    }
+    body.bg-black #stage { background-color: #000000 !important; }
+    /* 黒背景: 真っ白文字（#ffffff） */
+    body.bg-black.text-sharp .demo-card {
+      background: #000000;
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+    }
+    body.bg-black.text-sharp .demo-card.dragging {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.45);
+    }
+    /* 黒背景: 落ち着いた薄グレー文字（#e5e5e5） */
+    body.bg-black.text-soft .demo-card {
+      background: #171717;
+      border: 2px solid #737373;
+      color: #e5e5e5;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    }
+    body.bg-black.text-soft .demo-card.dragging {
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 3. 純粋な無彩色の薄グレー背景（#eeeeee） */
+    body.bg-gray {
+      background-color: #eeeeee !important;
+      color: #171717;
+    }
+    body.bg-gray #stage { background-color: #eeeeee !important; }
+    body.bg-gray .demo-card {
+      background: #ffffff;
+      border: 2px solid #a3a3a3;
+      color: #171717;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    body.bg-gray .demo-card.dragging {
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+    }
+  </style>
+</head>
+<body class="bg-white">
+
+  <header>
+    <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">4.3 ④ 背景色とコントラストの選択基準ラボ</span>
+    <button class="btn-reset" onclick="resetPositions()">位置リセット</button>
+  </header>
+
+  <div class="settings-bar">
+    <div class="pill-group">
+      <button class="pill-btn active" id="btn-white" onclick="setBg('white')">① 白背景（#fff）</button>
+      <button class="pill-btn" id="btn-black" onclick="setBg('black')">② 黒背景（#000）</button>
+      <button class="pill-btn" id="btn-gray" onclick="setBg('gray')">③ 薄グレー背景（#eee）</button>
+    </div>
+
+    <!-- 黒背景時の文字色調整トグル -->
+    <div id="black-sub-options" style="display:none; align-items:center; gap:6px; margin-left: auto;">
+      <span style="font-size:0.75rem; color:#737373; font-weight:700;">文字・枠:</span>
+      <div class="pill-group">
+        <button class="pill-btn" id="btn-sharp" onclick="setBlackText('sharp')">真っ白（#fff）</button>
+        <button class="pill-btn active" id="btn-soft" onclick="setBlackText('soft')">薄グレー（#e5e）</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="stage">
+    <div class="anchor-row" id="anchorRow">
+      <div class="card-anchor"></div>
+      <div class="card-anchor"></div>
+      <div class="card-anchor"></div>
+    </div>
+
+    <div class="demo-card" id="card-apple">
+      <span class="demo-icon">🍎</span>
+      <span class="demo-text">りんご</span>
+    </div>
+    <div class="demo-card" id="card-car">
+      <span class="demo-icon">🚗</span>
+      <span class="demo-text">くるま</span>
+    </div>
+    <div class="demo-card" id="card-star">
+      <span class="demo-icon">⭐</span>
+      <span class="demo-text">ほし</span>
+    </div>
+  </main>
+
+  <script>
+    let currentBg = 'white';
+    let blackTextStyle = 'soft';
+    let zIndexCounter = 10;
+    const cards = [
+      { id: 'card-apple', el: document.getElementById('card-apple') },
+      { id: 'card-car', el: document.getElementById('card-car') },
+      { id: 'card-star', el: document.getElementById('card-star') }
+    ];
+
+    function setBg(bg) {
+      currentBg = bg;
+      document.body.className = `bg-${bg}` + (bg === 'black' ? ` text-${blackTextStyle}` : '');
+
+      document.getElementById('btn-white').classList.toggle('active', bg === 'white');
+      document.getElementById('btn-black').classList.toggle('active', bg === 'black');
+      document.getElementById('btn-gray').classList.toggle('active', bg === 'gray');
+
+      const subOpt = document.getElementById('black-sub-options');
+      subOpt.style.display = bg === 'black' ? 'flex' : 'none';
+    }
+
+    function setBlackText(style) {
+      blackTextStyle = style;
+      document.getElementById('btn-sharp').classList.toggle('active', style === 'sharp');
+      document.getElementById('btn-soft').classList.toggle('active', style === 'soft');
+      document.body.className = `bg-black text-${blackTextStyle}`;
+    }
+
+    function resetPositions() {
+      const anchors = document.getElementById('anchorRow').children;
+      const stageRect = document.getElementById('stage').getBoundingClientRect();
+
+      for (let i = 0; i < cards.length; i++) {
+        const c = cards[i];
+        const aRect = anchors[i].getBoundingClientRect();
+        c.el.classList.add('animating');
+        c.el.style.left = `${aRect.left - stageRect.left}px`;
+        c.el.style.top = `${aRect.top - stageRect.top}px`;
+        setTimeout(() => c.el.classList.remove('animating'), 300);
+      }
+    }
+
+    // ドラッグ移動（吸着なし・指を離した位置にそのまま留まる）
+    function setupFreeDrag(cardObj) {
+      const el = cardObj.el;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        el.setPointerCapture(e.pointerId);
+        el.classList.remove('animating');
+        el.classList.add('dragging');
+        el.style.zIndex = ++zIndexCounter;
+
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = parseFloat(el.style.left) || 0;
+        initialTop = parseFloat(el.style.top) || 0;
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        el.style.left = `${initialLeft + dx}px`;
+        el.style.top = `${initialTop + dy}px`;
+      });
+
+      const handlePointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { el.releasePointerCapture(e.pointerId); } catch(err) {}
+        el.classList.remove('dragging');
+      };
+
+      el.addEventListener('pointerup', handlePointerUp);
+      el.addEventListener('pointercancel', handlePointerUp);
+    }
+
+    cards.forEach(setupFreeDrag);
+
+    window.addEventListener('load', resetPositions);
+    window.addEventListener('resize', resetPositions);
+  </script>
+</body>
+</html>

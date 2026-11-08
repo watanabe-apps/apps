@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモH：操作対象と終点の視覚化ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    /* 1行にスッキリ収まるコンパクト設定バー */
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    .setting-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .setting-item label {
+      font-weight: 700;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+    .compact-select {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* 色付きの□（カラーピッカー） */
+    .color-box-input {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: 1.5px solid #94a3b8;
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      background: none;
+      cursor: pointer;
+      vertical-align: middle;
+      outline: none;
+    }
+    .color-box-input::-webkit-color-swatch-wrapper {
+      padding: 1px;
+    }
+    .color-box-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      padding: 16px;
+      position: relative;
+      background: #ffffff;
+    }
+
+    .stage-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 受け皿（終点枠）：色をカラーピッカーで直接変更 */
+    .slot-box {
+      width: 90px;
+      height: 90px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.1s ease, background-color 0.1s ease;
+    }
+
+    .pos-anchor {
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 操作対象（3種類のくだもの） */
+    .fruit-item {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      transition: transform 0.15s ease;
+    }
+    .fruit-item.dragging {
+      cursor: grabbing;
+      transform: scale(1.1);
+      z-index: 999;
+    }
+    .fruit-item.animating {
+      transition: left 0.2s ease-out, top 0.2s ease-out, transform 0.15s ease;
+    }
+
+    .fruit-icon {
+      font-size: 3.4rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* 対象の装飾スタイル */
+    /* 1. 枠なし（イラストのみ） */
+    .fruit-style-raw {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+    /* 2. 枠・影あり（カード化） */
+    .fruit-style-card {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .fruit-style-card.dragging {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span style="font-weight:700; font-size:0.9rem; color:#0f172a;">4.3 ① 操作対象と終点の視覚化ラボ</span>
+    <button class="btn-reset" onclick="initLab()">位置リセット</button>
+  </header>
+
+  <!-- 1行にスッキリ収まるコントロールバー -->
+  <div class="settings-bar">
+    <div class="setting-item">
+      <label for="sel-layout">配置:</label>
+      <select id="sel-layout" class="compact-select" onchange="initLab()">
+        <option value="up" selected>下に対象 / 上に枠</option>
+        <option value="down">上に対象 / 下に枠</option>
+      </select>
+    </div>
+
+    <div class="setting-item">
+      <label for="sel-target-style">対象:</label>
+      <select id="sel-target-style" class="compact-select" onchange="initLab()">
+        <option value="raw" selected>枠なし（イラストのみ）</option>
+        <option value="card">枠・影あり（カード化）</option>
+      </select>
+    </div>
+
+    <div class="setting-item">
+      <label for="border-color-picker">枠線色:</label>
+      <input type="color" id="border-color-picker" class="color-box-input" value="#000000" oninput="updateColors()">
+    </div>
+
+    <div class="setting-item">
+      <label for="bg-color-picker">枠内色:</label>
+      <input type="color" id="bg-color-picker" class="color-box-input" value="#ffffff" oninput="updateColors()">
+    </div>
+  </div>
+
+  <main id="stage">
+    <!-- 上段 -->
+    <div class="stage-row" id="row-top"></div>
+
+    <!-- 下段 -->
+    <div class="stage-row" id="row-bottom"></div>
+  </main>
+
+  <script>
+    const FRUITS = [
+      { id: 'apple', icon: '🍎' },
+      { id: 'banana', icon: '🍌' },
+      { id: 'grape', icon: '🍇' }
+    ];
+    const BOX_SIZE = 90;
+
+    let items = [];
+    let slots = [];
+    let zIndexCounter = 10;
+
+    function updateColors() {
+      const bColor = document.getElementById('border-color-picker').value;
+      const bgColor = document.getElementById('bg-color-picker').value;
+
+      slots.forEach(s => {
+        if (s.el) {
+          s.el.style.border = `1.5px solid ${bColor}`;
+          s.el.style.backgroundColor = bgColor;
+        }
+      });
+    }
+
+    function initLab() {
+      items.forEach(item => {
+        if (item.el && item.el.parentNode) item.el.parentNode.removeChild(item.el);
+      });
+      items = [];
+      slots = [];
+
+      const layout = document.getElementById('sel-layout').value;
+      const targetStyle = document.getElementById('sel-target-style').value;
+
+      const rowTop = document.getElementById('row-top');
+      const rowBottom = document.getElementById('row-bottom');
+      rowTop.innerHTML = '';
+      rowBottom.innerHTML = '';
+
+      // layout === 'up' の場合：上が枠、下が対象
+      // layout === 'down' の場合：下が枠、上が対象
+      const slotRow = (layout === 'up') ? rowTop : rowBottom;
+      const fruitRow = (layout === 'up') ? rowBottom : rowTop;
+
+      // 3つの枠の配置
+      for (let i = 0; i < FRUITS.length; i++) {
+        const slotEl = document.createElement('div');
+        slotEl.className = 'slot-box';
+        slotRow.appendChild(slotEl);
+        slots.push({ el: slotEl, occupant: null });
+      }
+      updateColors();
+
+      // 3つの対象プレースホルダー
+      for (let i = 0; i < FRUITS.length; i++) {
+        const ph = document.createElement('div');
+        ph.className = 'pos-anchor';
+        fruitRow.appendChild(ph);
+      }
+
+      requestAnimationFrame(() => {
+        slots.forEach(s => {
+          const rect = s.el.getBoundingClientRect();
+          s.x = rect.left;
+          s.y = rect.top;
+        });
+
+        const phs = fruitRow.children;
+        for (let i = 0; i < FRUITS.length; i++) {
+          const f = FRUITS[i];
+          const rect = phs[i].getBoundingClientRect();
+
+          const fEl = document.createElement('div');
+          fEl.className = `fruit-item animating fruit-style-${targetStyle}`;
+          fEl.innerHTML = `<span class="fruit-icon">${f.icon}</span>`;
+          fEl.style.left = `${rect.left}px`;
+          fEl.style.top = `${rect.top}px`;
+          document.body.appendChild(fEl);
+
+          const itemObj = {
+            id: f.id,
+            el: fEl,
+            startX: rect.left,
+            startY: rect.top,
+            currentX: rect.left,
+            currentY: rect.top,
+            currentSlot: null
+          };
+          items.push(itemObj);
+          setupDrag(itemObj);
+        }
+      });
+    }
+
+    function setupDrag(item) {
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      item.el.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        item.el.setPointerCapture(e.pointerId);
+        item.el.classList.remove('animating');
+        item.el.classList.add('dragging');
+        item.el.style.zIndex = ++zIndexCounter;
+
+        const rect = item.el.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        // 枠から離脱
+        if (item.currentSlot) {
+          item.currentSlot.occupant = null;
+          item.currentSlot = null;
+        }
+      });
+
+      item.el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        item.currentX = newX;
+        item.currentY = newY;
+        item.el.style.left = `${newX}px`;
+        item.el.style.top = `${newY}px`;
+      });
+
+      const handlePointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { item.el.releasePointerCapture(e.pointerId); } catch(err){}
+        item.el.classList.remove('dragging');
+        item.el.classList.add('animating');
+
+        const iCenterX = item.currentX + BOX_SIZE / 2;
+        const iCenterY = item.currentY + BOX_SIZE / 2;
+
+        // 最も近い空きスロットを探す（正解判定なし）
+        let nearestSlot = null;
+        let minDistance = BOX_SIZE * 0.75;
+
+        for (let s of slots) {
+          if (s.occupant && s.occupant !== item) continue;
+          const sCenterX = s.x + BOX_SIZE / 2;
+          const sCenterY = s.y + BOX_SIZE / 2;
+          const dist = Math.hypot(iCenterX - sCenterX, iCenterY - sCenterY);
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearestSlot = s;
+          }
+        }
+
+        if (nearestSlot) {
+          item.currentX = nearestSlot.x;
+          item.currentY = nearestSlot.y;
+          item.el.style.left = `${nearestSlot.x}px`;
+          item.el.style.top = `${nearestSlot.y}px`;
+          nearestSlot.occupant = item;
+          item.currentSlot = nearestSlot;
+        } else {
+          item.currentX = item.startX;
+          item.currentY = item.startY;
+          item.el.style.left = `${item.startX}px`;
+          item.el.style.top = `${item.startY}px`;
+        }
+      };
+
+      item.el.addEventListener('pointerup', handlePointerUp);
+      item.el.addEventListener('pointercancel', handlePointerUp);
+    }
+
+    window.addEventListener('resize', initLab);
+    window.addEventListener('load', initLab);
+  </script>
+</body>
+</html>
