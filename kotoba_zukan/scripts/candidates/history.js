@@ -1,0 +1,445 @@
+window.DT_CACHED_HISTORY = [
+  {
+    "url": "/images/backup_h_oniisan_1794118666.png",
+    "word_id": "h_oniisan",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_oniisan",
+    "timestamp": 1794118666291
+  },
+  {
+    "word_id": "h_oniisan",
+    "word_name": "おにいさん",
+    "filename": "studio_h_oniisan_1794118355.png",
+    "url": "/images/studio_h_oniisan_1794118355.png",
+    "timestamp": 1794118355000,
+    "is_backup": false,
+    "prompt": "Japanese picture book watercolor illustration depicting an older brother (おにいさん / elder brother, age 12). Chest-up portrait bust, facing front. A gentle, pleasant 12-year-old Japanese schoolboy with natural short dark hair, warm welcoming smile, reliable big-brother charm. Wearing a clean casual shirt. Soft watercolor textures, delicate pencil contour, solid pure white background (#ffffff), isolated, no text, no letters."
+  },
+  {
+    "word_id": "h_oniisan",
+    "word_name": "おにいさん",
+    "filename": "studio_h_oniisan_1794118281.png",
+    "url": "/images/studio_h_oniisan_1794118281.png",
+    "timestamp": 1794118281000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration of a kind and reliable elder brother (おにいさん / 12-year-old older brother). Bust portrait framing, chest-up shot, facing forward, matching the family portrait series (like oneesan and otousan). A cheerful, friendly 12-year-old Japanese pre-teen boy with a neat clean short haircut, kind sparkling eyes, and a warm, dependable smiling expression. Wearing a neat casual layered polo shirt or crewneck sweater. Gentle warm watercolor wash, delicate soft pencil contours, completely isolated on solid pure white background (#ffffff), no raised hands, flashcard quality, no text, no letters."
+  },
+  {
+    "url": "/images/backup_h_otokonoko_1794118104.png",
+    "word_id": "h_otokonoko",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_otokonoko",
+    "timestamp": 1794118104280
+  },
+  {
+    "url": "/images/backup_h_onnanoko_1794118100.png",
+    "word_id": "h_onnanoko",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_onnanoko",
+    "timestamp": 1794118100098
+  },
+  {
+    "word_id": "h_onnanoko",
+    "word_name": "おんなのこ",
+    "filename": "studio_h_onnanoko_1794117951.png",
+    "url": "/images/studio_h_onnanoko_1794117951.png",
+    "timestamp": 1794117951000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration representing 'Girls' (おんなのこ / young girls). A charming group of three cute young Japanese girls standing happily side by side, smiling sweetly together. Distinct girlish features: adorable hairstyles such as cute pigtails (twin tails) with hair ribbons, a high ponytail with a scrunchie, and cute bob with a headband. Wearing lovely pastel pink, red, and yellow dresses and flared skirts with pretty details, Mary Jane shoes. Holding hands or standing close like sweet cheerful friends. Clearly representing the category of 'girls' as a group, distinct from a single sister. Gentle warm watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff), flashcard quality, no text, no letters."
+  },
+  {
+    "word_id": "h_otokonoko",
+    "word_name": "おとこのこ",
+    "filename": "studio_h_otokonoko_1794117867.png",
+    "url": "/images/studio_h_otokonoko_1794117867.png",
+    "timestamp": 1794117867000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration representing 'Boys' (おとこのこ / young boys). A cheerful group of three lively young Japanese boys standing side by side, smiling brightly together. Distinct boyish features: neat short haircuts, baseball caps, colorful casual T-shirts (blue, green, yellow), knee-length shorts, and athletic sneakers. Energetic friendly poses, one boy giving a thumbs-up, looking like happy school friends. Clearly representing the category of 'boys' as a group, distinct from a single brother. Gentle warm watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff), flashcard quality, no text, no letters."
+  },
+  {
+    "url": "/images/backup_h_anata_1794117667.png",
+    "word_id": "h_anata",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_anata",
+    "timestamp": 1794117667129
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117649.png",
+    "url": "/images/studio_h_anata_1794117649.png",
+    "timestamp": 1794117649000,
+    "is_backup": false,
+    "prompt": "Japanese picture book watercolor illustration depicting 'You' (あなた). First-person point of view (POV): from the bottom foreground, a single open right hand with palm facing upward and relaxed straight fingers extends forward to politely present and indicate a kind, smiling companion standing in front. The companion in the background smiles happily at the viewer. Clear polite Japanese etiquette gesture (手のひらを差し伸べて相手を示す), warm storybook watercolor style, soft pencil lines, completely isolated on pure white background (#ffffff), no text, no watermark."
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117568.png",
+    "url": "/images/studio_h_anata_1794117568.png",
+    "timestamp": 1794117568000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration of the word 'You' (あなた). First-person POV perspective: in the foreground, the viewer's gentle open hand extends from the bottom of the frame with palm facing upward, fingers smoothly together in a polite, respectful guiding gesture (手のひらを上に向けて丁寧に相手を示すジェスチャー) gently presenting and indicating the friendly person in front. Standing opposite is a cheerful, smiling child with a warm friendly expression, arms naturally relaxed. Polite educational etiquette, open palm upward, absolutely NOT index finger pointing. Gentle warm watercolor wash, soft colored pencil contours, solid pure white background (#ffffff), isolated, no text, no letters."
+  },
+  {
+    "url": "/images/backup_h_anata_1794117452.png",
+    "word_id": "h_anata",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_anata",
+    "timestamp": 1794117452378
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117341.png",
+    "url": "/images/studio_h_anata_1794117341.png",
+    "timestamp": 1794117341000,
+    "is_backup": false,
+    "prompt": "Japanese picture book watercolor illustration representing 'You' (あなた). First-person perspective (POV): in the foreground, the viewer's right hand points an index finger forward at a happy smiling child standing across from them. The child in the background is standing with hands placed behind their back or resting naturally against their legs, smiling warmly. It is unmistakably clear that only the viewer's hand from the front is pointing at 'You' (あなた). Gentle warm Japanese picture book style, soft pencil lines, pure white background (#ffffff), no text, no watermark."
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117257.png",
+    "url": "/images/studio_h_anata_1794117257.png",
+    "timestamp": 1794117257000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration of the word 'You' (あなた). First-person POV angle: a single viewer's hand enters from the bottom corner of the frame, pointing its index finger directly at a friendly person in front. In the background, a friendly smiling person stands facing forward with BOTH hands hanging straight down at their sides in a calm relaxed standing pose. The background person is NOT raising their hands and NOT gesturing at all. Only the viewer's foreground hand is pointing forward at 'You'. Gentle warm watercolor textures, soft pencil contours, solid pure white background (#ffffff), isolated, no text, no letters."
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117115.png",
+    "url": "/images/studio_h_anata_1794117115.png",
+    "timestamp": 1794117115000,
+    "is_backup": false,
+    "prompt": "A warm educational picture book watercolor illustration depicting the concept of 'You' (あなた). First-person view (POV): from the bottom edge of the image, the viewer's hand extends forward, pointing with an index finger at a friendly companion standing opposite. In the background, a cute friendly young person smiles happily at the viewer. Clear depth: the pointing hand is in the immediate foreground pointing outward at 'You', while the subject is standing further back. Gentle warm Japanese watercolor wash, soft pencil lines, pure solid white background (#ffffff), isolated, no text, no watermark."
+  },
+  {
+    "word_id": "h_anata",
+    "word_name": "あなた",
+    "filename": "studio_h_anata_1794117039.png",
+    "url": "/images/studio_h_anata_1794117039.png",
+    "timestamp": 1794117039000,
+    "is_backup": false,
+    "prompt": "An educational Japanese picture book watercolor illustration representing 'You' (あなた). First-person POV perspective: in the close foreground, a hand extends into the frame from the bottom, pointing an index finger forward directly at a friendly person in front. Standing in front of the viewer is a cheerful smiling child with kind eyes facing forward. The foreground pointing hand clearly belongs to the first-person viewer pointing at 'You' (あなた), while the person in the background has their own arms naturally at their sides. Gentle warm Japanese picture book watercolor style, soft colored pencil contour. Completely isolated on solid pure white background (#ffffff), no ground, no text, no letters, flashcard quality."
+  },
+  {
+    "url": "/images/backup_d_katatsumuri_1794116817.png",
+    "word_id": "d_katatsumuri",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】d_katatsumuri",
+    "timestamp": 1794116817136
+  },
+  {
+    "url": "/images/backup_h_ekiin_1794116815.png",
+    "word_id": "h_ekiin",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_ekiin",
+    "timestamp": 1794116815025
+  },
+  {
+    "url": "/images/backup_h_uchuuhikoushi_1794116812.png",
+    "word_id": "h_uchuuhikoushi",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_uchuuhikoushi",
+    "timestamp": 1794116812371
+  },
+  {
+    "url": "/images/backup_h_oni_1794116809.png",
+    "word_id": "h_oni",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_oni",
+    "timestamp": 1794116809043
+  },
+  {
+    "word_id": "h_oni",
+    "word_name": "おに",
+    "filename": "studio_h_oni_1794116722.png",
+    "url": "/images/studio_h_oni_1794116722.png",
+    "timestamp": 1794116722000,
+    "is_backup": false,
+    "prompt": "Traditional Japanese picture book watercolor illustration of a friendly Setsubun Red Oni (あかおに / Japanese red demon from folklore). A friendly red-skinned humanoid with two small yellow horns on his curly black hair, bushy friendly eyebrows, big round smiling eyes, and a cheerful wide smile with a cute small fang, looking lovable and fun for toddlers. Wearing classic yellow shorts with black tiger stripes (トラのパンツ), standing and holding a rounded black studded club (金棒). Gentle warm Japanese picture book watercolor style, soft colored pencil contours. Completely isolated on a solid pure white background (#ffffff). Absolutely NO scary monster, NO western ogre, NO grotesque beast, NO text, no letters."
+  },
+  {
+    "word_id": "h_uchuuhikoushi",
+    "word_name": "うちゅうひこうし",
+    "filename": "studio_h_uchuuhikoushi_1794116654.png",
+    "url": "/images/studio_h_uchuuhikoushi_1794116654.png",
+    "timestamp": 1794116654000,
+    "is_backup": false,
+    "prompt": "Japanese picture book watercolor illustration of an adult professional astronaut (うちゅうひこうし / adult astronaut, mature reliable man or woman). Realistic adult facial proportions, warm confident friendly smile clearly visible inside the clear transparent astronaut helmet visor. Wearing a clean white bulky space suit with authentic chest pack and shoulder patches, waving cheerfully with an accurate five-fingered white astronaut glove (one thumb and four fingers). Gentle warm watercolor wash, soft pencil contours. Completely isolated on solid pure white background (#ffffff), no text, no letters, flashcard quality."
+  },
+  {
+    "word_id": "h_ekiin",
+    "word_name": "えきいんさん",
+    "filename": "studio_h_ekiin_1794116576.png",
+    "url": "/images/studio_h_ekiin_1794116576.png",
+    "timestamp": 1794116576000,
+    "is_backup": false,
+    "prompt": "Japanese picture book watercolor illustration of a friendly railway station attendant (えきいんさん) on a Japanese train station platform. Standing on the train station platform with a passenger commuter train stopped alongside, clear station roof, platform pillar, and yellow safety tactile blocks on the platform floor. The station attendant is wearing a neat dark navy-blue uniform with peaked cap and clean white gloves, performing a safety finger-pointing gesture (指差確認) with a warm friendly smile. Gentle warm Japanese picture book watercolor style, soft colored pencil textures. No text, no letters, no characters, no watermark."
+  },
+  {
+    "word_id": "d_katatsumuri",
+    "word_name": "かたつむり",
+    "filename": "studio_d_katatsumuri_1794116493.png",
+    "url": "/images/studio_d_katatsumuri_1794116493.png",
+    "timestamp": 1794116493000,
+    "is_backup": false,
+    "prompt": "An educational picture book watercolor illustration of a cute snail crawling on a solid pure white background (かたつむり). Gentle warm Japanese picture book style, delicate watercolor wash, soft pencil contour. Round spiral shell on its back. The snail has exactly TWO upper eye-stalks with two simple black dot eyes at their very tips, and a simple curved smiling mouth on the body. CRITICAL: absolutely smooth face, NO eyes on the head, NO facial eyes, NO extra dots, exactly two eyes on the whole snail. Solid pure white background (#ffffff), isolated, no ground, no scenery, no text."
+  },
+  {
+    "url": "/images/backup_h_santakuro-su_1794069952.png",
+    "word_id": "h_santakuro-su",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_santakuro-su",
+    "timestamp": 1794069952983
+  },
+  {
+    "url": "/images/backup_h_untenshi_1794069944.png",
+    "word_id": "h_untenshi",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_untenshi",
+    "timestamp": 1794069944428
+  },
+  {
+    "url": "/images/backup_h_panyasan_1794069935.png",
+    "word_id": "h_panyasan",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_panyasan",
+    "timestamp": 1794069935230
+  },
+  {
+    "url": "/images/studio_h_oni_1794063085.png",
+    "word_id": "h_oni",
+    "name": "おに",
+    "prompt": "Traditional Japanese picture book watercolor illustration of a cute and friendly Red Oni (あかおに / Japanese Red Ogre for children's storybook). Bright friendly coral-red skin, two small yellow horns on cute curly dark hair, big round smiling eyes (not scary at all, lovable and gentle expression for toddlers), wearing yellow tiger-striped shorts (トラのパンツ), holding a small cute studded club (金棒). Classic Japanese fairy tale folklore style (泣いた赤鬼・節分絵本風), warm watercolor wash, soft pencil contour. Completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794063085000
+  },
+  {
+    "url": "/images/studio_h_santakuro-su_1794063002.png",
+    "word_id": "h_santakuro-su",
+    "name": "サンタクロース",
+    "prompt": "Japanese picture book watercolor illustration of a jolly, round, friendly Santa Claus (サンタクロース / Santa Claus) with a big fluffy white beard and mustache, twinkling smiling eyes, wearing a traditional bright red coat with fluffy white fleece trim, red pointed hat with white pom-pom, black belt with gold buckle, and warm white mittens, carrying a large overflowing gift sack of toys slung over his shoulder. Merry warm storybook holiday charm, delicate watercolor wash, soft pencil contour. Completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794063002000
+  },
+  {
+    "url": "/images/studio_h_untenshi_1794062749.png",
+    "word_id": "h_untenshi",
+    "name": "うんてんし",
+    "prompt": "Japanese picture book watercolor illustration of a professional train driver (うんてんし / train driver, motorman) sitting in a train cab holding a train controller handle (mascon handle). Wearing a crisp dark navy railway driver uniform, peaked cap, and clean white gloves (白手袋). Confident friendly smile, looking ahead, trustworthy pose for toddlers. Gentle watercolor wash, soft pencil contour. Completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794062749000
+  },
+  {
+    "url": "/images/studio_h_panyasan_1794062667.png",
+    "word_id": "h_panyasan",
+    "name": "パンやさん",
+    "prompt": "Japanese picture book watercolor illustration of a friendly cheerful Japanese baker (パンやさん / baker, boulanger) wearing a clean white baker's chef hat (toque blanche) and a tidy apron, happily holding a wooden tray filled with delicious golden baked breads (melon pan, croissant, baguette). Warm friendly smiling face, accurate five-fingered hands, warm gentle watercolor wash, soft pencil contour. Completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters, no watermark.",
+    "timestamp": 1794062667000
+  },
+  {
+    "url": "/images/studio_d_katatsumuri_1794062584.png",
+    "word_id": "d_katatsumuri",
+    "name": "かたつむり",
+    "prompt": "An educational picture book watercolor illustration of a cute friendly garden snail crawling sideways (かたつむり). Gentle warm Japanese picture book style with delicate watercolor wash and soft pencil contours. Cute spiral shell on its back. Exactly two upper tentacles with cute round friendly eyes at the very tips. The snail's face below has ONLY a cute smiling mouth and blushing pink cheeks, with absolutely NO extra eyes or duplicate eyes on the head. Anatomically charming and clear for children. Completely isolated on a solid pure white background (#ffffff), no ground, no scenery, no text, no watermark, flashcard quality.",
+    "timestamp": 1794062584000
+  },
+  {
+    "url": "/images/backup_h_panyasan_1794062470.png",
+    "word_id": "h_panyasan",
+    "is_backup": true,
+    "label": "【旧画像バックアップ】h_panyasan",
+    "timestamp": 1794062470463
+  },
+  {
+    "url": "/images/studio_h_oni_1794061754.png",
+    "word_id": "h_oni",
+    "prompt": "Japanese picture book watercolor illustration of a cute and colorful Japanese ogre with small horns wearing tiger-striped pants (おに / Japanese ogre, oni), funny friendly expression, Setsubun storybook charm, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794061754171
+  },
+  {
+    "url": "/images/studio_d_katatsumuri_1794056429.png",
+    "word_id": "d_katatsumuri",
+    "prompt": "An educational picture book watercolor illustration of a cute friendly snail crawling (かたつむり). Gentle warm Japanese picture book style with delicate watercolor textures and soft pencil contours. Cute spiral shell on its back, cute round eyes located naturally at the tips of its two upper tentacles. NO duplicate eyes on the face, normal charming snail. Solid pure white background (#ffffff), completely isolated, no ground, no scenery, no text, flashcard quality.",
+    "timestamp": 1794056429812
+  },
+  {
+    "url": "/images/studio_h_panyasan_1794055873.png",
+    "word_id": "h_panyasan",
+    "prompt": "Japanese picture book watercolor illustration of a cheerful baker with a flour-dusted apron holding a fresh golden loaf of bread (パンやさん / baker), warm bakery aroma feel, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794055873350
+  },
+  {
+    "url": "/images/studio_h_watashi_1794055394.png",
+    "word_id": "h_watashi",
+    "name": "わたし",
+    "prompt": "Japanese picture book watercolor illustration of a cute young child smiling proudly while pointing an index finger directly inward at their own chest (わたし / me, myself), touching one's own chest to indicate myself, friendly happy eyes, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794055394000
+  },
+  {
+    "url": "/images/studio_h_panyasan_1794054502.png",
+    "word_id": "h_panyasan",
+    "prompt": "Japanese picture book watercolor illustration of a cheerful baker with a flour-dusted apron holding a fresh golden loaf of bread (パンやさん / baker), warm bakery aroma feel, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794054502387
+  },
+  {
+    "url": "/images/studio_h_oniisan_1794052875.png",
+    "word_id": "h_oniisan",
+    "prompt": "Japanese picture book watercolor illustration of a cheerful energetic boy or elder brother smiling waving hand (おにいさん / older brother, boy), lively posture, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.１２歳",
+    "timestamp": 1794052875292
+  },
+  {
+    "url": "/images/studio_h_ninja_1794051989.png",
+    "word_id": "h_ninja",
+    "name": "にんじゃ",
+    "prompt": "Japanese picture book watercolor illustration of a cute agile ninja in traditional ninja outfit making a hand sign (にんじゃ / ninja), playful stealthy smile, storybook aesthetic, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051989000
+  },
+  {
+    "url": "/images/studio_h_hi-ro-_1794051876.png",
+    "word_id": "h_hi-ro-",
+    "name": "ヒーロー",
+    "prompt": "Japanese picture book watercolor illustration of a cool and friendly superhero in bright colorful costume and cape striking a confident heroic pose (ヒーロー / superhero), brave energetic posture, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051876000
+  },
+  {
+    "url": "/images/studio_h_mahoutsukai_1794051820.png",
+    "word_id": "h_mahoutsukai",
+    "name": "まほうつかい",
+    "prompt": "Japanese picture book watercolor illustration of a cute whimsical wizard or witch with a pointed hat holding a glowing magic star wand (まほうつかい / wizard, magician), playful gentle smile, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051820000
+  },
+  {
+    "url": "/images/studio_h_oujisama_1794051761.png",
+    "word_id": "h_oujisama",
+    "name": "おうじさま",
+    "prompt": "Japanese picture book watercolor illustration of a handsome fairytale prince in royal tunic and cape with a golden circlet crown smiling gallantly (おうじさま / prince), noble gentle pose, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051761000
+  },
+  {
+    "url": "/images/studio_h_ohimesama_1794051705.png",
+    "word_id": "h_ohimesama",
+    "name": "おひめさま",
+    "prompt": "Japanese picture book watercolor illustration of a charming fairytale princess wearing an elegant pastel ballgown and sparkling tiara smiling gracefully (おひめさま / princess), magical fairytale aesthetic, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051705000
+  },
+  {
+    "url": "/images/studio_h_santakuro-su_1794051648.png",
+    "word_id": "h_santakuro-su",
+    "name": "サンタクロース",
+    "prompt": "Japanese picture book watercolor illustration of a jolly friendly Santa Claus in red suit with fluffy white beard and red hat smiling warmly holding a toy sack (サンタクロース / Santa Claus), merry holiday charm, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051648000
+  },
+  {
+    "url": "/images/studio_h_uchuuhikoushi_1794051591.png",
+    "word_id": "h_uchuuhikoushi",
+    "name": "うちゅうひこうし",
+    "prompt": "Japanese picture book watercolor illustration of a cute astronaut in a white space suit waving happily (うちゅうひこうし / astronaut), friendly transparent helmet visor showing smiling face, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051591000
+  },
+  {
+    "url": "/images/studio_h_untenshi_1794051535.png",
+    "word_id": "h_untenshi",
+    "name": "うんてんし",
+    "prompt": "Japanese picture book watercolor illustration of a proud train or bus driver in uniform and peaked cap smiling while pointing forward (うんてんし / train driver, conductor), trustworthy pose, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051535000
+  },
+  {
+    "url": "/images/studio_h_ekiin_1794051478.png",
+    "word_id": "h_ekiin",
+    "name": "えきいんさん",
+    "prompt": "Japanese picture book watercolor illustration of a neat railway station attendant in railway uniform and cap smiling politely (えきいんさん / train station attendant), professional friendly pose, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051478000
+  },
+  {
+    "url": "/images/studio_h_hanayasan_1794051421.png",
+    "word_id": "h_hanayasan",
+    "name": "はなやさん",
+    "prompt": "Japanese picture book watercolor illustration of a smiling florist wearing a green apron holding a colorful bouquet of flowers (はなやさん / florist), bright cheerful blooms, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051421000
+  },
+  {
+    "url": "/images/studio_h_panyasan_1794051364.png",
+    "word_id": "h_panyasan",
+    "name": "パンやさん",
+    "prompt": "Japanese picture book watercolor illustration of a cheerful baker with a flour-dusted apron holding a fresh golden loaf of bread (パンやさん / baker), warm bakery aroma feel, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051364000
+  },
+  {
+    "url": "/images/studio_h_kokkusan_1794051308.png",
+    "word_id": "h_kokkusan",
+    "name": "コックさん",
+    "prompt": "Japanese picture book watercolor illustration of a jolly smiling chef in tall white chef hat and apron holding a wooden spoon (コックさん / chef, cook), delicious warm atmosphere, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051308000
+  },
+  {
+    "url": "/images/studio_h_haishasan_1794051251.png",
+    "word_id": "h_haishasan",
+    "name": "はいしゃさん",
+    "prompt": "Japanese picture book watercolor illustration of a friendly dentist holding a dental mirror with a gentle smile (はいしゃさん / pediatric dentist), reassuring clean white coat, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051251000
+  },
+  {
+    "url": "/images/studio_h_kangoshi_1794051187.png",
+    "word_id": "h_kangoshi",
+    "name": "かんごし",
+    "prompt": "Japanese picture book watercolor illustration of a caring and kind nurse in medical scrubs or uniform smiling warmly (かんごし / nurse), compassionate friendly posture, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051187000
+  },
+  {
+    "url": "/images/studio_h_oishasan_1794051121.png",
+    "word_id": "h_oishasan",
+    "name": "おいしゃさん",
+    "prompt": "Japanese picture book watercolor illustration of a gentle and friendly doctor wearing a white coat with a stethoscope around neck smiling reassuringly (おいしゃさん / doctor, pediatrician), warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051121000
+  },
+  {
+    "url": "/images/studio_h_keisatsukan_1794051066.png",
+    "word_id": "h_keisatsukan",
+    "name": "けいさつかん",
+    "prompt": "Japanese picture book watercolor illustration of a polite and friendly police officer in neat blue uniform and cap with a kind smile saluting gently (けいさつかん / police officer), reassuring posture, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051066000
+  },
+  {
+    "url": "/images/studio_h_shouboushi_1794051010.png",
+    "word_id": "h_shouboushi",
+    "name": "しょうぼうし",
+    "prompt": "Japanese picture book watercolor illustration of a brave and friendly firefighter in orange firefighter uniform and helmet smiling reliably (しょうぼうし / firefighter), warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794051010000
+  },
+  {
+    "url": "/images/studio_h_sensei_1794050954.png",
+    "word_id": "h_sensei",
+    "name": "せんせい",
+    "prompt": "Japanese picture book watercolor illustration of a kind and smiling kindergarten or preschool teacher holding a picture book (せんせい / teacher, preschool teacher), warm welcoming smile, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794050954000
+  },
+  {
+    "url": "/images/studio_h_onnanoko_1794050899.png",
+    "word_id": "h_onnanoko",
+    "name": "おんなのこ",
+    "prompt": "Japanese picture book watercolor illustration of a cute cheerful little girl standing with a bright friendly smile (おんなのこ / young girl), wearing a simple cute dress, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794050899000
+  },
+  {
+    "url": "/images/studio_h_otokonoko_1794050842.png",
+    "word_id": "h_otokonoko",
+    "name": "おとこのこ",
+    "prompt": "Japanese picture book watercolor illustration of a cute cheerful little boy standing with a bright energetic smile (おとこのこ / young boy), casual T-shirt and shorts, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794050842000
+  },
+  {
+    "url": "/images/studio_h_tomodachi_1794050772.png",
+    "word_id": "h_tomodachi",
+    "name": "ともだち",
+    "prompt": "Japanese picture book watercolor illustration of two cute young children standing happily together with smiles and friendly arms around shoulders (ともだち / friends), heartwarming companionship, warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794050772000
+  },
+  {
+    "url": "/images/studio_h_obaasan_1794050710.png",
+    "word_id": "h_obaasan",
+    "name": "おばあさん",
+    "prompt": "Japanese picture book watercolor illustration of a warm and gentle elderly grandmother with a kind smile (おばあさん / grandmother), wearing comfortable knitwear, affectionate sweet expression, gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.",
+    "timestamp": 1794050710000
+  }
+];

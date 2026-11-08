@@ -45,6 +45,7 @@
       --cat-midikanamono: #10b981;
       --cat-ugoki: #8b5cf6;
       --cat-kimochi: #ec4899;
+      --cat-hito: #f43f5e;
     }
 
     * {
@@ -1976,12 +1977,13 @@
       { id: 'norimono', name: 'のりもの', color: 'var(--cat-norimono)' },
       { id: 'midikanamono', name: 'みぢかなもの', color: 'var(--cat-midikanamono)' },
       { id: 'ugoki', name: 'うごき', color: 'var(--cat-ugoki)' },
-      { id: 'kimochi', name: 'きもち', color: 'var(--cat-kimochi)' }
+      { id: 'kimochi', name: 'きもち', color: 'var(--cat-kimochi)' },
+      { id: 'hito', name: 'ひと', color: 'var(--cat-hito)' }
     ];
 
     // デフォルト設定
     const DEFAULT_SETTINGS = {
-      categories: ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi'],
+      categories: ['doubutsu', 'tabemono', 'norimono', 'midikanamono', 'ugoki', 'kimochi', 'hito'],
       quizFormat: 'random', // 'choose-pic' | 'choose-text' | 'random'
       questionCount: 5,     // 1〜20
       choiceCount: 3,       // 2, 3, 4

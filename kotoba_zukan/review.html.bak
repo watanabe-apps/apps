@@ -1,0 +1,3685 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ことばずかん - 画像レビュー＆不備指摘ツール</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --danger-light: #fef2f2;
+      --danger-border: #f87171;
+      --success: #10b981;
+      --accent: #f59e0b;
+      --border-color: #e2e8f0;
+      
+      --cat-doubutsu: #f97316;
+      --cat-tabemono: #ef4444;
+      --cat-norimono: #0284c7;
+      --cat-midikanamono: #10b981;
+      --cat-ugoki: #8b5cf6;
+      --cat-kimochi: #ec4899;
+      --cat-hito: #f43f5e;
+
+      --card-size: 175px;
+      --font-family: "Zen Maru Gothic", "UD Digi Kyokasho N-R", "Klee One", sans-serif;
+
+      --type-image: #ef4444;
+      --type-image-bg: #fef2f2;
+      --type-image-border: #fca5a5;
+
+      --type-audio: #2563eb;
+      --type-audio-bg: #eff6ff;
+      --type-audio-border: #93c5fd;
+
+      --type-text: #8b5cf6;
+      --type-text-bg: #f5f3ff;
+      --type-text-border: #c4b5fd;
+
+      --type-other: #64748b;
+      --type-other-bg: #f8fafc;
+      --type-other-border: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 120px;
+    }
+
+    /* Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-top {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stats-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--danger-light);
+      color: var(--danger-dark);
+      border: 1px solid var(--danger-border);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .size-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .size-control label {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .size-btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .size-btn {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .size-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Filter Toolbar */
+    .toolbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 8px 16px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cat-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .cat-tab.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.85rem;
+      font-family: inherit;
+      width: 180px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .type-filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .type-filter-btn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      user-select: none;
+      font-family: inherit;
+    }
+    .type-filter-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    .type-filter-btn.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+    }
+    .type-filter-btn.flag-all.active {
+      background: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+    }
+    .type-filter-btn.type-image.active {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #dc2626;
+    }
+    .type-filter-btn.type-audio.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .type-filter-btn.type-text.active {
+      background: #8b5cf6;
+      color: #ffffff;
+      border-color: #7c3aed;
+    }
+    .type-filter-btn.type-other.active {
+      background: #475569;
+      color: #ffffff;
+      border-color: #334155;
+    }
+
+    .flag-filter-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .flag-filter-btn.active {
+      background: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+    }
+
+    /* Subcategory Filter Toolbar */
+    .subcat-toolbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 16px 12px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .subcat-toolbar::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .subcat-toolbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .subcat-pill {
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+    }
+
+    .subcat-pill:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .subcat-pill.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Main Grid */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+      width: 100%;
+    }
+
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
+      gap: 12px;
+    }
+
+    /* Card Styling */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
+      border-color: #94a3b8;
+    }
+
+    /* Flagged State */
+    .card.is-flagged {
+      border-color: #f87171;
+      background-color: #fffaf9;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+    .card.has-image-issue {
+      border-color: #ef4444;
+    }
+    .card.has-audio-issue {
+      border-color: #2563eb;
+    }
+    .card.has-text-issue {
+      border-color: #8b5cf6;
+    }
+    .card.has-multi-issues {
+      border-color: #e11d48;
+      box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
+    }
+
+    .card-issue-badges {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .issue-tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+    .issue-tag-badge.badge-image { background: #ef4444; color: #fff; }
+    .issue-tag-badge.badge-audio { background: #2563eb; color: #fff; }
+    .issue-tag-badge.badge-text  { background: #8b5cf6; color: #fff; }
+    .issue-tag-badge.badge-other { background: #475569; color: #fff; }
+
+    /* Quick Type Buttons on Card */
+    .card-quick-types {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      padding: 6px 6px 6px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .quick-type-btn {
+      padding: 4px 2px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      transition: all 0.15s ease;
+      user-select: none;
+      font-family: inherit;
+    }
+    .quick-type-btn:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+    .quick-type-btn.active.btn-image {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #dc2626;
+      box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
+    }
+    .quick-type-btn.active.btn-audio {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35);
+    }
+    .quick-type-btn.active.btn-text {
+      background: #8b5cf6;
+      color: #ffffff;
+      border-color: #7c3aed;
+      box-shadow: 0 1px 3px rgba(139, 92, 246, 0.35);
+    }
+    .quick-type-btn.active.btn-other {
+      background: #475569;
+      color: #ffffff;
+      border-color: #334155;
+      box-shadow: 0 1px 3px rgba(71, 85, 105, 0.35);
+    }
+
+    .card-top-actions {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: #ffffff;
+      transform: scale(1.1);
+    }
+
+    .image-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .card-info {
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-top: 1px solid #f1f5f9;
+      background: inherit;
+    }
+
+    .card-word {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      gap: 6px;
+    }
+
+    .card-tags {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .cat-tag {
+      font-weight: 700;
+    }
+
+    .subcat-tag {
+      font-size: 0.68rem;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .card-id {
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    .cat-doubutsu { color: var(--cat-doubutsu); }
+    .cat-tabemono { color: var(--cat-tabemono); }
+    .cat-norimono { color: var(--cat-norimono); }
+    .cat-midikanamono { color: var(--cat-midikanamono); }
+    .cat-ugoki { color: var(--cat-ugoki); }
+    .cat-kimochi { color: var(--cat-kimochi); }
+    .cat-hito { color: var(--cat-hito); }
+
+    .card-comment {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--danger-dark);
+      background: rgba(239, 68, 68, 0.1);
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: none;
+      word-break: break-all;
+    }
+
+    .card.is-flagged .card-comment.has-text {
+      display: block;
+    }
+
+    /* Detail / Edit Reason Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: modalSlide 0.25s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(20px) scale(0.97); }
+      to { transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 300px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Modal Issue Type Selector */
+    .modal-type-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .modal-type-btn {
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .modal-type-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .modal-type-btn.active.type-image {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #dc2626;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+
+    .modal-type-btn.active.type-audio {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .modal-type-btn.active.type-text {
+      background: #f5f3ff;
+      border-color: #8b5cf6;
+      color: #6d28d9;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .modal-type-btn.active.type-other {
+      background: #f1f5f9;
+      border-color: #475569;
+      color: #1e293b;
+      box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.2);
+    }
+
+    .quick-reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .reason-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+      transition: all 0.15s;
+    }
+
+    .reason-btn:hover {
+      background: #eff6ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .reason-textarea {
+      width: 100%;
+      height: 70px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      resize: vertical;
+    }
+
+    .reason-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .prompt-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      color: #475569;
+      line-height: 1.4;
+      max-height: 100px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-dark);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Floating Dock / Bottom Bar */
+    .bottom-dock {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 2px solid var(--border-color);
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+      padding: 12px 16px;
+      z-index: 40;
+    }
+
+    .dock-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .dock-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dock-count-box {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .dock-count-box span {
+      font-size: 1.3rem;
+      color: var(--danger);
+      font-weight: 800;
+    }
+
+    .dock-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease-out;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    /* ========================================================
+       Full-Screen View Switcher & Draw Things Studio Styles
+       ======================================================== */
+    /* View Switcher Tabs in Header */
+    .view-switcher {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 10px;
+      gap: 3px;
+    }
+    .view-tab {
+      background: transparent;
+      border: none;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .view-tab.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Studio Fullscreen Container */
+    #studio-view {
+      display: none;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      background: #121218;
+      color: #f1f5f9;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    #studio-view.active {
+      display: flex;
+    }
+
+    .studio-top-nav {
+      height: 52px;
+      background: #181822;
+      border-bottom: 1px solid #2a2a3a;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .studio-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .studio-back-btn {
+      background: #252535;
+      color: #f1f5f9;
+      border: 1px solid #3a3a4e;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .studio-back-btn:hover {
+      background: #35354a;
+      border-color: #6366f1;
+    }
+
+    /* Word Selector in Studio Nav */
+    .studio-word-picker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f0f15;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      padding: 3px 8px;
+    }
+    .studio-word-select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 4px 6px;
+      outline: none;
+      cursor: pointer;
+      max-width: 260px;
+    }
+    .studio-word-select option {
+      background: #181822;
+      color: #fff;
+    }
+
+    .studio-step-btn {
+      background: #20202c;
+      border: 1px solid #3a3a4e;
+      color: #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .studio-step-btn:hover {
+      background: #303042;
+      color: #fff;
+    }
+
+    /* Comparison Toolbar Controls */
+    .studio-mode-pills {
+      display: flex;
+      background: #0e0e14;
+      border: 1px solid #2a2a3a;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .studio-mode-pill {
+      background: none;
+      border: none;
+      color: #88889c;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .studio-mode-pill.active {
+      background: #6366f1;
+      color: #fff;
+    }
+
+    /* Studio Main Stage: Side-by-Side Stage (Fill space) */
+    .studio-stage {
+      flex: 1;
+      display: flex;
+      position: relative;
+      background: #ffffff; /* pure white canvas for vocabulary illustration */
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+    }
+    .studio-stage:active {
+      cursor: grabbing;
+    }
+
+    .studio-panes {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .studio-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border-right: 2px solid #e2e8f0;
+      overflow: hidden;
+    }
+    .studio-pane:last-child {
+      border-right: none;
+    }
+
+    .studio-pane-header {
+      padding: 8px 16px;
+      background: rgba(248, 250, 252, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .studio-tag-old {
+      background: #fee2e2;
+      color: #ef4444;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .studio-tag-new {
+      background: #dcfce7;
+      color: #10b981;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .studio-pane-canvas {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    .studio-pane-canvas img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      transform-origin: center center;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    /* Comparison Modes Overlay / Slider */
+    .studio-slider-stage {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: white;
+      overflow: hidden;
+    }
+    .studio-slider-under, .studio-slider-over {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .studio-slider-under img, .studio-slider-over img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+      transform-origin: center center;
+      pointer-events: none;
+    }
+    .studio-slider-over {
+      overflow: hidden;
+      border-right: 2px solid #06b6d4;
+      width: 50%;
+      background: white;
+      z-index: 2;
+    }
+    .studio-slider-divider {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 4px;
+      background: #06b6d4;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: ew-resize;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(6,182,212,0.8);
+    }
+    .studio-slider-handle {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px; height: 36px;
+      background: #06b6d4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 15px;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* Comparison Modes Overlay / Toggle */
+    .studio-toggle-stage {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: white;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .studio-toggle-stage img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+      transform-origin: center center;
+      pointer-events: none;
+    }
+    .studio-toggle-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Studio Bottom Control Console (Prompt, Gen, History) */
+    .studio-bottom-bar {
+      height: 160px;
+      background: #161620;
+      border-top: 1px solid #2a2a3a;
+      padding: 12px 20px;
+      display: flex;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .studio-prompt-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .studio-prompt-input {
+      flex: 1;
+      background: #0d0d12;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      color: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      line-height: 1.4;
+      resize: none;
+      outline: none;
+    }
+    .studio-prompt-input:focus {
+      border-color: #6366f1;
+    }
+
+    .studio-action-col {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      justify-content: center;
+    }
+    .studio-btn-gen {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 10px rgba(99,102,241,0.4);
+      transition: all 0.15s;
+    }
+    .studio-btn-gen:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(99,102,241,0.5);
+    }
+    .studio-btn-gen:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .studio-btn-apply {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .studio-btn-apply:hover:not(:disabled) {
+      background: #059669;
+    }
+    .studio-btn-apply:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .studio-btn-discard {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .studio-btn-discard:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.25);
+    }
+    .studio-btn-discard:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .studio-history-col {
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .studio-history-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+      background: #0f0f15;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #2a2a3a;
+    }
+    .studio-hist-item {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .studio-hist-item.active {
+      border-color: #06b6d4;
+    }
+    .studio-hist-item img {
+      width: 100%; height: 100%; object-fit: contain;
+    }
+
+    /* Floating PIP Window during generation */
+    .dt-floating-pip {
+      position: fixed;
+      top: 60px;
+      left: 20px;
+      width: 260px;
+      background: rgba(20, 20, 28, 0.97);
+      backdrop-filter: blur(14px);
+      border: 1px solid #06b6d4;
+      border-radius: 10px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.8);
+      z-index: 2500;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      cursor: move;
+      color: #fff;
+      animation: dtPopIn 0.2s ease-out;
+    }
+    .dt-pip-header {
+      padding: 8px 12px;
+      background: #14141e;
+      border-bottom: 1px solid #2a2a3a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #06b6d4;
+    }
+    .dt-pip-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dt-pip-bar {
+      width: 100%;
+      height: 6px;
+      background: #333344;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dt-pip-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #06b6d4);
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-top">
+      <div class="title-group">
+        <h1>🔍 ことばずかん レビュー＆不備指摘ツール</h1>
+        <div class="stats-badge" id="stats-badge">
+          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">491</span>
+          <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; margin-left: 4px;">
+            (🖼️ <span id="stat-image">0</span> / 🔊 <span id="stat-audio">0</span> / ✍️ <span id="stat-text">0</span> / 💬 <span id="stat-other">0</span>)
+          </span>
+        </div>
+      </div>
+
+      <!-- View Switcher & Size Controls -->
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="view-switcher">
+          <button class="view-tab active" id="tab-review-btn" onclick="switchMainView('review')">
+            <span>📋 レビュー一覧</span>
+          </button>
+          <button class="view-tab" id="tab-studio-btn" onclick="switchMainView('studio')">
+            <span>🎨 生成・新旧比較</span>
+          </button>
+        </div>
+        <button class="btn btn-secondary" onclick="openHistoryModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; background: #1e1b4b; border: 1px solid #6366f1; color: #a5b4fc; padding: 6px 12px; border-radius: 8px; cursor: pointer;" title="Draw Thingsで生成された過去の画像一覧を開きます">
+          <span>📜 生成履歴</span>
+          <span id="header-hist-count" style="background: #6366f1; color: #fff; font-size: 0.72rem; padding: 1px 6px; border-radius: 999px;">0</span>
+        </button>
+        <div class="size-control" id="review-size-control">
+          <label>表示サイズ:</label>
+          <div class="size-btn-group">
+            <button class="size-btn" onclick="setCardSize(130, this)">小</button>
+            <button class="size-btn active" onclick="setCardSize(175, this)">中</button>
+            <button class="size-btn" onclick="setCardSize(230, this)">大</button>
+            <button class="size-btn" onclick="setCardSize(300, this)">特大</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="toolbar">
+      <div class="cat-tabs" id="cat-tabs"></div>
+
+      <div class="filter-options">
+        <div class="type-filter-group" id="type-filter-group">
+          <button class="type-filter-btn active" data-type="all" onclick="setTypeFilter('all', this)">
+            すべて
+          </button>
+          <button class="type-filter-btn flag-all" data-type="flagged" onclick="setTypeFilter('flagged', this)">
+            🚨 要修正 (<span id="btn-count-flagged">0</span>)
+          </button>
+          <button class="type-filter-btn type-image" data-type="image" onclick="setTypeFilter('image', this)">
+            🖼️ 画像 (<span id="btn-count-image">0</span>)
+          </button>
+          <button class="type-filter-btn type-audio" data-type="audio" onclick="setTypeFilter('audio', this)">
+            🔊 音声 (<span id="btn-count-audio">0</span>)
+          </button>
+          <button class="type-filter-btn type-text" data-type="text" onclick="setTypeFilter('text', this)">
+            ✍️ 表記 (<span id="btn-count-text">0</span>)
+          </button>
+          <button class="type-filter-btn type-other" data-type="other" onclick="setTypeFilter('other', this)">
+            💬 他 (<span id="btn-count-other">0</span>)
+          </button>
+        </div>
+        <input type="text" class="search-input" id="search-input" placeholder="単語・ID・分類で検索...">
+      </div>
+    </div>
+
+    <!-- Subcategory Filter Toolbar -->
+    <div class="subcat-toolbar" id="subcat-toolbar" style="display: none;">
+      <div id="subcat-pills" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main>
+    <div class="vocab-grid" id="vocab-grid"></div>
+  </main>
+
+  <!-- Floating Dock -->
+  <div class="bottom-dock">
+    <div class="dock-container">
+      <div class="dock-status">
+        <div class="dock-count-box">
+          選択中の不備: <span id="dock-flag-count">0</span> 件
+          <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; margin-left: 6px;">
+            (🖼️ <span id="dock-stat-image">0</span> / 🔊 <span id="dock-stat-audio">0</span> / ✍️ <span id="dock-stat-text">0</span> / 💬 <span id="dock-stat-other">0</span>)
+          </span>
+        </div>
+      </div>
+
+      <div class="dock-actions">
+        <button class="btn btn-primary" onclick="copyForChat()">
+          📋 チャット用テキストをコピー
+        </button>
+        <button class="btn btn-secondary" onclick="exportJSON()">
+          💾 JSON保存
+        </button>
+        <button class="btn btn-secondary" onclick="triggerImportJSON()">
+          📥 JSON読込
+        </button>
+        <button class="btn btn-secondary" onclick="showSummaryModal()">
+          👀 指摘一覧を見る
+        </button>
+        <button class="btn btn-secondary" onclick="resetAllFlags()" style="color: var(--danger);">
+          🗑️ クリア
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail / Reason Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">単語詳細</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+
+      <div class="modal-img-wrap">
+        <img id="modal-img" src="" alt="">
+      </div>
+
+      <!-- Draw Things 再生成ボタン -->
+      <div style="margin: 6px 0 10px 0;">
+        <button type="button" class="dt-studio-btn" style="width: 100%; justify-content: center; padding: 8px 16px; font-size: 0.88rem;" onclick="openStudioFromModal()">
+          <span>🎨 Draw Things で再生成・新旧比較を開く</span>
+        </button>
+      </div>
+
+      <!-- 不備種別セレクター（複数選択可） -->
+      <div>
+        <label style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: block;">
+          不備の種別（複数選択可）:
+        </label>
+        <div class="modal-type-selector">
+          <button type="button" class="modal-type-btn type-image" id="mtype-image" onclick="toggleModalType('image')">
+            <span style="font-size: 1.25rem;">🖼️</span>
+            <span>画像がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-audio" id="mtype-audio" onclick="toggleModalType('audio')">
+            <span style="font-size: 1.25rem;">🔊</span>
+            <span>音声がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-text" id="mtype-text" onclick="toggleModalType('text')">
+            <span style="font-size: 1.25rem;">✍️</span>
+            <span>表記がダメ</span>
+          </button>
+          <button type="button" class="modal-type-btn type-other" id="mtype-other" onclick="toggleModalType('other')">
+            <span style="font-size: 1.25rem;">💬</span>
+            <span>その他</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 単語の現在情報（表記・読み上げテキスト） -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div><strong>表記 (name):</strong> <span id="modal-name-val" style="font-weight: 700; color: #0f172a;"></span></div>
+          <div><strong>音声テキスト (tts_text):</strong> <span id="modal-tts-val" style="font-weight: 700; color: #2563eb;"></span></div>
+        </div>
+        <div style="color: #64748b; font-size: 0.75rem;">
+          <strong>分類:</strong> <span id="modal-cat-val"></span>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">
+          よくある理由（クリックでメモに追加）:
+        </label>
+        <div class="quick-reasons">
+          <!-- 画像 -->
+          <button class="reason-btn" onclick="addReasonTag('【画像】手・人体の崩れ')">🖐️ 手・人体の崩れ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】背景の黄ばみ/色')">🎨 背景の黄ばみ/色</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】意味のズレ')">❓ 意味のズレ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】構図・見切れ')">✂️ 構図・見切れ</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】パーツ不足/多すぎ')">🚲 パーツ不足/過剰</button>
+          <button class="reason-btn" onclick="addReasonTag('【画像】実写風/画風不揃い')">📷 実写風/画風違い</button>
+          <!-- 音声 -->
+          <button class="reason-btn" onclick="addReasonTag('【音声】読み間違い・誤読')">🗣️ 発音/読み間違い</button>
+          <button class="reason-btn" onclick="addReasonTag('【音声】イントネーション不自然')">🎵 イントネーション</button>
+          <button class="reason-btn" onclick="addReasonTag('【音声】音質・ノイズ・途切れ')">⚠️ 音質/途切れ</button>
+          <!-- 表記 -->
+          <button class="reason-btn" onclick="addReasonTag('【表記】ひらがな表記揺れ')">✍️ ひらがな表記</button>
+          <button class="reason-btn" onclick="addReasonTag('【表記】単語名の変更')">🏷️ 単語名の変更</button>
+          <!-- その他 -->
+          <button class="reason-btn" onclick="addReasonTag('【その他】カテゴリ分類違い')">📁 分類違い</button>
+        </div>
+      </div>
+
+      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 腕が浮いている、発音が「かな」になっている、こーちゃ→こうちゃ...）"></textarea>
+
+      <div>
+        <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">生成プロンプト:</label>
+        <div class="prompt-box" id="modal-prompt"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="playAudioFromModal()">🔊 発音を聴く</button>
+        <button class="btn btn-danger" id="modal-flag-toggle-btn" onclick="toggleModalFlagAll()">🚨 すべて解除</button>
+        <button class="btn btn-primary" onclick="saveModalChanges()">保存して閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div class="modal-overlay" id="summary-modal">
+    <div class="modal-content" style="max-width: 720px;">
+      <div class="modal-header">
+        <h2>🚨 要修正として指摘した一覧 (<span id="summary-count">0</span>件)</h2>
+        <button class="modal-close" onclick="closeSummaryModal()">&times;</button>
+      </div>
+
+      <!-- 種別絞り込みタブ in Summary Modal -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;" id="summary-filter-pills">
+        <button class="subcat-pill active" data-filter="all" onclick="filterSummaryList('all', this)">すべて</button>
+        <button class="subcat-pill" data-filter="image" onclick="filterSummaryList('image', this)">🖼️ 画像</button>
+        <button class="subcat-pill" data-filter="audio" onclick="filterSummaryList('audio', this)">🔊 音声</button>
+        <button class="subcat-pill" data-filter="text" onclick="filterSummaryList('text', this)">✍️ 表記</button>
+        <button class="subcat-pill" data-filter="other" onclick="filterSummaryList('other', this)">💬 その他</button>
+      </div>
+
+      <div id="summary-list" style="max-height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeSummaryModal()">閉じる</button>
+        <button class="btn btn-primary" onclick="copyForChat(); closeSummaryModal();">📋 チャット用にコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Gallery Modal (View & Apply All Past Generations) -->
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-content" style="max-width: 980px; width: 95vw; max-height: 85vh; display: flex; flex-direction: column; background: #0f172a; color: #f8fafc; border: 1px solid #334155;">
+      <div class="modal-header" style="border-bottom: 1px solid #334155; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 style="color: #fff; margin: 0; font-size: 1.25rem;">📜 Draw Things 生成履歴ギャラリー (<span id="modal-hist-count">0</span>件)</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn btn-secondary" onclick="syncStudioHistoryFromServer(false); showToast('🔄 履歴を再読み込みしました');" style="padding: 4px 10px; font-size: 0.8rem; background: #1e293b; color: #94a3b8; border-color: #475569;">
+            🔄 再読み込み
+          </button>
+          <button class="modal-close" onclick="closeHistoryModal()" style="color: #94a3b8;">&times;</button>
+        </div>
+      </div>
+
+      <div style="padding: 8px 16px; background: #1e293b; border-bottom: 1px solid #334155; font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; align-items: center;">
+        <span>Draw Thingsで生成された新画像および旧画像バックアップの一覧です。「👥 新旧比較」を押すとスタジオで拡大・スライダー比較できます。</span>
+      </div>
+
+      <div id="modal-hist-grid" style="flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; background: #0b0f19;">
+        <!-- Dynamically rendered -->
+      </div>
+
+      <div class="modal-actions" style="border-top: 1px solid #334155; margin-top: 0; padding-top: 12px; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="closeHistoryModal()" style="background: #1e293b; color: #cbd5e1; border-color: #475569;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for JSON import -->
+  <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+
+  <!-- Toast -->
+  <div class="toast" id="toast">📋 コピーしました</div>
+
+  <!-- Load Vocab DB & Cached Studio History -->
+  <script src="../common/vocab.js"></script>
+  <script src="./scripts/candidates/history.js" onerror="console.log('No cached history.js found')"></script>
+
+  <script>
+    'use strict';
+
+    // State & Constants
+    const STORAGE_KEY = 'kotoba_zukan_review_flags_v1';
+    
+    // 不備種別の定義
+    const ISSUE_TYPES = [
+      { id: 'image', label: '画像', fullLabel: '画像がダメ', icon: '🖼️', badgeClass: 'badge-image', btnClass: 'btn-image' },
+      { id: 'audio', label: '音声', fullLabel: '音声がダメ', icon: '🔊', badgeClass: 'badge-audio', btnClass: 'btn-audio' },
+      { id: 'text',  label: '表記', fullLabel: '表記がダメ', icon: '✍️', badgeClass: 'badge-text',  btnClass: 'btn-text' },
+      { id: 'other', label: 'その他', fullLabel: 'その他',   icon: '💬', badgeClass: 'badge-other', btnClass: 'btn-other' }
+    ];
+    const ISSUE_TYPE_MAP = new Map(ISSUE_TYPES.map(t => [t.id, t]));
+
+    let flaggedMap = {}; // { [id]: { id, name, category, categoryName, subCategory, subCategoryName, types: [], reason, tts_text } }
+    let currentCategory = 'all';
+    let currentSubCategory = 'all';
+    let currentTypeFilter = 'all'; // 'all' | 'flagged' | 'image' | 'audio' | 'text' | 'other'
+    let searchQuery = '';
+    let currentModalItem = null;
+    let modalSelectedTypes = new Set();
+    let currentSummaryFilter = 'all';
+    let audioPlayer = new Audio();
+
+    const CATEGORIES_DEF = [
+      { id: 'all', name: 'すべて' },
+      { id: 'doubutsu', name: 'いきもの' },
+      { id: 'tabemono', name: 'たべもの' },
+      { id: 'norimono', name: 'のりもの' },
+      { id: 'midikanamono', name: 'みぢかなもの' },
+      { id: 'ugoki', name: 'うごき' },
+      { id: 'kimochi', name: 'きもち' },
+      { id: 'hito', name: 'ひと' }
+    ];
+
+    function getVocabList() {
+      if (window.APP_VOCAB && Array.isArray(window.APP_VOCAB.list)) {
+        return window.APP_VOCAB.list;
+      }
+      if (window.VocabDB && Array.isArray(window.VocabDB.list)) {
+        return window.VocabDB.list;
+      }
+      return [];
+    }
+
+    function getVocabById(id) {
+      if (window.APP_VOCAB && window.APP_VOCAB.byId && window.APP_VOCAB.byId[id]) {
+        return window.APP_VOCAB.byId[id];
+      }
+      if (window.VocabDB && typeof window.VocabDB.findById === 'function') {
+        return window.VocabDB.findById(id);
+      }
+      return null;
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFlagsFromStorage();
+      renderCategoryTabs();
+      setupSearch();
+      renderGrid();
+      updateStats();
+      initStudioHistory();
+    });
+
+    // LocalStorage with Backward Compatibility
+    function loadFlagsFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // 旧形式（types配列がない場合）の自動マイグレーション
+          Object.keys(parsed).forEach(id => {
+            const item = parsed[id];
+            if (!Array.isArray(item.types) || item.types.length === 0) {
+              item.types = ['image']; // 旧形式は画像として移行
+            }
+          });
+          flaggedMap = parsed;
+        }
+      } catch (e) {
+        console.error('Failed to load review flags:', e);
+        flaggedMap = {};
+      }
+    }
+
+    function saveFlagsToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(flaggedMap));
+      } catch (e) {
+        console.error('Failed to save review flags:', e);
+      }
+      updateStats();
+    }
+
+    // Grid Size Control
+    function setCardSize(size, btn) {
+      document.documentElement.style.setProperty('--card-size', size + 'px');
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    // Filter Controls
+    function setTypeFilter(type, btn) {
+      currentTypeFilter = type;
+      document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderGrid();
+    }
+
+    function renderCategoryTabs() {
+      const container = document.getElementById('cat-tabs');
+      if (!container) return;
+      const list = getVocabList();
+      container.innerHTML = '';
+
+      CATEGORIES_DEF.forEach(cat => {
+        const count = cat.id === 'all'
+          ? list.length
+          : list.filter(w => w.category === cat.id).length;
+        const btn = document.createElement('button');
+        btn.className = `cat-tab ${cat.id === currentCategory ? 'active' : ''}`;
+        btn.dataset.cat = cat.id;
+        btn.textContent = `${cat.name} (${count})`;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          currentCategory = cat.id;
+          currentSubCategory = 'all';
+          renderSubCategoryPills();
+          renderGrid();
+        });
+        container.appendChild(btn);
+      });
+
+      renderSubCategoryPills();
+    }
+
+    function renderSubCategoryPills() {
+      const toolbar = document.getElementById('subcat-toolbar');
+      const pillsContainer = document.getElementById('subcat-pills');
+      if (!toolbar || !pillsContainer) return;
+
+      if (currentCategory === 'all') {
+        toolbar.style.display = 'none';
+        pillsContainer.innerHTML = '';
+        return;
+      }
+
+      const list = getVocabList();
+      const catWords = list.filter(w => w.category === currentCategory);
+      
+      const subMap = new Map();
+      catWords.forEach(w => {
+        if (w.subCategory) {
+          const current = subMap.get(w.subCategory) || { name: w.subCategoryName || w.subCategory, count: 0 };
+          current.count++;
+          subMap.set(w.subCategory, current);
+        }
+      });
+
+      if (subMap.size === 0) {
+        toolbar.style.display = 'none';
+        pillsContainer.innerHTML = '';
+        return;
+      }
+
+      toolbar.style.display = 'block';
+      pillsContainer.innerHTML = '';
+
+      // 「すべて」ピル
+      const allPill = document.createElement('button');
+      allPill.className = `subcat-pill ${currentSubCategory === 'all' ? 'active' : ''}`;
+      allPill.textContent = `すべて (${catWords.length})`;
+      allPill.addEventListener('click', () => {
+        currentSubCategory = 'all';
+        renderSubCategoryPills();
+        renderGrid();
+      });
+      pillsContainer.appendChild(allPill);
+
+      const SUBCAT_ORDER = [
+        'riku_doubutsu', 'tori', 'sakana_umi', 'mushi',
+        'shushoku', 'niku_okazu', 'sakana_okazu', 'tamago_okazu', 'sonota_okazu', 'yasai', 'kudamono', 'oyatsu', 'nomimono',
+        'kuruma', 'hatarakukuruma', 'densha', 'sora', 'umi', 'sonota_norimono',
+        'karada', 'karada_kenkou', 'gakkou', 'bunbougu', 'fuku_kougu', 'kagu_kaden', 'seikatsu_seiketsu', 'asobi',
+        'kihon_ugoki', 'seikatsu_habit', 'tesaki_sagyou',
+        'kimochi_hyoujou', 'tsutaeru_aisatsu', 'fureai_nakayoshi',
+        'kazoku_hito', 'oshigoto_hito', 'monogatari_hito'
+      ];
+
+      const sortedSubEntries = Array.from(subMap.entries()).sort((a, b) => {
+        const ia = SUBCAT_ORDER.indexOf(a[0]);
+        const ib = SUBCAT_ORDER.indexOf(b[0]);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+
+      sortedSubEntries.forEach(([subId, info]) => {
+        const pill = document.createElement('button');
+        pill.className = `subcat-pill ${currentSubCategory === subId ? 'active' : ''}`;
+        pill.textContent = `${info.name} (${info.count})`;
+        pill.addEventListener('click', () => {
+          currentSubCategory = subId;
+          renderSubCategoryPills();
+          renderGrid();
+        });
+        pillsContainer.appendChild(pill);
+      });
+    }
+
+    function setupSearch() {
+      const input = document.getElementById('search-input');
+      input.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        renderGrid();
+      });
+    }
+
+    // Render Grid
+    function renderGrid() {
+      const container = document.getElementById('vocab-grid');
+      const list = getVocabList();
+      
+      const filtered = list.filter(item => {
+        if (currentCategory !== 'all' && item.category !== currentCategory) return false;
+        if (currentSubCategory !== 'all' && item.subCategory !== currentSubCategory) return false;
+
+        const flagInfo = flaggedMap[item.id];
+        const isFlagged = !!flagInfo && (Array.isArray(flagInfo.types) && flagInfo.types.length > 0 || !!flagInfo.reason);
+        const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+
+        // 種別フィルター
+        if (currentTypeFilter === 'flagged' && !isFlagged) return false;
+        if (currentTypeFilter === 'image' && !types.includes('image')) return false;
+        if (currentTypeFilter === 'audio' && !types.includes('audio')) return false;
+        if (currentTypeFilter === 'text'  && !types.includes('text'))  return false;
+        if (currentTypeFilter === 'other' && !types.includes('other')) return false;
+
+        if (searchQuery) {
+          const matchName = item.name && item.name.toLowerCase().includes(searchQuery);
+          const matchId = item.id && item.id.toLowerCase().includes(searchQuery);
+          const matchPrompt = item.prompt && item.prompt.toLowerCase().includes(searchQuery);
+          const matchSub = item.subCategoryName && item.subCategoryName.toLowerCase().includes(searchQuery);
+          const matchReason = flagInfo && flagInfo.reason && flagInfo.reason.toLowerCase().includes(searchQuery);
+          if (!matchName && !matchId && !matchPrompt && !matchSub && !matchReason) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
+            <p style="font-size: 1.2rem; font-weight: 700;">条件に一致する単語がありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const flagInfo = flaggedMap[item.id];
+        const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+        const isFlagged = !!flagInfo && (types.length > 0 || !!flagInfo.reason);
+        const reason = flagInfo ? (flagInfo.reason || '') : '';
+        const imgPath = '../common/images/' + (item.file || (item.id + '.png'));
+
+        // バッジHTML
+        const badgesHtml = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          if (!conf) return '';
+          return `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>`;
+        }).join('');
+
+        // クラス
+        const hasMulti = types.length >= 2;
+        const typeClasses = [
+          isFlagged ? 'is-flagged' : '',
+          types.includes('image') ? 'has-image-issue' : '',
+          types.includes('audio') ? 'has-audio-issue' : '',
+          types.includes('text') ? 'has-text-issue' : '',
+          hasMulti ? 'has-multi-issues' : ''
+        ].filter(Boolean).join(' ');
+
+        return `
+          <div class="card ${typeClasses}" id="card-${item.id}">
+            <div class="card-issue-badges" id="badges-${item.id}">
+              ${badgesHtml}
+            </div>
+
+            <div class="card-top-actions">
+              <button class="icon-btn" title="詳細・理由を編集" onclick="openDetailModal(event, '${item.id}')">🔍</button>
+              <button class="icon-btn" title="発音を再生" onclick="playAudio(event, '${item.id}')">🔊</button>
+            </div>
+
+            <div class="image-container" onclick="openDetailModal(event, '${item.id}')">
+              <img id="card-img-${item.id}" src="${imgPath}" loading="lazy" alt="${escapeHtml(item.name)}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'160\\' height=\\'160\\' viewBox=\\'0 0 160 160\\'><rect width=\\'160\\' height=\\'160\\' fill=\\'%23f8fafc\\'/><text x=\\'50%\\' y=\\'45%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'36\\'>🎨</text><text x=\\'50%\\' y=\\'75%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'12\\' fill=\\'%2394a3b8\\' font-family=\\'sans-serif\\'>未生成 (クリック)</text></svg>';">
+            </div>
+
+            <div class="card-info" onclick="openDetailModal(event, '${item.id}')">
+              <div class="card-word">${escapeHtml(item.name)}</div>
+              <div class="card-meta">
+                <div class="card-tags">
+                  <span class="cat-tag cat-${item.category}">${escapeHtml(item.categoryName || item.category)}</span>
+                  ${item.subCategoryName ? `<span class="subcat-tag">${escapeHtml(item.subCategoryName)}</span>` : ''}
+                </div>
+                <span class="card-id">${item.id}</span>
+              </div>
+              <div class="card-comment ${reason ? 'has-text' : ''}" id="comment-${item.id}">${escapeHtml(reason)}</div>
+            </div>
+
+            <!-- クイック不備選択バー -->
+            <div class="card-quick-types">
+              <button class="quick-type-btn btn-image ${types.includes('image') ? 'active' : ''}" 
+                      title="画像がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'image')">
+                <span>🖼️</span>
+                <span>画像</span>
+              </button>
+              <button class="quick-type-btn btn-audio ${types.includes('audio') ? 'active' : ''}" 
+                      title="音声がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'audio')">
+                <span>🔊</span>
+                <span>音声</span>
+              </button>
+              <button class="quick-type-btn btn-text ${types.includes('text') ? 'active' : ''}" 
+                      title="表記がダメ" 
+                      onclick="toggleQuickType(event, '${item.id}', 'text')">
+                <span>✍️</span>
+                <span>表記</span>
+              </button>
+              <button class="quick-type-btn btn-other ${types.includes('other') ? 'active' : ''}" 
+                      title="その他" 
+                      onclick="toggleQuickType(event, '${item.id}', 'other')">
+                <span>💬</span>
+                <span>他</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Quick Issue Type Toggle
+    function toggleQuickType(e, id, type) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      const item = getVocabById(id);
+      if (!item) return;
+
+      const typeConf = ISSUE_TYPE_MAP.get(type);
+      const typeLabel = typeConf ? typeConf.label : type;
+
+      if (!flaggedMap[id]) {
+        // 新規追加
+        flaggedMap[id] = {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          categoryName: item.categoryName || '',
+          subCategory: item.subCategory || '',
+          subCategoryName: item.subCategoryName || '',
+          types: [type],
+          reason: '',
+          tts_text: item.tts_text || item.name
+        };
+        showToast(`🚨 「${item.name}」の [${typeLabel}] 不備を追加しました`);
+      } else {
+        const flagInfo = flaggedMap[id];
+        if (!Array.isArray(flagInfo.types)) flagInfo.types = [];
+        const idx = flagInfo.types.indexOf(type);
+        if (idx !== -1) {
+          flagInfo.types.splice(idx, 1);
+          if (flagInfo.types.length === 0 && !flagInfo.reason) {
+            delete flaggedMap[id];
+            showToast(`⚪ 「${item.name}」の指摘をすべて解除しました`);
+          } else {
+            showToast(`⚪ 「${item.name}」の [${typeLabel}] 不備を解除しました`);
+          }
+        } else {
+          flagInfo.types.push(type);
+          showToast(`🚨 「${item.name}」の [${typeLabel}] 不備を追加しました`);
+        }
+      }
+
+      saveFlagsToStorage();
+      updateCardUI(id);
+    }
+
+    function updateCardUI(id) {
+      const card = document.getElementById('card-' + id);
+      const flagInfo = flaggedMap[id];
+      const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+      const isFlagged = !!flagInfo && (types.length > 0 || !!flagInfo.reason);
+
+      if (card) {
+        card.classList.toggle('is-flagged', isFlagged);
+        card.classList.toggle('has-image-issue', types.includes('image'));
+        card.classList.toggle('has-audio-issue', types.includes('audio'));
+        card.classList.toggle('has-text-issue', types.includes('text'));
+        card.classList.toggle('has-multi-issues', types.length >= 2);
+
+        // Update Badges
+        const badgesContainer = document.getElementById('badges-' + id);
+        if (badgesContainer) {
+          badgesContainer.innerHTML = types.map(t => {
+            const conf = ISSUE_TYPE_MAP.get(t);
+            if (!conf) return '';
+            return `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>`;
+          }).join('');
+        }
+
+        // Update Quick Buttons
+        const btns = card.querySelectorAll('.quick-type-btn');
+        btns.forEach(btn => {
+          if (btn.classList.contains('btn-image')) btn.classList.toggle('active', types.includes('image'));
+          if (btn.classList.contains('btn-audio')) btn.classList.toggle('active', types.includes('audio'));
+          if (btn.classList.contains('btn-text'))  btn.classList.toggle('active', types.includes('text'));
+          if (btn.classList.contains('btn-other')) btn.classList.toggle('active', types.includes('other'));
+        });
+
+        // Update Comment
+        const commentEl = document.getElementById('comment-' + id);
+        if (commentEl) {
+          const reason = flagInfo ? (flagInfo.reason || '') : '';
+          commentEl.textContent = reason;
+          commentEl.classList.toggle('has-text', !!reason);
+        }
+      }
+
+      // 絞り込み表示中に該当しなくなった場合は再描画
+      if (currentTypeFilter !== 'all') {
+        const matchesFilter = (
+          (currentTypeFilter === 'flagged' && isFlagged) ||
+          (currentTypeFilter === 'image' && types.includes('image')) ||
+          (currentTypeFilter === 'audio' && types.includes('audio')) ||
+          (currentTypeFilter === 'text' && types.includes('text')) ||
+          (currentTypeFilter === 'other' && types.includes('other'))
+        );
+        if (!matchesFilter && card) {
+          card.remove();
+        }
+      }
+    }
+
+    function updateStats() {
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const it = flaggedMap[id];
+        return (it.types && it.types.length > 0) || it.reason;
+      });
+
+      let imgCount = 0, audCount = 0, txtCount = 0, othCount = 0;
+      keys.forEach(id => {
+        const t = flaggedMap[id].types || [];
+        if (t.includes('image')) imgCount++;
+        if (t.includes('audio')) audCount++;
+        if (t.includes('text')) txtCount++;
+        if (t.includes('other')) othCount++;
+      });
+
+      const total = getVocabList().length;
+      const count = keys.length;
+
+      const totalEl = document.getElementById('total-count');
+      if (totalEl) totalEl.textContent = total;
+
+      document.getElementById('flagged-count').textContent = count;
+      document.getElementById('dock-flag-count').textContent = count;
+      document.getElementById('summary-count').textContent = count;
+
+      // 内訳
+      const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      setTxt('stat-image', imgCount);
+      setTxt('stat-audio', audCount);
+      setTxt('stat-text', txtCount);
+      setTxt('stat-other', othCount);
+
+      setTxt('dock-stat-image', imgCount);
+      setTxt('dock-stat-audio', audCount);
+      setTxt('dock-stat-text', txtCount);
+      setTxt('dock-stat-other', othCount);
+
+      setTxt('btn-count-flagged', count);
+      setTxt('btn-count-image', imgCount);
+      setTxt('btn-count-audio', audCount);
+      setTxt('btn-count-text', txtCount);
+      setTxt('btn-count-other', othCount);
+    }
+
+    // Audio Playback with Web Speech Fallback
+    function playAudio(e, id) {
+      if (e) e.stopPropagation();
+      const item = getVocabById(id);
+      const audioUrl = `audio/words/${id}.mp3`;
+
+      audioPlayer.src = audioUrl;
+      const playPromise = audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback to speech synthesis
+          if (window.speechSynthesis && item) {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(item.name);
+            utter.lang = 'ja-JP';
+            window.speechSynthesis.speak(utter);
+          }
+        });
+      }
+    }
+
+    function playAudioFromModal() {
+      if (currentModalItem) {
+        playAudio(null, currentModalItem.id);
+      }
+    }
+
+    // Detail Modal Logic
+    function openDetailModal(e, id) {
+      if (e) e.stopPropagation();
+      const item = getVocabById(id);
+      if (!item) return;
+      currentModalItem = item;
+
+      const subInfo = item.subCategoryName ? ` ＞ ${item.subCategoryName}` : '';
+      document.getElementById('modal-title').textContent = `${item.name} (${item.id})`;
+      document.getElementById('modal-name-val').textContent = item.name;
+      document.getElementById('modal-tts-val').textContent = item.tts_text || item.name;
+      document.getElementById('modal-cat-val').textContent = `${item.categoryName || item.category}${subInfo}`;
+
+      const modalImg = document.getElementById('modal-img');
+      modalImg.onerror = () => {
+        modalImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="300" height="300" fill="%23f8fafc"/><text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-size="54">🎨</text><text x="50%" y="70%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%2394a3b8" font-family="sans-serif">本番画像未生成</text><text x="50%" y="82%" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="%236366f1" font-family="sans-serif">上のボタンからスタジオで生成できます</text></svg>';
+      };
+      modalImg.src = '../common/images/' + (item.file || (item.id + '.png'));
+      document.getElementById('modal-prompt').textContent = item.prompt || '（プロンプト情報なし）';
+
+      const flagInfo = flaggedMap[id];
+      const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
+      modalSelectedTypes = new Set(types);
+
+      // 種別ボタンのアクティブ更新
+      updateModalTypeButtons();
+
+      document.getElementById('modal-reason-input').value = flagInfo ? (flagInfo.reason || '') : '';
+      updateModalFlagAllBtn(modalSelectedTypes.size > 0 || (flagInfo && !!flagInfo.reason));
+
+      document.getElementById('detail-modal').classList.add('active');
+    }
+
+    function updateModalTypeButtons() {
+      ['image', 'audio', 'text', 'other'].forEach(type => {
+        const btn = document.getElementById('mtype-' + type);
+        if (btn) {
+          btn.classList.toggle('active', modalSelectedTypes.has(type));
+        }
+      });
+    }
+
+    function toggleModalType(type) {
+      if (modalSelectedTypes.has(type)) {
+        modalSelectedTypes.delete(type);
+      } else {
+        modalSelectedTypes.add(type);
+      }
+      updateModalTypeButtons();
+      updateModalFlagAllBtn(modalSelectedTypes.size > 0);
+    }
+
+    function updateModalFlagAllBtn(hasFlags) {
+      const btn = document.getElementById('modal-flag-toggle-btn');
+      if (hasFlags) {
+        btn.textContent = '⚪ すべて解除';
+        btn.className = 'btn btn-secondary';
+      } else {
+        btn.textContent = '🚨 画像を要修正にする';
+        btn.className = 'btn btn-danger';
+      }
+    }
+
+    function toggleModalFlagAll() {
+      if (!currentModalItem) return;
+      const id = currentModalItem.id;
+      if (modalSelectedTypes.size > 0 || flaggedMap[id]) {
+        // 全解除
+        modalSelectedTypes.clear();
+        document.getElementById('modal-reason-input').value = '';
+        delete flaggedMap[id];
+        updateModalTypeButtons();
+        updateModalFlagAllBtn(false);
+        saveFlagsToStorage();
+        updateCardUI(id);
+        showToast(`⚪ 「${currentModalItem.name}」の指摘を解除しました`);
+      } else {
+        // 画像を要修正にする
+        modalSelectedTypes.add('image');
+        updateModalTypeButtons();
+        updateModalFlagAllBtn(true);
+      }
+    }
+
+    function addReasonTag(tag) {
+      const input = document.getElementById('modal-reason-input');
+      const val = input.value.trim();
+      if (!val) {
+        input.value = tag;
+      } else if (!val.includes(tag)) {
+        input.value = val + ' / ' + tag;
+      }
+    }
+
+    function saveModalChanges() {
+      if (!currentModalItem) return;
+      const id = currentModalItem.id;
+      const reason = document.getElementById('modal-reason-input').value.trim();
+      const types = Array.from(modalSelectedTypes);
+
+      if (types.length > 0 || reason) {
+        flaggedMap[id] = {
+          id: currentModalItem.id,
+          name: currentModalItem.name,
+          category: currentModalItem.category,
+          categoryName: currentModalItem.categoryName || '',
+          subCategory: currentModalItem.subCategory || '',
+          subCategoryName: currentModalItem.subCategoryName || '',
+          types: types.length > 0 ? types : ['other'],
+          reason: reason,
+          tts_text: currentModalItem.tts_text || currentModalItem.name
+        };
+        saveFlagsToStorage();
+        updateCardUI(id);
+        showToast(`💾 「${currentModalItem.name}」の変更を保存しました`);
+      } else {
+        if (flaggedMap[id]) {
+          delete flaggedMap[id];
+          saveFlagsToStorage();
+          updateCardUI(id);
+          showToast(`⚪ 「${currentModalItem.name}」の指摘を解除しました`);
+        }
+      }
+
+      closeModal();
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').classList.remove('active');
+      currentModalItem = null;
+    }
+
+    // Summary Modal
+    function showSummaryModal() {
+      currentSummaryFilter = 'all';
+      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === 'all');
+      });
+      renderSummaryList();
+      document.getElementById('summary-modal').classList.add('active');
+    }
+
+    function filterSummaryList(filter, btn) {
+      currentSummaryFilter = filter;
+      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderSummaryList();
+    }
+
+    function renderSummaryList() {
+      const listEl = document.getElementById('summary-list');
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const it = flaggedMap[id];
+        return (it.types && it.types.length > 0) || it.reason;
+      });
+
+      const filteredKeys = keys.filter(id => {
+        if (currentSummaryFilter === 'all') return true;
+        const types = flaggedMap[id].types || [];
+        return types.includes(currentSummaryFilter);
+      });
+
+      if (filteredKeys.length === 0) {
+        listEl.innerHTML = '<p style="padding: 24px; text-align: center; color: #64748b;">該当する指摘はありません。</p>';
+        return;
+      }
+
+      listEl.innerHTML = filteredKeys.map(id => {
+        const item = flaggedMap[id];
+        const subInfo = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
+        const imgFile = item.file || (item.id + '.png');
+        const types = item.types || [];
+
+        const badgesHtml = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          if (!conf) return '';
+          return `<span class="issue-tag-badge ${conf.badgeClass}" style="box-shadow:none;">${conf.icon} ${conf.label}</span>`;
+        }).join(' ');
+
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+              <img src="../common/images/${imgFile}" style="width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 1rem; color: #0f172a;">${escapeHtml(item.name)}</strong>
+                  <span style="font-size: 0.75rem; color: #64748b;">(${item.id}) [${escapeHtml(item.categoryName || '')}${escapeHtml(subInfo)}]</span>
+                  <div style="display: inline-flex; gap: 4px;">${badgesHtml}</div>
+                </div>
+                ${item.reason ? `<div style="font-size: 0.82rem; color: #dc2626; margin-top: 3px; word-break: break-all;">💬 ${escapeHtml(item.reason)}</div>` : ''}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; flex-shrink: 0;">
+              <button class="icon-btn" title="発音" onclick="playAudio(event, '${item.id}')">🔊</button>
+              <button class="icon-btn" title="編集" onclick="openDetailModal(event, '${item.id}'); closeSummaryModal();">🔍</button>
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleModalFlagAllExternal('${item.id}')">解除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleModalFlagAllExternal(id) {
+      delete flaggedMap[id];
+      saveFlagsToStorage();
+      updateCardUI(id);
+      renderSummaryList();
+      showToast('⚪ 指摘を解除しました');
+    }
+
+    function closeSummaryModal() {
+      document.getElementById('summary-modal').classList.remove('active');
+    }
+
+    // Export & Copy
+    function copyForChat() {
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const item = flaggedMap[id];
+        return (item.types && item.types.length > 0) || item.reason;
+      });
+
+      if (keys.length === 0) {
+        alert('要修正として指摘された単語がまだありません。');
+        return;
+      }
+
+      let imgCount = 0, audCount = 0, txtCount = 0, othCount = 0;
+      keys.forEach(id => {
+        const t = flaggedMap[id].types || [];
+        if (t.includes('image')) imgCount++;
+        if (t.includes('audio')) audCount++;
+        if (t.includes('text')) txtCount++;
+        if (t.includes('other')) othCount++;
+      });
+
+      let text = `【ことばずかん レビュー不備指摘リスト (計 ${keys.length} 件)】\n`;
+      text += `・🖼️ 画像がダメ: ${imgCount} 件\n`;
+      text += `・🔊 音声がダメ: ${audCount} 件\n`;
+      text += `・✍️ 表記がダメ: ${txtCount} 件\n`;
+      text += `・💬 その他: ${othCount} 件\n\n`;
+
+      keys.forEach((id, idx) => {
+        const item = flaggedMap[id];
+        const sub = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
+        const types = item.types || [];
+        const typeLabels = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          return conf ? `${conf.icon} ${conf.fullLabel}` : t;
+        }).join(', ') || '未指定';
+
+        const ttsInfo = item.tts_text ? ` [tts_text: "${item.tts_text}"]` : '';
+        const reasonInfo = item.reason ? `\n   【理由/メモ】 ${item.reason}` : '';
+
+        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}${sub}]${ttsInfo}\n`;
+        text += `   【不備種別】 ${typeLabels}${reasonInfo}\n\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 チャット用テキストをコピーしました！そのまま貼り付けてください');
+      }).catch(() => {
+        window.prompt('コピーしてください:', text);
+      });
+    }
+
+    function exportJSON() {
+      const keys = Object.keys(flaggedMap);
+      if (keys.length === 0) {
+        alert('要修正の単語がありません。');
+        return;
+      }
+
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(flaggedMap, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', 'review_feedback.json');
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('💾 review_feedback.json を保存しました');
+    }
+
+    function triggerImportJSON() {
+      document.getElementById('json-file-input').click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (typeof imported === 'object' && imported !== null) {
+            // マイグレーション
+            Object.keys(imported).forEach(id => {
+              if (!Array.isArray(imported[id].types)) {
+                imported[id].types = ['image'];
+              }
+            });
+            flaggedMap = Object.assign({}, flaggedMap, imported);
+            saveFlagsToStorage();
+            renderGrid();
+            showToast(`📥 ${Object.keys(imported).length} 件の指摘データを読み込みました`);
+          }
+        } catch (err) {
+          alert('JSONファイルの読み込みに失敗しました: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function resetAllFlags() {
+      const count = Object.keys(flaggedMap).length;
+      if (count === 0) return;
+      if (confirm(`要修正として指摘した ${count} 件のデータをすべてクリアしますか？`)) {
+        flaggedMap = {};
+        saveFlagsToStorage();
+        renderGrid();
+        showToast('🗑️ すべての指摘をクリアしました');
+      }
+    }
+
+    // Helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    /* ========================================================
+       Draw Things Integrated Studio Scripts (Full-Screen Switcher)
+       ======================================================== */
+    const DT_SERVER = 'http://localhost:8085';
+    let currentMainView = 'review'; // 'review' | 'studio'
+    let dtCurrentWord = null;
+    let dtFilteredWords = [];
+    let dtOldImageUrl = null;
+    let dtNewImageUrl = null;
+    let dtNewImageWordId = null;
+    let dtHistory = [];
+    let dtIsGenerating = false;
+    let dtGenTimer = null;
+    let dtZoom = 1.0;
+    let dtIsPan = false, dtStartX = 0, dtStartY = 0, dtPanX = 0, dtPanY = 0;
+    let dtCompareMode = 'split'; // 'split' | 'slider' | 'toggle'
+    let dtToggleState = 'new'; // 'old' | 'new'
+    let dtSliderPos = 50; // percentage
+    let dtIsSliderDragging = false;
+    let dtSelectorInitialized = false;
+
+    // View Switcher (Review vs Fullscreen Studio)
+    function switchMainView(view, targetItem = null) {
+      currentMainView = view;
+      const studioView = document.getElementById('studio-view');
+      const tabReview = document.getElementById('tab-review-btn');
+      const tabStudio = document.getElementById('tab-studio-btn');
+
+      if (view === 'studio') {
+        studioView.classList.add('active');
+        if (tabReview) tabReview.classList.remove('active');
+        if (tabStudio) tabStudio.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        const vocabList = getVocabList();
+        if (!dtSelectorInitialized && vocabList.length > 0) {
+          initStudioWordSelector();
+        }
+
+        // Fetch latest history from server (e.g. from chat generation)
+        syncStudioHistoryFromServer(false);
+
+        if (targetItem) {
+          loadStudioWord(targetItem);
+        } else if (!dtCurrentWord && dtFilteredWords.length > 0) {
+          loadStudioWord(dtFilteredWords[0]);
+        }
+      } else {
+        studioView.classList.remove('active');
+        if (tabReview) tabReview.classList.add('active');
+        if (tabStudio) tabStudio.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function openStudioFromModal() {
+      if (currentModalItem) {
+        closeModal();
+        switchMainView('studio', currentModalItem);
+      }
+    }
+
+    // Studio Word Selector & Filter Functions
+    function initStudioWordSelector() {
+      const vocabList = getVocabList();
+      // 1. Initialize Category Filter Dropdown
+      const catSelect = document.getElementById('studio-cat-filter');
+      if (catSelect && catSelect.options.length <= 1) {
+        catSelect.innerHTML = `<option value="all">📁 すべてのカテゴリ (${vocabList.length})</option>`;
+        if (typeof CATEGORIES_DEF !== 'undefined') {
+          CATEGORIES_DEF.forEach(cat => {
+            if (cat.id === 'all') return;
+            const count = vocabList.filter(w => w.category === cat.id).length;
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = `${cat.name} (${count})`;
+            catSelect.appendChild(opt);
+          });
+        }
+      }
+      dtSelectorInitialized = true;
+      updateStudioFilteredWords();
+    }
+
+    function updateStudioFilteredWords() {
+      const vocabList = getVocabList();
+      if (!vocabList || vocabList.length === 0) return;
+
+      const catFilter = (document.getElementById('studio-cat-filter') && document.getElementById('studio-cat-filter').value) || 'all';
+      const flaggedOnly = document.getElementById('studio-flagged-only') ? document.getElementById('studio-flagged-only').checked : false;
+
+      dtFilteredWords = vocabList.filter(item => {
+        if (catFilter !== 'all' && item.category !== catFilter) return false;
+        if (flaggedOnly && (!flaggedMap || !flaggedMap[item.id])) return false;
+        return true;
+      });
+
+      // Populate word dropdown
+      const wordSelect = document.getElementById('studio-word-select');
+      wordSelect.innerHTML = '';
+
+      if (dtFilteredWords.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '(該当する単語がありません)';
+        wordSelect.appendChild(opt);
+        document.getElementById('studio-count-badge').textContent = '0 / ' + vocabList.length + '語';
+        return;
+      }
+
+      dtFilteredWords.forEach((item, idx) => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        const isFlagged = flaggedMap && flaggedMap[item.id];
+        const flagPrefix = isFlagged ? '🚨 ' : '';
+        opt.textContent = `${flagPrefix}[${idx + 1}/${dtFilteredWords.length}] ${item.name} (${item.id})`;
+        wordSelect.appendChild(opt);
+      });
+
+      document.getElementById('studio-count-badge').textContent = `${dtFilteredWords.length} / ${vocabList.length}語`;
+
+      // Keep current word if in filtered list, else select first
+      if (dtCurrentWord && dtFilteredWords.some(w => w.id === dtCurrentWord.id)) {
+        wordSelect.value = dtCurrentWord.id;
+      } else if (dtFilteredWords.length > 0) {
+        loadStudioWord(dtFilteredWords[0]);
+      }
+    }
+
+    function onStudioFilterChange() {
+      updateStudioFilteredWords();
+    }
+
+    function onStudioWordSelectChange() {
+      const select = document.getElementById('studio-word-select');
+      const id = select.value;
+      if (!id) return;
+      const vocabList = getVocabList();
+      const item = vocabList.find(w => w.id === id);
+      if (item) {
+        loadStudioWord(item);
+      }
+    }
+
+    function stepStudioWord(delta) {
+      if (!dtFilteredWords || dtFilteredWords.length === 0) return;
+      let currIdx = dtFilteredWords.findIndex(w => w.id === (dtCurrentWord ? dtCurrentWord.id : ''));
+      if (currIdx === -1) currIdx = 0;
+      let nextIdx = currIdx + delta;
+      if (nextIdx < 0) nextIdx = dtFilteredWords.length - 1;
+      if (nextIdx >= dtFilteredWords.length) nextIdx = 0;
+      loadStudioWord(dtFilteredWords[nextIdx]);
+    }
+
+    // Load Word into Studio
+    function loadStudioWord(item) {
+      dtCurrentWord = item;
+
+      // Update selector dropdown value
+      const wordSelect = document.getElementById('studio-word-select');
+      if (wordSelect) wordSelect.value = item.id;
+
+      // Header labels
+      document.getElementById('studio-title-name').textContent = item.name;
+      const reading = item.ruby || item.kana || item.tts_text || '';
+      document.getElementById('studio-title-reading').textContent = reading ? `【${reading}】` : '';
+      document.getElementById('studio-title-cat').textContent = `${item.categoryName || item.category} ＞ ${item.subCategoryName || ''}`;
+
+      // Flag badge & Unflag buttons
+      const flagInfo = flaggedMap ? flaggedMap[item.id] : null;
+      const badgeElem = document.getElementById('studio-title-badge');
+      const unflagBtn = document.getElementById('studio-unflag-btn');
+      const actionUnflagBtn = document.getElementById('studio-action-unflag-btn');
+      if (flagInfo) {
+        badgeElem.style.display = 'inline-flex';
+        badgeElem.textContent = `🚨 要修正 (${(flagInfo.types || []).join(', ')})`;
+        if (unflagBtn) unflagBtn.style.display = 'inline-flex';
+        if (actionUnflagBtn) actionUnflagBtn.style.display = 'inline-flex';
+      } else {
+        badgeElem.style.display = 'none';
+        if (unflagBtn) unflagBtn.style.display = 'none';
+        if (actionUnflagBtn) actionUnflagBtn.style.display = 'none';
+      }
+
+      // Default Prompt generator (picture book watercolor on pure white #ffffff)
+      const pInput = document.getElementById('studio-prompt-input');
+      if (item.prompt) {
+        pInput.value = item.prompt;
+      } else {
+        pInput.value = `Japanese picture book watercolor illustration of a cute ${item.name} (${item.name} / ${item.tts_text || item.name}), warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.`;
+      }
+
+      // Load Old Image into all stages
+      dtOldImageUrl = '../common/images/' + (item.file || (item.id + '.png')) + '?t=' + Date.now();
+      const placeholderOld = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="%23f8fafc"/><text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-size="64">🖼️</text><text x="50%" y="65%" dominant-baseline="middle" text-anchor="middle" font-size="18" fill="%2394a3b8" font-family="sans-serif">現在の本番画像は未登録です</text><text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" font-size="14" fill="%236366f1" font-family="sans-serif">下の「生成開始」を押して新規作成してください</text></svg>';
+      const imgOldSplit = document.getElementById('studio-img-old-split');
+      imgOldSplit.onerror = () => { imgOldSplit.src = placeholderOld; };
+      imgOldSplit.src = dtOldImageUrl;
+
+      const imgOldSlider = document.getElementById('studio-img-old-slider');
+      imgOldSlider.onerror = () => { imgOldSlider.src = placeholderOld; };
+      imgOldSlider.src = dtOldImageUrl;
+
+      // If we already have a generated image for this exact word, show it; otherwise reset
+      if (dtNewImageUrl && dtNewImageWordId === item.id) {
+        showStudioNewImage(dtNewImageUrl);
+      } else {
+        resetStudioNewImage();
+      }
+
+      // Update toggle stage
+      updateStudioToggleView();
+      resetStudioZoom();
+    }
+
+    function resetStudioNewImage() {
+      dtNewImageUrl = null;
+      dtNewImageWordId = null;
+
+      document.getElementById('studio-img-new-split').style.display = 'none';
+      document.getElementById('studio-no-new-split').style.display = 'flex';
+      document.getElementById('studio-img-new-slider').src = '';
+      document.getElementById('studio-img-new-slider').style.display = 'none';
+
+      document.getElementById('studio-apply-btn').disabled = true;
+      document.getElementById('studio-discard-btn').disabled = true;
+    }
+
+    function showStudioNewImage(url) {
+      dtNewImageUrl = url;
+      dtNewImageWordId = dtCurrentWord ? dtCurrentWord.id : null;
+
+      const imgSplit = document.getElementById('studio-img-new-split');
+      imgSplit.onerror = () => handleStudioImgError(imgSplit);
+      imgSplit.src = url;
+      imgSplit.style.display = 'block';
+      document.getElementById('studio-no-new-split').style.display = 'none';
+
+      const imgSlider = document.getElementById('studio-img-new-slider');
+      imgSlider.onerror = () => handleStudioImgError(imgSlider);
+      imgSlider.src = url;
+      imgSlider.style.display = 'block';
+
+      document.getElementById('studio-apply-btn').disabled = false;
+      document.getElementById('studio-discard-btn').disabled = false;
+
+      updateStudioToggleView();
+    }
+
+    // Comparison Modes (Split, Slider, Toggle)
+    function setStudioCompareMode(mode) {
+      dtCompareMode = mode;
+      document.getElementById('mode-btn-split').classList.toggle('active', mode === 'split');
+      document.getElementById('mode-btn-slider').classList.toggle('active', mode === 'slider');
+      document.getElementById('mode-btn-toggle').classList.toggle('active', mode === 'toggle');
+
+      const splitStage = document.getElementById('studio-panes');
+      const sliderStage = document.getElementById('studio-slider-stage');
+      const toggleStage = document.getElementById('studio-toggle-stage');
+
+      splitStage.style.display = mode === 'split' ? 'flex' : 'none';
+      sliderStage.style.display = mode === 'slider' ? 'flex' : 'none';
+      toggleStage.style.display = mode === 'toggle' ? 'flex' : 'none';
+
+      if (mode === 'toggle') {
+        updateStudioToggleView();
+      }
+    }
+
+    function toggleStudioCompareImage(forceState = null) {
+      if (forceState) {
+        dtToggleState = forceState;
+      } else {
+        dtToggleState = dtToggleState === 'old' ? 'new' : 'old';
+      }
+      updateStudioToggleView();
+    }
+
+    function updateStudioToggleView() {
+      const toggleImg = document.getElementById('studio-img-toggle');
+      const toggleBadge = document.getElementById('studio-toggle-badge');
+      if (!toggleImg || !toggleBadge) return;
+
+      if (dtToggleState === 'new' && dtNewImageUrl) {
+        toggleImg.onerror = () => handleStudioImgError(toggleImg);
+        toggleImg.src = dtNewImageUrl;
+        toggleBadge.textContent = '✨ 新画像 (Draw Things)';
+        toggleBadge.style.background = '#10b981';
+        toggleBadge.style.color = '#fff';
+      } else {
+        toggleImg.src = dtOldImageUrl || '';
+        toggleBadge.textContent = '🖼️ 現在の画像 (旧)';
+        toggleBadge.style.background = '#ef4444';
+        toggleBadge.style.color = '#fff';
+      }
+    }
+
+    // Synchronized Zoom & Pan
+    function setupStudioZoomAndPan() {
+      const stage = document.getElementById('studio-stage');
+      stage.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.18 : 0.85;
+        dtZoom = Math.min(Math.max(dtZoom * factor, 0.35), 8.0);
+        applyStudioTransform();
+      }, { passive: false });
+
+      stage.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.studio-slider-divider') || e.target.closest('.studio-slider-handle')) return;
+        dtIsPan = true;
+        dtStartX = e.clientX - dtPanX;
+        dtStartY = e.clientY - dtPanY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (dtIsSliderDragging) {
+          handleSliderDrag(e);
+          return;
+        }
+        if (!dtIsPan) return;
+        dtPanX = e.clientX - dtStartX;
+        dtPanY = e.clientY - dtStartY;
+        applyStudioTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        dtIsPan = false;
+        dtIsSliderDragging = false;
+      });
+    }
+
+    function applyStudioTransform() {
+      const tr = `translate(${dtPanX}px, ${dtPanY}px) scale(${dtZoom})`;
+      const targetImgs = [
+        document.getElementById('studio-img-old-split'),
+        document.getElementById('studio-img-new-split'),
+        document.getElementById('studio-img-old-slider'),
+        document.getElementById('studio-img-new-slider'),
+        document.getElementById('studio-img-toggle')
+      ];
+      targetImgs.forEach(img => {
+        if (img) img.style.transform = tr;
+      });
+      document.getElementById('studio-zoom-text').textContent = Math.round(dtZoom * 100) + '%';
+    }
+
+    function resetStudioZoom() {
+      dtZoom = 1.0;
+      dtPanX = 0;
+      dtPanY = 0;
+      applyStudioTransform();
+      document.getElementById('studio-zoom-text').textContent = 'Fit';
+    }
+
+    function zoomStudioIn() {
+      dtZoom = Math.min(dtZoom * 1.25, 8.0);
+      applyStudioTransform();
+    }
+
+    function zoomStudioOut() {
+      dtZoom = Math.max(dtZoom * 0.8, 0.35);
+      applyStudioTransform();
+    }
+
+    // Slider Comparison Dragging
+    function initStudioSlider() {
+      const divider = document.getElementById('studio-slider-divider');
+      if (!divider) return;
+      divider.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        dtIsSliderDragging = true;
+      });
+    }
+
+    function handleSliderDrag(e) {
+      const sliderStage = document.getElementById('studio-slider-stage');
+      const rect = sliderStage.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+      dtSliderPos = pct;
+      document.getElementById('studio-slider-divider').style.left = pct + '%';
+      document.getElementById('studio-slider-over').style.width = pct + '%';
+    }
+
+    // Start Generation via Studio API (Port 8085 -> Draw Things 7860)
+    async function startStudioGen() {
+      if (dtIsGenerating || !dtCurrentWord) return;
+      const prompt = document.getElementById('studio-prompt-input').value.trim();
+      if (!prompt) {
+        alert("プロンプトを入力してください");
+        return;
+      }
+
+      const autoApplyCheck = document.getElementById('studio-auto-apply');
+      const autoApply = autoApplyCheck ? autoApplyCheck.checked : true;
+
+      dtIsGenerating = true;
+      document.getElementById('studio-gen-btn').disabled = true;
+      document.getElementById('studio-gen-btn-text').textContent = '生成中...';
+
+      // Show Floating PIP Window (Visible across both Review and Studio views)
+      const pip = document.getElementById('dt-floating-pip');
+      pip.style.display = 'flex';
+      document.getElementById('dt-pip-name').textContent = `「${dtCurrentWord.name}」を生成中...`;
+      document.getElementById('dt-pip-fill').style.width = '5%';
+
+      const startTime = Date.now();
+      clearInterval(dtGenTimer);
+      dtGenTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('dt-pip-timer').textContent = `${m}:${s}`;
+        const pct = Math.min(Math.round((elapsed / 30) * 100), 96);
+        document.getElementById('dt-pip-fill').style.width = pct + '%';
+      }, 500);
+
+      try {
+        const res = await fetch(`${DT_SERVER}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            word_id: dtCurrentWord.id,
+            width: 1024,
+            height: 1024,
+            steps: 8,
+            auto_apply: autoApply
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || !data) {
+          throw new Error((data && data.error) || `HTTP ${res.status}: 生成サーバーでエラーが発生しました`);
+        }
+
+        if (data.image_url) {
+          document.getElementById('dt-pip-fill').style.width = '100%';
+          document.getElementById('dt-pip-name').textContent = '✨ 生成完了！';
+
+          const resolved = resolveStudioImageUrl(data.image_url);
+          showStudioNewImage(resolved);
+          addStudioHistory({ url: data.image_url, word_id: dtCurrentWord.id, name: dtCurrentWord.name });
+
+          if (data.applied) {
+            // 本番画像として更新されたのでキャッシュバスターで旧画像側も更新
+            dtOldImageUrl = '../common/images/' + (dtCurrentWord.file || (dtCurrentWord.id + '.png')) + '?t=' + Date.now();
+            const imgOldSplit = document.getElementById('studio-img-old-split');
+            if (imgOldSplit) imgOldSplit.src = dtOldImageUrl;
+            const imgOldSlider = document.getElementById('studio-img-old-slider');
+            if (imgOldSlider) imgOldSlider.src = dtOldImageUrl;
+
+            const cardImg = document.getElementById('card-img-' + dtCurrentWord.id);
+            if (cardImg) cardImg.src = dtOldImageUrl;
+
+            // 自動で要修正を解除
+            if (flaggedMap && flaggedMap[dtCurrentWord.id]) {
+              delete flaggedMap[dtCurrentWord.id];
+              saveFlagsToStorage();
+              renderGrid();
+              updateStats();
+              const badgeElem = document.getElementById('studio-title-badge');
+              if (badgeElem) badgeElem.style.display = 'none';
+              const unflagBtn = document.getElementById('studio-unflag-btn');
+              if (unflagBtn) unflagBtn.style.display = 'none';
+              const actionUnflagBtn = document.getElementById('studio-action-unflag-btn');
+              if (actionUnflagBtn) actionUnflagBtn.style.display = 'none';
+              updateStudioFilteredWords();
+            }
+            showToast(`🎉「${dtCurrentWord.name}」を生成し、図鑑に自動反映しました！`);
+          } else {
+            showToast(`✨「${dtCurrentWord.name}」の新画像が生成されました！`);
+          }
+        } else {
+          alert("生成エラー: " + (data.error || '不明なエラー'));
+        }
+      } catch (e) {
+        console.warn("Studio Gen fetch issue, checking server history fallback:", e);
+        // Fallback: Check if image was actually generated on server despite client-side error
+        setTimeout(async () => {
+          await syncStudioHistoryFromServer(false);
+          const latest = dtHistory.find(h => h.word_id === dtCurrentWord.id);
+          if (latest) {
+            showStudioNewImage(resolveStudioImageUrl(latest.url));
+            showToast(`✨「${dtCurrentWord.name}」の画像をサーバーから自動同期しました！`);
+          } else {
+            alert(`生成エラーが発生しました:\n${e.message || e}\n\nDraw Thingsアプリが起動しているか確認してください。`);
+          }
+        }, 1000);
+      } finally {
+        dtIsGenerating = false;
+        clearInterval(dtGenTimer);
+        document.getElementById('studio-gen-btn').disabled = false;
+        document.getElementById('studio-gen-btn-text').textContent = '生成開始';
+        setTimeout(() => { pip.style.display = 'none'; }, 2200);
+      }
+    }
+
+    // URL & Image Resolution Helpers (Safe for file:// and http://)
+    function resolveStudioImageUrl(rawUrl) {
+      if (!rawUrl) return '';
+      if (rawUrl.startsWith('data:')) return rawUrl;
+      const fname = rawUrl.replace(/^http:\/\/[^\/]+/, '').replace(/^\/images\//, '').split('?')[0];
+      if (window.location.protocol === 'file:') {
+        return './scripts/candidates/' + fname;
+      }
+      return `${DT_SERVER}/images/${fname}`;
+    }
+
+    function handleStudioImgError(img) {
+      if (img.dataset.hasRetried) return;
+      img.dataset.hasRetried = 'true';
+      const fname = img.src.split('/').pop().split('?')[0];
+      if (img.src.includes('candidates')) {
+        img.src = '../common/images/' + fname;
+      } else if (img.src.includes('localhost:8085')) {
+        img.src = './scripts/candidates/' + fname;
+      } else {
+        img.src = `${DT_SERVER}/images/` + fname;
+      }
+    }
+
+    function updateAllHistoryCounts() {
+      const count = dtHistory.length;
+      ['header-hist-count', 'studio-nav-hist-count', 'modal-hist-count', 'studio-strip-count'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = count;
+      });
+    }
+
+    function initStudioHistory() {
+      // 1. Initial load from embedded cache if available
+      if (window.DT_CACHED_HISTORY && Array.isArray(window.DT_CACHED_HISTORY)) {
+        processHistoryData(window.DT_CACHED_HISTORY);
+      }
+      // 2. Fetch live updates from server
+      syncStudioHistoryFromServer(false);
+      // 3. Periodic polling every 3.5 seconds
+      setInterval(() => syncStudioHistoryFromServer(false), 3500);
+    }
+
+    function processHistoryData(dataList) {
+      const vocabList = getVocabList();
+      dtHistory = dataList.map(item => {
+        const word = (vocabList && vocabList.find(w => w.id === item.word_id)) || null;
+        return {
+          url: item.url,
+          word_id: item.word_id,
+          name: (word ? word.name : (item.name || item.word_id)) + (item.is_backup ? ' 📦旧画像' : ''),
+          prompt: item.prompt || '',
+          timestamp: item.timestamp || Date.now(),
+          is_backup: item.is_backup || false
+        };
+      });
+      updateAllHistoryCounts();
+      renderStudioHistoryGrid();
+      const modal = document.getElementById('history-modal');
+      if (modal && modal.classList.contains('active')) {
+        renderHistoryModalGrid();
+      }
+    }
+
+    // Sync History from Server (Supports images generated from Chat / Scripts)
+    async function syncStudioHistoryFromServer(autoSelectLatest = false) {
+      try {
+        const res = await fetch(`${DT_SERVER}/api/recent_images`);
+        const serverHistory = await res.json();
+        if (Array.isArray(serverHistory)) {
+          const prevLength = dtHistory.length;
+          processHistoryData(serverHistory);
+
+          // Auto-select latest if new image arrived from chat and we haven't selected one
+          if (autoSelectLatest && dtHistory.length > 0 && (!dtNewImageUrl || dtHistory.length > prevLength)) {
+            selectStudioHistory(dtHistory[0]);
+          }
+        }
+      } catch (e) {
+        // Fallback to cached history if server is not running
+        if (dtHistory.length === 0 && window.DT_CACHED_HISTORY && Array.isArray(window.DT_CACHED_HISTORY)) {
+          processHistoryData(window.DT_CACHED_HISTORY);
+        }
+      }
+    }
+
+    // Add Thumbnail to Studio History Strip
+    function addStudioHistory(item) {
+      dtHistory.unshift(item);
+      updateAllHistoryCounts();
+      renderStudioHistoryGrid();
+    }
+
+    function renderStudioHistoryGrid() {
+      const grid = document.getElementById('studio-history-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      if (dtHistory.length === 0) {
+        grid.innerHTML = '<div style="grid-column: span 4; font-size: 0.72rem; color: #64748b; padding: 12px; text-align: center;">生成履歴はありません</div>';
+        return;
+      }
+      dtHistory.forEach((item) => {
+        const box = document.createElement('div');
+        box.className = 'studio-hist-item' + (item.url === dtNewImageUrl ? ' active' : '');
+        box.style.position = 'relative';
+        box.title = `${item.name} (${item.word_id})\nクリックして新旧比較`;
+        const imgSrc = resolveStudioImageUrl(item.url);
+        box.innerHTML = `
+          <img src="${imgSrc}" onerror="handleStudioImgError(this)" alt="${item.name}" />
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15,23,42,0.85); color: #f8fafc; font-size: 0.62rem; padding: 1px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; pointer-events: none;">
+            ${item.name}
+          </div>
+        `;
+        box.onclick = () => selectStudioHistory(item);
+        grid.appendChild(box);
+      });
+    }
+
+    // Click on history item: AUTOMATICALLY SYNC OLD IMAGE TO THE SAME WORD!
+    function selectStudioHistory(item) {
+      // If history item is from a different word, automatically switch current word!
+      if (!dtCurrentWord || dtCurrentWord.id !== item.word_id) {
+        const vocabList = getVocabList();
+        const targetWord = vocabList.find(w => w.id === item.word_id);
+        if (targetWord) {
+          loadStudioWord(targetWord);
+        }
+      }
+      showStudioNewImage(resolveStudioImageUrl(item.url));
+      renderStudioHistoryGrid();
+    }
+
+    // History Modal Open / Close & Rendering
+    function openHistoryModal() {
+      renderHistoryModalGrid();
+      document.getElementById('history-modal').classList.add('active');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.remove('active');
+    }
+
+    function renderHistoryModalGrid() {
+      const grid = document.getElementById('modal-hist-grid');
+      if (!grid) return;
+      updateAllHistoryCounts();
+      grid.innerHTML = '';
+
+      if (dtHistory.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; color: #94a3b8; text-align: center; padding: 40px; font-size: 0.95rem;">Draw Thingsでの生成履歴はまだありません。「生成開始」を押すとここに一覧表示されます。</div>';
+        return;
+      }
+
+      dtHistory.forEach(item => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;';
+        
+        const imgSrc = resolveStudioImageUrl(item.url);
+        const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+
+        card.innerHTML = `
+          <div style="position: relative; aspect-ratio: 1; background: #0f172a; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden;" onclick="openHistoryInStudio('${item.url}', '${item.word_id}')" title="クリックしてスタジオで新旧比較を開く">
+            <img src="${imgSrc}" onerror="handleStudioImgError(this)" alt="${item.name}" style="width: 100%; height: 100%; object-fit: contain;" />
+            <span style="position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.75); color: #cbd5e1; font-size: 0.68rem; padding: 1px 5px; border-radius: 4px;">🕒 ${dateStr}</span>
+            ${item.is_backup ? '<span style="position: absolute; top: 4px; right: 4px; background: #eab308; color: #000; font-size: 0.65rem; font-weight: 700; padding: 1px 5px; border-radius: 4px;">📦 旧画像</span>' : ''}
+          </div>
+          <div style="padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 1rem;">${item.name}</div>
+              <div style="font-size: 0.72rem; color: #06b6d4; font-family: monospace;">ID: ${item.word_id}</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-primary" onclick="openHistoryInStudio('${item.url}', '${item.word_id}')" style="flex: 1; padding: 5px 6px; font-size: 0.75rem; justify-content: center;">
+                👥 新旧比較
+              </button>
+              <button class="btn btn-secondary" onclick="applyHistoryDirect('${item.url}', '${item.word_id}', '${item.name}')" style="padding: 5px 8px; font-size: 0.75rem; background: #059669; color: #fff; border-color: #10b981;" title="本番の画像として図鑑に反映">
+                ✨ 反映
+              </button>
+              <button class="btn btn-secondary" onclick="discardHistoryDirect('${item.url}')" style="padding: 5px 8px; font-size: 0.75rem; color: #f87171; border-color: rgba(239,68,68,0.4);" title="この画像を破棄">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openHistoryInStudio(rawUrl, wordId) {
+      closeHistoryModal();
+      switchMainView('studio');
+      const vocabList = getVocabList();
+      const targetWord = vocabList.find(w => w.id === wordId);
+      if (targetWord) {
+        loadStudioWord(targetWord);
+      }
+      showStudioNewImage(resolveStudioImageUrl(rawUrl));
+    }
+
+    async function applyHistoryDirect(rawUrl, wordId, wordName) {
+      if (!confirm(`「${wordName}」(${wordId}) の画像を本番として図鑑に反映しますか？`)) return;
+      try {
+        const res = await fetch(`${DT_SERVER}/api/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word_id: wordId, image_url: rawUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (flaggedMap && flaggedMap[wordId]) {
+            delete flaggedMap[wordId];
+            saveFlagsToStorage();
+            renderGrid();
+            updateStats();
+          }
+          showToast(`🎉「${wordName}」の本番画像を更新しました！`);
+          renderHistoryModalGrid();
+        } else {
+          alert("保存エラー: " + (data.error || '不明なエラー'));
+        }
+      } catch (e) {
+        alert("エラー: " + e);
+      }
+    }
+
+    async function discardHistoryDirect(rawUrl) {
+      if (!confirm("この生成画像を破棄しますか？")) return;
+      dtHistory = dtHistory.filter(h => h.url !== rawUrl);
+      updateAllHistoryCounts();
+      renderStudioHistoryGrid();
+      renderHistoryModalGrid();
+      try {
+        await fetch(`${DT_SERVER}/api/discard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: rawUrl })
+        });
+        showToast("🗑️ 画像を破棄しました");
+      } catch (e) {
+        console.error("Discard error:", e);
+      }
+    }
+
+    // Discard New Image
+    async function discardStudioNewImage() {
+      if (!dtNewImageUrl) return;
+      if (!confirm("生成した新画像を破棄しますか？")) return;
+
+      const discardedUrl = dtNewImageUrl;
+      resetStudioNewImage();
+
+      // Remove from history
+      dtHistory = dtHistory.filter(h => h.url !== discardedUrl);
+      updateAllHistoryCounts();
+      renderStudioHistoryGrid();
+
+      // Notify backend to delete temp file
+      try {
+        await fetch(`${DT_SERVER}/api/discard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: discardedUrl })
+        });
+        showToast("🗑️ 新規生成画像を破棄しました");
+      } catch (e) {
+        console.error("Discard API error:", e);
+      }
+    }
+
+    // Apply New Image to Production and Update Review Grid
+    async function applyStudioNewImage() {
+      if (!dtCurrentWord || !dtNewImageUrl) return;
+      if (!confirm(`単語「${dtCurrentWord.name}」(${dtCurrentWord.id}) の本番画像として保存し、図鑑に反映しますか？`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${DT_SERVER}/api/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word_id: dtCurrentWord.id,
+            image_url: dtNewImageUrl
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🎉「${dtCurrentWord.name}」の本番画像を更新しました！`);
+          document.getElementById('studio-apply-btn').disabled = true;
+          document.getElementById('studio-discard-btn').disabled = true;
+
+          // Reload Old Image with cache-buster
+          dtOldImageUrl = '../common/images/' + (dtCurrentWord.file || (dtCurrentWord.id + '.png')) + '?t=' + Date.now();
+          document.getElementById('studio-img-old-split').src = dtOldImageUrl;
+          document.getElementById('studio-img-old-slider').src = dtOldImageUrl;
+
+          // Update Review Grid Thumbnail
+          const cardImg = document.getElementById('card-img-' + dtCurrentWord.id);
+          if (cardImg) {
+            cardImg.src = dtOldImageUrl;
+          }
+
+          // Automatically unflag word after applying fix
+          if (flaggedMap && flaggedMap[dtCurrentWord.id]) {
+            delete flaggedMap[dtCurrentWord.id];
+            saveFlagsToStorage();
+            renderGrid();
+            updateStats();
+
+            // Hide badge and unflag buttons in studio
+            const badgeElem = document.getElementById('studio-title-badge');
+            if (badgeElem) badgeElem.style.display = 'none';
+            const unflagBtn = document.getElementById('studio-unflag-btn');
+            if (unflagBtn) unflagBtn.style.display = 'none';
+            const actionUnflagBtn = document.getElementById('studio-action-unflag-btn');
+            if (actionUnflagBtn) actionUnflagBtn.style.display = 'none';
+
+            // Refresh studio filtered list (removes from 'Flagged Only' if active)
+            updateStudioFilteredWords();
+            showToast(`🎉「${dtCurrentWord.name}」の本番画像を更新し、要修正から解除しました！`);
+          } else {
+            showToast(`🎉「${dtCurrentWord.name}」の本番画像を更新しました！`);
+          }
+        } else {
+          alert("保存エラー: " + data.error);
+        }
+      } catch (e) {
+        alert("エラー: " + e);
+      }
+    }
+
+    // Manually unflag current word in Studio
+    function unflagCurrentStudioWord() {
+      if (!dtCurrentWord) return;
+      if (!flaggedMap || !flaggedMap[dtCurrentWord.id]) {
+        showToast("この単語には要修正フラグが付いていません");
+        return;
+      }
+      delete flaggedMap[dtCurrentWord.id];
+      saveFlagsToStorage();
+      renderGrid();
+      updateStats();
+
+      // Hide badge and unflag buttons in studio
+      const badgeElem = document.getElementById('studio-title-badge');
+      if (badgeElem) badgeElem.style.display = 'none';
+      const unflagBtn = document.getElementById('studio-unflag-btn');
+      if (unflagBtn) unflagBtn.style.display = 'none';
+      const actionUnflagBtn = document.getElementById('studio-action-unflag-btn');
+      if (actionUnflagBtn) actionUnflagBtn.style.display = 'none';
+
+      // Refresh studio filtered list (removes from 'Flagged Only' if active)
+      updateStudioFilteredWords();
+      showToast(`✅「${dtCurrentWord.name}」の要修正を解除しました`);
+    }
+
+    // Setup drag for floating PIP window
+    function setupDtPipDrag() {
+      const pip = document.getElementById('dt-floating-pip');
+      let isDrag = false, ox = 0, oy = 0;
+      pip.addEventListener('mousedown', (e) => {
+        isDrag = true;
+        ox = e.clientX - pip.offsetLeft;
+        oy = e.clientY - pip.offsetTop;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDrag) return;
+        pip.style.left = Math.max(10, e.clientX - ox) + 'px';
+        pip.style.top = Math.max(10, e.clientY - oy) + 'px';
+      });
+      window.addEventListener('mouseup', () => { isDrag = false; });
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Don't intercept when user is typing in prompt or comments
+      if (['TEXTAREA', 'INPUT', 'SELECT'].includes(document.activeElement.tagName)) {
+        return;
+      }
+
+      if (currentMainView === 'studio') {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          toggleStudioCompareImage();
+        } else if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          stepStudioWord(-1);
+        } else if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          stepStudioWord(1);
+        } else if (e.code === 'Escape') {
+          switchMainView('review');
+        }
+      }
+    });
+
+    // Initialize Draw Things studio integration on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setupStudioZoomAndPan();
+      initStudioSlider();
+      setupDtPipDrag();
+      syncStudioHistoryFromServer(false);
+
+      // Periodic sync for images generated from Chat / external scripts
+      setInterval(() => {
+        if (currentMainView === 'studio' && !dtIsGenerating) {
+          syncStudioHistoryFromServer(false);
+        }
+      }, 4000);
+    });
+  </script>
+
+  <!-- ========================================================
+       FLOATING PIP PROGRESS WINDOW (Top-Left of Screen)
+       ======================================================== -->
+  <div class="dt-floating-pip" id="dt-floating-pip">
+    <div class="dt-pip-header">
+      <span>⚡ Draw Things 生成中</span>
+      <span id="dt-pip-timer">00:00</span>
+    </div>
+    <div class="dt-pip-body">
+      <div id="dt-pip-name" style="font-size: 0.8rem; font-weight: 700;">計算中...</div>
+      <div class="dt-pip-bar">
+        <div class="dt-pip-fill" id="dt-pip-fill"></div>
+      </div>
+      <div style="font-size: 0.7rem; color: #94a3b8; text-align: center;">
+        ※生成中もレビュー一覧や画像の拡大・確認は自由に操作できます
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       FULLSCREEN DRAW THINGS STUDIO VIEW (Complete Screen Switch)
+       ======================================================== -->
+  <div id="studio-view">
+    <!-- Studio Top Navigation & Word Selector Bar -->
+    <div class="studio-top-nav">
+      <!-- Left: Back Button & Word Selector -->
+      <div class="studio-nav-left">
+        <button class="studio-back-btn" onclick="switchMainView('review')">
+          <span>← レビュー一覧に戻る</span>
+        </button>
+
+        <div class="studio-word-picker">
+          <!-- Category Filter inside Studio -->
+          <select id="studio-cat-filter" onchange="onStudioFilterChange()" style="background: transparent; border: none; color: #94a3b8; font-size: 0.8rem; font-weight: 600; outline: none; cursor: pointer; padding: 2px 4px; border-right: 1px solid #2a2a3a; margin-right: 4px;">
+            <option value="all">📁 すべてのカテゴリ</option>
+          </select>
+
+          <!-- Flagged Only Toggle inside Studio -->
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #ef4444; cursor: pointer; margin-right: 6px; user-select: none;">
+            <input type="checkbox" id="studio-flagged-only" onchange="onStudioFilterChange()" style="cursor: pointer;" />
+            <span>🚨 要修正のみ</span>
+          </label>
+
+          <!-- Step Buttons -->
+          <button class="studio-step-btn" onclick="stepStudioWord(-1)" title="前の単語 (←キー)">◀ 前へ</button>
+
+          <!-- Word Dropdown (526 items) -->
+          <select class="studio-word-select" id="studio-word-select" onchange="onStudioWordSelectChange()">
+            <option value="">単語読み込み中...</option>
+          </select>
+
+          <button class="studio-step-btn" onclick="stepStudioWord(1)" title="次の単語 (→キー)">次へ ▶</button>
+
+          <!-- Count badge -->
+          <span id="studio-count-badge" style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-left: 4px;">- / -語</span>
+        </div>
+
+        <!-- Word Info in Nav -->
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-left: 6px;">
+          <span id="studio-title-name" style="font-size: 1.15rem; font-weight: 800; color: #fff;">-</span>
+          <span id="studio-title-reading" style="font-size: 0.82rem; color: #94a3b8;">-</span>
+          <span id="studio-title-cat" style="font-size: 0.75rem; color: #64748b;">-</span>
+          <span id="studio-title-badge" style="font-size: 0.72rem; font-weight: 700; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 6px; border-radius: 4px; display: none;">-</span>
+          <button id="studio-unflag-btn" onclick="unflagCurrentStudioWord()" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer; align-items: center; gap: 4px;" title="この単語の要修正フラグを解除します">
+            <span>✅ 要修正から外す</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Comparison Mode & Zoom Controls -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button class="btn btn-secondary" onclick="openHistoryModal()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; background: #1e1b4b; border: 1px solid #6366f1; color: #a5b4fc; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;" title="過去の生成履歴一覧を開く">
+          <span>📜 生成履歴 (<span id="studio-nav-hist-count">0</span>)</span>
+        </button>
+
+        <!-- Compare Mode Pills -->
+        <div class="studio-mode-pills">
+          <button class="studio-mode-pill active" id="mode-btn-split" onclick="setStudioCompareMode('split')">👥 並べて比較</button>
+          <button class="studio-mode-pill" id="mode-btn-slider" onclick="setStudioCompareMode('slider')">↔️ スライダー</button>
+          <button class="studio-mode-pill" id="mode-btn-toggle" onclick="setStudioCompareMode('toggle')">⚡ トグル (Space)</button>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div style="display: flex; align-items: center; gap: 4px; background: #0f0f15; border: 1px solid #2a2a3a; border-radius: 6px; padding: 2px 6px;">
+          <button onclick="zoomStudioOut()" class="studio-step-btn" style="padding: 2px 6px;" title="ズームアウト">➖</button>
+          <span id="studio-zoom-text" style="font-family: monospace; font-size: 0.75rem; min-width: 38px; text-align: center; color: #cbd5e1;">Fit</span>
+          <button onclick="zoomStudioIn()" class="studio-step-btn" style="padding: 2px 6px;" title="ズームイン">➕</button>
+          <button onclick="resetStudioZoom()" class="studio-step-btn" style="padding: 2px 6px;" title="全体表示 (Fit)">🔲</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Studio Main Stage -->
+    <div class="studio-stage" id="studio-stage">
+      <!-- 1. Side-by-Side Split Panes -->
+      <div class="studio-panes" id="studio-panes">
+        <!-- Left: Old Image (Current Production) -->
+        <div class="studio-pane">
+          <div class="studio-pane-header">
+            <span class="studio-tag-old">🖼️ 現在の画像 (旧)</span>
+            <span style="font-size: 0.75rem; color: #64748b;">本番に公開中</span>
+          </div>
+          <div class="studio-pane-canvas">
+            <img id="studio-img-old-split" src="" alt="旧画像" />
+          </div>
+        </div>
+
+        <!-- Right: New Generated Image -->
+        <div class="studio-pane">
+          <div class="studio-pane-header">
+            <span class="studio-tag-new">✨ 新画像 (Draw Things)</span>
+            <span style="font-size: 0.75rem; color: #06b6d4;">Qwen 1024px 水彩絵本風</span>
+          </div>
+          <div class="studio-pane-canvas">
+            <img id="studio-img-new-split" src="" alt="新画像" style="display: none;" />
+            <div id="studio-no-new-split" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #94a3b8; font-size: 0.88rem; text-align: center;">
+              <span style="font-size: 2.2rem; opacity: 0.5;">🎨</span>
+              <div>下の「🚀 生成開始」を押すと<br>ここに新画像が表示され、並べて比較できます</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Split Slider Stage -->
+      <div class="studio-slider-stage" id="studio-slider-stage">
+        <!-- Under: Old Image -->
+        <div class="studio-slider-under">
+          <img id="studio-img-old-slider" src="" alt="旧画像" />
+        </div>
+        <!-- Over: New Image -->
+        <div class="studio-slider-over" id="studio-slider-over">
+          <img id="studio-img-new-slider" src="" alt="新画像" />
+        </div>
+        <!-- Draggable Divider -->
+        <div class="studio-slider-divider" id="studio-slider-divider">
+          <div class="studio-slider-handle">↔</div>
+        </div>
+      </div>
+
+      <!-- 3. Toggle Stage (Spacebar / Click to flip) -->
+      <div class="studio-toggle-stage" id="studio-toggle-stage" onclick="toggleStudioCompareImage()">
+        <span class="studio-toggle-badge" id="studio-toggle-badge">✨ 新画像 (Draw Things)</span>
+        <img id="studio-img-toggle" src="" alt="トグル画像" />
+        <div style="position: absolute; bottom: 14px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; color: #fff; pointer-events: none;">
+          画面クリック または Spaceキー で旧画像 ⇄ 新画像を瞬時に切り替え
+        </div>
+      </div>
+    </div>
+
+    <!-- Studio Bottom Bar (Prompt, Generation Actions, History) -->
+    <div class="studio-bottom-bar">
+      <!-- Prompt Column -->
+      <div class="studio-prompt-col">
+        <label style="font-size: 0.78rem; font-weight: 700; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+          <span>✍️ プロンプト (絵本風・水彩タッチ・純白背景 #ffffff 自動生成)</span>
+          <button onclick="if(dtCurrentWord) loadStudioWord(dtCurrentWord)" style="background: none; border: none; color: #06b6d4; font-size: 0.72rem; cursor: pointer; text-decoration: underline;">🔄 デフォルトに戻す</button>
+        </label>
+        <textarea id="studio-prompt-input" class="studio-prompt-input" placeholder="プロンプトを入力..."></textarea>
+      </div>
+
+      <!-- Actions Column -->
+      <div class="studio-action-col">
+        <button id="studio-gen-btn" class="studio-btn-gen" onclick="startStudioGen()">
+          <span>🚀</span>
+          <span id="studio-gen-btn-text">生成開始</span>
+        </button>
+
+        <label style="display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.72rem; color: #a5b4fc; font-weight: 600; cursor: pointer; user-select: none; padding: 2px 0;">
+          <input type="checkbox" id="studio-auto-apply" style="cursor: pointer;" checked />
+          <span>生成時に図鑑へ自動反映</span>
+        </label>
+
+        <button id="studio-apply-btn" class="studio-btn-apply" onclick="applyStudioNewImage()" disabled title="この新画像を図鑑の本番画像として保存し、レビュー一覧も更新します">
+          <span>✨ 図鑑に反映</span>
+        </button>
+
+        <button id="studio-discard-btn" class="studio-btn-discard" onclick="discardStudioNewImage()" disabled title="この新画像を破棄して消去します">
+          <span>🗑️ 破棄</span>
+        </button>
+
+        <button id="studio-action-unflag-btn" onclick="unflagCurrentStudioWord()" style="display: none; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; border-radius: 6px; padding: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; align-items: center; justify-content: center; gap: 4px;" title="修正不要と判断した場合に要修正フラグを解除します">
+          <span>✅ 要修正から外す</span>
+        </button>
+      </div>
+
+      <!-- History Column -->
+      <div class="studio-history-col" style="width: 320px;">
+        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+          <span>直近の生成履歴 (<span id="studio-strip-count">0</span>)</span>
+          <button onclick="openHistoryModal()" style="background: none; border: none; color: #06b6d4; font-size: 0.72rem; cursor: pointer; text-decoration: underline;">📜 全履歴を見る</button>
+        </div>
+        <div class="studio-history-grid" id="studio-history-grid"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draw Things Studio - 新旧画像比較 & 生成スタジオ</title>
+  <style>
+    :root {
+      --bg: #121216;
+      --panel: #1a1a22;
+      --panel-border: #2a2a38;
+      --text: #f0f0f8;
+      --text-muted: #88889c;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Left Sidebar: Controls */
+    .sidebar {
+      width: 380px;
+      min-width: 340px;
+      background: var(--panel);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+    }
+    .header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #15151c;
+    }
+    .header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .clickable-link {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 11px;
+    }
+
+    select, input, textarea {
+      background: #111115;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 85px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-success {
+      background: var(--success);
+    }
+    .btn-success:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    /* History Grid */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      max-height: 130px;
+      overflow-y: auto;
+      padding-top: 4px;
+    }
+    .history-item {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: #000;
+      position: relative;
+    }
+    .history-item.active {
+      border-color: var(--accent);
+    }
+    .history-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: white;
+    }
+
+    /* Main Area: Top Bar & Comparison Stage */
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #0d0d11;
+      overflow: hidden;
+    }
+
+    .top-toolbar {
+      padding: 10px 20px;
+      background: #16161e;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .mode-pills {
+      display: flex;
+      background: #0e0e14;
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .mode-pill {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-pill.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .zoom-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tool-btn {
+      background: #20202c;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tool-btn:hover {
+      background: #2a2a3a;
+    }
+
+    /* Comparison Stage (Side-by-Side or Overlay) */
+    .stage {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+    }
+    .stage:active {
+      cursor: grabbing;
+    }
+
+    /* Side-by-Side Panels */
+    .compare-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      position: relative;
+    }
+
+    .compare-pane {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--panel-border);
+      background: #111116;
+    }
+    .compare-pane:last-child {
+      border-right: none;
+    }
+
+    .pane-header {
+      padding: 8px 14px;
+      background: rgba(22, 22, 30, 0.9);
+      border-bottom: 1px solid var(--panel-border);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 5;
+    }
+    .tag-old {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .tag-new {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .pane-canvas {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      background: #ffffff; /* White background for picture book graphics */
+    }
+    .pane-canvas img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      transform-origin: center center;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    /* Split Slider Mode Overlay */
+    .slider-stage {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: white;
+      overflow: hidden;
+    }
+    .slider-img-under, .slider-img-over {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slider-img-under img, .slider-img-over img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+      transform-origin: center center;
+      pointer-events: none;
+    }
+    .slider-img-over {
+      overflow: hidden;
+      border-right: 2px solid var(--accent);
+      width: 50%; /* Slider position */
+      background: white;
+      z-index: 2;
+    }
+    .slider-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent);
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: ew-resize;
+      z-index: 10;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.8);
+    }
+    .slider-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    /* FLOATING PIP PROGRESS WINDOW (TOP-LEFT) */
+    .pip-float {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 250px;
+      background: rgba(22, 22, 30, 0.96);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.8);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      cursor: move;
+      animation: pop 0.2s ease-out;
+    }
+    @keyframes pop {
+      from { transform: scale(0.9) translateY(-10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .pip-float-header {
+      padding: 8px 12px;
+      background: #161622;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .pip-float-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pip-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: #2a2a38;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .pip-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 0.3s;
+    }
+
+    /* Fullscreen Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+    }
+    .modal-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    .modal-content img {
+      max-width: 95%;
+      max-height: 95%;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Controls -->
+  <div class="sidebar">
+    <div class="header">
+      <h1>🎨 Draw Things Studio</h1>
+      <span class="status-badge" id="connStatus">API 接続中 (7860)</span>
+    </div>
+
+    <div class="sidebar-body">
+
+      <!-- Word Selector -->
+      <div class="form-group">
+        <div class="form-label">
+          <span>対象の単語を選択</span>
+          <span class="clickable-link" onclick="toggleFlagged()">要修正リストに絞る</span>
+        </div>
+        <select id="wordSelect" onchange="onWordSelected()">
+          <option value="">-- 単語を選択してください --</option>
+        </select>
+      </div>
+
+      <!-- Main Action Buttons -->
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" style="flex: 1;" id="genBtn" onclick="startGeneration()">
+          <span id="genBtnIcon">🚀</span>
+          <span id="genBtnText">生成開始</span>
+        </button>
+        <button class="btn" id="discardBtn" onclick="discardNewImage()" disabled style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; border-radius: 6px; font-weight: 600;" title="この新規画像を破棄してやり直す">
+          <span>🗑️ 破棄</span>
+        </button>
+        <button class="btn btn-success" id="applyBtn" onclick="applyNewImage()" disabled title="この新画像を図鑑に本番保存">
+          <span>✨ 図鑑に反映</span>
+        </button>
+      </div>
+
+      <!-- Prompt Input -->
+      <div class="form-group">
+        <div class="form-label">
+          <span>プロンプト (Prompt)</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Qwen / 1024px</span>
+        </div>
+        <textarea id="promptInput" placeholder="プロンプトが自動設定されます..."></textarea>
+      </div>
+
+      <!-- Generation Details -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div class="form-group">
+          <div class="form-label">解像度</div>
+          <select id="sizeSelect">
+            <option value="1024x1024" selected>1024 × 1024 (推奨)</option>
+            <option value="512x512">512 × 512</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">ステップ数</div>
+          <input type="number" id="stepsInput" value="8" min="4" max="50">
+        </div>
+      </div>
+
+      <!-- History of Generated Images -->
+      <div class="form-group" style="margin-top: 4px;">
+        <div class="form-label">
+          <span>生成履歴 (クリックで比較対象に設定)</span>
+          <span id="historyCount" style="font-size: 11px;">0枚</span>
+        </div>
+        <div class="history-grid" id="historyGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main-area">
+
+    <!-- Top Toolbar -->
+    <div class="top-toolbar">
+      <div class="mode-pills">
+        <button class="mode-pill active" id="btnModeSide" onclick="setMode('side')">👥 左右に並べて比較</button>
+        <button class="mode-pill" id="btnModeSlider" onclick="setMode('slider')">↔️ スライダー重ね比較</button>
+        <button class="mode-pill" id="btnModeToggle" onclick="setMode('toggle')">🔄 新旧パッパ切替 (Space)</button>
+      </div>
+
+      <div class="zoom-toolbar">
+        <button class="tool-btn" onclick="zoomOut()">➖ 縮小</button>
+        <span id="zoomText" style="font-size: 12px; font-family: ui-monospace, monospace; min-width: 44px; text-align: center;">100%</span>
+        <button class="tool-btn" onclick="zoomIn()">➕ 拡大</button>
+        <div style="width: 1px; height: 16px; background: var(--panel-border);"></div>
+        <button class="tool-btn" onclick="resetZoom()">🔲 フィット</button>
+        <button class="tool-btn" onclick="openFullscreen()">🔍 最大化拡大</button>
+      </div>
+    </div>
+
+    <!-- Comparison Stage -->
+    <div class="stage" id="stage">
+
+      <!-- FLOATING PIP PROGRESS WINDOW (TOP-LEFT) -->
+      <div class="pip-float" id="pipFloat">
+        <div class="pip-float-header">
+          <span>⚡ 次の画像を生成中</span>
+          <span id="pipTimer" style="font-family: ui-monospace, monospace; color: #fff;">00:00</span>
+        </div>
+        <div class="pip-float-body">
+          <div style="font-size: 12px; font-weight: 600;" id="pipWordName">Draw Things で計算中...</div>
+          <div class="pip-bar-wrap">
+            <div class="pip-bar-fill" id="pipBarFill"></div>
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); text-align: center;">
+            ※生成中も画面の新旧比較は自由に拡大できます
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 1: Side by Side (Left: Old, Right: New) -->
+      <div class="compare-container" id="sideContainer">
+        
+        <!-- Left Pane: Old (Current App Image) -->
+        <div class="compare-pane">
+          <div class="pane-header">
+            <span>現在の図鑑画像 (旧)</span>
+            <span class="tag-old">現在採用中</span>
+          </div>
+          <div class="pane-canvas" id="leftCanvas">
+            <img id="imgOld" src="" alt="旧画像未選択" style="display: none;" />
+            <div id="noOldNotice" style="color: #999; font-size: 13px;">単語を選択してください</div>
+          </div>
+        </div>
+
+        <!-- Right Pane: New (Newly Generated Image) -->
+        <div class="compare-pane">
+          <div class="pane-header">
+            <span id="newPaneTitle">新しく生成した画像 (新)</span>
+            <span class="tag-new">最新生成</span>
+          </div>
+          <div class="pane-canvas" id="rightCanvas">
+            <img id="imgNew" src="" alt="新画像未生成" style="display: none;" />
+            <div id="noNewNotice" style="color: #999; font-size: 13px;">生成または履歴を選択してください</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Mode 2: Slider Overlay -->
+      <div class="slider-stage" id="sliderStage">
+        <div class="slider-img-under">
+          <img id="sliderImgOld" src="" />
+        </div>
+        <div class="slider-img-over" id="sliderOver">
+          <img id="sliderImgNew" src="" />
+        </div>
+        <div class="slider-handle" id="sliderHandle">
+          <div class="slider-button">↔</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Fullscreen Modal -->
+  <div class="modal" id="fullModal" onclick="closeFullscreen(event)">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: white;">
+      <span style="font-weight: bold; font-size: 14px;" id="modalTitle">超高解像度 拡大確認</span>
+      <button class="tool-btn" onclick="document.getElementById('fullModal').style.display = 'none'">✕ 閉じる (Esc)</button>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <img id="modalImg" src="" onclick="event.stopPropagation();" />
+    </div>
+  </div>
+
+  <script>
+    let words = [];
+    let currentWord = null;
+    let oldImageUrl = null;
+    let newImageUrl = null;
+    let historyList = [];
+    let isGenerating = false;
+    let genTimer = null;
+    let currentMode = 'side'; // 'side', 'slider', 'toggle'
+    let toggleState = false;
+
+    // Zoom & Pan
+    let zoomLevel = 1.0;
+    let isPanning = false, startPanX = 0, startPanY = 0, panX = 0, panY = 0;
+
+    const flaggedIds = ['d_semi', 'd_furamingo', 'd_tako', 'd_koi', 'd_maguro', 'd_manbou', 'd_hamusuta-'];
+    let isFlaggedOnly = false;
+
+    async function init() {
+      try {
+        const res = await fetch('/api/words');
+        words = await res.json();
+        renderSelect(words);
+
+        // Load existing recent images
+        const hRes = await fetch('/api/recent_images');
+        const hData = await hRes.json();
+        if (hData && hData.length > 0) {
+          hData.forEach(item => addHistory(item, false));
+          setNewImage(hData[0].url, '最新の生成画像');
+        }
+      } catch (err) {
+        console.error("Init error:", err);
+      }
+
+      setupStageZoomPan();
+      setupSliderDrag();
+      setupPipDrag();
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && !['TEXTAREA', 'INPUT'].includes(e.target.tagName)) {
+          e.preventDefault();
+          if (currentMode === 'toggle') {
+            flipToggle();
+          } else {
+            resetZoom();
+          }
+        }
+      });
+    }
+
+    function renderSelect(list) {
+      const select = document.getElementById('wordSelect');
+      select.innerHTML = '<option value="">-- 単語を選択してください --</option>';
+      list.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        opt.innerText = `${w.name} (${w.category || ''}) [${w.id}]`;
+        select.appendChild(opt);
+      });
+    }
+
+    function toggleFlagged() {
+      isFlaggedOnly = !isFlaggedOnly;
+      const link = document.querySelector('.clickable-link');
+      if (isFlaggedOnly) {
+        const filtered = words.filter(w => flaggedIds.includes(w.id));
+        renderSelect(filtered);
+        link.innerText = '全単語を表示';
+      } else {
+        renderSelect(words);
+        link.innerText = '要修正リストに絞る';
+      }
+    }
+
+    function onWordSelected() {
+      const id = document.getElementById('wordSelect').value;
+      currentWord = words.find(w => w.id === id);
+      if (!currentWord) return;
+
+      const pInput = document.getElementById('promptInput');
+      if (currentWord.prompt) {
+        pInput.value = currentWord.prompt;
+      } else {
+        pInput.value = `Japanese picture book watercolor illustration of a cute ${currentWord.name} (${currentWord.name} / ${currentWord.tts_text}), warm gentle watercolor wash, soft pencil contour, completely isolated on solid pure white background (#ffffff). Absolutely no text, no letters.`;
+      }
+
+      // Load Old Image (Current from common/images)
+      oldImageUrl = `/images/${currentWord.id}.png?t=${Date.now()}`;
+      const imgOld = document.getElementById('imgOld');
+      imgOld.src = oldImageUrl;
+      imgOld.style.display = 'block';
+      document.getElementById('noOldNotice').style.display = 'none';
+
+      document.getElementById('sliderImgOld').src = oldImageUrl;
+      resetZoom();
+    }
+
+    function setNewImage(url, title) {
+      newImageUrl = url;
+      const imgNew = document.getElementById('imgNew');
+      imgNew.src = url;
+      imgNew.style.display = 'block';
+      document.getElementById('noNewNotice').style.display = 'none';
+      document.getElementById('sliderImgNew').src = url;
+      if (title) document.getElementById('newPaneTitle').innerText = title;
+      document.getElementById('applyBtn').disabled = false;
+      document.getElementById('discardBtn').disabled = false;
+      resetZoom();
+    }
+
+    async function discardNewImage() {
+      if (!newImageUrl) return;
+      if (!confirm("生成した新画像を破棄しますか？")) return;
+
+      const discardedUrl = newImageUrl;
+      newImageUrl = null;
+      document.getElementById('imgNew').style.display = 'none';
+      document.getElementById('noNewNotice').style.display = 'block';
+      document.getElementById('sliderImgNew').src = '';
+      document.getElementById('applyBtn').disabled = true;
+      document.getElementById('discardBtn').disabled = true;
+
+      // Remove from history
+      historyList = historyList.filter(h => h.url !== discardedUrl);
+      const grid = document.getElementById('historyGrid');
+      grid.innerHTML = '';
+      historyList.forEach(h => addHistory(h, false));
+      document.getElementById('historyCount').innerText = `${historyList.length}枚`;
+
+      try {
+        await fetch('/api/discard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: discardedUrl })
+        });
+      } catch (e) {
+        console.error("Discard error:", e);
+      }
+    }
+
+    // Zoom & Pan (Synchronized across both panes)
+    function setupStageZoomPan() {
+      const stage = document.getElementById('stage');
+
+      stage.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.18 : 0.85;
+        zoomLevel = Math.min(Math.max(zoomLevel * factor, 0.4), 8.0);
+        applyTransforms();
+      }, { passive: false });
+
+      stage.addEventListener('mousedown', (e) => {
+        if (e.target.closest('#sliderHandle') || e.target.closest('#pipFloat')) return;
+        isPanning = true;
+        startPanX = e.clientX - panX;
+        startPanY = e.clientY - panY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        panX = e.clientX - startPanX;
+        panY = e.clientY - startPanY;
+        applyTransforms();
+      });
+
+      window.addEventListener('mouseup', () => { isPanning = false; });
+    }
+
+    function applyTransforms() {
+      const transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+      document.getElementById('imgOld').style.transform = transform;
+      document.getElementById('imgNew').style.transform = transform;
+      document.getElementById('sliderImgOld').style.transform = transform;
+      document.getElementById('sliderImgNew').style.transform = transform;
+      document.getElementById('zoomText').innerText = `${Math.round(zoomLevel * 100)}%`;
+    }
+
+    function resetZoom() {
+      zoomLevel = 1.0;
+      panX = 0; panY = 0;
+      applyTransforms();
+      document.getElementById('zoomText').innerText = 'Fit';
+    }
+    function zoomIn() { zoomLevel = Math.min(zoomLevel * 1.25, 8.0); applyTransforms(); }
+    function zoomOut() { zoomLevel = Math.max(zoomLevel * 0.8, 0.4); applyTransforms(); }
+
+    // Mode Switcher: Side, Slider, Toggle
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-pill').forEach(b => b.classList.remove('active'));
+
+      const side = document.getElementById('sideContainer');
+      const slider = document.getElementById('sliderStage');
+
+      if (mode === 'side') {
+        document.getElementById('btnModeSide').classList.add('active');
+        side.style.display = 'flex';
+        slider.style.display = 'none';
+        document.getElementById('imgOld').parentElement.parentElement.style.display = 'flex';
+        document.getElementById('imgNew').parentElement.parentElement.style.display = 'flex';
+      } else if (mode === 'slider') {
+        document.getElementById('btnModeSlider').classList.add('active');
+        side.style.display = 'none';
+        slider.style.display = 'block';
+      } else if (mode === 'toggle') {
+        document.getElementById('btnModeToggle').classList.add('active');
+        side.style.display = 'flex';
+        slider.style.display = 'none';
+        toggleState = false;
+        flipToggle();
+      }
+      resetZoom();
+    }
+
+    function flipToggle() {
+      toggleState = !toggleState;
+      const leftPane = document.getElementById('imgOld').parentElement.parentElement;
+      const rightPane = document.getElementById('imgNew').parentElement.parentElement;
+      if (toggleState) {
+        leftPane.style.display = 'none';
+        rightPane.style.display = 'flex';
+      } else {
+        leftPane.style.display = 'flex';
+        rightPane.style.display = 'none';
+      }
+    }
+
+    // Slider Drag Logic
+    function setupSliderDrag() {
+      const stage = document.getElementById('sliderStage');
+      const over = document.getElementById('sliderOver');
+      const handle = document.getElementById('sliderHandle');
+      let isDragging = false;
+
+      function updateSlider(clientX) {
+        const rect = stage.getBoundingClientRect();
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(x, rect.width));
+        const pct = (x / rect.width) * 100;
+        over.style.width = `${pct}%`;
+        handle.style.left = `${pct}%`;
+      }
+
+      handle.addEventListener('mousedown', () => { isDragging = true; });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        updateSlider(e.clientX);
+      });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+    }
+
+    // Pip Float Drag
+    function setupPipDrag() {
+      const pip = document.getElementById('pipFloat');
+      let isPipDrag = false, pX = 0, pY = 0;
+      pip.addEventListener('mousedown', (e) => {
+        isPipDrag = true;
+        pX = e.clientX - pip.offsetLeft;
+        pY = e.clientY - pip.offsetTop;
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isPipDrag) return;
+        pip.style.left = `${Math.max(10, e.clientX - pX)}px`;
+        pip.style.top = `${Math.max(10, e.clientY - pY)}px`;
+      });
+      window.addEventListener('mouseup', () => { isPipDrag = false; });
+    }
+
+    // Trigger Generation (Background API with Top-Left Progress Window)
+    async function startGeneration() {
+      if (isGenerating) return;
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        alert("プロンプトを入力してください");
+        return;
+      }
+
+      const sizeStr = document.getElementById('sizeSelect').value;
+      const [w, h] = sizeStr.split('x').map(Number);
+      const steps = parseInt(document.getElementById('stepsInput').value, 10) || 8;
+
+      isGenerating = true;
+      document.getElementById('genBtn').disabled = true;
+      document.getElementById('genBtnIcon').innerText = '⏳';
+      document.getElementById('genBtnText').innerText = '生成中...';
+
+      // OPEN FLOATING PROGRESS WINDOW (TOP-LEFT)
+      const pip = document.getElementById('pipFloat');
+      pip.style.display = 'flex';
+      document.getElementById('pipWordName').innerText = currentWord ? `「${currentWord.name}」を生成中...` : 'Draw Things で計算中...';
+      document.getElementById('pipBarFill').style.width = '5%';
+
+      const startTime = Date.now();
+      clearInterval(genTimer);
+      genTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('pipTimer').innerText = `${m}:${s}`;
+        const pct = Math.min(Math.round((elapsed / 56) * 100), 96);
+        document.getElementById('pipBarFill').style.width = `${pct}%`;
+      }, 500);
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            word_id: currentWord ? currentWord.id : null,
+            width: w,
+            height: h,
+            steps: steps
+          })
+        });
+
+        const data = await res.json();
+        if (data.image_url) {
+          document.getElementById('pipBarFill').style.width = '100%';
+          document.getElementById('pipWordName').innerText = '生成完了！';
+
+          const item = { url: data.image_url, word_id: data.word_id, timestamp: Date.now() };
+          addHistory(item, true);
+          setNewImage(data.image_url, currentWord ? `新「${currentWord.name}」` : '新画像');
+        } else {
+          alert("エラー: " + (data.error || '生成に失敗しました'));
+        }
+      } catch (e) {
+        alert("通信エラー: " + e);
+      } finally {
+        isGenerating = false;
+        clearInterval(genTimer);
+        document.getElementById('genBtn').disabled = false;
+        document.getElementById('genBtnIcon').innerText = '🚀';
+        document.getElementById('genBtnText').innerText = '生成開始';
+        setTimeout(() => { pip.style.display = 'none'; }, 1500);
+      }
+    }
+
+    function addHistory(item, prepend = true) {
+      historyList.unshift(item);
+      const grid = document.getElementById('historyGrid');
+      const box = document.createElement('div');
+      box.className = 'history-item active';
+      box.innerHTML = `<img src="${item.url}" />`;
+      box.onclick = () => {
+        document.querySelectorAll('.history-item').forEach(b => b.classList.remove('active'));
+        box.classList.add('active');
+
+        // Automatically sync Old Image and Select to the SAME word as this history item
+        if (item.word_id) {
+          const matchedWord = words.find(w => w.id === item.word_id);
+          if (matchedWord) {
+            document.getElementById('wordSelect').value = matchedWord.id;
+            currentWord = matchedWord;
+
+            // Update Left Pane (Old Image)
+            oldImageUrl = `/images/${matchedWord.id}.png?t=${Date.now()}`;
+            const imgOld = document.getElementById('imgOld');
+            imgOld.src = oldImageUrl;
+            imgOld.style.display = 'block';
+            document.getElementById('noOldNotice').style.display = 'none';
+            document.getElementById('sliderImgOld').src = oldImageUrl;
+
+            // Sync prompt
+            const pInput = document.getElementById('promptInput');
+            if (item.prompt) {
+              pInput.value = item.prompt;
+            } else if (matchedWord.prompt) {
+              pInput.value = matchedWord.prompt;
+            }
+          }
+        }
+
+        setNewImage(item.url, currentWord ? `新「${currentWord.name}」` : `履歴画像 (${item.word_id})`);
+      };
+
+      if (prepend && grid.firstChild) {
+        grid.insertBefore(box, grid.firstChild);
+      } else {
+        grid.appendChild(box);
+      }
+      document.getElementById('historyCount').innerText = `${historyList.length}枚`;
+    }
+
+    // Apply New Image to Kotoba Zukan App
+    async function applyNewImage() {
+      if (!currentWord || !newImageUrl) {
+        alert("適用する画像または単語が選択されていません");
+        return;
+      }
+
+      if (!confirm(`単語「${currentWord.name}」(${currentWord.id}) の本番画像として上書き反映しますか？`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word_id: currentWord.id,
+            image_url: newImageUrl
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`「${currentWord.name}」の画像を本番に反映しました！`);
+          document.getElementById('applyBtn').disabled = true;
+          document.getElementById('discardBtn').disabled = true;
+          // Reload old image to match the newly applied one
+          oldImageUrl = `/images/${currentWord.id}.png?t=${Date.now()}`;
+          document.getElementById('imgOld').src = oldImageUrl;
+          document.getElementById('sliderImgOld').src = oldImageUrl;
+        } else {
+          alert("保存エラー: " + data.error);
+        }
+      } catch (e) {
+        alert("エラー: " + e);
+      }
+    }
+
+    // Fullscreen Modal
+    function openFullscreen() {
+      const targetUrl = newImageUrl || oldImageUrl;
+      if (!targetUrl) return;
+      document.getElementById('modalImg').src = targetUrl;
+      document.getElementById('modalTitle').innerText = currentWord ? `${currentWord.name} (超高解像度 拡大)` : '最大化プレビュー';
+      document.getElementById('fullModal').style.display = 'flex';
+    }
+    function closeFullscreen(e) {
+      if (e.target.id === 'fullModal' || e.target.id === 'modalContent') {
+        document.getElementById('fullModal').style.display = 'none';
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

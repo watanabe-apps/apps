@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ことばずかん - 画像レビュー＆不備指摘ツール</title>
+  <title>ことばずかん - レビュー＆不備指摘ツール</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -23,18 +23,11 @@
       --danger-light: #fef2f2;
       --danger-border: #f87171;
       --success: #10b981;
-      --accent: #f59e0b;
+      --success-hover: #059669;
       --border-color: #e2e8f0;
       
-      --cat-doubutsu: #f97316;
-      --cat-tabemono: #ef4444;
-      --cat-norimono: #0284c7;
-      --cat-midikanamono: #10b981;
-      --cat-ugoki: #8b5cf6;
-      --cat-kimochi: #ec4899;
-
       --card-size: 175px;
-      --font-family: "Zen Maru Gothic", "UD Digi Kyokasho N-R", "Klee One", sans-serif;
+      --font-family: "Zen Maru Gothic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", sans-serif;
 
       --type-image: #ef4444;
       --type-image-bg: #fef2f2;
@@ -51,6 +44,14 @@
       --type-other: #64748b;
       --type-other-bg: #f8fafc;
       --type-other-border: #cbd5e1;
+
+      --cat-doubutsu: #f97316;
+      --cat-tabemono: #ef4444;
+      --cat-norimono: #0284c7;
+      --cat-midikanamono: #10b981;
+      --cat-ugoki: #8b5cf6;
+      --cat-kimochi: #ec4899;
+      --cat-hito: #f59e0b;
     }
 
     * {
@@ -67,10 +68,15 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+
+    body.review-mode {
       padding-bottom: 120px;
     }
 
-    /* Header */
+    /* ========================================================
+       TOP HEADER
+       ======================================================== */
     header {
       background: #ffffff;
       border-bottom: 1px solid var(--border-color);
@@ -81,9 +87,9 @@
     }
 
     .header-top {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 12px 16px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -98,8 +104,8 @@
     }
 
     .title-group h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 800;
       color: #1e293b;
       display: flex;
       align-items: center;
@@ -113,61 +119,97 @@
       background: var(--danger-light);
       color: var(--danger-dark);
       border: 1px solid var(--danger-border);
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 9999px;
       font-size: 0.85rem;
       font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .stats-badge:hover {
+      background: #fee2e2;
+    }
+
+    .header-right-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* History Drawer Trigger Button */
+    .btn-history-toggle {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .btn-history-toggle:hover {
+      background: #334155;
+      transform: translateY(-1px);
+    }
+    .hist-badge-pill {
+      background: #38bdf8;
+      color: #0f172a;
+      font-size: 0.72rem;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-weight: 800;
     }
 
     .size-control {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: #f8fafc;
-      padding: 4px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
-
-    .size-control label {
-      font-size: 0.8rem;
+      gap: 6px;
+      font-size: 0.82rem;
       color: var(--text-sub);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .size-btn-group {
       display: flex;
-      gap: 4px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 2px;
+      border: 1px solid var(--border-color);
     }
 
     .size-btn {
-      padding: 4px 10px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      color: #334155;
+      padding: 3px 9px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: #64748b;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s;
+      font-family: inherit;
     }
-
     .size-btn.active {
       background: var(--primary);
       color: #ffffff;
-      border-color: var(--primary);
     }
 
     /* Filter Toolbar */
     .toolbar {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 8px 16px 12px;
+      padding: 8px 16px 10px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
       justify-content: space-between;
+      border-top: 1px solid #f1f5f9;
     }
 
     .cat-tabs {
@@ -177,9 +219,9 @@
     }
 
     .cat-tab {
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       border: 1px solid #cbd5e1;
       background: #ffffff;
@@ -187,10 +229,13 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.15s;
+      font-family: inherit;
     }
-
+    .cat-tab:hover {
+      background: #f1f5f9;
+    }
     .cat-tab.active {
       background: #1e293b;
       color: #ffffff;
@@ -202,35 +247,20 @@
       gap: 8px;
       align-items: center;
       flex-wrap: wrap;
-    }
-
-    .search-input {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid #cbd5e1;
-      font-size: 0.85rem;
-      font-family: inherit;
-      width: 180px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .search-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      margin-left: auto;
     }
 
     .type-filter-group {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
       align-items: center;
     }
 
     .type-filter-btn {
-      padding: 6px 12px;
+      padding: 5px 11px;
       border-radius: 20px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
       border: 1px solid #cbd5e1;
       background: #ffffff;
@@ -238,7 +268,7 @@
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       transition: all 0.15s ease;
       user-select: none;
       font-family: inherit;
@@ -278,51 +308,38 @@
       border-color: #334155;
     }
 
-    .flag-filter-btn {
-      padding: 6px 14px;
+    .search-input {
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
       border: 1px solid #cbd5e1;
-      background: #ffffff;
-      color: #475569;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
+      font-size: 0.82rem;
+      font-family: inherit;
+      width: 170px;
+      outline: none;
+      transition: border-color 0.15s;
     }
-
-    .flag-filter-btn.active {
-      background: var(--danger);
-      color: #ffffff;
-      border-color: var(--danger);
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
     /* Subcategory Filter Toolbar */
     .subcat-toolbar {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
-      padding: 0 16px 12px;
+      padding: 0 16px 8px;
       display: flex;
       gap: 6px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
-
-    .subcat-toolbar::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .subcat-toolbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
+    .subcat-toolbar::-webkit-scrollbar { height: 4px; }
+    .subcat-toolbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
     .subcat-pill {
-      padding: 4px 12px;
+      padding: 4px 11px;
       border-radius: 16px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       border: 1px solid #e2e8f0;
       background: #f8fafc;
@@ -335,22 +352,18 @@
       gap: 4px;
       font-family: inherit;
     }
-
-    .subcat-pill:hover {
-      background: #e2e8f0;
-      color: #1e293b;
-    }
-
+    .subcat-pill:hover { background: #e2e8f0; color: #1e293b; }
     .subcat-pill.active {
-      background: #2563eb;
+      background: var(--primary);
       color: #ffffff;
-      border-color: #2563eb;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+      border-color: var(--primary);
     }
 
-    /* Main Grid */
-    main {
-      max-width: 1400px;
+    /* ========================================================
+       MAIN REVIEW GRID
+       ======================================================== */
+    main#review-view {
+      max-width: 1500px;
       margin: 0 auto;
       padding: 16px;
       width: 100%;
@@ -375,28 +388,21 @@
       transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s;
       user-select: none;
     }
-
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.08);
       border-color: #94a3b8;
     }
 
-    /* Flagged State */
+    /* Flagged Highlight */
     .card.is-flagged {
       border-color: #f87171;
       background-color: #fffaf9;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
     }
-    .card.has-image-issue {
-      border-color: #ef4444;
-    }
-    .card.has-audio-issue {
-      border-color: #2563eb;
-    }
-    .card.has-text-issue {
-      border-color: #8b5cf6;
-    }
+    .card.has-image-issue { border-color: #ef4444; }
+    .card.has-audio-issue { border-color: #2563eb; }
+    .card.has-text-issue  { border-color: #8b5cf6; }
     .card.has-multi-issues {
       border-color: #e11d48;
       box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
@@ -430,14 +436,146 @@
     .issue-tag-badge.badge-text  { background: #8b5cf6; color: #fff; }
     .issue-tag-badge.badge-other { background: #475569; color: #fff; }
 
-    /* Quick Type Buttons on Card */
+    .card-top-actions {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.15s;
+    }
+    .icon-btn:hover {
+      background: #ffffff;
+      transform: scale(1.1);
+    }
+
+    .image-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      padding: 8px;
+    }
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.2s;
+    }
+    .card:hover .image-container img {
+      transform: scale(1.05);
+    }
+
+    .card-info {
+      padding: 8px 10px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: #ffffff;
+    }
+
+    .card-word {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+
+    .card-tags {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .cat-tag {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.68rem;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .cat-doubutsu   { background: var(--cat-doubutsu); }
+    .cat-tabemono   { background: var(--cat-tabemono); }
+    .cat-norimono   { background: var(--cat-norimono); }
+    .cat-midikanamono { background: var(--cat-midikanamono); }
+    .cat-ugoki      { background: var(--cat-ugoki); }
+    .cat-kimochi    { background: var(--cat-kimochi); }
+    .cat-hito       { background: var(--cat-hito); }
+
+    .subcat-tag {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-id {
+      font-family: monospace;
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+
+    .card-comment {
+      font-size: 0.72rem;
+      color: #dc2626;
+      background: #fef2f2;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-top: 4px;
+      display: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-comment.has-text { display: block; }
+
+    /* Quick Issue Type Selector on Each Card */
     .card-quick-types {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 3px;
-      padding: 6px 6px 6px;
+      padding: 5px 6px 6px;
       background: #f8fafc;
       border-top: 1px solid var(--border-color);
+      margin-top: auto;
     }
 
     .quick-type-btn {
@@ -487,373 +625,7 @@
       box-shadow: 0 1px 3px rgba(71, 85, 105, 0.35);
     }
 
-    .card-top-actions {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      display: flex;
-      gap: 4px;
-      z-index: 10;
-    }
-
-    .icon-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #cbd5e1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.8rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: all 0.15s;
-    }
-
-    .icon-btn:hover {
-      background: #ffffff;
-      transform: scale(1.1);
-    }
-
-    .image-container {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .image-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
-
-    .card-info {
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      border-top: 1px solid #f1f5f9;
-      background: inherit;
-    }
-
-    .card-word {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--text-main);
-      line-height: 1.2;
-    }
-
-    .card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.72rem;
-      color: var(--text-sub);
-      gap: 6px;
-    }
-
-    .card-tags {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-
-    .cat-tag {
-      font-weight: 700;
-    }
-
-    .subcat-tag {
-      font-size: 0.68rem;
-      background: #f1f5f9;
-      color: #475569;
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .card-id {
-      font-family: monospace;
-      font-size: 0.7rem;
-      color: #94a3b8;
-      white-space: nowrap;
-    }
-
-    .cat-doubutsu { color: var(--cat-doubutsu); }
-    .cat-tabemono { color: var(--cat-tabemono); }
-    .cat-norimono { color: var(--cat-norimono); }
-    .cat-midikanamono { color: var(--cat-midikanamono); }
-    .cat-ugoki { color: var(--cat-ugoki); }
-    .cat-kimochi { color: var(--cat-kimochi); }
-
-    .card-comment {
-      margin-top: 4px;
-      font-size: 0.75rem;
-      color: var(--danger-dark);
-      background: rgba(239, 68, 68, 0.1);
-      padding: 3px 6px;
-      border-radius: 4px;
-      display: none;
-      word-break: break-all;
-    }
-
-    .card.is-flagged .card-comment.has-text {
-      display: block;
-    }
-
-    /* Detail / Edit Reason Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background: #ffffff;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 20px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      animation: modalSlide 0.25s ease-out;
-    }
-
-    @keyframes modalSlide {
-      from { transform: translateY(20px) scale(0.97); }
-      to { transform: translateY(0) scale(1); }
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 12px;
-    }
-
-    .modal-header h2 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: var(--text-sub);
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .modal-img-wrap {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      max-width: 300px;
-      margin: 0 auto;
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-img-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    /* Modal Issue Type Selector */
-    .modal-type-selector {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .modal-type-btn {
-      padding: 10px 6px;
-      border-radius: 10px;
-      border: 2px solid #cbd5e1;
-      background: #f8fafc;
-      color: #475569;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.15s ease;
-      font-family: inherit;
-      user-select: none;
-    }
-
-    .modal-type-btn:hover {
-      background: #f1f5f9;
-      border-color: #94a3b8;
-    }
-
-    .modal-type-btn.active.type-image {
-      background: #fef2f2;
-      border-color: #ef4444;
-      color: #dc2626;
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-    }
-
-    .modal-type-btn.active.type-audio {
-      background: #eff6ff;
-      border-color: #2563eb;
-      color: #1d4ed8;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-
-    .modal-type-btn.active.type-text {
-      background: #f5f3ff;
-      border-color: #8b5cf6;
-      color: #6d28d9;
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-    }
-
-    .modal-type-btn.active.type-other {
-      background: #f1f5f9;
-      border-color: #475569;
-      color: #1e293b;
-      box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.2);
-    }
-
-    .quick-reasons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .reason-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      background: #f8fafc;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: #334155;
-      transition: all 0.15s;
-    }
-
-    .reason-btn:hover {
-      background: #eff6ff;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .reason-textarea {
-      width: 100%;
-      height: 70px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      font-family: inherit;
-      font-size: 0.9rem;
-      outline: none;
-      resize: vertical;
-    }
-
-    .reason-textarea:focus {
-      border-color: var(--primary);
-    }
-
-    .prompt-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.75rem;
-      color: #475569;
-      line-height: 1.4;
-      max-height: 100px;
-      overflow-y: auto;
-      word-break: break-all;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-
-    .btn-secondary {
-      background: #e2e8f0;
-      color: #334155;
-    }
-
-    .btn-secondary:hover {
-      background: #cbd5e1;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: #ffffff;
-    }
-
-    .btn-danger:hover {
-      background: var(--danger-dark);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    /* Floating Dock / Bottom Bar */
+    /* Floating Dock */
     .bottom-dock {
       position: fixed;
       bottom: 0;
@@ -862,12 +634,12 @@
       background: #ffffff;
       border-top: 2px solid var(--border-color);
       box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-      padding: 12px 16px;
+      padding: 10px 16px;
       z-index: 40;
     }
 
     .dock-container {
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -883,13 +655,12 @@
     }
 
     .dock-count-box {
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: #1e293b;
     }
-
-    .dock-count-box span {
-      font-size: 1.3rem;
+    .dock-count-box span.highlight {
+      font-size: 1.25rem;
       color: var(--danger);
       font-weight: 800;
     }
@@ -900,7 +671,798 @@
       flex-wrap: wrap;
     }
 
-    /* Toast Notification */
+    .btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-danger { background: var(--danger); color: #ffffff; }
+    .btn-danger:hover { background: var(--danger-dark); }
+    .btn-primary { background: var(--primary); color: #ffffff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    /* ========================================================
+       HUGE COMPARISON VIEW (Accessed ONLY from History Drawer)
+       ======================================================== */
+    main#compare-view {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      height: calc(100vh - 58px);
+      background: #090d16;
+      color: #f8fafc;
+      overflow: hidden;
+    }
+    main#compare-view.active { display: flex; }
+
+    .compare-top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .compare-nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .compare-back-btn {
+      background: #334155;
+      color: #ffffff;
+      border: 1px solid #475569;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+    }
+    .compare-back-btn:hover { background: #475569; }
+
+    .compare-word-picker {
+      display: flex;
+      align-items: center;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 2px 6px;
+      gap: 4px;
+    }
+    .compare-word-select {
+      background: transparent;
+      border: none;
+      color: #f8fafc;
+      font-size: 0.88rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      max-width: 240px;
+      font-family: inherit;
+    }
+    .compare-word-select option { background: #1e293b; color: #fff; }
+    .compare-nav-step-btn {
+      border: none;
+      background: #334155;
+      color: #cbd5e1;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .compare-nav-step-btn:hover { background: #475569; color: #fff; }
+
+    .compare-word-info {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .compare-word-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .compare-word-meta {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .compare-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .compare-mode-pills {
+      display: flex;
+      background: #1e293b;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .compare-mode-pill {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .compare-mode-pill.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .compare-action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .compare-btn-apply {
+      background: var(--success);
+      color: #ffffff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .compare-btn-apply:hover:not(:disabled) {
+      background: var(--success-hover);
+      transform: translateY(-1px);
+    }
+    .compare-btn-apply:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .compare-btn-discard {
+      background: #1e293b;
+      color: #fca5a5;
+      border: 1px solid #7f1d1d;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .compare-btn-discard:hover:not(:disabled) { background: #991b1b; color: #fff; }
+    .compare-btn-discard:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    /* Comparison Stage */
+    .compare-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      background: #000;
+      overflow: hidden;
+      user-select: none;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .compare-panes {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #334155;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-pane:last-child { border-right: none; }
+
+    .compare-pane-header {
+      padding: 8px 16px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+    .compare-tag-old {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .compare-tag-new {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .compare-pane-canvas {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: #05070d;
+      padding: 16px;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-pane-canvas img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 6px 36px rgba(0,0,0,0.7);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    /* Slider Stage */
+    .compare-slider-stage {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #05070d;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-slider-under, .compare-slider-over {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 16px;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-slider-over {
+      width: 50%;
+      border-right: 2px solid #06b6d4;
+      background: #05070d;
+      z-index: 2;
+    }
+    .compare-slider-under img, .compare-slider-over img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 6px 36px rgba(0,0,0,0.7);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .compare-slider-divider {
+      position: absolute;
+      top: 0; bottom: 0; left: 50%;
+      width: 4px;
+      background: #06b6d4;
+      cursor: ew-resize;
+      z-index: 10;
+      transform: translateX(-50%);
+    }
+    .compare-slider-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: #06b6d4;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+
+    /* Toggle Stage */
+    .compare-toggle-stage {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      align-items: center;
+      justify-content: center;
+      background: #05070d;
+      cursor: pointer;
+      padding: 16px;
+      min-height: 0;
+      min-width: 0;
+    }
+    .compare-toggle-stage img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 6px 36px rgba(0,0,0,0.7);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .compare-toggle-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    /* Compare Bottom Bar */
+    .compare-bottom-bar {
+      height: 70px;
+      background: #0f172a;
+      border-top: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .compare-bottom-bar label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .compare-cand-thumbs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .cand-thumb-card {
+      width: 52px;
+      height: 52px;
+      border-radius: 6px;
+      border: 2px solid #334155;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: #1e293b;
+      transition: all 0.15s;
+    }
+    .cand-thumb-card:hover { border-color: #38bdf8; }
+    .cand-thumb-card.active {
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+    }
+    .cand-thumb-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ========================================================
+       LARGE HISTORY DRAWER (Width: 520px)
+       ======================================================== */
+    .history-drawer-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .history-drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .history-drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 520px;
+      max-width: 90vw;
+      background: #0f172a;
+      color: #f8fafc;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .history-drawer.active {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 16px 20px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .drawer-header h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-close-btn {
+      background: #334155;
+      color: #94a3b8;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .drawer-close-btn:hover { background: #475569; color: #fff; }
+
+    .drawer-tabs {
+      display: flex;
+      background: #090d16;
+      border-bottom: 1px solid #334155;
+      padding: 6px 12px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .drawer-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .drawer-tab.active { background: #1e293b; color: #38bdf8; }
+
+    .drawer-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .drawer-item {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.15s;
+    }
+    .drawer-item:hover {
+      border-color: #475569;
+      background: #243247;
+    }
+
+    .drawer-item-thumb {
+      width: 96px;
+      height: 96px;
+      border-radius: 8px;
+      background: #ffffff;
+      flex-shrink: 0;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .drawer-item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .drawer-item-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .drawer-item-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-item-id {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .drawer-item-time {
+      font-size: 0.72rem;
+      color: #64748b;
+    }
+    .drawer-item-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .drawer-btn-compare {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .drawer-btn-compare:hover { background: #1d4ed8; }
+
+    .drawer-btn-apply {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .drawer-btn-apply:hover { background: #059669; }
+
+    .drawer-btn-discard {
+      background: transparent;
+      color: #fca5a5;
+      border: 1px solid #7f1d1d;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .drawer-btn-discard:hover { background: #991b1b; color: #fff; }
+
+    /* ========================================================
+       MODALS
+       ======================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { transform: translateY(12px) scale(0.97); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    .modal-header h2 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 240px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .modal-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .modal-type-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .modal-type-btn {
+      padding: 8px 4px;
+      border-radius: 10px;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      user-select: none;
+    }
+    .modal-type-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .modal-type-btn.active.type-image {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #dc2626;
+    }
+    .modal-type-btn.active.type-audio {
+      background: #eff6ff;
+      border-color: #2563eb;
+      color: #1d4ed8;
+    }
+    .modal-type-btn.active.type-text {
+      background: #f5f3ff;
+      border-color: #8b5cf6;
+      color: #6d28d9;
+    }
+    .modal-type-btn.active.type-other {
+      background: #f1f5f9;
+      border-color: #475569;
+      color: #1e293b;
+    }
+
+    .quick-reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .reason-btn {
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #334155;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .reason-btn:hover {
+      background: #eff6ff;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .reason-textarea {
+      width: 100%;
+      height: 65px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      resize: vertical;
+    }
+    .reason-textarea:focus { border-color: var(--primary); }
+
+    .prompt-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      color: #475569;
+      line-height: 1.4;
+      max-height: 90px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 90px;
@@ -908,62 +1470,68 @@
       transform: translateX(-50%) translateY(20px);
       background: #1e293b;
       color: #ffffff;
-      padding: 10px 20px;
+      padding: 10px 22px;
       border-radius: 9999px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 700;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.3);
       opacity: 0;
       pointer-events: none;
       transition: all 0.25s ease-out;
-      z-index: 150;
+      z-index: 2000;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
     .toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
   </style>
 </head>
-<body>
+<body class="review-mode">
 
-  <!-- Header -->
-  <header>
+  <!-- ========================================================
+       TOP HEADER (Clean 2-tier Design)
+       ======================================================== -->
+  <header id="main-header">
     <div class="header-top">
       <div class="title-group">
         <h1>🔍 ことばずかん レビュー＆不備指摘ツール</h1>
-        <div class="stats-badge" id="stats-badge">
-          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">491</span>
+        <div class="stats-badge" onclick="showSummaryModal()" title="要修正として指摘した単語一覧を表示">
+          🚨 要修正: <span id="flagged-count">0</span> / <span id="total-count">0</span>
           <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.9; margin-left: 4px;">
             (🖼️ <span id="stat-image">0</span> / 🔊 <span id="stat-audio">0</span> / ✍️ <span id="stat-text">0</span> / 💬 <span id="stat-other">0</span>)
           </span>
         </div>
       </div>
 
-      <!-- Size Controls -->
-      <div class="size-control">
-        <label>表示サイズ:</label>
-        <div class="size-btn-group">
-          <button class="size-btn" onclick="setCardSize(130, this)">小</button>
-          <button class="size-btn active" onclick="setCardSize(175, this)">中</button>
-          <button class="size-btn" onclick="setCardSize(230, this)">大</button>
-          <button class="size-btn" onclick="setCardSize(300, this)">特大</button>
+      <div class="header-right-tools">
+        <!-- History Drawer Button -->
+        <button class="btn-history-toggle" onclick="toggleHistoryDrawer()" title="生成履歴トレイを開閉（ここから新旧比較ができます）">
+          <span>📜 生成履歴</span>
+          <span class="hist-badge-pill" id="hist-pill-count">0</span>
+        </button>
+
+        <div class="size-control">
+          <label>サイズ:</label>
+          <div class="size-btn-group">
+            <button class="size-btn" onclick="setCardSize(130, this)">小</button>
+            <button class="size-btn active" onclick="setCardSize(175, this)">中</button>
+            <button class="size-btn" onclick="setCardSize(230, this)">大</button>
+            <button class="size-btn" onclick="setCardSize(300, this)">特大</button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Filter Toolbar -->
-    <div class="toolbar">
+    <div class="toolbar" id="review-toolbar">
       <div class="cat-tabs" id="cat-tabs"></div>
 
       <div class="filter-options">
         <div class="type-filter-group" id="type-filter-group">
-          <button class="type-filter-btn active" data-type="all" onclick="setTypeFilter('all', this)">
-            すべて
-          </button>
+          <button class="type-filter-btn active" data-type="all" onclick="setTypeFilter('all', this)">すべて</button>
           <button class="type-filter-btn flag-all" data-type="flagged" onclick="setTypeFilter('flagged', this)">
             🚨 要修正 (<span id="btn-count-flagged">0</span>)
           </button>
@@ -990,17 +1558,19 @@
     </div>
   </header>
 
-  <!-- Main Grid -->
-  <main>
+  <!-- ========================================================
+       1. MAIN REVIEW GRID (Pure Review & Defect Flagging View)
+       ======================================================== -->
+  <main id="review-view">
     <div class="vocab-grid" id="vocab-grid"></div>
   </main>
 
-  <!-- Floating Dock -->
-  <div class="bottom-dock">
+  <!-- Floating Bottom Dock for Review View -->
+  <div class="bottom-dock" id="bottom-dock">
     <div class="dock-container">
       <div class="dock-status">
         <div class="dock-count-box">
-          選択中の不備: <span id="dock-flag-count">0</span> 件
+          選択中の不備: <span class="highlight" id="dock-flag-count">0</span> 件
           <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; margin-left: 6px;">
             (🖼️ <span id="dock-stat-image">0</span> / 🔊 <span id="dock-stat-audio">0</span> / ✍️ <span id="dock-stat-text">0</span> / 💬 <span id="dock-stat-other">0</span>)
           </span>
@@ -1027,7 +1597,134 @@
     </div>
   </div>
 
-  <!-- Detail / Reason Modal -->
+  <!-- ========================================================
+       2. HUGE COMPARISON VIEW (Clean, High-Impact Compare Screen)
+       Accessed ONLY from the History Drawer
+       ======================================================== -->
+  <main id="compare-view">
+    <div class="compare-top-nav">
+      <div class="compare-nav-left">
+        <button class="compare-back-btn" onclick="switchMainView('review')">
+          <span>← レビュー一覧に戻る</span>
+        </button>
+
+        <div class="compare-word-picker">
+          <button class="compare-nav-step-btn" onclick="stepCompareWord(-1)" title="前の単語 (←キー)">◀</button>
+          <select class="compare-word-select" id="compare-word-select" onchange="onCompareWordSelectChange()">
+            <option value="">単語読み込み中...</option>
+          </select>
+          <button class="compare-nav-step-btn" onclick="stepCompareWord(1)" title="次の単語 (→キー)">▶</button>
+        </div>
+
+        <div class="compare-word-info">
+          <div class="compare-word-name" id="compare-title-name">-</div>
+          <div class="compare-word-meta">
+            <span id="compare-title-reading"></span>
+            <span id="compare-title-cat" style="opacity: 0.7; margin-left: 4px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="compare-nav-right">
+        <div class="compare-mode-pills">
+          <button class="compare-mode-pill active" id="btn-mode-split" onclick="setCompareMode('split')">並べて比較</button>
+          <button class="compare-mode-pill" id="btn-mode-slider" onclick="setCompareMode('slider')">スライダー</button>
+          <button class="compare-mode-pill" id="btn-mode-toggle" onclick="setCompareMode('toggle')">トグル (Space)</button>
+        </div>
+
+        <div class="compare-action-buttons">
+          <button class="compare-btn-apply" id="compare-apply-btn" onclick="handleCompareApply()" disabled title="この新画像をcommon/images/の本番画像として採用">
+            <span>✨ 本番に採用</span>
+          </button>
+          <button class="compare-btn-discard" id="compare-discard-btn" onclick="handleCompareDiscard()" disabled title="この生成画像を候補から削除">
+            <span>🗑️ 破棄</span>
+          </button>
+          <button class="btn-history-toggle" onclick="toggleHistoryDrawer()" style="background: #334155;">
+            <span>📜 履歴</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Comparison Stage -->
+    <div class="compare-stage" id="compare-stage">
+      <!-- 1. Side-by-Side Split Panes -->
+      <div class="compare-panes" id="compare-panes">
+        <div class="compare-pane">
+          <div class="compare-pane-header">
+            <span class="compare-tag-old">現在の本番画像 (旧)</span>
+            <span style="font-size: 0.75rem; color: #94a3b8;">本番に公開中</span>
+          </div>
+          <div class="compare-pane-canvas">
+            <img id="compare-img-old-split" src="" alt="旧画像">
+          </div>
+        </div>
+        <div class="compare-pane">
+          <div class="compare-pane-header">
+            <span class="compare-tag-new">✨ 新画像 (Draw Things)</span>
+            <span id="compare-cand-timestamp" style="font-size: 0.75rem; color: #94a3b8;">-</span>
+          </div>
+          <div class="compare-pane-canvas">
+            <div id="compare-no-new-split" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #64748b; font-size: 0.95rem; text-align: center;">
+              <span style="font-size: 2rem;">🖼️</span>
+              <span>生成履歴トレイから候補を選択してください</span>
+            </div>
+            <img id="compare-img-new-split" src="" alt="新画像" style="display: none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Slider Stage -->
+      <div class="compare-slider-stage" id="compare-slider-stage">
+        <div class="compare-slider-under">
+          <img id="compare-img-new-slider" src="" alt="新画像">
+        </div>
+        <div class="compare-slider-over" id="compare-slider-over">
+          <img id="compare-img-old-slider" src="" alt="旧画像">
+        </div>
+        <div class="compare-slider-divider" id="compare-slider-divider">
+          <div class="compare-slider-handle">↔</div>
+        </div>
+      </div>
+
+      <!-- 3. Toggle Stage -->
+      <div class="compare-toggle-stage" id="compare-toggle-stage" onclick="toggleCompareFlipImage()">
+        <span class="compare-toggle-badge" id="compare-toggle-badge">新画像 (クリックまたはSpaceで切替)</span>
+        <img id="compare-img-toggle" src="" alt="トグル画像">
+        <div style="position: absolute; bottom: 18px; background: rgba(0,0,0,0.75); padding: 6px 16px; border-radius: 8px; font-size: 0.82rem; color: #fff;">
+          画面クリック または Spaceキー で旧画像/新画像を切替
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Candidate Thumbnails Strip -->
+    <div class="compare-bottom-bar" id="compare-bottom-bar">
+      <label>この単語の候補:</label>
+      <div class="compare-cand-thumbs" id="compare-cand-thumbs"></div>
+    </div>
+  </main>
+
+  <!-- ========================================================
+       LARGE HISTORY DRAWER (Width: 520px)
+       ======================================================== -->
+  <div class="history-drawer-overlay" id="drawer-overlay" onclick="toggleHistoryDrawer(false)"></div>
+  <aside class="history-drawer" id="history-drawer">
+    <div class="drawer-header">
+      <h3>📜 生成履歴 (<span id="drawer-hist-count">0</span>件)</h3>
+      <button class="drawer-close-btn" onclick="toggleHistoryDrawer(false)">&times;</button>
+    </div>
+
+    <div class="drawer-tabs">
+      <button class="drawer-tab active" id="drawer-tab-all" onclick="setDrawerFilter('all')">すべての履歴</button>
+      <button class="drawer-tab" id="drawer-tab-current" onclick="setDrawerFilter('current')">現在の単語のみ</button>
+    </div>
+
+    <div class="drawer-list" id="drawer-list"></div>
+  </aside>
+
+  <!-- ========================================================
+       DETAIL / REASON EDIT MODAL
+       ======================================================== -->
   <div class="modal-overlay" id="detail-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -1064,11 +1761,11 @@
         </div>
       </div>
 
-      <!-- 単語の現在情報（表記・読み上げテキスト） -->
+      <!-- 単語の現在情報 -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div><strong>表記 (name):</strong> <span id="modal-name-val" style="font-weight: 700; color: #0f172a;"></span></div>
-          <div><strong>音声テキスト (tts_text):</strong> <span id="modal-tts-val" style="font-weight: 700; color: #2563eb;"></span></div>
+          <div><strong>表記:</strong> <span id="modal-name-val" style="font-weight: 700; color: #0f172a;"></span></div>
+          <div><strong>読み上げテキスト:</strong> <span id="modal-tts-val" style="font-weight: 700; color: #2563eb;"></span></div>
         </div>
         <div style="color: #64748b; font-size: 0.75rem;">
           <strong>分類:</strong> <span id="modal-cat-val"></span>
@@ -1077,29 +1774,20 @@
 
       <div>
         <label style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px; display: block;">
-          よくある理由（クリックでメモに追加）:
+          よくある理由（クリックで追記）:
         </label>
         <div class="quick-reasons">
-          <!-- 画像 -->
-          <button class="reason-btn" onclick="addReasonTag('【画像】手・人体の崩れ')">🖐️ 手・人体の崩れ</button>
-          <button class="reason-btn" onclick="addReasonTag('【画像】背景の黄ばみ/色')">🎨 背景の黄ばみ/色</button>
-          <button class="reason-btn" onclick="addReasonTag('【画像】意味のズレ')">❓ 意味のズレ</button>
-          <button class="reason-btn" onclick="addReasonTag('【画像】構図・見切れ')">✂️ 構図・見切れ</button>
-          <button class="reason-btn" onclick="addReasonTag('【画像】パーツ不足/多すぎ')">🚲 パーツ不足/過剰</button>
-          <button class="reason-btn" onclick="addReasonTag('【画像】実写風/画風不揃い')">📷 実写風/画風違い</button>
-          <!-- 音声 -->
-          <button class="reason-btn" onclick="addReasonTag('【音声】読み間違い・誤読')">🗣️ 発音/読み間違い</button>
-          <button class="reason-btn" onclick="addReasonTag('【音声】イントネーション不自然')">🎵 イントネーション</button>
-          <button class="reason-btn" onclick="addReasonTag('【音声】音質・ノイズ・途切れ')">⚠️ 音質/途切れ</button>
-          <!-- 表記 -->
-          <button class="reason-btn" onclick="addReasonTag('【表記】ひらがな表記揺れ')">✍️ ひらがな表記</button>
-          <button class="reason-btn" onclick="addReasonTag('【表記】単語名の変更')">🏷️ 単語名の変更</button>
-          <!-- その他 -->
-          <button class="reason-btn" onclick="addReasonTag('【その他】カテゴリ分類違い')">📁 分類違い</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('指の本数が不自然')">🖐️ 指が不自然</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('二重目になっている')">👀 二重目</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('形が崩れている')">🌀 形の崩れ</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('動物の特徴が不正確')">🐾 動物特徴不正確</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('文字表記と絵が不一致')">❌ 絵と文字不一致</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('絵本風タッチと異なる')">🎨 タッチ不一致</button>
+          <button type="button" class="reason-btn" onclick="addReasonTag('背景が白でない')">⬜ 背景白でない</button>
         </div>
       </div>
 
-      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 腕が浮いている、発音が「かな」になっている、こーちゃ→こうちゃ...）"></textarea>
+      <textarea class="reason-textarea" id="modal-reason-input" placeholder="具体的な問題点があれば入力（例: 触角の先に二重目がある、コック帽を被せてほしい...）"></textarea>
 
       <div>
         <label style="font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; display: block;">生成プロンプト:</label>
@@ -1114,7 +1802,9 @@
     </div>
   </div>
 
-  <!-- Summary Modal -->
+  <!-- ========================================================
+       SUMMARY MODAL (List of Flagged Words)
+       ======================================================== -->
   <div class="modal-overlay" id="summary-modal">
     <div class="modal-content" style="max-width: 720px;">
       <div class="modal-header">
@@ -1122,7 +1812,6 @@
         <button class="modal-close" onclick="closeSummaryModal()">&times;</button>
       </div>
 
-      <!-- 種別絞り込みタブ in Summary Modal -->
       <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;" id="summary-filter-pills">
         <button class="subcat-pill active" data-filter="all" onclick="filterSummaryList('all', this)">すべて</button>
         <button class="subcat-pill" data-filter="image" onclick="filterSummaryList('image', this)">🖼️ 画像</button>
@@ -1139,22 +1828,20 @@
     </div>
   </div>
 
-  <!-- Hidden File Input for JSON import -->
   <input type="file" id="json-file-input" accept=".json" style="display: none;" onchange="handleFileImport(event)">
-
-  <!-- Toast -->
   <div class="toast" id="toast">📋 コピーしました</div>
 
-  <!-- Load Vocab DB -->
+  <!-- Load Vocab DB & Candidates History -->
   <script src="../common/vocab.js"></script>
+  <script src="./scripts/candidates/history.js"></script>
 
   <script>
     'use strict';
 
     // State & Constants
     const STORAGE_KEY = 'kotoba_zukan_review_flags_v1';
-    
-    // 不備種別の定義
+    const DT_SERVER = window.location.protocol === 'file:' ? 'http://127.0.0.1:8085' : '';
+
     const ISSUE_TYPES = [
       { id: 'image', label: '画像', fullLabel: '画像がダメ', icon: '🖼️', badgeClass: 'badge-image', btnClass: 'btn-image' },
       { id: 'audio', label: '音声', fullLabel: '音声がダメ', icon: '🔊', badgeClass: 'badge-audio', btnClass: 'btn-audio' },
@@ -1163,15 +1850,28 @@
     ];
     const ISSUE_TYPE_MAP = new Map(ISSUE_TYPES.map(t => [t.id, t]));
 
-    let flaggedMap = {}; // { [id]: { id, name, category, categoryName, subCategory, subCategoryName, types: [], reason, tts_text } }
+    let flaggedMap = {};
     let currentCategory = 'all';
     let currentSubCategory = 'all';
-    let currentTypeFilter = 'all'; // 'all' | 'flagged' | 'image' | 'audio' | 'text' | 'other'
+    let currentTypeFilter = 'all';
     let searchQuery = '';
     let currentModalItem = null;
     let modalSelectedTypes = new Set();
     let currentSummaryFilter = 'all';
     let audioPlayer = new Audio();
+
+    // View Switch State: 'review' | 'compare'
+    let currentMainView = 'review';
+
+    // Compare View State
+    let dtCurrentWord = null;
+    let dtCurrentCandidateFilename = null;
+    let currentCompareMode = 'split'; // 'split' | 'slider' | 'toggle'
+    let isShowingNewInToggle = true;
+
+    // History State
+    let dtHistory = [];
+    let drawerFilterMode = 'all'; // 'all' | 'current'
 
     const CATEGORIES_DEF = [
       { id: 'all', name: 'すべて' },
@@ -1180,7 +1880,8 @@
       { id: 'norimono', name: 'のりもの' },
       { id: 'midikanamono', name: 'みぢかなもの' },
       { id: 'ugoki', name: 'うごき' },
-      { id: 'kimochi', name: 'きもち' }
+      { id: 'kimochi', name: 'きもち' },
+      { id: 'hito', name: 'ひと' }
     ];
 
     function getVocabList() {
@@ -1203,32 +1904,77 @@
       return null;
     }
 
-    // Init
+    function getProductionImgUrl(wordId) {
+      const item = getVocabById(wordId);
+      const file = (item && item.file) ? item.file : `${wordId}.png`;
+      return `../common/images/${file}?t=${Date.now()}`;
+    }
+
+    function getCandidateImgUrl(filename) {
+      if (!filename) return '';
+      const cleanName = filename.replace(/^http:\/\/[^\/]+/, '').replace(/^\/images\//, '').split('?')[0];
+      const base = cleanName.split('/').pop();
+      const buster = `t=${Date.now()}`;
+      if (window.location.protocol === 'file:') {
+        return `./scripts/candidates/${base}?${buster}`;
+      }
+      return `${DT_SERVER}/images/${base}?${buster}`;
+    }
+
+    // ========================================================
+    // INITIALIZATION
+    // ========================================================
     window.addEventListener('DOMContentLoaded', () => {
       loadFlagsFromStorage();
       renderCategoryTabs();
       setupSearch();
       renderGrid();
       updateStats();
+
+      initHistory();
+      initCompareSlider();
+
+      // Keyboard shortcuts for compare view
+      window.addEventListener('keydown', (e) => {
+        if (currentMainView !== 'compare') return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (currentCompareMode === 'toggle') {
+            toggleCompareFlipImage();
+          } else {
+            setCompareMode('toggle');
+          }
+        } else if (e.code === 'ArrowLeft') {
+          e.preventDefault();
+          stepCompareWord(-1);
+        } else if (e.code === 'ArrowRight') {
+          e.preventDefault();
+          stepCompareWord(1);
+        } else if (e.code === 'Escape') {
+          switchMainView('review');
+        }
+      });
     });
 
-    // LocalStorage with Backward Compatibility
+    // ========================================================
+    // STORAGE & FLAGS
+    // ========================================================
     function loadFlagsFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          // 旧形式（types配列がない場合）の自動マイグレーション
           Object.keys(parsed).forEach(id => {
             const item = parsed[id];
             if (!Array.isArray(item.types) || item.types.length === 0) {
-              item.types = ['image']; // 旧形式は画像として移行
+              item.types = ['image'];
             }
           });
           flaggedMap = parsed;
         }
       } catch (e) {
-        console.error('Failed to load review flags:', e);
         flaggedMap = {};
       }
     }
@@ -1236,20 +1982,59 @@
     function saveFlagsToStorage() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(flaggedMap));
-      } catch (e) {
-        console.error('Failed to save review flags:', e);
-      }
+      } catch (e) {}
       updateStats();
     }
 
-    // Grid Size Control
+    // ========================================================
+    // VIEW SWITCHER (Review Grid vs Huge Compare Screen)
+    // ========================================================
+    function switchMainView(viewName) {
+      currentMainView = viewName;
+      const reviewView = document.getElementById('review-view');
+      const compareView = document.getElementById('compare-view');
+      const reviewToolbar = document.getElementById('review-toolbar');
+      const subcatToolbar = document.getElementById('subcat-toolbar');
+      const bottomDock = document.getElementById('bottom-dock');
+      const mainHeader = document.getElementById('main-header');
+
+      if (viewName === 'compare') {
+        document.body.classList.remove('review-mode');
+        reviewView.style.display = 'none';
+        reviewToolbar.style.display = 'none';
+        if (subcatToolbar) subcatToolbar.style.display = 'none';
+        bottomDock.style.display = 'none';
+        mainHeader.style.display = 'none';
+
+        compareView.classList.add('active');
+        populateCompareWordDropdown();
+        if (dtCurrentWord) {
+          loadCompareWord(dtCurrentWord);
+        } else {
+          const list = getVocabList();
+          if (list.length > 0) loadCompareWord(list[0]);
+        }
+      } else {
+        document.body.classList.add('review-mode');
+        mainHeader.style.display = 'block';
+        reviewView.style.display = 'block';
+        reviewToolbar.style.display = 'flex';
+        bottomDock.style.display = 'block';
+        compareView.classList.remove('active');
+        renderSubCategoryPills();
+        renderGrid();
+      }
+    }
+
+    // ========================================================
+    // REVIEW VIEW CONTROLS & GRID RENDERING
+    // ========================================================
     function setCardSize(size, btn) {
       document.documentElement.style.setProperty('--card-size', size + 'px');
       document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
     }
 
-    // Filter Controls
     function setTypeFilter(type, btn) {
       currentTypeFilter = type;
       document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active'));
@@ -1317,7 +2102,6 @@
       toolbar.style.display = 'block';
       pillsContainer.innerHTML = '';
 
-      // 「すべて」ピル
       const allPill = document.createElement('button');
       allPill.className = `subcat-pill ${currentSubCategory === 'all' ? 'active' : ''}`;
       allPill.textContent = `すべて (${catWords.length})`;
@@ -1328,22 +2112,7 @@
       });
       pillsContainer.appendChild(allPill);
 
-      const SUBCAT_ORDER = [
-        'riku_doubutsu', 'tori', 'sakana_umi', 'mushi',
-        'shushoku', 'niku_okazu', 'sakana_okazu', 'tamago_okazu', 'sonota_okazu', 'yasai', 'kudamono', 'oyatsu', 'nomimono',
-        'kuruma', 'hatarakukuruma', 'densha', 'sora', 'umi', 'sonota_norimono',
-        'karada', 'karada_kenkou', 'gakkou', 'bunbougu', 'fuku_kougu', 'kagu_kaden', 'seikatsu_seiketsu', 'asobi',
-        'kihon_ugoki', 'seikatsu_habit', 'tesaki_sagyou',
-        'kimochi_hyoujou', 'tsutaeru_aisatsu', 'fureai_nakayoshi'
-      ];
-
-      const sortedSubEntries = Array.from(subMap.entries()).sort((a, b) => {
-        const ia = SUBCAT_ORDER.indexOf(a[0]);
-        const ib = SUBCAT_ORDER.indexOf(b[0]);
-        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-      });
-
-      sortedSubEntries.forEach(([subId, info]) => {
+      subMap.forEach((info, subId) => {
         const pill = document.createElement('button');
         pill.className = `subcat-pill ${currentSubCategory === subId ? 'active' : ''}`;
         pill.textContent = `${info.name} (${info.count})`;
@@ -1358,15 +2127,17 @@
 
     function setupSearch() {
       const input = document.getElementById('search-input');
+      if (!input) return;
       input.addEventListener('input', (e) => {
         searchQuery = e.target.value.trim().toLowerCase();
         renderGrid();
       });
     }
 
-    // Render Grid
+    // Render Main Review Grid
     function renderGrid() {
       const container = document.getElementById('vocab-grid');
+      if (!container) return;
       const list = getVocabList();
       
       const filtered = list.filter(item => {
@@ -1377,7 +2148,6 @@
         const isFlagged = !!flagInfo && (Array.isArray(flagInfo.types) && flagInfo.types.length > 0 || !!flagInfo.reason);
         const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
 
-        // 種別フィルター
         if (currentTypeFilter === 'flagged' && !isFlagged) return false;
         if (currentTypeFilter === 'image' && !types.includes('image')) return false;
         if (currentTypeFilter === 'audio' && !types.includes('audio')) return false;
@@ -1398,7 +2168,7 @@
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #64748b;">
-            <p style="font-size: 1.2rem; font-weight: 700;">条件に一致する単語がありません</p>
+            <p style="font-size: 1.1rem; font-weight: 700;">条件に一致する単語がありません</p>
           </div>
         `;
         return;
@@ -1411,14 +2181,12 @@
         const reason = flagInfo ? (flagInfo.reason || '') : '';
         const imgPath = '../common/images/' + (item.file || (item.id + '.png'));
 
-        // バッジHTML
         const badgesHtml = types.map(t => {
           const conf = ISSUE_TYPE_MAP.get(t);
           if (!conf) return '';
           return `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>`;
         }).join('');
 
-        // クラス
         const hasMulti = types.length >= 2;
         const typeClasses = [
           isFlagged ? 'is-flagged' : '',
@@ -1489,10 +2257,7 @@
 
     // Quick Issue Type Toggle
     function toggleQuickType(e, id, type) {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
+      if (e) e.stopPropagation();
       const item = getVocabById(id);
       if (!item) return;
 
@@ -1500,7 +2265,6 @@
       const typeLabel = typeConf ? typeConf.label : type;
 
       if (!flaggedMap[id]) {
-        // 新規追加
         flaggedMap[id] = {
           id: item.id,
           name: item.name,
@@ -1548,7 +2312,6 @@
         card.classList.toggle('has-text-issue', types.includes('text'));
         card.classList.toggle('has-multi-issues', types.length >= 2);
 
-        // Update Badges
         const badgesContainer = document.getElementById('badges-' + id);
         if (badgesContainer) {
           badgesContainer.innerHTML = types.map(t => {
@@ -1558,7 +2321,6 @@
           }).join('');
         }
 
-        // Update Quick Buttons
         const btns = card.querySelectorAll('.quick-type-btn');
         btns.forEach(btn => {
           if (btn.classList.contains('btn-image')) btn.classList.toggle('active', types.includes('image'));
@@ -1567,7 +2329,6 @@
           if (btn.classList.contains('btn-other')) btn.classList.toggle('active', types.includes('other'));
         });
 
-        // Update Comment
         const commentEl = document.getElementById('comment-' + id);
         if (commentEl) {
           const reason = flagInfo ? (flagInfo.reason || '') : '';
@@ -1576,7 +2337,6 @@
         }
       }
 
-      // 絞り込み表示中に該当しなくなった場合は再描画
       if (currentTypeFilter !== 'all') {
         const matchesFilter = (
           (currentTypeFilter === 'flagged' && isFlagged) ||
@@ -1616,7 +2376,6 @@
       document.getElementById('dock-flag-count').textContent = count;
       document.getElementById('summary-count').textContent = count;
 
-      // 内訳
       const setTxt = (id, val) => {
         const el = document.getElementById(id);
         if (el) el.textContent = val;
@@ -1648,7 +2407,6 @@
       const playPromise = audioPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Fallback to speech synthesis
           if (window.speechSynthesis && item) {
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(item.name);
@@ -1665,7 +2423,9 @@
       }
     }
 
-    // Detail Modal Logic
+    // ========================================================
+    // DETAIL / REASON MODAL LOGIC
+    // ========================================================
     function openDetailModal(e, id) {
       if (e) e.stopPropagation();
       const item = getVocabById(id);
@@ -1687,7 +2447,6 @@
       const types = (flagInfo && Array.isArray(flagInfo.types)) ? flagInfo.types : [];
       modalSelectedTypes = new Set(types);
 
-      // 種別ボタンのアクティブ更新
       updateModalTypeButtons();
 
       document.getElementById('modal-reason-input').value = flagInfo ? (flagInfo.reason || '') : '';
@@ -1730,7 +2489,6 @@
       if (!currentModalItem) return;
       const id = currentModalItem.id;
       if (modalSelectedTypes.size > 0 || flaggedMap[id]) {
-        // 全解除
         modalSelectedTypes.clear();
         document.getElementById('modal-reason-input').value = '';
         delete flaggedMap[id];
@@ -1740,7 +2498,6 @@
         updateCardUI(id);
         showToast(`⚪ 「${currentModalItem.name}」の指摘を解除しました`);
       } else {
-        // 画像を要修正にする
         modalSelectedTypes.add('image');
         updateModalTypeButtons();
         updateModalFlagAllBtn(true);
@@ -1795,206 +2552,604 @@
       currentModalItem = null;
     }
 
-    // Summary Modal
+    // ========================================================
+    // SUMMARY MODAL (Flagged Words List)
+    // ========================================================
     function showSummaryModal() {
       currentSummaryFilter = 'all';
-      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => {
-        b.classList.toggle('active', b.dataset.filter === 'all');
-      });
       renderSummaryList();
       document.getElementById('summary-modal').classList.add('active');
-    }
-
-    function filterSummaryList(filter, btn) {
-      currentSummaryFilter = filter;
-      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      renderSummaryList();
-    }
-
-    function renderSummaryList() {
-      const listEl = document.getElementById('summary-list');
-      const keys = Object.keys(flaggedMap).filter(id => {
-        const it = flaggedMap[id];
-        return (it.types && it.types.length > 0) || it.reason;
-      });
-
-      const filteredKeys = keys.filter(id => {
-        if (currentSummaryFilter === 'all') return true;
-        const types = flaggedMap[id].types || [];
-        return types.includes(currentSummaryFilter);
-      });
-
-      if (filteredKeys.length === 0) {
-        listEl.innerHTML = '<p style="padding: 24px; text-align: center; color: #64748b;">該当する指摘はありません。</p>';
-        return;
-      }
-
-      listEl.innerHTML = filteredKeys.map(id => {
-        const item = flaggedMap[id];
-        const subInfo = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
-        const imgFile = item.file || (item.id + '.png');
-        const types = item.types || [];
-
-        const badgesHtml = types.map(t => {
-          const conf = ISSUE_TYPE_MAP.get(t);
-          if (!conf) return '';
-          return `<span class="issue-tag-badge ${conf.badgeClass}" style="box-shadow:none;">${conf.icon} ${conf.label}</span>`;
-        }).join(' ');
-
-        return `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-              <img src="../common/images/${imgFile}" style="width: 48px; height: 48px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 1rem; color: #0f172a;">${escapeHtml(item.name)}</strong>
-                  <span style="font-size: 0.75rem; color: #64748b;">(${item.id}) [${escapeHtml(item.categoryName || '')}${escapeHtml(subInfo)}]</span>
-                  <div style="display: inline-flex; gap: 4px;">${badgesHtml}</div>
-                </div>
-                ${item.reason ? `<div style="font-size: 0.82rem; color: #dc2626; margin-top: 3px; word-break: break-all;">💬 ${escapeHtml(item.reason)}</div>` : ''}
-              </div>
-            </div>
-            <div style="display: flex; gap: 6px; flex-shrink: 0;">
-              <button class="icon-btn" title="発音" onclick="playAudio(event, '${item.id}')">🔊</button>
-              <button class="icon-btn" title="編集" onclick="openDetailModal(event, '${item.id}'); closeSummaryModal();">🔍</button>
-              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="toggleModalFlagAllExternal('${item.id}')">解除</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function toggleModalFlagAllExternal(id) {
-      delete flaggedMap[id];
-      saveFlagsToStorage();
-      updateCardUI(id);
-      renderSummaryList();
-      showToast('⚪ 指摘を解除しました');
     }
 
     function closeSummaryModal() {
       document.getElementById('summary-modal').classList.remove('active');
     }
 
-    // Export & Copy
-    function copyForChat() {
+    function filterSummaryList(type, btn) {
+      currentSummaryFilter = type;
+      document.querySelectorAll('#summary-filter-pills .subcat-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderSummaryList();
+    }
+
+    function renderSummaryList() {
+      const container = document.getElementById('summary-list');
       const keys = Object.keys(flaggedMap).filter(id => {
         const item = flaggedMap[id];
-        return (item.types && item.types.length > 0) || item.reason;
+        const isFlagged = (item.types && item.types.length > 0) || item.reason;
+        if (!isFlagged) return false;
+        if (currentSummaryFilter === 'all') return true;
+        const types = item.types || [];
+        return types.includes(currentSummaryFilter);
       });
 
       if (keys.length === 0) {
-        alert('要修正として指摘された単語がまだありません。');
+        container.innerHTML = '<p style="text-align: center; padding: 20px; color: #64748b;">該当する指摘はありません</p>';
         return;
       }
 
-      let imgCount = 0, audCount = 0, txtCount = 0, othCount = 0;
-      keys.forEach(id => {
-        const t = flaggedMap[id].types || [];
-        if (t.includes('image')) imgCount++;
-        if (t.includes('audio')) audCount++;
-        if (t.includes('text')) txtCount++;
-        if (t.includes('other')) othCount++;
+      container.innerHTML = keys.map(id => {
+        const item = flaggedMap[id];
+        const types = item.types || [];
+        const typeBadges = types.map(t => {
+          const conf = ISSUE_TYPE_MAP.get(t);
+          return conf ? `<span class="issue-tag-badge ${conf.badgeClass}">${conf.icon} ${conf.label}</span>` : '';
+        }).join(' ');
+
+        return `
+          <div style="padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span style="font-weight: 800; font-size: 0.95rem; color: #1e293b;">${escapeHtml(item.name)}</span>
+                <span style="font-family: monospace; font-size: 0.72rem; color: #94a3b8;">${item.id}</span>
+                ${typeBadges}
+              </div>
+              ${item.reason ? `<div style="font-size: 0.78rem; color: #dc2626; margin-top: 3px;">📝 ${escapeHtml(item.reason)}</div>` : ''}
+            </div>
+            <div style="display: flex; gap: 4px; flex-shrink: 0;">
+              <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openDetailModal(null, '${item.id}'); closeSummaryModal();">
+                ✏️ 編集
+              </button>
+              <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;" onclick="removeFlagDirect('${item.id}')">
+                ✕ 解除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function removeFlagDirect(id) {
+      delete flaggedMap[id];
+      saveFlagsToStorage();
+      updateCardUI(id);
+      renderSummaryList();
+      showToast('⚪ 解除しました');
+    }
+
+    // ========================================================
+    // CHAT COPY & EXPORT / IMPORT
+    // ========================================================
+    function copyForChat() {
+      const keys = Object.keys(flaggedMap).filter(id => {
+        const it = flaggedMap[id];
+        return (it.types && it.types.length > 0) || it.reason;
       });
 
-      let text = `【ことばずかん レビュー不備指摘リスト (計 ${keys.length} 件)】\n`;
-      text += `・🖼️ 画像がダメ: ${imgCount} 件\n`;
-      text += `・🔊 音声がダメ: ${audCount} 件\n`;
-      text += `・✍️ 表記がダメ: ${txtCount} 件\n`;
-      text += `・💬 その他: ${othCount} 件\n\n`;
+      if (keys.length === 0) {
+        showToast('⚠️ 指摘された単語がありません');
+        return;
+      }
 
+      let text = '【ことばずかん 不備指摘リスト】\n';
       keys.forEach((id, idx) => {
         const item = flaggedMap[id];
-        const sub = item.subCategoryName ? ` / ${item.subCategoryName}` : '';
-        const types = item.types || [];
-        const typeLabels = types.map(t => {
-          const conf = ISSUE_TYPE_MAP.get(t);
-          return conf ? `${conf.icon} ${conf.fullLabel}` : t;
-        }).join(', ') || '未指定';
-
-        const ttsInfo = item.tts_text ? ` [tts_text: "${item.tts_text}"]` : '';
-        const reasonInfo = item.reason ? `\n   【理由/メモ】 ${item.reason}` : '';
-
-        text += `${idx + 1}. ${item.name} (${item.id}) [${item.categoryName || item.category}${sub}]${ttsInfo}\n`;
-        text += `   【不備種別】 ${typeLabels}${reasonInfo}\n\n`;
+        const typesStr = (item.types && item.types.length > 0) ? item.types.join(', ') : 'other';
+        const reasonStr = item.reason ? ` / 理由: ${item.reason}` : '';
+        text += `${idx + 1}. [${item.id}] ${item.name} (${typesStr})${reasonStr}\n`;
       });
 
       navigator.clipboard.writeText(text).then(() => {
-        showToast('📋 チャット用テキストをコピーしました！そのまま貼り付けてください');
+        showToast('📋 チャット用テキストをコピーしました！');
       }).catch(() => {
-        window.prompt('コピーしてください:', text);
+        showToast('❌ コピーに失敗しました');
       });
     }
 
     function exportJSON() {
-      const keys = Object.keys(flaggedMap);
-      if (keys.length === 0) {
-        alert('要修正の単語がありません。');
-        return;
-      }
-
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(flaggedMap, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', 'review_feedback.json');
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      showToast('💾 review_feedback.json を保存しました');
+      const blob = new Blob([JSON.stringify(flaggedMap, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kotoba_zukan_issues_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('💾 指摘データをJSONとして保存しました');
     }
 
     function triggerImportJSON() {
       document.getElementById('json-file-input').click();
     }
 
-    function handleFileImport(event) {
-      const file = event.target.files[0];
+    function handleFileImport(e) {
+      const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = (event) => {
         try {
-          const imported = JSON.parse(e.target.result);
-          if (typeof imported === 'object' && imported !== null) {
-            // マイグレーション
-            Object.keys(imported).forEach(id => {
-              if (!Array.isArray(imported[id].types)) {
-                imported[id].types = ['image'];
-              }
-            });
-            flaggedMap = Object.assign({}, flaggedMap, imported);
+          const parsed = JSON.parse(event.target.result);
+          if (typeof parsed === 'object') {
+            flaggedMap = parsed;
             saveFlagsToStorage();
             renderGrid();
-            showToast(`📥 ${Object.keys(imported).length} 件の指摘データを読み込みました`);
+            updateStats();
+            showToast('📥 JSONデータを読み込みました');
           }
         } catch (err) {
-          alert('JSONファイルの読み込みに失敗しました: ' + err.message);
+          alert('JSONの読み込みに失敗しました');
         }
       };
       reader.readAsText(file);
-      event.target.value = '';
+      e.target.value = '';
     }
 
     function resetAllFlags() {
-      const count = Object.keys(flaggedMap).length;
-      if (count === 0) return;
-      if (confirm(`要修正として指摘した ${count} 件のデータをすべてクリアしますか？`)) {
+      if (confirm('すべての要修正フラグをクリアしますか？')) {
         flaggedMap = {};
         saveFlagsToStorage();
         renderGrid();
+        updateStats();
         showToast('🗑️ すべての指摘をクリアしました');
       }
     }
 
-    // Helper
+    // ========================================================
+    // HISTORY & HUGE COMPARISON VIEW LOGIC
+    // ========================================================
+    function initHistory() {
+      if (window.DT_CACHED_HISTORY && Array.isArray(window.DT_CACHED_HISTORY)) {
+        loadHistoryItems(window.DT_CACHED_HISTORY);
+      }
+      syncHistoryFromServer();
+      setInterval(syncHistoryFromServer, 4000);
+    }
+
+    function toggleHistoryDrawer(forceState = null) {
+      const drawer = document.getElementById('history-drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const shouldOpen = forceState !== null ? forceState : !drawer.classList.contains('active');
+
+      drawer.classList.toggle('active', shouldOpen);
+      overlay.classList.toggle('active', shouldOpen);
+
+      if (shouldOpen) {
+        renderDrawerList();
+        syncHistoryFromServer();
+      }
+    }
+
+    function setDrawerFilter(mode) {
+      drawerFilterMode = mode;
+      document.getElementById('drawer-tab-all').classList.toggle('active', mode === 'all');
+      document.getElementById('drawer-tab-current').classList.toggle('active', mode === 'current');
+      renderDrawerList();
+    }
+
+    function loadHistoryItems(items) {
+      if (!Array.isArray(items)) return;
+      const seen = new Set();
+      dtHistory = [];
+      items.forEach(item => {
+        const key = item.url ? item.url.split('?')[0] : '';
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          dtHistory.push(item);
+        }
+      });
+      updateHistoryPillCount();
+      renderWordCandidatesStrip();
+    }
+
+    function updateHistoryPillCount() {
+      const realCands = dtHistory.filter(h => !h.is_backup);
+      const pill = document.getElementById('hist-pill-count');
+      if (pill) pill.textContent = realCands.length;
+      const drawerCount = document.getElementById('drawer-hist-count');
+      if (drawerCount) drawerCount.textContent = realCands.length;
+    }
+
+    async function syncHistoryFromServer() {
+      try {
+        const res = await fetch(`${DT_SERVER}/api/recent_images`);
+        const serverData = await res.json();
+        if (Array.isArray(serverData)) {
+          loadHistoryItems(serverData);
+          if (document.getElementById('history-drawer').classList.contains('active')) {
+            renderDrawerList();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Render Large History Drawer List
+    function renderDrawerList() {
+      const listContainer = document.getElementById('drawer-list');
+      if (!listContainer) return;
+      listContainer.innerHTML = '';
+
+      let items = dtHistory.filter(h => !h.is_backup);
+      if (drawerFilterMode === 'current' && dtCurrentWord) {
+        items = items.filter(h => h.word_id === dtCurrentWord.id);
+      }
+
+      if (items.length === 0) {
+        listContainer.innerHTML = `
+          <div style="padding: 40px 20px; text-align: center; color: #64748b;">
+            <p style="font-size: 1.5rem; margin-bottom: 8px;">📜</p>
+            <p style="font-weight: 700;">生成履歴がありません</p>
+          </div>
+        `;
+        return;
+      }
+
+      items.forEach(item => {
+        const filename = item.url.split('/').pop();
+        const candUrl = getCandidateImgUrl(filename);
+        const w = getVocabById(item.word_id);
+        const wordName = item.word_name || (w ? w.name : item.word_id);
+        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString() : '';
+
+        const card = document.createElement('div');
+        card.className = 'drawer-item';
+        card.innerHTML = `
+          <div class="drawer-item-thumb" onclick="openCompareFromHistory('${item.word_id}', '${filename}')" title="クリックして大画面で新旧比較">
+            <img src="${candUrl}" loading="lazy" alt="${wordName}" />
+          </div>
+          <div class="drawer-item-body">
+            <div class="drawer-item-title">${escapeHtml(wordName)}</div>
+            <div class="drawer-item-id">${item.word_id}</div>
+            <div class="drawer-item-time">${timeStr}</div>
+            <div class="drawer-item-actions">
+              <button class="drawer-btn-compare" onclick="openCompareFromHistory('${item.word_id}', '${filename}')">
+                👥 比較
+              </button>
+              <button class="drawer-btn-apply" onclick="applyHistoryDirect('${filename}', '${item.word_id}', '${wordName}')">
+                ✨ 本番反映
+              </button>
+              <button class="drawer-btn-discard" onclick="discardHistoryDirect('${filename}')">
+                🗑️ 破棄
+              </button>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+
+    // Open Huge Comparison View directly from History
+    function openCompareFromHistory(wordId, candidateFilename) {
+      const w = getVocabById(wordId);
+      if (w) dtCurrentWord = w;
+      toggleHistoryDrawer(false);
+      switchMainView('compare');
+      if (candidateFilename) {
+        setCompareCandidateImage(candidateFilename);
+      }
+    }
+
+    function populateCompareWordDropdown() {
+      const select = document.getElementById('compare-word-select');
+      if (!select) return;
+      const list = getVocabList();
+      select.innerHTML = '';
+
+      const candCounts = {};
+      dtHistory.forEach(h => {
+        if (!h.is_backup) candCounts[h.word_id] = (candCounts[h.word_id] || 0) + 1;
+      });
+
+      list.forEach((w, i) => {
+        const opt = document.createElement('option');
+        opt.value = w.id;
+        const flagMark = flaggedMap[w.id] ? '🚨 ' : '';
+        const candMark = candCounts[w.id] ? ` [✨${candCounts[w.id]}件]` : '';
+        opt.textContent = `[${i+1}/${list.length}] ${flagMark}${w.name}${candMark}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function onCompareWordSelectChange() {
+      const select = document.getElementById('compare-word-select');
+      const w = getVocabById(select.value);
+      if (w) loadCompareWord(w);
+    }
+
+    function stepCompareWord(direction) {
+      const list = getVocabList();
+      if (!dtCurrentWord || list.length === 0) return;
+      let idx = list.findIndex(w => w.id === dtCurrentWord.id);
+      if (idx === -1) idx = 0;
+      let nextIdx = (idx + direction + list.length) % list.length;
+      loadCompareWord(list[nextIdx]);
+    }
+
+    function loadCompareWord(word) {
+      dtCurrentWord = word;
+
+      const select = document.getElementById('compare-word-select');
+      if (select) select.value = word.id;
+
+      document.getElementById('compare-title-name').textContent = word.name;
+      const reading = word.ruby || word.kana || word.tts_text || '';
+      document.getElementById('compare-title-reading').textContent = reading ? `【${reading}】` : '';
+      document.getElementById('compare-title-cat').textContent = `${word.categoryName || word.category} ＞ ${word.subCategoryName || ''}`;
+
+      const prodImgUrl = getProductionImgUrl(word.id);
+      document.getElementById('compare-img-old-split').src = prodImgUrl;
+      document.getElementById('compare-img-old-slider').src = prodImgUrl;
+
+      const wordCands = dtHistory.filter(h => h.word_id === word.id && !h.is_backup);
+      if (wordCands.length > 0) {
+        const latestBaseName = wordCands[0].url.split('/').pop();
+        setCompareCandidateImage(latestBaseName);
+      } else {
+        clearCompareCandidateImage();
+      }
+
+      renderWordCandidatesStrip();
+      updateCompareToggleView();
+    }
+
+    function clearCompareCandidateImage() {
+      dtCurrentCandidateFilename = null;
+      document.getElementById('compare-img-new-split').style.display = 'none';
+      document.getElementById('compare-no-new-split').style.display = 'flex';
+      document.getElementById('compare-img-new-slider').src = '';
+      document.getElementById('compare-cand-timestamp').textContent = '-';
+      document.getElementById('compare-apply-btn').disabled = true;
+      document.getElementById('compare-discard-btn').disabled = true;
+    }
+
+    function setCompareCandidateImage(filename) {
+      if (!filename) {
+        clearCompareCandidateImage();
+        return;
+      }
+      dtCurrentCandidateFilename = filename;
+      const fullUrl = getCandidateImgUrl(filename);
+
+      const histItem = dtHistory.find(h => h.url.split('/').pop() === filename);
+      const timeStr = histItem && histItem.timestamp ? new Date(histItem.timestamp).toLocaleString() : '';
+      document.getElementById('compare-cand-timestamp').textContent = timeStr ? `生成日時: ${timeStr}` : '生成候補';
+
+      const imgSplit = document.getElementById('compare-img-new-split');
+      imgSplit.dataset.retried = '0';
+      imgSplit.onerror = function() {
+        if (this.dataset.retried === '0') {
+          this.dataset.retried = '1';
+          setTimeout(() => { this.src = `${fullUrl}&retry=${Date.now()}`; }, 350);
+        }
+      };
+      imgSplit.src = fullUrl;
+      imgSplit.style.display = 'block';
+      document.getElementById('compare-no-new-split').style.display = 'none';
+
+      document.getElementById('compare-img-new-slider').src = fullUrl;
+      document.getElementById('compare-apply-btn').disabled = false;
+      document.getElementById('compare-discard-btn').disabled = false;
+
+      updateCompareToggleView();
+      renderWordCandidatesStrip();
+    }
+
+    function renderWordCandidatesStrip() {
+      const container = document.getElementById('compare-cand-thumbs');
+      if (!container || !dtCurrentWord) return;
+      container.innerHTML = '';
+
+      const cands = dtHistory.filter(h => h.word_id === dtCurrentWord.id && !h.is_backup);
+      if (cands.length === 0) {
+        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748b;">候補なし</span>';
+        return;
+      }
+
+      cands.forEach((cand) => {
+        const filename = cand.url.split('/').pop();
+        const candUrl = getCandidateImgUrl(filename);
+        const thumb = document.createElement('div');
+        thumb.className = `cand-thumb-card ${dtCurrentCandidateFilename === filename ? 'active' : ''}`;
+        thumb.onclick = () => setCompareCandidateImage(filename);
+        thumb.innerHTML = `<img src="${candUrl}" alt="cand" />`;
+        container.appendChild(thumb);
+      });
+    }
+
+    // Mode Switcher: Split / Slider / Toggle
+    function setCompareMode(mode) {
+      currentCompareMode = mode;
+      document.getElementById('btn-mode-split').classList.toggle('active', mode === 'split');
+      document.getElementById('btn-mode-slider').classList.toggle('active', mode === 'slider');
+      document.getElementById('btn-mode-toggle').classList.toggle('active', mode === 'toggle');
+
+      document.getElementById('compare-panes').style.display = mode === 'split' ? 'flex' : 'none';
+      document.getElementById('compare-slider-stage').style.display = mode === 'slider' ? 'block' : 'none';
+      document.getElementById('compare-toggle-stage').style.display = mode === 'toggle' ? 'flex' : 'none';
+
+      if (mode === 'toggle') updateCompareToggleView();
+    }
+
+    function toggleCompareFlipImage() {
+      isShowingNewInToggle = !isShowingNewInToggle;
+      updateCompareToggleView();
+    }
+
+    function updateCompareToggleView() {
+      if (!dtCurrentWord) return;
+      const imgToggle = document.getElementById('compare-img-toggle');
+      const badge = document.getElementById('compare-toggle-badge');
+      if (!imgToggle || !badge) return;
+
+      if (isShowingNewInToggle && dtCurrentCandidateFilename) {
+        imgToggle.src = getCandidateImgUrl(dtCurrentCandidateFilename);
+        badge.textContent = '✨ 新画像 (Draw Things)';
+        badge.style.background = 'rgba(16, 185, 129, 0.2)';
+        badge.style.border = '1px solid #10b981';
+        badge.style.color = '#6ee7b7';
+      } else {
+        imgToggle.src = getProductionImgUrl(dtCurrentWord.id);
+        badge.textContent = '現在の本番画像 (旧)';
+        badge.style.background = 'rgba(239, 68, 68, 0.2)';
+        badge.style.border = '1px solid #ef4444';
+        badge.style.color = '#fca5a5';
+      }
+    }
+
+    function initCompareSlider() {
+      const stage = document.getElementById('compare-slider-stage');
+      const divider = document.getElementById('compare-slider-divider');
+      const over = document.getElementById('compare-slider-over');
+      if (!stage || !divider || !over) return;
+
+      let isDragging = false;
+      const updateSlider = (clientX) => {
+        const rect = stage.getBoundingClientRect();
+        let pct = ((clientX - rect.left) / rect.width) * 100;
+        pct = Math.max(0, Math.min(100, pct));
+        over.style.width = pct + '%';
+        divider.style.left = pct + '%';
+      };
+
+      divider.addEventListener('mousedown', () => isDragging = true);
+      window.addEventListener('mouseup', () => isDragging = false);
+      window.addEventListener('mousemove', (e) => {
+        if (isDragging) updateSlider(e.clientX);
+      });
+      divider.addEventListener('touchstart', () => isDragging = true);
+      window.addEventListener('touchend', () => isDragging = false);
+      window.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches[0]) updateSlider(e.touches[0].clientX);
+      });
+    }
+
+    // ========================================================
+    // ADOPT & DISCARD API HANDLERS
+    // ========================================================
+    async function handleCompareApply() {
+      if (!dtCurrentWord || !dtCurrentCandidateFilename) return;
+      if (!confirm(`「${dtCurrentWord.name}」(${dtCurrentWord.id}) の本番画像として保存し、図鑑に反映しますか？`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${DT_SERVER}/api/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            word_id: dtCurrentWord.id,
+            filename: dtCurrentCandidateFilename
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const newProdUrl = getProductionImgUrl(dtCurrentWord.id);
+          document.getElementById('compare-img-old-split').src = newProdUrl;
+          document.getElementById('compare-img-old-slider').src = newProdUrl;
+
+          if (flaggedMap && flaggedMap[dtCurrentWord.id]) {
+            delete flaggedMap[dtCurrentWord.id];
+            saveFlagsToStorage();
+            updateStats();
+          }
+
+          document.getElementById('compare-apply-btn').disabled = true;
+          showToast(`🎉「${dtCurrentWord.name}」の本番画像を図鑑に反映しました！`);
+          syncHistoryFromServer();
+        } else {
+          alert("保存エラー: " + (data.error || '不明なエラー'));
+        }
+      } catch (e) {
+        alert("エラー: " + e);
+      }
+    }
+
+    async function handleCompareDiscard() {
+      if (!dtCurrentCandidateFilename) return;
+      if (!confirm("この生成画像を破棄しますか？")) return;
+
+      const discardedFilename = dtCurrentCandidateFilename;
+      dtHistory = dtHistory.filter(h => h.url.split('/').pop() !== discardedFilename);
+      clearCompareCandidateImage();
+      updateHistoryPillCount();
+      renderWordCandidatesStrip();
+      renderDrawerList();
+
+      try {
+        await fetch(`${DT_SERVER}/api/discard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: discardedFilename })
+        });
+        showToast("🗑️ 生成画像を破棄しました");
+      } catch (e) {}
+    }
+
+    async function applyHistoryDirect(filename, wordId, wordName) {
+      if (!confirm(`「${wordName}」(${wordId}) の画像を本番として図鑑に反映しますか？`)) return;
+      try {
+        const res = await fetch(`${DT_SERVER}/api/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word_id: wordId, filename: filename })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (flaggedMap && flaggedMap[wordId]) {
+            delete flaggedMap[wordId];
+            saveFlagsToStorage();
+            updateStats();
+          }
+          if (dtCurrentWord && dtCurrentWord.id === wordId) {
+            loadCompareWord(dtCurrentWord);
+          }
+          showToast(`🎉「${wordName}」の本番画像を更新しました！`);
+          syncHistoryFromServer();
+        } else {
+          alert("保存エラー: " + data.error);
+        }
+      } catch (e) {
+        alert("エラー: " + e);
+      }
+    }
+
+    async function discardHistoryDirect(filename) {
+      if (!confirm("この生成画像を破棄しますか？")) return;
+      dtHistory = dtHistory.filter(h => h.url.split('/').pop() !== filename);
+      if (dtCurrentCandidateFilename === filename) {
+        clearCompareCandidateImage();
+      }
+      renderDrawerList();
+      updateHistoryPillCount();
+      renderWordCandidatesStrip();
+
+      try {
+        await fetch(`${DT_SERVER}/api/discard`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: filename })
+        });
+        showToast("🗑️ 画像を破棄しました");
+      } catch (e) {}
+    }
+
+    // ========================================================
+    // TOAST & UTILITIES
+    // ========================================================
     function showToast(msg) {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2500);
+      setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     function escapeHtml(str) {
@@ -2004,9 +3159,8 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+        .replace(/'/g, '&#39;');
     }
   </script>
 </body>
 </html>
-
