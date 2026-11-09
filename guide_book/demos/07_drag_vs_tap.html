@@ -241,32 +241,33 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
-      transition: filter 0.15s ease;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: left, top;
     }
     .shape-piece.tap-mode {
       cursor: pointer;
     }
     .shape-piece.dragging {
       cursor: grabbing;
-      filter: drop-shadow(0 14px 24px rgba(0,0,0,0.25));
-      transform: scale(1.08);
+      transform: scale(1.08) translateZ(0);
       z-index: 999;
-      opacity: 0.95;
+      opacity: 1;
+      transition: none !important;
     }
     .shape-piece.animating {
       transition: left 0.25s ease-out, top 0.25s ease-out, transform 0.2s ease;
     }
     .shape-piece.is-locked {
       cursor: default;
-      filter: drop-shadow(0 2px 4px rgba(21, 128, 61, 0.2));
     }
 
     /* 不正解タップ時のプルプル揺れ */
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-8px); }
-      40%, 80% { transform: translateX(8px); }
+      0%, 100% { transform: translateX(0) translateZ(0); }
+      20%, 60% { transform: translateX(-8px) translateZ(0); }
+      40%, 80% { transform: translateX(8px) translateZ(0); }
     }
     .shape-piece.shake {
       animation: shake 0.35s ease-in-out;
@@ -279,6 +280,8 @@
       border-radius: 50%;
       background: #ef4444; /* 赤マル */
       border: 3px solid #b91c1c;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: box-shadow 0.15s ease;
     }
     .shape-square {
       width: 100%;
@@ -286,15 +289,43 @@
       border-radius: 14px;
       background: #0284c7; /* 青シカク */
       border: 3px solid #0369a1;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: box-shadow 0.15s ease;
     }
     .shape-triangle {
       width: 100%;
       height: 100%;
+      overflow: visible;
     }
-    .shape-triangle polygon {
+    .shape-triangle .triangle-body {
       fill: #eab308; /* 黄サンカク */
       stroke: #ca8a04;
       stroke-width: 4;
+      stroke-linejoin: round;
+    }
+    .shape-triangle .triangle-shadow {
+      fill: rgba(0, 0, 0, 0.15);
+      stroke: rgba(0, 0, 0, 0.15);
+      stroke-width: 4;
+      stroke-linejoin: round;
+      transition: transform 0.15s ease, fill 0.15s ease;
+    }
+
+    /* ドラッグ時の影 */
+    .shape-piece.dragging .shape-circle,
+    .shape-piece.dragging .shape-square {
+      box-shadow: 0 14px 24px rgba(0,0,0,0.25);
+    }
+    .shape-piece.dragging .shape-triangle .triangle-shadow {
+      transform: translateY(6px);
+      fill: rgba(0, 0, 0, 0.22);
+      stroke: rgba(0, 0, 0, 0.22);
+    }
+
+    /* ロック時の影 */
+    .shape-piece.is-locked .shape-circle,
+    .shape-piece.is-locked .shape-square {
+      box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
     }
 
     /* 正解エフェクト */
@@ -524,7 +555,8 @@
           } else if (s.id === 'triangle') {
             pieceEl.innerHTML = `
               <svg viewBox="0 0 110 110" class="shape-triangle">
-                <polygon points="55,8 104,102 6,102" />
+                <polygon class="triangle-shadow" points="55,12 104,106 6,106" />
+                <polygon class="triangle-body" points="55,8 104,102 6,102" />
               </svg>
             `;
           }

@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>単語練習プリントメーカー</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-family: "UD デジタル 教科書体 N-R", "UD Digi Kyokasho N-R", "UDDigiKyokashoN-R",
+                     "UD デジタル 教科書体 NP-R", "UD Digi Kyokasho NP-R",
+                     "UD デジタル 教科書体 NK-R", "UD Digi Kyokasho NK-R",
+                     "UD デジタル 教科書体 N", "UD Digi Kyokasho N",
+                     "UD デジタル 教科書体", "UD Digi Kyokasho",
+                     "YuKyokasho", "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN",
+                     "Klee One", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: #525659;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #ffffff;
+      padding: 8px 18px;
+      border-bottom: 2px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .help-banner {
+      background-color: #e8f4fd;
+      border: 1px solid #b6e0fe;
+      border-radius: 4px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      color: #1a568c;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      align-items: center;
+    }
+
+    .help-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+    }
+
+    .child-manage-row {
+      background: #fdfaf0;
+      border: 1px solid #fae1af;
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .control-group label {
+      font-weight: normal;
+      cursor: pointer;
+    }
+
+    .group-title {
+      background: #e8ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      margin-right: 2px;
+    }
+
+    .group-title-child {
+      background: #ffecb3;
+      color: #8d4a00;
+      font-weight: bold;
+      padding: 3px 7px;
+      border-radius: 4px;
+      font-size: 12.5px;
+    }
+
+    select, button, input[type="text"], input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    select, button, input[type="text"] {
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    select:disabled {
+      background-color: #f0f0f0;
+      color: #aaa;
+      border-color: #ddd;
+      cursor: not-allowed;
+    }
+
+    button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      font-weight: bold;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    button:hover { background-color: #1976D2; }
+    button.btn-secondary { background-color: #4CAF50; }
+    button.btn-secondary:hover { background-color: #388E3C; }
+    button.btn-danger { background-color: #f44336; }
+    button.btn-danger:hover { background-color: #d32f2f; }
+    button.btn-random { background-color: #FF9800; }
+    button.btn-random:hover { background-color: #F57C00; }
+
+    button.btn-action {
+      background-color: #0288d1;
+      color: white;
+      font-size: 12.5px;
+      padding: 4px 9px;
+    }
+    button.btn-action:hover { background-color: #0277bd; }
+
+    button.btn-outline-danger {
+      background-color: transparent;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      font-size: 12px;
+      padding: 3px 7px;
+    }
+    button.btn-outline-danger:hover {
+      background-color: #ffebee;
+      border-color: #e53935;
+    }
+
+    button.btn-print {
+      background-color: #2e7d32;
+      color: white;
+      font-size: 13.5px;
+      padding: 5px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    button.btn-print:hover { background-color: #1b5e20; }
+
+    button.btn-print-all {
+      background-color: #e65100;
+      color: white;
+      font-size: 13.5px;
+      padding: 5px 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    button.btn-print-all:hover { background-color: #bf360c; }
+
+    .checkbox-group {
+      display: flex;
+      gap: 7px;
+      font-weight: normal;
+      font-size: 12px;
+      background: #f8f9fa;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .privacy-note { font-size: 11px; color: #666; font-weight: normal; }
+
+    .word-selector {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding-top: 5px;
+      border-top: 1px dashed #ddd;
+    }
+
+    .word-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f0f4f8;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .word-item select {
+      max-width: 130px;
+      font-size: 12px;
+      padding: 2px 4px;
+    }
+
+    .page-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      overflow: hidden;
+    }
+
+    .page-scale-container {
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
+    }
+
+    .sheet {
+      width: 297mm;
+      height: 210mm;
+      background: white;
+      padding: 3mm 8mm 1mm 8mm;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: space-between;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .words-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-grow: 1;
+      margin-right: 15px;
+      height: 100%;
+    }
+
+    .empty-state {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #b6e0fe;
+      background-color: #f4f9ff;
+      border-radius: 12px;
+      color: #2b547e;
+      padding: 30px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+    .empty-state-desc { font-size: 14px; line-height: 1.6; color: #555; }
+
+    .word-column {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .image-box {
+      width: var(--col-box-size, 90px);
+      height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 4px;
+    }
+
+    .image-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .char-row {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .grid-box {
+      width: var(--col-box-size, 90px);
+      height: var(--col-box-size, 90px);
+      border: 1.5px solid #000;
+      margin-top: -1.5px;
+      position: relative;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .grid-box:hover { background-color: #f5f5f5; }
+
+    .grid-box.show-grid::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      border-top: 1px dashed #e0e0e0;
+    }
+
+    .grid-box.show-grid::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      height: 100%;
+      border-left: 1px dashed #e0e0e0;
+    }
+
+    .grid-box.hide-trace .trace-char,
+    .name-box-single.hide-trace .name-single-trace {
+      display: none !important;
+    }
+
+    .sample-char {
+      margin-left: 2px;
+      font-size: calc(var(--col-box-size, 90px) * 0.38);
+      font-weight: normal;
+      color: #222;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .sample-char.hide-sample {
+      opacity: 0;
+    }
+
+    .sample-char.hide-sample:hover {
+      opacity: 0.3;
+    }
+
+    .trace-char {
+      font-size: calc(var(--col-box-size, 90px) * 0.72);
+      font-weight: normal;
+      color: #d2d2d2;
+      z-index: 1;
+      line-height: 1;
+      pointer-events: none;
+      transition: transform 0.1s ease;
+    }
+
+    .trace-char.small-char {
+      transform: translate(22%, -22%);
+    }
+
+    /* 長音「ー」などの縦書き対応 */
+    .choon-char {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      text-orientation: mixed;
+      font-feature-settings: "vrt2", "vert";
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .sample-char.choon-char {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      vertical-align: middle;
+    }
+
+    .name-column {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: 100%;
+    }
+
+    .name-label {
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      writing-mode: vertical-rl;
+      letter-spacing: 2px;
+      font-weight: normal;
+      align-self: center;
+      flex-shrink: 0;
+    }
+
+    .name-single-wrapper {
+      display: flex;
+      align-items: center;
+      height: 630px;
+      box-sizing: border-box;
+    }
+
+    .name-box-single {
+      width: 90px;
+      border: 1.5px solid #000;
+      height: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      overflow: hidden;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .name-box-single:hover { background-color: #f5f5f5; }
+
+    .name-single-trace {
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      font-feature-settings: "vrt2", "vert";
+      font-weight: normal;
+      color: #d2d2d2;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .name-single-sample-outside {
+      margin-left: 3px;
+      writing-mode: vertical-rl;
+      -webkit-writing-mode: vertical-rl;
+      font-feature-settings: "vrt2", "vert";
+      font-weight: normal;
+      color: #222;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.15s ease;
+      line-height: 1;
+    }
+
+    .name-single-sample-outside.hide-sample {
+      opacity: 0;
+    }
+
+    .name-single-sample-outside.hide-sample:hover {
+      opacity: 0.3;
+    }
+
+    .name-box-split {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 一括印刷用コンテナ */
+    #printAllContainer {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      body {
+        background: white;
+        min-height: auto;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .page-wrapper {
+        padding: 0;
+        overflow: visible;
+      }
+      .page-scale-container {
+        transform: none !important;
+      }
+      .sheet {
+        box-shadow: none;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .grid-box, .name-box-single {
+        cursor: default;
+      }
+      .grid-box:hover, .name-box-single:hover {
+        background-color: #fff;
+      }
+      .sample-char.hide-sample, .name-single-sample-outside.hide-sample {
+        opacity: 0 !important;
+      }
+
+      /* 通常印刷時（個別印刷） */
+      body:not(.printing-all) .sheet {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+
+      /* 全員分印刷モード時 */
+      body.printing-all #pageWrapper {
+        display: none !important;
+      }
+      body.printing-all #printAllContainer {
+        display: block !important;
+      }
+      .print-sheet {
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        width: 297mm;
+        height: 210mm;
+        box-sizing: border-box;
+        padding: 3mm 8mm 1mm 8mm;
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        background: white;
+      }
+      .print-sheet:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls no-print" id="controls">
+    <div class="help-banner">
+      <div class="help-item"><b>💡 使い方:</b> お子さんごとに名前や単語を保持でき、個別印刷・全員一括印刷に対応しています。</div>
+      <div class="help-item"><b>👆 マス/見本クリック:</b> マス枠で「なぞり」、見本文字で「見本」の表示・非表示を個別切替できます（設定は記憶されます）。</div>
+      <div class="help-item"><b>🎲 ランダム:</b> 選択中の「種類」から単語を自動選出します（手動変更しても選択は消えません）。</div>
+    </div>
+
+    <!-- お子さん管理 & 印刷 -->
+    <div class="control-row child-manage-row">
+      <div class="control-group">
+        <span class="group-title-child">🧒 お子さん</span>
+        <select id="childSelect" onchange="onChildSelectChange()" style="font-weight:bold; min-width:110px;"></select>
+        <button class="btn-action" onclick="addChildPrompt()">＋ 追加</button>
+        <button class="btn-action" onclick="renameChildPrompt()">✏️ 呼称変更</button>
+        <button class="btn-outline-danger" onclick="deleteCurrentChild()">🗑️ 削除</button>
+      </div>
+
+      <div class="control-group" style="margin-left: auto;">
+        <button class="btn-print" onclick="window.print()">🖨️ この子のプリントを印刷</button>
+        <button class="btn-print-all" onclick="printAllChildren()">📑 全員分まとめて印刷 (<span id="childTotalCount">1</span>人)</button>
+      </div>
+    </div>
+
+    <!-- 画像管理 -->
+    <div class="control-row">
+      <div class="control-group">
+        <button class="btn-secondary" onclick="triggerInput('folderInput')">📂 フォルダを開く</button>
+        <button class="btn-secondary" onclick="triggerInput('fileInput')">🖼️ ファイルを選択</button>
+        <button class="btn-danger" onclick="clearSavedImages()">🗑️ 画像クリア</button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleImageUpload(event)">
+        <input type="file" id="fileInput" multiple accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+      </div>
+      <span class="privacy-note" id="statusMsg">※画像はブラウザ内に自動保存されます（外部送信はありません）。</span>
+    </div>
+
+    <!-- プリント設定 -->
+    <div class="control-row">
+      <div class="control-group">
+        <label>単語数:</label>
+        <select id="wordCount" onchange="onWordCountChange()">
+          <option value="5">5語</option>
+          <option value="6">6語</option>
+          <option value="7" selected>7語</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>種類:</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" class="cat-check" value="seion" checked onchange="onCategoryChange()"> 清音</label>
+          <label><input type="checkbox" class="cat-check" value="dakuon" checked onchange="onCategoryChange()"> 濁音</label>
+          <label><input type="checkbox" class="cat-check" value="handakuon" checked onchange="onCategoryChange()"> 半濁音</label>
+          <label><input type="checkbox" class="cat-check" value="sokuon" checked onchange="onCategoryChange()"> 促音</label>
+          <label><input type="checkbox" class="cat-check" value="youon" checked onchange="onCategoryChange()"> 拗音</label>
+          <label><input type="checkbox" class="cat-check" value="choon" checked onchange="onCategoryChange()"> 長音</label>
+        </div>
+      </div>
+
+      <button class="btn-random" onclick="randomizeWords()">🎲 ランダムに選ぶ</button>
+
+      <div class="control-group">
+        <span class="group-title">単語</span>
+        <label><input type="checkbox" id="wordShowSample" checked onchange="onSettingChange()"> 見本</label>
+        <label><input type="checkbox" id="wordShowTrace" checked onchange="onSettingChange()"> なぞり</label>
+      </div>
+
+      <div class="control-group">
+        <span class="group-title">名前</span>
+        <label><input type="checkbox" id="nameShowSample" checked onchange="onSettingChange()"> 見本</label>
+        <label><input type="checkbox" id="nameShowTrace" checked onchange="onSettingChange()"> なぞり</label>
+      </div>
+
+      <div class="control-group">
+        <label><input type="checkbox" id="showGrid" checked onchange="onSettingChange()"> ガイド線</label>
+      </div>
+
+      <div class="control-group">
+        <label>なまえ枠:</label>
+        <select id="nameType" onchange="onNameTypeChange()">
+          <option value="single">1つの枠</option>
+          <option value="split" selected>分割枠</option>
+        </select>
+        <select id="nameLength" onchange="onNameLengthChange()">
+          <option value="2">2字</option>
+          <option value="3">3字</option>
+          <option value="4">4字</option>
+          <option value="5">5字</option>
+          <option value="6">6字</option>
+          <option value="7">7字</option>
+          <option value="8" selected>8字</option>
+          <option value="9">9字</option>
+          <option value="10">10字</option>
+        </select>
+        <input type="text" id="nameText" value="ひろしま太郎左衛門" style="width:130px;" placeholder="名前" oninput="onNameInput()">
+      </div>
+    </div>
+
+    <div class="word-selector" id="wordSelector">
+      <span style="font-size:12px; color:#666;">※画像を読み込むとここにリストが表示されます。</span>
+    </div>
+  </div>
+
+  <div class="page-wrapper" id="pageWrapper">
+    <div class="page-scale-container" id="scaleContainer">
+      <div class="sheet" id="sheet">
+        <div class="words-area" id="wordsArea"></div>
+        <div class="name-column" id="nameArea"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全員分印刷時にシートを展開する領域 -->
+  <div id="printAllContainer"></div>
+
+  <script>
+    let imageDatabase = [];
+    let db = null;
+
+    // カテゴリ定義
+    const CATEGORY_DEFINITIONS = {
+      seion: {
+        label: "清音",
+        test: (word) => {
+          return !/[がぎぐげござじずぜぞだぢづでどばびぶべぼガギグゲゴザジズゼゾダヂヅデドバビブベボ]/.test(word) &&
+                 !/[ぱぴぷぺぽパピプペポ]/.test(word) &&
+                 !/[っッ]/.test(word) &&
+                 !/[ゃゅょャュョ]/.test(word) &&
+                 !/[ー―‐－〜～]/.test(word);
+        }
+      },
+      dakuon: {
+        label: "濁音",
+        test: (word) => /[がぎぐげござじずぜぞだぢづでどばびぶべぼガギグゲゴザジズゼゾダヂヅデドバビブベボ]/.test(word)
+      },
+      handakuon: {
+        label: "半濁音",
+        test: (word) => /[ぱぴぷぺぽパピプペポ]/.test(word)
+      },
+      sokuon: {
+        label: "促音",
+        test: (word) => /[っッ]/.test(word)
+      },
+      youon: {
+        label: "拗音",
+        test: (word) => /[ゃゅょャュョ]/.test(word)
+      },
+      choon: {
+        label: "長音",
+        test: (word) => /[ー―‐－〜～]/.test(word)
+      }
+    };
+
+    // 子供データ構造
+    let childrenData = [];
+    let currentChildId = "";
+
+    function createDefaultChild(name = "こども1", printName = "ひろしま太郎左衛門") {
+      return {
+        id: "child_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+        name: name,
+        printName: printName,
+        nameType: "split",
+        nameLength: 8,
+        nameShowSample: true,
+        nameShowTrace: true,
+        wordCount: 7,
+        wordShowSample: true,
+        wordShowTrace: true,
+        showGrid: true,
+        selectedWords: [],
+        hiddenTraces: {},
+        hiddenSamples: {}
+      };
+    }
+
+    function getCurrentChild() {
+      let child = childrenData.find(c => c.id === currentChildId);
+      if (!child && childrenData.length > 0) {
+        currentChildId = childrenData[0].id;
+        child = childrenData[0];
+      }
+      return child;
+    }
+
+    /* IndexedDB 操作 */
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open("WordPrintDB", 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("images")) {
+            db.createObjectStore("images", { keyPath: "name" });
+          }
+        };
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          resolve(db);
+        };
+        request.onerror = (e) => reject(e);
+      });
+    }
+
+    async function saveImagesToDB(images) {
+      if (!db) return;
+      const tx = db.transaction("images", "readwrite");
+      const store = tx.objectStore("images");
+      for (let img of images) {
+        store.put(img);
+      }
+    }
+
+    async function loadImagesFromDB() {
+      if (!db) return [];
+      return new Promise((resolve) => {
+        const tx = db.transaction("images", "readonly");
+        const store = tx.objectStore("images");
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => resolve([]);
+      });
+    }
+
+    async function clearSavedImages() {
+      if (!confirm("保存されている画像データと設定をすべて消去しますか？")) return;
+      if (db) {
+        const tx = db.transaction("images", "readwrite");
+        tx.objectStore("images").clear();
+      }
+      localStorage.removeItem('WordPrintSettings');
+      localStorage.removeItem('WordPrintChildrenData');
+      localStorage.removeItem('WordPrintActiveChildId');
+      localStorage.removeItem('WordPrintCategorySettings');
+
+      imageDatabase = [];
+      childrenData = [createDefaultChild()];
+      currentChildId = childrenData[0].id;
+
+      updateChildSelectUI();
+      applyCurrentChildToControls();
+      setupWordSelector();
+      renderWorksheet();
+      document.getElementById('statusMsg').innerText = "※保存画像を消去しました。";
+    }
+
+    /* データ保存と復元 */
+    function saveAllData() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      // 現在のコントロール値を反映
+      child.wordCount = parseInt(document.getElementById('wordCount').value);
+      child.wordShowSample = document.getElementById('wordShowSample').checked;
+      child.wordShowTrace = document.getElementById('wordShowTrace').checked;
+      child.nameShowSample = document.getElementById('nameShowSample').checked;
+      child.nameShowTrace = document.getElementById('nameShowTrace').checked;
+      child.showGrid = document.getElementById('showGrid').checked;
+      child.nameType = document.getElementById('nameType').value;
+      child.nameLength = parseInt(document.getElementById('nameLength').value);
+      child.printName = document.getElementById('nameText').value;
+
+      // カテゴリチェック状態
+      const catSettings = Array.from(document.querySelectorAll('.cat-check')).map(cb => ({
+        value: cb.value,
+        checked: cb.checked
+      }));
+
+      try {
+        localStorage.setItem('WordPrintChildrenData', JSON.stringify(childrenData));
+        localStorage.setItem('WordPrintActiveChildId', currentChildId);
+        localStorage.setItem('WordPrintCategorySettings', JSON.stringify(catSettings));
+
+        // 旧設定キーへの互換書き出し（バックアップ）
+        const legacySettings = {
+          wordCount: child.wordCount.toString(),
+          categories: catSettings,
+          wordShowSample: child.wordShowSample,
+          wordShowTrace: child.wordShowTrace,
+          nameShowSample: child.nameShowSample,
+          nameShowTrace: child.nameShowTrace,
+          showGrid: child.showGrid,
+          nameType: child.nameType,
+          nameLength: child.nameLength.toString(),
+          nameText: child.printName,
+          selectedWordNames: child.selectedWords
+        };
+        localStorage.setItem('WordPrintSettings', JSON.stringify(legacySettings));
+      } catch (e) {
+        console.error("データの保存に失敗しました:", e);
+      }
+    }
+
+    function loadAllData() {
+      // カテゴリ設定の復元
+      const savedCats = localStorage.getItem('WordPrintCategorySettings');
+      if (savedCats) {
+        try {
+          const cats = JSON.parse(savedCats);
+          cats.forEach(c => {
+            const cb = document.querySelector(`.cat-check[value="${c.value}"]`);
+            if (cb) cb.checked = c.checked;
+          });
+        } catch (e) {}
+      }
+
+      // 子供データの復元
+      const savedChildren = localStorage.getItem('WordPrintChildrenData');
+      const savedActiveId = localStorage.getItem('WordPrintActiveChildId');
+
+      if (savedChildren) {
+        try {
+          childrenData = JSON.parse(savedChildren);
+          if (!Array.isArray(childrenData) || childrenData.length === 0) {
+            childrenData = [createDefaultChild()];
+          }
+          currentChildId = savedActiveId || childrenData[0].id;
+          if (!childrenData.some(c => c.id === currentChildId)) {
+            currentChildId = childrenData[0].id;
+          }
+          return;
+        } catch (e) {
+          console.error("子供データの読み込みエラー:", e);
+        }
+      }
+
+      // 旧フォーマット（WordPrintSettings）からのマイグレーション
+      const legacySaved = localStorage.getItem('WordPrintSettings');
+      if (legacySaved) {
+        try {
+          const s = JSON.parse(legacySaved);
+          const legacyChild = createDefaultChild("こども1", s.nameText || "ひろしま太郎左衛門");
+          if (s.wordCount) legacyChild.wordCount = parseInt(s.wordCount);
+          if (s.wordShowSample !== undefined) legacyChild.wordShowSample = s.wordShowSample;
+          if (s.wordShowTrace !== undefined) legacyChild.wordShowTrace = s.wordShowTrace;
+          if (s.nameShowSample !== undefined) legacyChild.nameShowSample = s.nameShowSample;
+          if (s.nameShowTrace !== undefined) legacyChild.nameShowTrace = s.nameShowTrace;
+          if (s.showGrid !== undefined) legacyChild.showGrid = s.showGrid;
+          if (s.nameType) legacyChild.nameType = s.nameType;
+          if (s.nameLength) legacyChild.nameLength = parseInt(s.nameLength);
+          if (s.selectedWordNames && Array.isArray(s.selectedWordNames)) {
+            legacyChild.selectedWords = s.selectedWordNames;
+          }
+          if (s.categories) {
+            s.categories.forEach(c => {
+              const cb = document.querySelector(`.cat-check[value="${c.value}"]`);
+              if (cb) cb.checked = c.checked;
+            });
+          }
+          childrenData = [legacyChild];
+          currentChildId = legacyChild.id;
+          saveAllData();
+          return;
+        } catch (e) {}
+      }
+
+      // デフォルト初期化
+      childrenData = [createDefaultChild()];
+      currentChildId = childrenData[0].id;
+    }
+
+    function applyCurrentChildToControls() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      document.getElementById('wordCount').value = child.wordCount;
+      document.getElementById('wordShowSample').checked = child.wordShowSample;
+      document.getElementById('wordShowTrace').checked = child.wordShowTrace;
+      document.getElementById('nameShowSample').checked = child.nameShowSample;
+      document.getElementById('nameShowTrace').checked = child.nameShowTrace;
+      document.getElementById('showGrid').checked = child.showGrid;
+      document.getElementById('nameType').value = child.nameType;
+      document.getElementById('nameLength').value = child.nameLength;
+      document.getElementById('nameText').value = child.printName;
+      document.getElementById('nameLength').disabled = (child.nameType === 'single');
+    }
+
+    function updateChildSelectUI() {
+      const select = document.getElementById('childSelect');
+      select.innerHTML = '';
+
+      childrenData.forEach(child => {
+        const opt = document.createElement('option');
+        opt.value = child.id;
+        opt.innerText = child.name + (child.printName ? ` (${child.printName})` : '');
+        if (child.id === currentChildId) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      document.getElementById('childTotalCount').innerText = childrenData.length;
+    }
+
+    function onChildSelectChange() {
+      const select = document.getElementById('childSelect');
+      currentChildId = select.value;
+      applyCurrentChildToControls();
+      setupWordSelector();
+      renderWorksheet();
+      saveAllData();
+    }
+
+    function addChildPrompt() {
+      const name = prompt("新しいお子さんの呼び名を入力してください（例: たろう、さくら）:", `こども${childrenData.length + 1}`);
+      if (!name || !name.trim()) return;
+
+      const current = getCurrentChild();
+      const trimmed = name.trim();
+      const newChild = createDefaultChild(trimmed, trimmed);
+
+      // 現在のお子さんの設定（単語数など）を引き継ぐ
+      if (current) {
+        newChild.wordCount = current.wordCount;
+        newChild.wordShowSample = current.wordShowSample;
+        newChild.wordShowTrace = current.wordShowTrace;
+        newChild.nameShowSample = current.nameShowSample;
+        newChild.nameShowTrace = current.nameShowTrace;
+        newChild.showGrid = current.showGrid;
+        newChild.nameType = current.nameType;
+        newChild.nameLength = Math.max(Math.min(trimmed.length, 10), 2);
+        newChild.selectedWords = [...current.selectedWords];
+      }
+
+      childrenData.push(newChild);
+      currentChildId = newChild.id;
+
+      updateChildSelectUI();
+      applyCurrentChildToControls();
+      setupWordSelector();
+      renderWorksheet();
+      saveAllData();
+    }
+
+    function renameChildPrompt() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const newName = prompt("お子さんの呼び名を変更してください:", child.name);
+      if (!newName || !newName.trim()) return;
+
+      child.name = newName.trim();
+      updateChildSelectUI();
+      saveAllData();
+    }
+
+    function deleteCurrentChild() {
+      if (childrenData.length <= 1) {
+        alert("登録されているお子さんが1人のため、削除できません。");
+        return;
+      }
+      const child = getCurrentChild();
+      if (!child) return;
+
+      if (!confirm(`「${child.name}」のプリント設定を削除しますか？`)) return;
+
+      const idx = childrenData.findIndex(c => c.id === child.id);
+      childrenData.splice(idx, 1);
+      currentChildId = childrenData[Math.max(0, idx - 1)].id;
+
+      updateChildSelectUI();
+      applyCurrentChildToControls();
+      setupWordSelector();
+      renderWorksheet();
+      saveAllData();
+    }
+
+    /* 画像アップロード処理 */
+    function triggerInput(id) {
+      const input = document.getElementById(id);
+      input.value = '';
+      input.click();
+    }
+
+    async function handleImageUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+
+      document.getElementById('statusMsg').innerText = "画像を処理中...";
+
+      const existingNames = new Set(imageDatabase.map(img => img.name));
+      const newImages = [];
+      let skippedCount = 0;
+
+      for (let file of files) {
+        if (file.type.startsWith('image/')) {
+          const wordName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+          if (existingNames.has(wordName)) {
+            skippedCount++;
+            continue;
+          }
+          const dataUrl = await readFileAsDataURL(file);
+          const imgObj = { name: wordName, url: dataUrl };
+          newImages.push(imgObj);
+          existingNames.add(wordName);
+        }
+      }
+
+      if (newImages.length > 0) {
+        imageDatabase.push(...newImages);
+        await saveImagesToDB(newImages);
+      }
+
+      const addedCount = newImages.length;
+      if (addedCount > 0) {
+        let msg = `※${addedCount}件の画像を追加しました。`;
+        if (skippedCount > 0) msg += `（${skippedCount}件は重複のためスキップ）`;
+        document.getElementById('statusMsg').innerText = msg;
+      } else if (skippedCount > 0) {
+        document.getElementById('statusMsg').innerText = `※選択された画像（${skippedCount}件）はすべて既に登録されています。`;
+      } else {
+        alert('画像ファイルが見つかりませんでした。');
+        document.getElementById('statusMsg').innerText = `※登録済み: ${imageDatabase.length}件`;
+        return;
+      }
+
+      setupWordSelector();
+      renderWorksheet();
+      saveAllData();
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* 単語の種類（カテゴリ）判定 */
+    function checkCategory(word, selectedCategories) {
+      if (!selectedCategories || selectedCategories.length === 0) return true;
+
+      return selectedCategories.some(cat => {
+        const def = CATEGORY_DEFINITIONS[cat];
+        return def ? def.test(word) : false;
+      });
+    }
+
+    function getSelectedCategories() {
+      return Array.from(document.querySelectorAll('.cat-check:checked')).map(cb => cb.value);
+    }
+
+    function getFilteredImages() {
+      const cats = getSelectedCategories();
+      return imageDatabase.filter(img => checkCategory(img.name, cats));
+    }
+
+    function onCategoryChange() {
+      // 種類チェックボックスの変更時は、現在選択されている単語は絶対に消さず、
+      // ドロップダウンのグループ表示のみを更新する
+      setupWordSelector();
+      saveAllData();
+    }
+
+    function onWordCountChange() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const newCount = parseInt(document.getElementById('wordCount').value);
+      child.wordCount = newCount;
+
+      setupWordSelector();
+      renderWordsArea();
+      saveAllData();
+    }
+
+    function onSettingChange() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      child.wordShowSample = document.getElementById('wordShowSample').checked;
+      child.wordShowTrace = document.getElementById('wordShowTrace').checked;
+      child.nameShowSample = document.getElementById('nameShowSample').checked;
+      child.nameShowTrace = document.getElementById('nameShowTrace').checked;
+      child.showGrid = document.getElementById('showGrid').checked;
+
+      renderWorksheet();
+      saveAllData();
+    }
+
+    function onNameTypeChange() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      child.nameType = document.getElementById('nameType').value;
+      document.getElementById('nameLength').disabled = (child.nameType === 'single');
+      onNameInput();
+    }
+
+    function onNameLengthChange() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      child.nameLength = parseInt(document.getElementById('nameLength').value);
+      renderNameArea();
+      saveAllData();
+    }
+
+    function onNameInput() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const text = document.getElementById('nameText').value;
+      child.printName = text;
+
+      if (child.nameType === 'split' && text.length > 0) {
+        const len = Math.max(Math.min(text.length, 10), 2);
+        child.nameLength = len;
+        document.getElementById('nameLength').value = len;
+      }
+
+      renderNameArea();
+
+      // セレクトの表示ラベルのみ更新（フォーカスを外さないよう直接更新）
+      const select = document.getElementById('childSelect');
+      const opt = select.querySelector(`option[value="${child.id}"]`);
+      if (opt) {
+        opt.innerText = child.name + (child.printName ? ` (${child.printName})` : '');
+      }
+
+      saveAllData();
+    }
+
+    /* 単語選択セレクタの生成（選択単語の完全保持） */
+    function setupWordSelector() {
+      const selector = document.getElementById('wordSelector');
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const count = child.wordCount;
+      const filteredList = getFilteredImages();
+
+      selector.innerHTML = '';
+
+      if (imageDatabase.length === 0) {
+        selector.innerHTML = '<span style="font-size:12px; color:#666;">※画像を読み込むとここにリストが表示されます。</span>';
+        return;
+      }
+
+      // 配列の長さを補正
+      while (child.selectedWords.length < count) {
+        const pool = filteredList.length > 0 ? filteredList : imageDatabase;
+        const defaultImg = pool[child.selectedWords.length % pool.length];
+        child.selectedWords.push(defaultImg ? defaultImg.name : '');
+      }
+
+      for (let i = 0; i < count; i++) {
+        const item = document.createElement('div');
+        item.className = 'word-item';
+
+        const label = document.createElement('span');
+        label.innerText = `${i + 1}:`;
+
+        const select = document.createElement('select');
+        select.dataset.index = i;
+        select.onchange = (e) => {
+          const idx = parseInt(e.target.dataset.index);
+          child.selectedWords[idx] = e.target.value;
+          renderWordsArea();
+          saveAllData();
+        };
+
+        const currentWordName = child.selectedWords[i] || '';
+
+        // ドロップダウン候補：選択中の種類に合う単語 ＋ その他の単語
+        const filteredNames = new Set(filteredList.map(img => img.name));
+        const otherList = imageDatabase.filter(img => !filteredNames.has(img.name));
+
+        if (filteredList.length > 0) {
+          const groupFiltered = document.createElement('optgroup');
+          groupFiltered.label = '【選択中の種類】';
+          filteredList.forEach(img => {
+            const opt = document.createElement('option');
+            opt.value = img.name;
+            opt.innerText = img.name;
+            groupFiltered.appendChild(opt);
+          });
+          select.appendChild(groupFiltered);
+        }
+
+        if (otherList.length > 0) {
+          const groupOther = document.createElement('optgroup');
+          groupOther.label = filteredList.length > 0 ? '【その他の登録単語】' : '【すべての登録単語】';
+          otherList.forEach(img => {
+            const opt = document.createElement('option');
+            opt.value = img.name;
+            opt.innerText = img.name;
+            groupOther.appendChild(opt);
+          });
+          select.appendChild(groupOther);
+        }
+
+        // 現在選択中の単語が万が一データベースにない場合でも option を追加して選択維持
+        const allDbNames = imageDatabase.map(img => img.name);
+        if (currentWordName && !allDbNames.includes(currentWordName)) {
+          const opt = document.createElement('option');
+          opt.value = currentWordName;
+          opt.innerText = currentWordName;
+          select.insertBefore(opt, select.firstChild);
+        }
+
+        // 値のセット（現在選択中の単語を必ず維持）
+        if (currentWordName && (allDbNames.includes(currentWordName) || select.querySelector(`option[value="${currentWordName}"]`))) {
+          select.value = currentWordName;
+        } else if (filteredList.length > 0) {
+          select.value = filteredList[i % filteredList.length].name;
+          child.selectedWords[i] = select.value;
+        } else if (imageDatabase.length > 0) {
+          select.value = imageDatabase[i % imageDatabase.length].name;
+          child.selectedWords[i] = select.value;
+        }
+
+        item.appendChild(label);
+        item.appendChild(select);
+        selector.appendChild(item);
+      }
+    }
+
+    /* ランダム単語選出 */
+    function randomizeWords() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const filteredList = getFilteredImages();
+      if (filteredList.length === 0) {
+        alert('チェックされている「種類」に合致する画像がありません。清音・濁音などにチェックを入れてください。');
+        return;
+      }
+
+      const count = child.wordCount;
+      const shuffled = [...filteredList].sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < count; i++) {
+        child.selectedWords[i] = shuffled[i % shuffled.length].name;
+      }
+
+      setupWordSelector();
+      renderWordsArea();
+      saveAllData();
+    }
+
+    function calculateColBoxSize(wordLength) {
+      const baseSize = 90;
+      const availableHeightPx = 630;
+      const maxBoxSize = Math.floor(availableHeightPx / wordLength);
+
+      return Math.max(Math.min(baseSize, maxBoxSize), 35);
+    }
+
+    function isSmallCharacter(char) {
+      return /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ]/.test(char);
+    }
+
+    // 長音符・ダッシュ判定（縦書き対応）
+    function isProlongedSoundMark(char) {
+      return /[ー―‐－〜～]/.test(char);
+    }
+
+    /* 個別クリックによる表示・非表示のトグル */
+    function toggleTrace(element, child, key) {
+      element.classList.toggle('hide-trace');
+      if (child && key) {
+        if (!child.hiddenTraces) child.hiddenTraces = {};
+        child.hiddenTraces[key] = element.classList.contains('hide-trace');
+        saveAllData();
+      }
+    }
+
+    function toggleSample(element, child, key) {
+      element.classList.toggle('hide-sample');
+      if (child && key) {
+        if (!child.hiddenSamples) child.hiddenSamples = {};
+        child.hiddenSamples[key] = element.classList.contains('hide-sample');
+        saveAllData();
+      }
+    }
+
+    /* 単語エリアの描画ロジック */
+    function populateWordsArea(wordsArea, child) {
+      wordsArea.innerHTML = '';
+
+      if (imageDatabase.length === 0) {
+        wordsArea.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🖼️</div>
+            <div class="empty-state-title">単語画像が登録されていません</div>
+            <div class="empty-state-desc">
+              画面上の <b>「📂 フォルダを開く」</b> または <b>「🖼️ ファイルを選択」</b> ボタンから<br>
+              単語の画像（ファイル名が単語名になります）を読み込んでください。<br>
+              一度読み込むと、次回以降も自動で保存・追加読み込みされます。
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const wordCount = child.wordCount;
+      const wordShowSample = child.wordShowSample;
+      const wordShowTrace = child.wordShowTrace;
+      const showGrid = child.showGrid;
+
+      for (let i = 0; i < wordCount; i++) {
+        const wordName = child.selectedWords[i] || '';
+        const imgObj = imageDatabase.find(img => img.name === wordName) || null;
+
+        const col = document.createElement('div');
+        col.className = 'word-column';
+
+        const wordText = wordName;
+        const wordLen = Math.max(wordText.length, 1);
+
+        const colBoxSize = calculateColBoxSize(wordLen);
+        col.style.setProperty('--col-box-size', `${colBoxSize}px`);
+
+        const imgBox = document.createElement('div');
+        imgBox.className = 'image-box';
+        if (imgObj) {
+          const img = document.createElement('img');
+          img.src = imgObj.url;
+          imgBox.appendChild(img);
+        }
+        col.appendChild(imgBox);
+
+        for (let charIdx = 0; charIdx < wordText.length; charIdx++) {
+          const char = wordText[charIdx];
+          const traceKey = `w_${i}_${charIdx}`;
+          const sampleKey = `ws_${i}_${charIdx}`;
+
+          const isTraceHidden = (!wordShowTrace) || (child.hiddenTraces && child.hiddenTraces[traceKey]);
+          const isSampleHidden = (!wordShowSample) || (child.hiddenSamples && child.hiddenSamples[sampleKey]);
+
+          const row = document.createElement('div');
+          row.className = 'char-row';
+
+          const box = document.createElement('div');
+          box.className = `grid-box ${showGrid ? 'show-grid' : ''} ${isTraceHidden ? 'hide-trace' : ''}`;
+          box.onclick = () => toggleTrace(box, child, traceKey);
+
+          const traceSpan = document.createElement('span');
+          traceSpan.className = 'trace-char';
+          if (isSmallCharacter(char)) {
+            traceSpan.classList.add('small-char');
+          }
+          if (isProlongedSoundMark(char)) {
+            traceSpan.classList.add('choon-char');
+          }
+          traceSpan.innerText = char;
+          box.appendChild(traceSpan);
+          row.appendChild(box);
+
+          const sampleSpan = document.createElement('span');
+          sampleSpan.className = `sample-char ${isSampleHidden ? 'hide-sample' : ''}`;
+          if (isProlongedSoundMark(char)) {
+            sampleSpan.classList.add('choon-char');
+          }
+          sampleSpan.innerText = char;
+          sampleSpan.onclick = () => toggleSample(sampleSpan, child, sampleKey);
+          row.appendChild(sampleSpan);
+
+          col.appendChild(row);
+        }
+
+        wordsArea.appendChild(col);
+      }
+    }
+
+    /* 名前エリアの描画ロジック */
+    function populateNameArea(nameArea, child) {
+      nameArea.innerHTML = '';
+
+      const nameShowSample = child.nameShowSample;
+      const nameShowTrace = child.nameShowTrace;
+      const showGrid = child.showGrid;
+      const nameType = child.nameType;
+      const nameLength = child.nameLength;
+      const nameText = child.printName || 'ひろしま太郎左衛門';
+
+      const nameLabel = document.createElement('div');
+      nameLabel.className = 'name-label';
+      nameLabel.innerText = 'なまえ';
+      nameArea.appendChild(nameLabel);
+
+      if (nameType === 'single') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'name-single-wrapper';
+
+        const singleTraceKey = 'name_single_trace';
+        const singleSampleKey = 'name_single_sample';
+
+        const isTraceHidden = (!nameShowTrace) || (child.hiddenTraces && child.hiddenTraces[singleTraceKey]);
+        const isSampleHidden = (!nameShowSample) || (child.hiddenSamples && child.hiddenSamples[singleSampleKey]);
+
+        const singleBox = document.createElement('div');
+        singleBox.className = `name-box-single ${isTraceHidden ? 'hide-trace' : ''}`;
+        singleBox.onclick = () => toggleTrace(singleBox, child, singleTraceKey);
+
+        const traceSpan = document.createElement('div');
+        traceSpan.className = 'name-single-trace';
+        traceSpan.innerText = nameText;
+
+        const nameLen = Math.max(nameText.length, 1);
+        const traceFontSize = Math.min(50, Math.floor(500 / nameLen));
+        const traceLetterSpacing = Math.min(10, Math.floor(traceFontSize * 0.2));
+        traceSpan.style.fontSize = `${traceFontSize}px`;
+        traceSpan.style.letterSpacing = `${traceLetterSpacing}px`;
+
+        singleBox.appendChild(traceSpan);
+        wrapper.appendChild(singleBox);
+
+        const sampleSpan = document.createElement('div');
+        sampleSpan.className = `name-single-sample-outside ${isSampleHidden ? 'hide-sample' : ''}`;
+        sampleSpan.innerText = nameText;
+
+        const sampleFontSize = Math.min(24, Math.floor(500 / nameLen * 0.45));
+        const sampleLetterSpacing = Math.min(6, Math.floor(sampleFontSize * 0.25));
+        sampleSpan.style.fontSize = `${sampleFontSize}px`;
+        sampleSpan.style.letterSpacing = `${sampleLetterSpacing}px`;
+
+        sampleSpan.onclick = () => toggleSample(sampleSpan, child, singleSampleKey);
+        wrapper.appendChild(sampleSpan);
+
+        nameArea.appendChild(wrapper);
+      } else {
+        const splitBox = document.createElement('div');
+        splitBox.className = 'name-box-split';
+
+        const nameBoxSize = calculateColBoxSize(nameLength);
+        splitBox.style.setProperty('--col-box-size', `${nameBoxSize}px`);
+
+        for (let i = 0; i < nameLength; i++) {
+          const char = nameText[i] || '';
+          const traceKey = `name_split_${i}`;
+          const sampleKey = `name_splits_${i}`;
+
+          const isTraceHidden = (!nameShowTrace) || (child.hiddenTraces && child.hiddenTraces[traceKey]);
+          const isSampleHidden = (!nameShowSample) || (child.hiddenSamples && child.hiddenSamples[sampleKey]);
+
+          const row = document.createElement('div');
+          row.className = 'char-row';
+
+          const box = document.createElement('div');
+          box.className = `grid-box ${showGrid ? 'show-grid' : ''} ${isTraceHidden ? 'hide-trace' : ''}`;
+          box.onclick = () => toggleTrace(box, child, traceKey);
+
+          const traceSpan = document.createElement('span');
+          traceSpan.className = 'trace-char';
+          if (isSmallCharacter(char)) {
+            traceSpan.classList.add('small-char');
+          }
+          if (isProlongedSoundMark(char)) {
+            traceSpan.classList.add('choon-char');
+          }
+          traceSpan.innerText = char;
+          box.appendChild(traceSpan);
+          row.appendChild(box);
+
+          const sampleSpan = document.createElement('span');
+          sampleSpan.className = `sample-char ${isSampleHidden ? 'hide-sample' : ''}`;
+          if (isProlongedSoundMark(char)) {
+            sampleSpan.classList.add('choon-char');
+          }
+          sampleSpan.innerText = char;
+          sampleSpan.onclick = () => toggleSample(sampleSpan, child, sampleKey);
+          row.appendChild(sampleSpan);
+
+          splitBox.appendChild(row);
+        }
+        nameArea.appendChild(splitBox);
+      }
+    }
+
+    /* プレビュー画面のレンダリング */
+    function renderWorksheet() {
+      renderWordsArea();
+      renderNameArea();
+    }
+
+    function renderWordsArea() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const wordsArea = document.getElementById('wordsArea');
+      if (wordsArea) {
+        populateWordsArea(wordsArea, child);
+      }
+      fitPreviewToScreen();
+    }
+
+    function renderNameArea() {
+      const child = getCurrentChild();
+      if (!child) return;
+
+      const nameArea = document.getElementById('nameArea');
+      if (nameArea) {
+        populateNameArea(nameArea, child);
+      }
+      fitPreviewToScreen();
+    }
+
+    /* 全員分印刷機能 */
+    function createPrintSheetForChild(child) {
+      const sheet = document.createElement('div');
+      sheet.className = 'sheet print-sheet';
+
+      const wordsArea = document.createElement('div');
+      wordsArea.className = 'words-area';
+      populateWordsArea(wordsArea, child);
+
+      const nameArea = document.createElement('div');
+      nameArea.className = 'name-column';
+      populateNameArea(nameArea, child);
+
+      sheet.appendChild(wordsArea);
+      sheet.appendChild(nameArea);
+
+      return sheet;
+    }
+
+    function printAllChildren() {
+      if (!childrenData || childrenData.length === 0) return;
+
+      const printContainer = document.getElementById('printAllContainer');
+      printContainer.innerHTML = '';
+
+      childrenData.forEach(child => {
+        const sheet = createPrintSheetForChild(child);
+        printContainer.appendChild(sheet);
+      });
+
+      document.body.classList.add('printing-all');
+      window.print();
+    }
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-all');
+      const printContainer = document.getElementById('printAllContainer');
+      if (printContainer) printContainer.innerHTML = '';
+    });
+
+    /* プレビュー画面のスケーリング */
+    function fitPreviewToScreen() {
+      const controls = document.getElementById('controls');
+      const wrapper = document.getElementById('pageWrapper');
+      const container = document.getElementById('scaleContainer');
+      const sheet = document.getElementById('sheet');
+
+      if (!controls || !wrapper || !container || !sheet) return;
+
+      const availWidth = wrapper.clientWidth - 20;
+      const availHeight = window.innerHeight - controls.offsetHeight - 25;
+
+      const scaleX = availWidth / sheet.offsetWidth;
+      const scaleY = availHeight / sheet.offsetHeight;
+
+      const scale = Math.min(scaleX, scaleY, 1);
+      container.style.transform = `scale(${Math.max(scale, 0.2)})`;
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initDB();
+      const savedImages = await loadImagesFromDB();
+      if (savedImages.length > 0) {
+        imageDatabase = savedImages;
+        document.getElementById('statusMsg').innerText = `※保存済みの画像${imageDatabase.length}件を自動読み込みしました。`;
+      }
+
+      loadAllData();
+      updateChildSelectUI();
+      applyCurrentChildToControls();
+      setupWordSelector();
+      renderWorksheet();
+    });
+
+    window.addEventListener('resize', fitPreviewToScreen);
+  </script>
+</body>
+</html>

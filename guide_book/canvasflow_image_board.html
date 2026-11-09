@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CanvasFlow - 画像プレゼンテーションボード</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for crisp modern icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Klee One Font for elegant handwriting style -->
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Klee One', sans-serif;
+            overflow: hidden;
+            touch-action: none; /* Prevent browser default touch scroll / multi-touch zoom pinch */
+        }
+        /* Header Toggle glide transition */
+        #appHeader {
+            transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        /* Discrete subtle dotted grid overlay that moves on panning */
+        .bg-grid-dynamic {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(128, 128, 128, 0.08) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(128, 128, 128, 0.08) 1px, transparent 1px);
+        }
+        /* Selection state halo effect (Only active when NOT transparent) */
+        .selected-image-container:not(.bg-transparent) {
+            outline: 3px solid #3b82f6;
+            outline-offset: 4px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        /* Hover visual warning during deleting mode */
+        .mode-delete .image-wrapper:hover {
+            outline: 3px solid #f43f5e !important;
+            outline-offset: 4px;
+            box-shadow: 0 10px 25px -5px rgba(244, 63, 94, 0.4);
+        }
+        .mode-delete .image-wrapper {
+            cursor: pointer !important;
+        }
+        /* Hide scrollbars across elements */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        /* Text area default color (non-transparent cards) */
+        .text-editor-area {
+            color: #f1f5f9; /* Slate 100 (Beautiful soft white on dark gray cards) */
+            transition: color 0.25s ease;
+        }
+        /* Dynamic complementary color applied automatically only when the card is transparent */
+        .image-wrapper.bg-transparent .text-editor-area {
+            color: var(--text-comp-color, #f1f5f9) !important;
+        }
+    </style>
+</head>
+<body class="text-slate-100 h-screen w-screen relative overflow-hidden select-none">
+
+    <!-- Top Header and Control Bar -->
+    <header id="appHeader" class="fixed top-0 left-0 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center z-50 gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
+                <i class="fa-solid fa-shapes text-xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">CanvasFlow</h1>
+                <p class="text-xs text-slate-400">インタラクティブ画像ボード</p>
+            </div>
+        </div>
+
+        <!-- Controls Block -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Upload Image Button -->
+            <label class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium px-4 py-2.5 rounded-xl cursor-pointer shadow-lg shadow-blue-500/10 transition-all flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>画像を追加</span>
+                <input type="file" id="imageInput" multiple accept="image/*" class="hidden">
+            </label>
+
+            <!-- Text Add Button -->
+            <button onclick="addTextObject()" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 border border-slate-700 font-medium px-4 py-2.5 rounded-xl cursor-pointer shadow-lg transition-all flex items-center gap-2 text-sm mr-1">
+                <i class="fa-solid fa-file-signature text-amber-400"></i>
+                <span>テキストを追加</span>
+            </button>
+
+            <!-- Workspace Mode Selector -->
+            <div class="flex bg-slate-800/80 p-1 rounded-xl gap-1 mr-1">
+                <button id="modeEdit" onclick="setAppMode('edit')" class="mode-btn text-white bg-blue-600/20 border border-blue-500/30 w-11 h-9 rounded-lg flex flex-col items-center justify-center transition-all" title="操作モード">
+                    <i class="fa-solid fa-arrows-up-down-left-right text-xs"></i>
+                    <span class="text-[8px] mt-0.5 font-bold">操作</span>
+                </button>
+                <button id="modeDraw" onclick="setAppMode('draw')" class="mode-btn text-slate-400 hover:text-white w-11 h-9 rounded-lg flex flex-col items-center justify-center transition-all" title="手書きアノテーションモード">
+                    <i class="fa-solid fa-pen-nib text-xs"></i>
+                    <span class="text-[8px] mt-0.5 font-bold">手書き</span>
+                </button>
+                <button id="modeLock" onclick="setAppMode('lock')" class="mode-btn text-slate-400 hover:text-white w-11 h-9 rounded-lg flex flex-col items-center justify-center transition-all" title="画像をロック（キャンバス操作のみ）">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                    <span class="text-[8px] mt-0.5 font-bold">固定</span>
+                </button>
+                <button id="modeDelete" onclick="setAppMode('delete')" class="mode-btn text-slate-400 hover:text-white w-11 h-9 rounded-lg flex flex-col items-center justify-center transition-all" title="クイック削除モード">
+                    <i class="fa-solid fa-eraser text-xs"></i>
+                    <span class="text-[8px] mt-0.5 font-bold">削除</span>
+                </button>
+            </div>
+
+            <!-- Axis Constraints Drag Lock Button -->
+            <button id="btnAxisLock" onclick="toggleAxisLock()" class="bg-slate-800/80 hover:bg-slate-700 text-slate-400 w-11 h-9 rounded-lg flex flex-col items-center justify-center transition-all border border-transparent mr-2" title="直線の縦横ドラッグロック機能">
+                <i class="fa-solid fa-arrows-up-to-line text-xs"></i>
+                <span class="text-[8px] mt-0.5 font-bold">軸固定</span>
+            </button>
+
+            <div class="h-8 w-[1px] bg-slate-800 mx-0.5"></div>
+
+            <!-- Arrangement Presets & Grid Options -->
+            <div class="flex bg-slate-800/80 p-1.5 rounded-xl items-center gap-1.5 flex-wrap">
+                <!-- Sorted by Name by default -->
+                <select id="sortSelect" class="bg-slate-900 text-slate-200 text-xs px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer" title="並べ替え基準">
+                    <option value="name" selected>名前順</option>
+                    <option value="added">読み込み順</option>
+                    <option value="random">ランダム</option>
+                </select>
+
+                <!-- Grid Dimension Custom Selectors -->
+                <div class="flex items-center gap-1 bg-slate-900/50 px-2 py-1 rounded-lg border border-slate-700/60 text-[11px]">
+                    <span class="text-slate-400 font-medium">横:</span>
+                    <select id="colsSelect" class="bg-slate-950 text-slate-200 text-xs py-0.5 rounded focus:outline-none cursor-pointer">
+                        <option value="auto">自動</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                    <span class="text-slate-500 mx-0.5">|</span>
+                    <span class="text-slate-400 font-medium">縦:</span>
+                    <select id="rowsSelect" class="bg-slate-950 text-slate-200 text-xs py-0.5 rounded focus:outline-none cursor-pointer">
+                        <option value="auto">自動</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+
+                <!-- Orientation Layout Selector -->
+                <select id="layoutDirection" class="bg-slate-900 text-slate-200 text-xs px-2 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer" title="整列の方向">
+                    <option value="ltr" selected>横並べ</option>
+                    <option value="rtl">縦並べ</option>
+                </select>
+                
+                <!-- Highly Outstanding Eye-catching Green Action Align Button -->
+                <button id="btnGrid" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:from-emerald-600 active:to-teal-700 text-white font-bold px-4 py-1.5 rounded-lg transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.03] active:scale-95 flex items-center gap-1 text-xs" title="格子状に並べる">
+                    <i class="fa-solid fa-table-cells-large text-[10px]"></i>
+                    <span>整列</span>
+                </button>
+            </div>
+
+            <div class="h-8 w-[1px] bg-slate-800 mx-1"></div>
+            
+            <!-- Safe Native Color Picker Trigger -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="triggerColorPicker()" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center justify-center transition-all active:scale-95" title="背景色をカスタマイズ">
+                    <i class="fa-solid fa-palette text-lg text-amber-400"></i>
+                </button>
+                <input type="color" id="bgColorInput" class="hidden" value="#000000" oninput="changeBgColor(this.value)" onchange="changeBgColor(this.value)">
+
+                <!-- Bulk background transparency button -->
+                <button id="btnBulkTrans" onclick="toggleAllBgTransparency()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-10 h-10 rounded-xl flex items-center justify-center border border-slate-700 transition-all" title="すべてのカード枠を透過・復元（一括背景透過）">
+                    <i class="fa-solid fa-circle-half-stroke text-base"></i>
+                </button>
+            </div>
+
+            <!-- Clear Canvas Button -->
+            <div class="h-8 w-[1px] bg-slate-800 mx-1"></div>
+            <button id="btnClear" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 p-2.5 rounded-xl transition-all" title="すべてのアイテムを消去">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+            
+            <!-- Notification Toggle Button -->
+            <button id="btnToggleNotice" onclick="toggleNoticeSettings()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-10 h-10 rounded-xl flex items-center justify-center border border-slate-700 transition-all" title="通知表示のオン/オフ">
+                <i id="noticeIcon" class="fa-solid fa-bell text-emerald-400"></i>
+            </button>
+
+            <!-- Help Button -->
+            <button id="btnHelp" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-10 h-10 rounded-xl flex items-center justify-center border border-slate-700 transition-all" title="使い方">
+                <i class="fa-solid fa-question"></i>
+            </button>
+        </div>
+
+        <!-- Sleek Folding Tab -->
+        <button id="btnToggleHeader" onclick="toggleHeader()" class="absolute bottom-[-28px] left-1/2 -translate-x-1/2 bg-slate-900/95 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border-b border-x border-slate-800/80 backdrop-blur-md px-4 py-1 rounded-b-xl shadow-lg transition-all flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold hover:pb-1.5 pointer-events-auto" title="コントロールバーの表示/非表示">
+            <i id="toggleHeaderIcon" class="fa-solid fa-chevron-up transition-transform duration-300"></i>
+            <span id="toggleHeaderTxt">コントロールを隠す</span>
+        </button>
+    </header>
+
+    <!-- Interactive Board Container (Workspace) -->
+    <main id="workspace" style="background-color: #000000;" class="absolute inset-0 overflow-hidden transition-colors duration-300 cursor-grab active:cursor-grabbing">
+        
+        <!-- Initial Dropzone Prompt -->
+        <div id="dropzonePrompt" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 pointer-events-none transition-opacity duration-300 z-10">
+            <div class="w-20 h-20 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex items-center justify-center text-slate-400 mb-4 animate-bounce">
+                <i class="fa-solid fa-images text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-semibold text-slate-200 mb-2">画像やテキストを配置して開始</h2>
+            <p class="text-sm text-slate-400 max-w-sm mb-6 leading-relaxed">
+                画像をここにドロップするか、上部のメニューから写真やテキストカードを配置してください。
+            </p>
+            <div class="flex items-center gap-6 text-xs text-slate-500 flex-wrap justify-center">
+                <span><i class="fa-solid fa-mouse-pointer mr-1"></i> ドラッグ: 移動 / 背景ドラッグ: キャンバス移動</span>
+                <span><i class="fa-solid fa-maximize mr-1"></i> ピンチ・ホイール: ズーム (1%〜無制限)</span>
+            </div>
+            <div class="mt-4 text-[11px] text-slate-600 bg-slate-950/40 px-3 py-1.5 rounded-lg max-w-md">
+                <i class="fa-solid fa-keyboard mr-1"></i> <strong>Shiftキー</strong>を押しながらドラッグ（または「<strong>軸固定</strong>」をON）すると、縦横に美しくまっすぐ直線移動できます。
+            </div>
+        </div>
+
+        <!-- Dynamic elements will be rendered inside this canvas wrapper -->
+        <div id="canvas-inner" class="absolute inset-0 w-full h-full pointer-events-auto bg-grid-dynamic transform origin-top-left transition-colors duration-300">
+            <!-- Infinite Handwritten Annotation Canvas Layer (z-index is maximized to stay on top of images) -->
+            <canvas id="drawCanvas" class="absolute pointer-events-none" width="8000" height="8000" style="top: -4000px; left: -4000px; width: 8000px; height: 8000px; z-index: 999999;"></canvas>
+        </div>
+
+        <!-- Floating Pen annotation toolbar (Visible only in 'draw' mode) -->
+        <div id="drawToolbar" class="hidden absolute bottom-6 left-6 bg-slate-900/95 border border-slate-800 p-3 rounded-2xl shadow-2xl z-40 flex items-center gap-3 backdrop-blur-md transition-all">
+            <!-- Pen Colors -->
+            <div class="flex gap-1.5 items-center border-r border-slate-800 pr-3">
+                <button onclick="setPenColor('#ef4444')" class="pen-color-btn w-6 h-6 rounded-full bg-red-500 border-2 border-white focus:outline-none transition-transform" title="赤"></button>
+                <button onclick="setPenColor('#3b82f6')" class="pen-color-btn w-6 h-6 rounded-full bg-blue-500 border-2 border-transparent hover:scale-105 focus:outline-none transition-transform" title="青"></button>
+                <button onclick="setPenColor('#10b981')" class="pen-color-btn w-6 h-6 rounded-full bg-emerald-500 border-2 border-transparent hover:scale-105 focus:outline-none transition-transform" title="緑"></button>
+                <button onclick="setPenColor('#eab308')" class="pen-color-btn w-6 h-6 rounded-full bg-yellow-500 border-2 border-transparent hover:scale-105 focus:outline-none transition-transform" title="黄"></button>
+                <button id="dynamicDarkLightColor" onclick="setPenColor('#ffffff')" class="pen-color-btn w-6 h-6 rounded-full bg-white border-2 border-transparent hover:scale-105 focus:outline-none transition-transform" title="白"></button>
+            </div>
+            <!-- Pen Thickness Slider (Upgraded supporting up to 100px) -->
+            <div class="flex items-center gap-2 border-r border-slate-800 pr-3 min-w-[130px]">
+                <span class="text-[10px] text-slate-400 font-bold whitespace-nowrap">太さ:</span>
+                <input type="range" id="penWidthSlider" min="1" max="100" value="6" class="w-20 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="updatePenWidthFromSlider(this.value)" title="ペンの太さを調整 (1px〜100px)">
+                <span id="txtPenWidth" class="text-[10px] font-bold text-slate-300 min-w-[28px] text-right">6px</span>
+            </div>
+            <!-- Drawing Actions -->
+            <div class="flex gap-1.5 items-center">
+                <button onclick="undoDraw()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all" title="1つ戻す">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                </button>
+                <button onclick="clearDraw()" class="bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all" title="手書きを全消去">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Floating Zoom Panel (Bottom Right) -->
+        <div class="absolute bottom-6 right-6 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl z-40 flex items-center gap-1.5 backdrop-blur-md">
+            <button id="btnZoomOut" class="w-9 h-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl flex items-center justify-center transition-all" title="ズームアウト">
+                <i class="fa-solid fa-minus text-xs"></i>
+            </button>
+            <span id="txtCanvasZoom" class="text-xs font-semibold text-slate-400 min-w-[48px] text-center">100%</span>
+            <button id="btnZoomIn" class="w-9 h-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl flex items-center justify-center transition-all" title="ズームイン">
+                <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+            <div class="h-6 w-[1px] bg-slate-800 mx-1"></div>
+            <button id="btnZoomReset" class="px-3 h-9 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl flex items-center justify-center text-xs font-medium transition-all" title="ズームをリセット">
+                リセット
+            </button>
+        </div>
+    </main>
+
+    <!-- Floating Help Panel -->
+    <div id="helpModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button id="btnCloseHelp" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-lg font-bold text-slate-100 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-question text-blue-500"></i> CanvasFlow の使い方
+            </h3>
+            <div class="space-y-4 text-sm text-slate-300">
+                <div class="flex gap-3">
+                    <div class="bg-slate-800 text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-file-signature text-xs text-amber-400"></i>
+                    </div>
+                    <p><strong>テキスト追加と編集:</strong> 新しいテキストを追加し、枠内を<strong>ダブルクリック</strong>してその場で文字を入力できます。枠外クリックで保存されます。</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-slate-800 text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrows-up-down-left-right text-xs"></i>
+                    </div>
+                    <p><strong>操作モード:</strong> 配置やズームが行えます。画像や文字をダブルクリックで中央に配置させられます。</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-slate-800 text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-arrows-up-to-line text-xs"></i>
+                    </div>
+                    <p><strong>軸固定ドラッグ:</strong> ✥ボタンをONにするか、または<strong>`Shift`キーを押しながらドラッグ</strong>することで、縦・横に直線移動できます。</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-slate-800 text-blue-400 w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-circle-half-stroke text-xs"></i>
+                    </div>
+                    <p><strong>カード背景透過:</strong> 背景を透明にし、写真の被写体やテキスト文字だけを綺麗に浮かび上がらせることができます。</p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button id="btnConfirmHelp" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition-all">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Engine -->
+    <script>
+        // Global variables for tracking canvas state
+        let activeImages = []; // Stores both Image Objects and Text Objects
+        let maxZIndex = 10;
+        let selectedImageId = null;
+
+        // Workspace operation modes: 'edit', 'draw', 'lock', 'delete'
+        let currentMode = 'edit';
+
+        // Axis restriction constraint togglers
+        let isAxisLockEnabled = false;
+
+        // Global state for whole-canvas zoom and pan (Infinite Canvas)
+        let canvasZoom = 1;
+        let canvasPanX = 0;
+        let canvasPanY = 0;
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        
+        // Touch tracking for whole-canvas gestures
+        let canvasTouchStartDist = 0;
+        let canvasInitialZoom = 1;
+        let canvasTouchMode = 'none';
+
+        // Window sizing for relative movement scaling
+        let prevWidth = window.innerWidth;
+        let prevHeight = window.innerHeight;
+
+        // Header folding state tracking
+        let isHeaderHidden = false;
+
+        // Notification active setting flag
+        let isNoticeEnabled = true;
+
+        // Handwritten Annotation Drawing States
+        let isDrawing = false;
+        let drawingPaths = []; // Array of { points: [{x, y}], color, width }
+        let currentPath = null;
+        let currentPenColor = '#ef4444';
+        let currentPenWidth = 6;
+
+        // Track text editing active status to avoid key conflict
+        let isEditingText = false;
+
+        const workspace = document.getElementById('workspace');
+        const canvasInner = document.getElementById('canvas-inner');
+        const imageInput = document.getElementById('imageInput');
+        const dropzonePrompt = document.getElementById('dropzonePrompt');
+        const txtCanvasZoom = document.getElementById('txtCanvasZoom');
+        
+        const appHeader = document.getElementById('appHeader');
+        const btnToggleHeader = document.getElementById('btnToggleHeader');
+        const toggleHeaderIcon = document.getElementById('toggleHeaderIcon');
+        const toggleHeaderTxt = document.getElementById('toggleHeaderTxt');
+
+        // Drawing Layer Selectors
+        const drawCanvas = document.getElementById('drawCanvas');
+        const drawCtx = drawCanvas.getContext('2d');
+        const drawToolbar = document.getElementById('drawToolbar');
+
+        // Initial setup on window load
+        window.onload = function() {
+            setupDragAndDrop();
+            setupCanvasInteraction();
+            setupWindowResize();
+            setupZoomControls();
+            setupHelpModal();
+            setupHandwriting();
+            updateCanvasTransform();
+            // Apply default background and compute its initial complementary text color
+            changeBgColor('#000000');
+            setAppMode('edit'); // Initialize default mode
+        };
+
+        // --- iOS-style Trigger Safe Color Picker ---
+        function triggerColorPicker() {
+            document.getElementById('bgColorInput').click();
+        }
+
+        // 背景の明るさ（輝度）を判定し、最も読みやすい「白」か「黒」の2択を返すシンプルで頑丈なアルゴリズム
+        function getComplementaryColor(hex) {
+            if (hex.indexOf('#') === 0) {
+                hex = hex.slice(1);
+            }
+            if (hex.length === 3) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            if (hex.length !== 6) {
+                return '#f8fafc'; // デフォルトは上品な白 (Slate 50)
+            }
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+
+            // 輝度（YIQ formula）を計算
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+            // 128（中間値）を境に、明るい背景なら「黒 (Slate 900)」、暗い背景なら「白 (Slate 50)」を100%保証
+            return brightness > 128 ? '#0f172a' : '#f8fafc';
+        }
+
+        function changeBgColor(color) {
+            // Paint ONLY the absolute bottom background layer of workspace safely
+            workspace.style.backgroundColor = color;
+            
+            // Calculate and inject the dynamic complementary color as a CSS variable for text objects
+            const compColor = getComplementaryColor(color);
+            workspace.style.setProperty('--text-comp-color', compColor);
+            
+            // Adapt dynamic brush white/black indicators based on background lightness
+            const r = parseInt(color.substring(1, 3), 16);
+            const g = parseInt(color.substring(3, 5), 16);
+            const b = parseInt(color.substring(5, 7), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            
+            const dynPenColorBtn = document.getElementById('dynamicDarkLightColor');
+            if (dynPenColorBtn) {
+                if (brightness > 125) {
+                    dynPenColorBtn.style.backgroundColor = '#000000';
+                    dynPenColorBtn.title = '黒';
+                    if (currentPenColor === '#ffffff') currentPenColor = '#000000';
+                } else {
+                    dynPenColorBtn.style.backgroundColor = '#ffffff';
+                    dynPenColorBtn.title = '白';
+                    if (currentPenColor === '#000000') currentPenColor = '#ffffff';
+                }
+            }
+        }
+
+        // --- Toggle Notice Display Settings ---
+        function toggleNoticeSettings() {
+            isNoticeEnabled = !isNoticeEnabled;
+            const btn = document.getElementById('btnToggleNotice');
+            const icon = document.getElementById('noticeIcon');
+            
+            if (isNoticeEnabled) {
+                icon.className = 'fa-solid fa-bell text-emerald-400';
+                btn.title = '通知：オン';
+                showNotice("通知メッセージを有効にしました。");
+            } else {
+                icon.className = 'fa-solid fa-bell-slash text-slate-500';
+                btn.title = '通知：オフ';
+            }
+        }
+
+        // --- Axis Drag Lock Configuration Toggle ---
+        function toggleAxisLock() {
+            isAxisLockEnabled = !isAxisLockEnabled;
+            const btn = document.getElementById('btnAxisLock');
+            if (isAxisLockEnabled) {
+                btn.classList.remove('text-slate-400');
+                btn.classList.add('text-white', 'bg-emerald-600/20', 'border-emerald-500/40');
+                showNotice("ドラッグ軸固定を有効にしました。縦・横方向に直線移動できます。");
+            } else {
+                btn.classList.remove('text-white', 'bg-emerald-600/20', 'border-emerald-500/40');
+                btn.classList.add('text-slate-400');
+                showNotice("ドラッグ軸固定を解除しました（Shiftキーでも一時的にロック可能です）。");
+            }
+        }
+
+        // --- App Work Mode Control Flow ---
+        function setAppMode(mode) {
+            currentMode = mode;
+
+            // Update UI buttons styling
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('text-white', 'bg-blue-600/20', 'border', 'border-blue-500/30');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('text-white', 'bg-blue-600/20', 'border', 'border-blue-500/30');
+            }
+
+            // Sync visual class with wrapper container
+            workspace.classList.remove('mode-edit', 'mode-draw', 'mode-lock', 'mode-delete');
+            workspace.classList.add(`mode-${mode}`);
+
+            // Toggle handwritten drawing layer and toolbar visibility
+            if (mode === 'draw') {
+                drawCanvas.classList.remove('pointer-events-none');
+                drawToolbar.classList.remove('hidden');
+                dropzonePrompt.classList.add('opacity-0', 'pointer-events-none');
+            } else {
+                drawCanvas.classList.add('pointer-events-none');
+                drawToolbar.classList.add('hidden');
+                if (activeImages.length === 0) {
+                    dropzonePrompt.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            }
+
+            // Apply direct interactive state settings to each active card
+            activeImages.forEach(img => {
+                const el = img.element;
+                const closeBtn = el.querySelector('button[onclick^="deleteImage"]');
+                const transBtn = el.querySelector('.bg-trans-btn');
+
+                if (mode === 'draw') {
+                    el.classList.add('pointer-events-none');
+                    el.classList.remove('selected-image-container');
+                    if (closeBtn) closeBtn.classList.add('hidden');
+                    if (transBtn) transBtn.classList.add('hidden');
+                } else if (mode === 'lock') {
+                    el.classList.remove('pointer-events-none');
+                    el.classList.remove('selected-image-container');
+                    if (closeBtn) closeBtn.classList.add('hidden');
+                    if (transBtn) transBtn.classList.add('hidden');
+                } else {
+                    el.classList.remove('pointer-events-none');
+                    if (closeBtn) closeBtn.classList.remove('hidden');
+                    if (transBtn) transBtn.classList.remove('hidden');
+
+                    if (mode === 'delete') {
+                        el.classList.remove('selected-image-container');
+                    }
+                }
+            });
+
+            // Status message notices
+            if (mode === 'lock') {
+                showNotice("画像を固定しました。ダブルクリックで画像を中央に配置できます。");
+            } else if (mode === 'edit') {
+                showNotice("画像操作モードに切り替えました。");
+            } else if (mode === 'delete') {
+                showNotice("クイック削除モード。画像をクリックするだけで消去できます。");
+            } else if (mode === 'draw') {
+                showNotice("手書きモード。画面いっぱいにメモやスケッチを書き込めます。");
+            }
+        }
+
+        // --- Handwriting Feature Core Mechanics ---
+        function setupHandwriting() {
+            function getLocalCoordinates(clientX, clientY) {
+                const rect = workspace.getBoundingClientRect();
+                const workspaceX = (clientX - rect.left - canvasPanX) / canvasZoom;
+                const workspaceY = (clientY - rect.top - canvasPanY) / canvasZoom;
+                return {
+                    x: workspaceX + 4000,
+                    y: workspaceY + 4000
+                };
+            }
+
+            function startDrawing(e) {
+                if (currentMode !== 'draw') return;
+                
+                if (e.touches && e.touches.length > 1) {
+                    isDrawing = false;
+                    return;
+                }
+
+                isDrawing = true;
+                const clientPointer = e.touches ? e.touches[0] : e;
+                const coords = getLocalCoordinates(clientPointer.clientX, clientPointer.clientY);
+
+                currentPath = {
+                    points: [coords],
+                    color: currentPenColor,
+                    width: currentPenWidth
+                };
+                drawingPaths.push(currentPath);
+                
+                redrawAllInk();
+            }
+
+            function drawMove(e) {
+                if (!isDrawing || currentMode !== 'draw') return;
+                if (e.touches && e.touches.length > 1) return;
+
+                const clientPointer = e.touches ? e.touches[0] : e;
+                const coords = getLocalCoordinates(clientPointer.clientX, clientPointer.clientY);
+
+                if (currentPath) {
+                    currentPath.points.push(coords);
+                    redrawAllInk();
+                }
+            }
+
+            function stopDrawing() {
+                isDrawing = false;
+                currentPath = null;
+            }
+
+            // Mouse Action Bindings
+            drawCanvas.addEventListener('mousedown', startDrawing);
+            window.addEventListener('mousemove', drawMove);
+            window.addEventListener('mouseup', stopDrawing);
+
+            // Touch Action Bindings
+            drawCanvas.addEventListener('touchstart', startDrawing, { passive: true });
+            window.addEventListener('touchmove', drawMove, { passive: true });
+            window.addEventListener('touchend', stopDrawing);
+        }
+
+        function redrawAllInk() {
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+            drawingPaths.forEach(path => {
+                if (path.points.length < 1) return;
+
+                drawCtx.beginPath();
+                drawCtx.strokeStyle = path.color;
+                drawCtx.lineWidth = path.width;
+                drawCtx.lineCap = 'round';
+                drawCtx.lineJoin = 'round';
+
+                drawCtx.moveTo(path.points[0].x, path.points[0].y);
+                
+                for (let i = 1; i < path.points.length; i++) {
+                    drawCtx.lineTo(path.points[i].x, path.points[i].y);
+                }
+                drawCtx.stroke();
+            });
+        }
+
+        function setPenColor(color) {
+            currentPenColor = color;
+            document.querySelectorAll('.pen-color-btn').forEach(btn => {
+                btn.classList.remove('border-white', 'border-slate-800');
+                btn.classList.add('border-transparent');
+            });
+            event.currentTarget.classList.remove('border-transparent');
+            event.currentTarget.classList.add(color === '#ffffff' ? 'border-slate-800' : 'border-white');
+        }
+
+        function updatePenWidthFromSlider(val) {
+            currentPenWidth = parseInt(val, 10);
+            const txt = document.getElementById('txtPenWidth');
+            if (txt) {
+                txt.innerText = `${val}px`;
+            }
+        }
+
+        function undoDraw() {
+            if (drawingPaths.length > 0) {
+                drawingPaths.pop();
+                redrawAllInk();
+            }
+        }
+
+        function clearDraw() {
+            if (drawingPaths.length === 0) return;
+            const confirmWipe = window.confirm("すべての手書きアノテーションを完全に消去しますか？");
+            if (confirmWipe) {
+                drawingPaths = [];
+                redrawAllInk();
+            }
+        }
+
+        // Header folding glide
+        function toggleHeader() {
+            isHeaderHidden = !isHeaderHidden;
+
+            if (isHeaderHidden) {
+                appHeader.style.transform = 'translateY(-100%)';
+                toggleHeaderIcon.className = 'fa-solid fa-chevron-down';
+                toggleHeaderTxt.innerText = 'コントロールを表示';
+                showNotice("コントロールバーを非表示にしました。");
+            } else {
+                appHeader.style.transform = 'translateY(0)';
+                toggleHeaderIcon.className = 'fa-solid fa-chevron-up';
+                toggleHeaderTxt.innerText = 'コントロールを隠す';
+            }
+        }
+
+        // --- Board Viewport Navigation Controls ---
+        function setupCanvasInteraction() {
+            let activeAxis = null; // 'x' for horizontal lock, 'y' for vertical lock
+
+            // --- PC Mouse Drag (Pan) ---
+            workspace.addEventListener('mousedown', (e) => {
+                if (currentMode === 'draw' || isEditingText) return;
+
+                if (e.target === workspace || e.target === canvasInner || e.target.closest('#dropzonePrompt') || currentMode === 'lock') {
+                    isPanning = true;
+                    panStartX = e.clientX - canvasPanX;
+                    panStartY = e.clientY - canvasPanY;
+                    activeAxis = null;
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isPanning && currentMode !== 'draw') {
+                    let targetX = e.clientX - panStartX;
+                    let targetY = e.clientY - panStartY;
+
+                    // Apply Shift Lock key constraints or UI Toggle button constraints
+                    if (e.shiftKey || isAxisLockEnabled) {
+                        if (!activeAxis) {
+                            const rawDx = targetX - canvasPanX;
+                            const rawDy = targetY - canvasPanY;
+                            if (Math.abs(rawDx) > 4 || Math.abs(rawDy) > 4) {
+                                activeAxis = Math.abs(rawDx) > Math.abs(rawDy) ? 'x' : 'y';
+                            }
+                        }
+                        
+                        if (activeAxis === 'x') {
+                            canvasPanX = targetX;
+                        } else if (activeAxis === 'y') {
+                            canvasPanY = targetY;
+                        }
+                    } else {
+                        activeAxis = null;
+                        canvasPanX = targetX;
+                        canvasPanY = targetY;
+                    }
+                    updateCanvasTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isPanning = false;
+                activeAxis = null;
+            });
+
+            // --- PC Mouse Wheel ---
+            workspace.addEventListener('wheel', (e) => {
+                if (isEditingText) return;
+                if (e.target === workspace || e.target === canvasInner || e.target === drawCanvas || e.target.closest('#dropzonePrompt') || currentMode === 'lock') {
+                    e.preventDefault();
+                    
+                    const zoomFactor = 1.15;
+                    const mouseX = e.clientX;
+                    const mouseY = e.clientY;
+                    
+                    const localX = (mouseX - canvasPanX) / canvasZoom;
+                    const localY = (mouseY - canvasPanY) / canvasZoom;
+                    
+                    if (e.deltaY < 0) {
+                        canvasZoom = canvasZoom * zoomFactor;
+                    } else {
+                        canvasZoom = Math.max(canvasZoom / zoomFactor, 0.01);
+                    }
+                    
+                    canvasPanX = mouseX - localX * canvasZoom;
+                    canvasPanY = mouseY - localY * canvasZoom;
+                    
+                    updateCanvasTransform();
+                }
+            }, { passive: false });
+
+            // --- Mobile / Tablet Touch Gestures (Pan & Pinch Zoom) ---
+            workspace.addEventListener('touchstart', (e) => {
+                if (currentMode === 'draw' || isEditingText) {
+                    if (e.touches.length === 2) {
+                        canvasTouchMode = 'pinch';
+                        isPanning = false;
+                        canvasInitialZoom = canvasZoom;
+                        canvasTouchStartDist = getTouchDistance(e.touches);
+                        
+                        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        this.gestureLocalX = (midX - canvasPanX) / canvasZoom;
+                        this.gestureLocalY = (midY - canvasPanY) / canvasZoom;
+                        this.gestureMidX = midX;
+                        this.gestureMidY = midY;
+                    }
+                    return;
+                }
+
+                if (e.target === workspace || e.target === canvasInner || e.target.closest('#dropzonePrompt') || currentMode === 'lock') {
+                    if (e.touches.length === 1) {
+                        canvasTouchMode = 'drag';
+                        isPanning = true;
+                        panStartX = e.touches[0].clientX - canvasPanX;
+                        panStartY = e.touches[0].clientY - canvasPanY;
+                        activeAxis = null;
+                    } else if (e.touches.length === 2) {
+                        canvasTouchMode = 'pinch';
+                        isPanning = false;
+                        canvasInitialZoom = canvasZoom;
+                        canvasTouchStartDist = getTouchDistance(e.touches);
+                        
+                        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        this.gestureLocalX = (midX - canvasPanX) / canvasZoom;
+                        this.gestureLocalY = (midY - canvasPanY) / canvasZoom;
+                        this.gestureMidX = midX;
+                        this.gestureMidY = midY;
+                    }
+                }
+            }, { passive: true });
+
+            workspace.addEventListener('touchmove', (e) => {
+                if (isEditingText) return;
+                if (canvasTouchMode === 'drag' && isPanning && e.touches.length === 1 && currentMode !== 'draw') {
+                    let targetX = e.touches[0].clientX - panStartX;
+                    let targetY = e.touches[0].clientY - panStartY;
+
+                    // Apply Axis restrictions on touch moves
+                    if (isAxisLockEnabled) {
+                        if (!activeAxis) {
+                            const rawDx = targetX - canvasPanX;
+                            const rawDy = targetY - canvasPanY;
+                            if (Math.abs(rawDx) > 4 || Math.abs(rawDy) > 4) {
+                                activeAxis = Math.abs(rawDx) > Math.abs(rawDy) ? 'x' : 'y';
+                            }
+                        }
+                        
+                        if (activeAxis === 'x') {
+                            canvasPanX = targetX;
+                        } else if (activeAxis === 'y') {
+                            canvasPanY = targetY;
+                        }
+                    } else {
+                        activeAxis = null;
+                        canvasPanX = targetX;
+                        canvasPanY = targetY;
+                    }
+                    updateCanvasTransform();
+                } else if (canvasTouchMode === 'pinch' && e.touches.length === 2) {
+                    const currentDist = getTouchDistance(e.touches);
+                    if (canvasTouchStartDist > 0) {
+                        const factor = currentDist / canvasTouchStartDist;
+                        const targetZoom = Math.max(0.01, canvasInitialZoom * factor);
+                        
+                        canvasZoom = targetZoom;
+                        canvasPanX = this.gestureMidX - this.gestureLocalX * canvasZoom;
+                        canvasPanY = this.gestureMidY - this.gestureLocalY * canvasZoom;
+                        
+                        updateCanvasTransform();
+                    }
+                }
+            }, { passive: true });
+
+            workspace.addEventListener('touchend', () => {
+                isPanning = false;
+                canvasTouchMode = 'none';
+                activeAxis = null;
+            });
+        }
+
+        function updateCanvasTransform() {
+            canvasInner.style.transform = `translate(${canvasPanX}px, ${canvasPanY}px) scale(${canvasZoom})`;
+            txtCanvasZoom.innerText = `${Math.round(canvasZoom * 100)}%`;
+        }
+
+        function setupZoomControls() {
+            const step = 1.25;
+            const centerCanvas = (targetZoom) => {
+                const wW = workspace.clientWidth;
+                const wH = workspace.clientHeight;
+                
+                let centerX = wW / 2;
+                let centerY = wH / 2;
+
+                if (activeImages.length > 0) {
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    activeImages.forEach(img => {
+                        minX = Math.min(minX, img.x);
+                        minY = Math.min(minY, img.y);
+                        maxX = Math.max(maxX, img.x + (img.element.offsetWidth || 250));
+                        maxY = Math.max(maxY, img.y + (img.element.offsetHeight || 250));
+                    });
+                    centerX = (minX + maxX) / 2;
+                    centerY = (minY + maxY) / 2;
+                }
+
+                canvasZoom = targetZoom;
+                canvasPanX = wW / 2 - centerX * canvasZoom;
+                canvasPanY = wH / 2 - centerY * canvasZoom;
+                updateCanvasTransform();
+            };
+
+            document.getElementById('btnZoomIn').addEventListener('click', () => {
+                const nextZoom = canvasZoom * step;
+                centerCanvas(nextZoom);
+            });
+
+            document.getElementById('btnZoomOut').addEventListener('click', () => {
+                const nextZoom = Math.max(canvasZoom / step, 0.01);
+                centerCanvas(nextZoom);
+            });
+
+            document.getElementById('btnZoomReset').addEventListener('click', () => {
+                canvasZoom = 1;
+                canvasPanX = 0;
+                canvasPanY = 0;
+                updateCanvasTransform();
+            });
+        }
+
+        // --- Safe Parallel Image Upload Pipeline ---
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                workspace.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                workspace.addEventListener(eventName, () => {
+                    workspace.classList.add('ring-4', 'ring-blue-500/30', 'ring-inset');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                workspace.addEventListener(eventName, () => {
+                    workspace.classList.remove('ring-4', 'ring-blue-500/30', 'ring-inset');
+                }, false);
+            });
+
+            workspace.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        function handleFiles(files) {
+            const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+            if (imageFiles.length === 0) return;
+
+            dropzonePrompt.classList.add('opacity-0', 'pointer-events-none');
+
+            imageFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    createImageElement(e.target.result, file.name, index);
+                };
+                reader.onerror = function() {
+                    showNotice("画像の読み込みに失敗しました。");
+                };
+                reader.readAsDataURL(file);
+            });
+            imageInput.value = '';
+        }
+
+        // CREATE IMAGE CARD
+        function createImageElement(src, name, index) {
+            const id = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            const imgObj = {
+                id: id,
+                name: name,
+                isText: false, // Flag to identify images vs text
+                addedAt: Date.now() + index,
+                x: 0,
+                y: 0,
+                scale: 1,
+                rotation: 0,
+                aspectRatio: 1,
+                isTransparent: false,
+                zIndex: ++maxZIndex
+            };
+
+            const wrapper = document.createElement('div');
+            wrapper.id = id;
+            wrapper.className = "image-wrapper absolute p-2 bg-slate-800 rounded-xl shadow-md border border-slate-700/80 cursor-grab active:cursor-grabbing select-none transition-shadow duration-200 group";
+            wrapper.style.zIndex = imgObj.zIndex;
+            wrapper.style.transformOrigin = "center center";
+
+            if (currentMode === 'draw') {
+                wrapper.classList.add('pointer-events-none');
+            }
+
+            wrapper.innerHTML = `
+                <div class="relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center overflow-hidden rounded-lg bg-slate-900">
+                    <div class="animate-spin text-blue-500 text-lg">
+                        <i class="fa-solid fa-spinner"></i>
+                    </div>
+                </div>
+            `;
+
+            canvasInner.appendChild(wrapper);
+
+            const img = new Image();
+            img.onload = function() {
+                const wWidth = workspace.clientWidth;
+                const wHeight = workspace.clientHeight;
+                
+                imgObj.aspectRatio = img.width / img.height;
+                const displayWidth = Math.min(Math.max(wWidth * 0.25, 200), 320);
+                const displayHeight = displayWidth / imgObj.aspectRatio;
+
+                const offset = index * 25;
+                const viewCenterX = (wWidth / 2 - canvasPanX) / canvasZoom;
+                const viewCenterY = (wHeight / 2 - canvasPanY) / canvasZoom;
+                
+                imgObj.x = viewCenterX - (displayWidth / 2) + offset;
+                imgObj.y = viewCenterY - (displayHeight / 2) + offset;
+
+                wrapper.innerHTML = `
+                    <div class="relative overflow-hidden rounded-lg bg-slate-900 pointer-events-none">
+                        <img src="${src}" alt="${name}" class="w-full h-auto block select-none pointer-events-none" style="width: ${displayWidth}px; height: ${displayHeight}px;">
+                    </div>
+                    <!-- Close button -->
+                    <button class="absolute -top-2 -right-2 bg-rose-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-rose-600 focus:outline-none shadow-lg shadow-rose-500/20 z-10 ${currentMode === 'lock' ? 'hidden' : ''}" onclick="deleteImage('${id}', event)">
+                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                    </button>
+                    <!-- Background Transparency Toggle button -->
+                    <button class="bg-trans-btn absolute -top-2 right-6 bg-slate-800 text-slate-200 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-slate-750 focus:outline-none shadow-lg z-10 border border-slate-700 ${currentMode === 'lock' ? 'hidden' : ''}" onclick="toggleBgTransparency('${id}', event)" title="背景透過のオン/オフ">
+                        <i class="fa-solid fa-circle-half-stroke text-[10px]"></i>
+                    </button>
+                    <!-- Info Badge -->
+                    <span class="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md text-[10px] text-slate-300 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+                        ${Math.round(imgObj.scale * 100)}%
+                    </span>
+                `;
+
+                imgObj.element = wrapper;
+                activeImages.push(imgObj);
+                
+                updateTransform(imgObj);
+                attachInteractions(imgObj);
+                if (currentMode !== 'lock' && currentMode !== 'delete') {
+                    selectImage(id);
+                }
+            };
+            img.src = src;
+        }
+
+        // CREATE STATIC TEXT OBJECT
+        function addTextObject() {
+            dropzonePrompt.classList.add('opacity-0', 'pointer-events-none');
+
+            const id = 'txt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const index = activeImages.length;
+
+            const textObj = {
+                id: id,
+                name: 'ダブルクリックして編集',
+                isText: true, // Flag to identify text vs images
+                addedAt: Date.now() + index,
+                x: 0,
+                y: 0,
+                scale: 1,
+                rotation: 0,
+                aspectRatio: 1.5,
+                isTransparent: false,
+                zIndex: ++maxZIndex
+            };
+
+            const wWidth = workspace.clientWidth;
+            const wHeight = workspace.clientHeight;
+
+            // Positioning in center with slight offset
+            const offset = index * 20;
+            const viewCenterX = (wWidth / 2 - canvasPanX) / canvasZoom;
+            const viewCenterY = (wHeight / 2 - canvasPanY) / canvasZoom;
+
+            textObj.x = viewCenterX - 130 + offset;
+            textObj.y = viewCenterY - 50 + offset;
+
+            const wrapper = document.createElement('div');
+            wrapper.id = id;
+            wrapper.className = "image-wrapper absolute p-4 bg-slate-800/95 rounded-2xl shadow-xl border border-slate-700/80 cursor-grab active:cursor-grabbing select-none transition-shadow duration-200 group min-w-[220px] max-w-[420px]";
+            wrapper.style.zIndex = textObj.zIndex;
+            wrapper.style.transformOrigin = "center center";
+
+            if (currentMode === 'draw') {
+                wrapper.classList.add('pointer-events-none');
+            }
+
+            // Editable Text Area - Style dynamically with parent classes instead of inline style colors
+            wrapper.innerHTML = `
+                <div class="relative min-h-[50px] flex items-center justify-center pointer-events-none">
+                    <div class="text-editor-area outline-none break-words text-xl font-semibold leading-relaxed w-full text-center whitespace-pre-wrap select-none" contenteditable="false" style="font-family: 'Klee One', sans-serif;">ダブルクリックして編集</div>
+                </div>
+                <!-- Close button -->
+                <button class="absolute -top-2 -right-2 bg-rose-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-rose-600 focus:outline-none shadow-lg shadow-rose-500/20 z-10 ${currentMode === 'lock' ? 'hidden' : ''}" onclick="deleteImage('${id}', event)">
+                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                </button>
+                <!-- Background Transparency Toggle button -->
+                <button class="bg-trans-btn absolute -top-2 right-6 bg-slate-800 text-slate-200 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-slate-750 focus:outline-none shadow-lg z-10 border border-slate-700 ${currentMode === 'lock' ? 'hidden' : ''}" onclick="toggleBgTransparency('${id}', event)" title="背景透過のオン/オフ">
+                    <i class="fa-solid fa-circle-half-stroke text-[10px]"></i>
+                </button>
+                <!-- Info Badge -->
+                <span class="absolute bottom-2 left-3 bg-slate-950/80 backdrop-blur-md text-[9px] text-slate-400 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
+                    ${Math.round(textObj.scale * 100)}%
+                </span>
+            `;
+
+            canvasInner.appendChild(wrapper);
+
+            textObj.element = wrapper;
+            activeImages.push(textObj);
+
+            updateTransform(textObj);
+            attachInteractions(textObj);
+            setupTextEditing(textObj);
+
+            if (currentMode !== 'lock' && currentMode !== 'delete') {
+                selectImage(id);
+            }
+
+            showNotice("テキストカードを追加しました。");
+        }
+
+        // SETUP IN-PLACE DOUBLE CLICK TEXT EDITING
+        function setupTextEditing(textObj) {
+            const el = textObj.element;
+            const textContainer = el.querySelector('.relative');
+            const textEditor = el.querySelector('.text-editor-area');
+
+            if (!textEditor) return;
+
+            // Trigger editable states on double click / tap
+            el.addEventListener('dblclick', (e) => {
+                if (currentMode === 'draw') return;
+                e.stopPropagation();
+
+                // Prevent editing while in delete mode
+                if (currentMode === 'delete') {
+                    deleteImage(textObj.id, e);
+                    return;
+                }
+
+                // Enable HTML5 ContentEditable and temporarily restore text selection pointer events
+                textContainer.classList.remove('pointer-events-none');
+                textEditor.contentEditable = "true";
+                textEditor.classList.remove('select-none');
+                textEditor.classList.add('select-text', 'cursor-text');
+                textEditor.focus();
+                
+                // Select text range beautifully
+                const range = document.createRange();
+                range.selectNodeContents(textEditor);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                isEditingText = true;
+                el.classList.add('ring-2', 'ring-amber-500/80');
+                el.classList.remove('cursor-grab', 'active:cursor-grabbing');
+            });
+
+            // Save text and deactivate editor on blur focusout
+            textEditor.addEventListener('blur', () => {
+                textContainer.classList.add('pointer-events-none');
+                textEditor.contentEditable = "false";
+                textEditor.classList.remove('select-text', 'cursor-text');
+                textEditor.classList.add('select-none');
+
+                textObj.name = textEditor.innerText.trim() || "空のテキスト";
+                if (!textEditor.innerText.trim()) {
+                    textEditor.innerText = "テキストを入力";
+                }
+                
+                isEditingText = false;
+                el.classList.remove('ring-2', 'ring-amber-500/80');
+                el.classList.add('cursor-grab', 'active:cursor-grabbing');
+            });
+
+            // Focus lock safety filters so user typing won't trigger canvas events
+            textEditor.addEventListener('keydown', (e) => {
+                e.stopPropagation(); // Block global delete, shift and layout keys while writing
+            });
+            textEditor.addEventListener('mousedown', (e) => {
+                e.stopPropagation(); // Avoid triggering workspace panning during editing
+            });
+            textEditor.addEventListener('touchstart', (e) => {
+                e.stopPropagation(); // Prevent touch gesture collision
+            }, { passive: true });
+        }
+
+        // Background transparency toggler for individual items (Fully strips borders when transparent)
+        function toggleBgTransparency(id, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            const imgObj = activeImages.find(img => img.id === id);
+            if (imgObj) {
+                imgObj.isTransparent = !imgObj.isTransparent;
+                const el = imgObj.element;
+                const innerDiv = el.querySelector('div');
+                const btnIcon = el.querySelector('.bg-trans-btn i');
+
+                if (imgObj.isTransparent) {
+                    el.classList.remove('p-2', 'p-4', 'bg-slate-800', 'bg-slate-800/95', 'shadow-md', 'shadow-xl', 'border', 'border-slate-700/80');
+                    el.classList.add('p-0', 'bg-transparent', 'border-0', 'shadow-none');
+                    if (innerDiv && !imgObj.isText) {
+                        innerDiv.classList.remove('bg-slate-900', 'rounded-lg');
+                        innerDiv.classList.add('bg-transparent');
+                    }
+                    if (btnIcon) {
+                        btnIcon.className = "fa-solid fa-border-all text-[10px]";
+                    }
+                    showNotice("背景とカード枠を透過に設定しました。");
+                } else {
+                    el.classList.remove('p-0', 'bg-transparent', 'border-0', 'shadow-none');
+                    if (imgObj.isText) {
+                        el.classList.add('p-4', 'bg-slate-800/95', 'shadow-xl', 'border', 'border-slate-700/80');
+                    } else {
+                        el.classList.add('p-2', 'bg-slate-800', 'shadow-md', 'border', 'border-slate-700/80');
+                    }
+                    if (innerDiv && !imgObj.isText) {
+                        innerDiv.classList.remove('bg-transparent');
+                        innerDiv.classList.add('bg-slate-900', 'rounded-lg');
+                    }
+                    if (btnIcon) {
+                        btnIcon.className = "fa-solid fa-circle-half-stroke text-[10px]";
+                    }
+                    showNotice("背景とカード枠を復元しました。");
+                }
+            }
+        }
+
+        // Bulk background transparency toggle
+        function toggleAllBgTransparency() {
+            if (activeImages.length === 0) {
+                showNotice("配置されたアイテムがありません。");
+                return;
+            }
+
+            const hasNonTransparent = activeImages.some(img => !img.isTransparent);
+            const targetTransparent = hasNonTransparent;
+
+            activeImages.forEach(imgObj => {
+                imgObj.isTransparent = targetTransparent;
+                const el = imgObj.element;
+                const innerDiv = el.querySelector('div');
+                const btnIcon = el.querySelector('.bg-trans-btn i');
+
+                if (targetTransparent) {
+                    el.classList.remove('p-2', 'p-4', 'bg-slate-800', 'bg-slate-800/95', 'shadow-md', 'shadow-xl', 'border', 'border-slate-700/80');
+                    el.classList.add('p-0', 'bg-transparent', 'border-0', 'shadow-none');
+                    if (innerDiv && !imgObj.isText) {
+                        innerDiv.classList.remove('bg-slate-900', 'rounded-lg');
+                        innerDiv.classList.add('bg-transparent');
+                    }
+                    if (btnIcon) {
+                        btnIcon.className = "fa-solid fa-border-all text-[10px]";
+                    }
+                } else {
+                    el.classList.remove('p-0', 'bg-transparent', 'border-0', 'shadow-none');
+                    if (imgObj.isText) {
+                        el.classList.add('p-4', 'bg-slate-800/95', 'shadow-xl', 'border', 'border-slate-700/80');
+                    } else {
+                        el.classList.add('p-2', 'bg-slate-800', 'shadow-md', 'border', 'border-slate-700/80');
+                    }
+                    if (innerDiv && !imgObj.isText) {
+                        innerDiv.classList.remove('bg-transparent');
+                        innerDiv.classList.add('bg-slate-900', 'rounded-lg');
+                    }
+                    if (btnIcon) {
+                        btnIcon.className = "fa-solid fa-circle-half-stroke text-[10px]";
+                    }
+                }
+            });
+
+            // Update bulk button state visually
+            const bulkBtn = document.getElementById('btnBulkTrans');
+            if (bulkBtn) {
+                if (targetTransparent) {
+                    bulkBtn.classList.remove('bg-slate-800', 'text-slate-300');
+                    bulkBtn.classList.add('bg-blue-600/20', 'text-blue-400', 'border', 'border-blue-500/30');
+                } else {
+                    bulkBtn.classList.remove('bg-blue-600/20', 'text-blue-400', 'border', 'border-blue-500/30');
+                    bulkBtn.classList.add('bg-slate-800', 'text-slate-300');
+                }
+            }
+
+            showNotice(targetTransparent ? "すべてのカード枠を透過に設定しました。" : "すべての背景とカード枠を復元しました。");
+        }
+
+        function updateTransform(imgObj) {
+            if (!imgObj.element) return;
+            imgObj.element.style.transform = `translate(${imgObj.x}px, ${imgObj.y}px) scale(${imgObj.scale}) rotate(${imgObj.rotation}deg)`;
+            
+            const badge = imgObj.element.querySelector('span');
+            if (badge) {
+                badge.innerText = `${Math.round(imgObj.scale * 100)}%`;
+            }
+        }
+
+        function selectImage(id) {
+            if (currentMode === 'lock' || currentMode === 'delete' || isEditingText) return;
+            selectedImageId = id;
+            
+            activeImages.forEach(img => {
+                if (img.id === id) {
+                    img.zIndex = ++maxZIndex;
+                    img.element.style.zIndex = img.zIndex;
+                    img.element.classList.add('selected-image-container');
+                } else {
+                    img.element.classList.remove('selected-image-container');
+                }
+            });
+        }
+
+        function attachInteractions(imgObj) {
+            const el = imgObj.element;
+
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let initialX = 0;
+            let initialY = 0;
+
+            let touchStartDist = 0;
+            let initialScale = 1;
+            let touchMode = 'none';
+
+            let dragActiveAxis = null; // 'x' or 'y' for drag snaps
+            let lastTapTime = 0; // double tap tracker for mobile devices
+
+            // --- Auto center camera on double click or double tap ---
+            function centerOnThisImage() {
+                if (currentMode === 'draw') return;
+
+                const wW = workspace.clientWidth;
+                const wH = workspace.clientHeight;
+
+                const imgW = el.offsetWidth || 250;
+                const imgH = el.offsetHeight || 250;
+
+                const imgCenterX = imgObj.x + imgW / 2;
+                const imgCenterY = imgObj.y + imgH / 2;
+
+                canvasPanX = wW / 2 - imgCenterX * canvasZoom;
+                canvasPanY = wH / 2 - imgCenterY * canvasZoom;
+
+                // Beautiful smooth camera slide transition
+                canvasInner.style.transition = 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)';
+                updateCanvasTransform();
+
+                // Clear transition immediately afterwards so custom dragging isn't laggy
+                setTimeout(() => {
+                    canvasInner.style.transition = 'none';
+                }, 450);
+
+                showNotice("フォーカス：画像を画面中央に配置しました。");
+            }
+
+            el.addEventListener('dblclick', (e) => {
+                if (e.target.closest('button') || isEditingText) return;
+                
+                // For text objects in non-locked edit mode, double click enters editing mode instead of centering
+                if (imgObj.isText && currentMode !== 'lock') {
+                    return;
+                }
+                
+                e.stopPropagation();
+                centerOnThisImage();
+            });
+
+            // --- Mouse Event Listeners ---
+            el.addEventListener('mousedown', (e) => {
+                if (currentMode === 'draw' || isEditingText) return;
+
+                if (currentMode === 'lock') {
+                    return;
+                }
+
+                if (currentMode === 'delete') {
+                    e.stopPropagation();
+                    deleteImage(imgObj.id, e);
+                    return;
+                }
+
+                if (e.target.closest('button')) return;
+                e.stopPropagation();
+                
+                isDragging = true;
+                selectImage(imgObj.id);
+
+                startX = e.clientX;
+                startY = e.clientY;
+                initialX = imgObj.x;
+                initialY = imgObj.y;
+                dragActiveAxis = null;
+
+                el.style.transition = 'none';
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                let dx = (e.clientX - startX) / canvasZoom;
+                let dy = (e.clientY - startY) / canvasZoom;
+
+                // Shift Key and Axis toggle constraints
+                if (e.shiftKey || isAxisLockEnabled) {
+                    if (!dragActiveAxis) {
+                        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                            dragActiveAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+                        }
+                    }
+                    
+                    if (dragActiveAxis === 'x') {
+                        imgObj.x = initialX + dx;
+                        imgObj.y = initialY;
+                    } else if (dragActiveAxis === 'y') {
+                        imgObj.x = initialX;
+                        imgObj.y = initialY + dy;
+                    }
+                } else {
+                    dragActiveAxis = null;
+                    imgObj.x = initialX + dx;
+                    imgObj.y = initialY + dy;
+                }
+                updateTransform(imgObj);
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                dragActiveAxis = null;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            // --- Touch Event Listeners ---
+            el.addEventListener('touchstart', (e) => {
+                if (currentMode === 'draw' || isEditingText) return;
+
+                if (currentMode === 'delete') {
+                    e.stopPropagation();
+                    deleteImage(imgObj.id, e);
+                    return;
+                }
+
+                if (e.target.closest('button')) return;
+
+                // Touch double tap tracking (300ms) - Center images on double tap
+                const currentTime = Date.now();
+                const tapInterval = currentTime - lastTapTime;
+                lastTapTime = currentTime;
+
+                if (tapInterval < 300 && tapInterval > 0) {
+                    if (!imgObj.isText || currentMode === 'lock') {
+                        e.stopPropagation();
+                        centerOnThisImage();
+                        lastTapTime = 0;
+                        return;
+                    }
+                }
+
+                if (currentMode === 'lock') {
+                    return;
+                }
+
+                e.stopPropagation();
+                selectImage(imgObj.id);
+                el.style.transition = 'none';
+
+                if (e.touches.length === 1) {
+                    touchMode = 'drag';
+                    isDragging = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    initialX = imgObj.x;
+                    initialY = imgObj.y;
+                    dragActiveAxis = null;
+                } else if (e.touches.length === 2) {
+                    touchMode = 'pinch';
+                    isDragging = false;
+                    initialScale = imgObj.scale;
+                    touchStartDist = getTouchDistance(e.touches);
+                }
+            }, { passive: true });
+
+            el.addEventListener('touchmove', (e) => {
+                if (currentMode === 'lock' || currentMode === 'draw' || isEditingText) return;
+
+                if (touchMode === 'drag' && isDragging && e.touches.length === 1) {
+                    let dx = (e.touches[0].clientX - startX) / canvasZoom;
+                    let dy = (e.touches[0].clientY - startY) / canvasZoom;
+
+                    if (isAxisLockEnabled) {
+                        if (!dragActiveAxis) {
+                            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                                dragActiveAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+                            }
+                        }
+                        
+                        if (dragActiveAxis === 'x') {
+                            imgObj.x = initialX + dx;
+                            imgObj.y = initialY;
+                        } else if (dragActiveAxis === 'y') {
+                            imgObj.x = initialX;
+                            imgObj.y = initialY + dy;
+                        }
+                    } else {
+                        dragActiveAxis = null;
+                        imgObj.x = initialX + dx;
+                        imgObj.y = initialY + dy;
+                    }
+                    updateTransform(imgObj);
+                } else if (touchMode === 'pinch' && e.touches.length === 2) {
+                    const currentDist = getTouchDistance(e.touches);
+                    if (touchStartDist > 0) {
+                        const factor = currentDist / touchStartDist;
+                        imgObj.scale = Math.max(0.01, initialScale * factor);
+                        updateTransform(imgObj);
+                    }
+                }
+            }, { passive: true });
+
+            el.addEventListener('touchend', () => {
+                isDragging = false;
+                touchMode = 'none';
+                dragActiveAxis = null;
+            });
+
+            // --- Mouse Wheel Scaling ---
+            el.addEventListener('wheel', (e) => {
+                if (currentMode === 'lock' || currentMode === 'draw' || isEditingText) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                selectImage(imgObj.id);
+
+                const scaleStep = 0.05;
+                if (e.shiftKey) {
+                    imgObj.rotation += e.deltaY > 0 ? 5 : -5;
+                } else {
+                    if (e.deltaY < 0) {
+                        imgObj.scale = imgObj.scale + scaleStep;
+                    } else {
+                        imgObj.scale = Math.max(imgObj.scale - scaleStep, 0.01);
+                    }
+                }
+                updateTransform(imgObj);
+            }, { passive: false });
+        }
+
+        function getTouchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function deleteImage(id, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            const imgIndex = activeImages.findIndex(img => img.id === id);
+            if (imgIndex !== -1) {
+                const imgObj = activeImages[imgIndex];
+                
+                imgObj.element.classList.add('transition-all', 'duration-200', 'scale-75', 'opacity-0');
+                
+                setTimeout(() => {
+                    imgObj.element.remove();
+                    activeImages.splice(imgIndex, 1);
+                    
+                    if (activeImages.length === 0) {
+                        dropzonePrompt.classList.remove('opacity-0', 'pointer-events-none');
+                    }
+                }, 200);
+            }
+        }
+
+        // Global Keydown Bindings (Delete Selected Item)
+        document.addEventListener('keydown', (e) => {
+            if (currentMode === 'draw' || isEditingText) return;
+            
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedImageId) {
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+                    return;
+                }
+                deleteImage(selectedImageId);
+                selectedImageId = null;
+            }
+        });
+
+        // Clear all elements
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (activeImages.length === 0) return;
+            
+            const modalResult = window.confirm("キャンバス上のすべてのアイテム（画像・テキスト）を消去してもよろしいですか？");
+            if (modalResult) {
+                activeImages.forEach(img => {
+                    img.element.remove();
+                });
+                activeImages = [];
+                dropzonePrompt.classList.remove('opacity-0', 'pointer-events-none');
+                
+                canvasZoom = 1;
+                canvasPanX = 0;
+                canvasPanY = 0;
+                updateCanvasTransform();
+            }
+        });
+
+        // Grid Alignment & Sorting
+        document.getElementById('btnGrid').addEventListener('click', () => {
+            // Filter images and texts. We only sort/grid images so text annotations stay exactly where they are!
+            const imageObjectsOnly = activeImages.filter(item => !item.isText);
+
+            if (imageObjectsOnly.length === 0) {
+                showNotice("整列する画像がありません。");
+                return;
+            }
+            
+            // 1. Sort the items
+            const sortVal = document.getElementById('sortSelect').value;
+            if (sortVal === 'name') {
+                imageObjectsOnly.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
+            } else if (sortVal === 'added') {
+                imageObjectsOnly.sort((a, b) => a.addedAt - b.addedAt);
+            } else if (sortVal === 'random') {
+                imageObjectsOnly.sort(() => Math.random() - 0.5);
+            }
+            
+            const wWidth = workspace.clientWidth;
+            const wHeight = workspace.clientHeight;
+            const N = imageObjectsOnly.length;
+            
+            // 2. Fetch row/col values
+            const colsVal = document.getElementById('colsSelect').value;
+            const rowsVal = document.getElementById('rowsSelect').value;
+            const dirVal = document.getElementById('layoutDirection').value; // 'ltr' (横並べ) or 'rtl' (縦並べ)
+            
+            let cols = 1;
+            let rows = 1;
+            
+            // Grid layout direction rules
+            if (dirVal === 'ltr') {
+                // Horizontal Arrangement (Left-to-Right, Top-to-Bottom)
+                if (colsVal === 'auto' && rowsVal === 'auto') {
+                    const screenRatio = wWidth / wHeight;
+                    cols = Math.max(1, Math.round(Math.sqrt(N * screenRatio)));
+                    rows = Math.ceil(N / cols);
+                } else if (colsVal !== 'auto' && rowsVal === 'auto') {
+                    cols = parseInt(colsVal, 10);
+                    rows = Math.ceil(N / cols);
+                } else if (colsVal === 'auto' && rowsVal !== 'auto') {
+                    rows = parseInt(rowsVal, 10);
+                    cols = Math.ceil(N / rows);
+                } else {
+                    cols = parseInt(colsVal, 10);
+                    rows = parseInt(rowsVal, 10);
+                    
+                    if (N > cols * rows) {
+                        rows = Math.ceil(N / cols);
+                        showNotice(`枠数を超えるため、縦を${rows}行に自動拡張して整列しました。`);
+                    }
+                }
+            } else {
+                // Vertical Arrangement (Top-to-Bottom, Right-to-Left)
+                if (colsVal === 'auto' && rowsVal === 'auto') {
+                    const screenRatio = wWidth / wHeight;
+                    rows = Math.max(1, Math.round(Math.sqrt(N / screenRatio)));
+                    cols = Math.ceil(N / rows);
+                } else if (colsVal !== 'auto' && rowsVal === 'auto') {
+                    cols = parseInt(colsVal, 10);
+                    rows = Math.ceil(N / cols);
+                } else if (colsVal === 'auto' && rowsVal !== 'auto') {
+                    rows = parseInt(rowsVal, 10);
+                    cols = Math.ceil(N / rows);
+                } else {
+                    cols = parseInt(colsVal, 10);
+                    rows = parseInt(rowsVal, 10);
+                    
+                    if (N > cols * rows) {
+                        cols = Math.ceil(N / rows);
+                        showNotice(`枠数を超えるため、横を${cols}列に自動拡張して整列しました。`);
+                    }
+                }
+            }
+            
+            const gap = 24;
+            const baseWidth = 260;
+            
+            const rowHeights = [];
+            imageObjectsOnly.forEach((img, index) => {
+                let r;
+                if (dirVal === 'ltr') {
+                    r = Math.floor(index / cols);
+                } else {
+                    r = index % rows; // row coord of vertical flows
+                }
+                const displayHeight = baseWidth / img.aspectRatio;
+                if (rowHeights[r] === undefined) {
+                    rowHeights[r] = 0;
+                }
+                rowHeights[r] = Math.max(rowHeights[r], displayHeight);
+            });
+
+            imageObjectsOnly.forEach((img, index) => {
+                let col, row;
+                
+                if (dirVal === 'ltr') {
+                    col = index % cols;
+                    row = Math.floor(index / cols);
+                } else {
+                    // Vertical mapping
+                    row = index % rows;
+                    const rawCol = Math.floor(index / rows); // 0 = first column on the right
+                    col = cols - 1 - rawCol; // Convert right-aligned index to left-origin index
+                }
+                
+                img.element.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+                
+                const displayHeight = baseWidth / img.aspectRatio;
+                const imgEl = img.element.querySelector('img');
+                if (imgEl) {
+                    imgEl.style.width = `${baseWidth}px`;
+                    imgEl.style.height = `${displayHeight}px`;
+                }
+
+                img.x = gap + col * (baseWidth + gap);
+                
+                let yPos = gap;
+                for (let r = 0; r < row; r++) {
+                    yPos += (rowHeights[r] !== undefined ? rowHeights[r] : (baseWidth / 1.5)) + gap;
+                }
+                img.y = yPos;
+                
+                img.scale = 1;
+                img.rotation = 0;
+                
+                updateTransform(img);
+                
+                setTimeout(() => {
+                    if (img.element) {
+                        img.element.style.transition = 'none';
+                    }
+                }, 600);
+            });
+
+            // Fit canvas view dynamically to show sorted images
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+
+            imageObjectsOnly.forEach(img => {
+                const displayHeight = baseWidth / img.aspectRatio;
+                const imgW = baseWidth + 24;
+                const imgH = displayHeight + 24;
+                
+                minX = Math.min(minX, img.x);
+                minY = Math.min(minY, img.y);
+                maxX = Math.max(maxX, img.x + imgW);
+                maxY = Math.max(maxY, img.y + imgH);
+            });
+
+            const contentW = (maxX - minX) + gap * 2;
+            const contentH = (maxY - minY) + gap * 2;
+
+            const zoomX = (wWidth * 0.9) / contentW;
+            const zoomY = (wHeight * 0.9) / contentH;
+            
+            canvasZoom = Math.min(zoomX, zoomY, 1.2);
+            canvasZoom = Math.max(canvasZoom, 0.01);
+
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+
+            canvasPanX = wW / 2 - centerX * canvasZoom;
+            canvasPanY = wH / 2 - centerY * canvasZoom;
+            
+            updateCanvasTransform();
+            
+            const directionStr = dirVal === 'ltr' ? "横並べ" : "縦並べ";
+            showNotice(`${directionStr}・指定グリッドで整列しました（テキスト配置は維持されます）。`);
+        });
+
+        // --- Standard UI Helper Bindings ---
+        function setupHelpModal() {
+            const helpModal = document.getElementById('helpModal');
+            document.getElementById('btnHelp').addEventListener('click', () => {
+                helpModal.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseHelp').addEventListener('click', () => {
+                helpModal.classList.add('hidden');
+            });
+            document.getElementById('btnConfirmHelp').addEventListener('click', () => {
+                helpModal.classList.add('hidden');
+            });
+        }
+
+        function setupWindowResize() {
+            window.addEventListener('resize', () => {
+                const currentWidth = window.innerWidth;
+                const currentHeight = window.innerHeight;
+                
+                const scaleX = currentWidth / prevWidth;
+                const scaleY = currentHeight / prevHeight;
+
+                activeImages.forEach(img => {
+                    img.x *= scaleX;
+                    img.y *= scaleY;
+                    updateTransform(img);
+                });
+
+                prevWidth = currentWidth;
+                prevHeight = currentHeight;
+            });
+        }
+
+        // Sleek status toast alert element with mute state support
+        function showNotice(text) {
+            if (!isNoticeEnabled) return;
+
+            const notice = document.createElement('div');
+            notice.className = "fixed bottom-6 right-6 bg-slate-900 border border-emerald-500/30 text-emerald-400 font-medium px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300";
+            
+            notice.innerHTML = `
+                <i class="fa-solid fa-circle-check shrink-0"></i>
+                <span class="mr-1">${text}</span>
+                <button class="text-slate-400 hover:text-white focus:outline-none transition-colors ml-1 p-0.5 hover:bg-slate-800 rounded" onclick="this.parentElement.remove()">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            `;
+            document.body.appendChild(notice);
+
+            setTimeout(() => {
+                notice.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                if (document.body.contains(notice)) {
+                    notice.classList.add('translate-y-10', 'opacity-0');
+                    setTimeout(() => {
+                        if (document.body.contains(notice)) notice.remove();
+                    }, 300);
+                }
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

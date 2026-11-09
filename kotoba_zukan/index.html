@@ -2222,9 +2222,13 @@
     let speakDebounceTimer = null;
     let speakSafetyTimer = null;
 
-    // 単語名 -> ID の高速逆引きマップ
+    // 単語ID / 単語名 の高速逆引きマップ
+    const WORD_BY_ID = new Map();
     const WORD_NAME_TO_ID = new Map();
-    ALL_WORDS.forEach(w => WORD_NAME_TO_ID.set(w.name, w.id));
+    ALL_WORDS.forEach(w => {
+      WORD_BY_ID.set(w.id, w);
+      WORD_NAME_TO_ID.set(w.name, w.id);
+    });
 
     function stopAllVoicePlayback() {
       activeAudioSession++;
@@ -2338,9 +2342,9 @@
       if (identifier === 'quiz_clear' || identifier === 'たいへん よく できました！') {
         audioUrl = 'audio/system/quiz_clear.mp3';
         fallbackText = 'たいへんよくできました！';
-      } else if (SVG_DICT[identifier] || identifier.startsWith('d_') || identifier.startsWith('t_') || identifier.startsWith('n_') || identifier.startsWith('m_') || identifier.startsWith('v_')) {
+      } else if (WORD_BY_ID.has(identifier) || SVG_DICT[identifier] || identifier.startsWith('d_') || identifier.startsWith('t_') || identifier.startsWith('n_') || identifier.startsWith('m_') || identifier.startsWith('v_') || identifier.startsWith('h_') || identifier.startsWith('k_') || identifier.startsWith('c_') || identifier.startsWith('s_')) {
         audioUrl = `audio/words/${identifier}.mp3`;
-        const item = ALL_WORDS.find(w => w.id === identifier);
+        const item = WORD_BY_ID.get(identifier) || ALL_WORDS.find(w => w.id === identifier);
         fallbackText = item ? item.name : identifier;
       } else {
         const foundId = WORD_NAME_TO_ID.get(identifier);

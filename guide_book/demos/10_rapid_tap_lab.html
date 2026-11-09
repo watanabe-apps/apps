@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>デモJ：連打対策ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1.5px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      height: 42px;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #0f172a;
+    }
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    /* 設定バー：連打対策の切り替えのみ */
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      font-size: 0.82rem;
+    }
+    .pill-group {
+      display: flex;
+      background: #e2e8f0;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #475569;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      touch-action: manipulation;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      padding: 16px;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .row-slots {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .slot-box {
+      width: 86px;
+      height: 86px;
+      border: 1.5px solid #000000;
+      border-radius: 8px;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .slot-box .slot-guide {
+      font-size: 2.4rem;
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .pos-anchor {
+      width: 86px;
+      height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drag-piece {
+      position: absolute;
+      width: 86px;
+      height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+      font-size: 3.4rem;
+      line-height: 1;
+      transition: transform 0.1s ease;
+    }
+    .drag-piece.dragging {
+      cursor: grabbing;
+      transform: scale(1.15);
+      z-index: 999;
+    }
+    .drag-piece.animating {
+      transition: left 0.2s ease-out, top 0.2s ease-out, transform 0.1s ease;
+    }
+
+    /* 連打で跳ねるアニメーション */
+    @keyframes piece-bounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.32) rotate(-8deg); }
+      100% { transform: scale(1); }
+    }
+    .drag-piece.bouncing {
+      animation: piece-bounce 0.16s ease;
+    }
+
+    /* 正解後ロック */
+    .drag-piece.is-locked {
+      cursor: default;
+    }
+
+    /* 控えめな正解表示 */
+    #correctBanner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 130px;
+      color: #ef4444;
+      font-weight: bold;
+      z-index: 800;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #correctBanner.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0.85;
+    }
+
+    /* 連打回数バッジ */
+    #spamCounterBadge {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #ea580c;
+      background: #ffedd5;
+      border: 1px solid #fdba74;
+      padding: 3px 12px;
+      border-radius: 14px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="header-title">4.5 ④ 連打対策ラボ（正解後の挙動比較）</span>
+    <button class="btn-reset" onclick="initStage()">リセット</button>
+  </header>
+
+  <div class="settings-bar">
+    <span style="font-weight:700; color:#475569;">連打設定:</span>
+    <div class="pill-group">
+      <button class="pill-btn active" id="btn-no-lock" onclick="setLockMode(false)">① 対策なし（連打で鳴る）</button>
+      <button class="pill-btn" id="btn-lock" onclick="setLockMode(true)">② 対策あり（正解後ロック）</button>
+    </div>
+  </div>
+
+  <main id="stage">
+    <!-- 上段：受け皿枠 -->
+    <div class="row-slots" id="slotsRow">
+      <div class="slot-box" data-id="apple" id="slot-apple">
+        <div class="slot-guide">🍎</div>
+      </div>
+      <div class="slot-box" data-id="banana" id="slot-banana">
+        <div class="slot-guide">🍌</div>
+      </div>
+      <div class="slot-box" data-id="grape" id="slot-grape">
+        <div class="slot-guide">🍇</div>
+      </div>
+    </div>
+
+    <!-- 下段：ピース初期位置アンカー -->
+    <div class="row-slots" id="trayRow">
+      <div class="pos-anchor" id="anchor-apple"></div>
+      <div class="pos-anchor" id="anchor-banana"></div>
+      <div class="pos-anchor" id="anchor-grape"></div>
+    </div>
+
+    <!-- 正解表示（シンプルな◯） -->
+    <div id="correctBanner">◯</div>
+
+    <!-- 連打カウンター -->
+    <div id="spamCounterBadge">連打中: 0 回タップ</div>
+  </main>
+
+  <script>
+    const ITEMS = [
+      { id: 'apple', emoji: '🍎' },
+      { id: 'banana', emoji: '🍌' },
+      { id: 'grape', emoji: '🍇' }
+    ];
+
+    let lockAfterSnap = false; // デフォルトは「対策なし」で連打を試せるようにする
+    let pieceElements = [];
+    let snappedSlots = { apple: null, banana: null, grape: null };
+    let tapCount = 0;
+    let zIndexCounter = 20;
+
+    // Web Audio API
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      window.addEventListener(evt, initAudio, { once: true });
+    });
+
+    // 静かなカチッ音（スナップ時）
+    function playClick() {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, t);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.03);
+    }
+
+    // 連打時のカチカチ・ポップ音（子供がハマる音）
+    function playTapPop(pitchMultiplier = 1) {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(650 * pitchMultiplier, t);
+      osc.frequency.exponentialRampToValueAtTime(320 * pitchMultiplier, t + 0.06);
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    }
+
+    // 正解音（ピンポン♪）
+    function playChime() {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      [880, 1174.66].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(freq, t + idx * 0.12);
+        gain.gain.setValueAtTime(0.18, t + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.12 + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t + idx * 0.12);
+        osc.stop(t + idx * 0.12 + 0.36);
+      });
+    }
+
+    // モード切り替え
+    function setLockMode(isLocked) {
+      lockAfterSnap = isLocked;
+      document.getElementById('btn-no-lock').className = isLocked ? 'pill-btn' : 'pill-btn active';
+      document.getElementById('btn-lock').className = isLocked ? 'pill-btn active' : 'pill-btn';
+
+      // 既存ピースへの即時反映
+      pieceElements.forEach(p => {
+        if (p.isSnapped) {
+          if (lockAfterSnap) {
+            p.el.classList.add('is-locked');
+          } else {
+            p.el.classList.remove('is-locked');
+          }
+        }
+      });
+
+      if (isLocked) {
+        document.getElementById('spamCounterBadge').style.display = 'none';
+      }
+    }
+
+    // 初期化
+    function initStage() {
+      const stage = document.getElementById('stage');
+      pieceElements.forEach(p => { if (p.el && p.el.parentNode) p.el.parentNode.removeChild(p.el); });
+      pieceElements = [];
+      snappedSlots = { apple: null, banana: null, grape: null };
+      tapCount = 0;
+      document.getElementById('spamCounterBadge').style.display = 'none';
+      document.getElementById('correctBanner').classList.remove('show');
+
+      const stageRect = stage.getBoundingClientRect();
+
+      ITEMS.forEach(item => {
+        const anchor = document.getElementById('anchor-' + item.id);
+        const aRect = anchor.getBoundingClientRect();
+
+        const el = document.createElement('div');
+        el.className = 'drag-piece';
+        el.textContent = item.emoji;
+        el.dataset.id = item.id;
+
+        const left = aRect.left - stageRect.left + (aRect.width - 86) / 2;
+        const top = aRect.top - stageRect.top + (aRect.height - 86) / 2;
+
+        el.style.left = left + 'px';
+        el.style.top = top + 'px';
+
+        stage.appendChild(el);
+
+        const pieceObj = {
+          id: item.id,
+          el: el,
+          homeLeft: left,
+          homeTop: top,
+          isSnapped: false
+        };
+
+        bindEvents(pieceObj);
+        pieceElements.push(pieceObj);
+      });
+    }
+
+    // ドラッグ＆連打イベント
+    function bindEvents(piece) {
+      const el = piece.el;
+      let isDragging = false;
+      let startX, startY;
+      let initialLeft, initialTop;
+      let hasMoved = false;
+
+      el.addEventListener('pointerdown', (e) => {
+        // 【対策あり】正解後ロックされている場合：何もしない
+        if (piece.isSnapped && lockAfterSnap) {
+          return;
+        }
+
+        // 【対策なし】正解後ロックされていない場合：タップするたびに跳ねて音が鳴る！
+        if (piece.isSnapped && !lockAfterSnap) {
+          tapCount++;
+          playTapPop(1 + (tapCount % 5) * 0.1);
+          el.classList.remove('bouncing');
+          void el.offsetWidth;
+          el.classList.add('bouncing');
+
+          const badge = document.getElementById('spamCounterBadge');
+          badge.textContent = `連打中: ${tapCount} 回タップ（触ると鳴るため遊びに没頭）`;
+          badge.style.display = 'block';
+          return;
+        }
+
+        // 通常のドラッグ開始
+        isDragging = true;
+        hasMoved = false;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+        el.classList.remove('animating');
+        el.style.zIndex = ++zIndexCounter;
+
+        startX = e.clientX;
+        startY = e.clientY;
+        initialLeft = parseFloat(el.style.left);
+        initialTop = parseFloat(el.style.top);
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+        el.style.left = (initialLeft + dx) + 'px';
+        el.style.top = (initialTop + dy) + 'px';
+      });
+
+      el.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        el.releasePointerCapture(e.pointerId);
+        el.classList.remove('dragging');
+        checkDrop(piece);
+      });
+
+      el.addEventListener('pointercancel', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        el.classList.remove('dragging');
+        returnHome(piece);
+      });
+    }
+
+    // ドロップ判定
+    function checkDrop(piece) {
+      const pRect = piece.el.getBoundingClientRect();
+      const pCenterX = pRect.left + pRect.width / 2;
+      const pCenterY = pRect.top + pRect.height / 2;
+
+      let matchedSlot = null;
+      ITEMS.forEach(item => {
+        const slotEl = document.getElementById('slot-' + item.id);
+        const sRect = slotEl.getBoundingClientRect();
+        if (
+          pCenterX >= sRect.left && pCenterX <= sRect.right &&
+          pCenterY >= sRect.top && pCenterY <= sRect.bottom
+        ) {
+          matchedSlot = item.id;
+        }
+      });
+
+      if (matchedSlot && matchedSlot === piece.id) {
+        // 正解
+        snapToSlot(piece, matchedSlot);
+      } else {
+        // 枠外または誤答
+        returnHome(piece);
+      }
+    }
+
+    // 正解吸着
+    function snapToSlot(piece, slotId) {
+      const stageRect = document.getElementById('stage').getBoundingClientRect();
+      const slotEl = document.getElementById('slot-' + slotId);
+      const sRect = slotEl.getBoundingClientRect();
+
+      const targetLeft = sRect.left - stageRect.left + (sRect.width - 86) / 2;
+      const targetTop = sRect.top - stageRect.top + (sRect.height - 86) / 2;
+
+      piece.el.classList.add('animating');
+      piece.el.style.left = targetLeft + 'px';
+      piece.el.style.top = targetTop + 'px';
+
+      piece.isSnapped = true;
+      snappedSlots[slotId] = piece;
+
+      if (lockAfterSnap) {
+        piece.el.classList.add('is-locked');
+      }
+
+      playClick();
+
+      // 全問正解判定
+      const allDone = ITEMS.every(item => snappedSlots[item.id] !== null);
+      if (allDone) {
+        playChime();
+        const banner = document.getElementById('correctBanner');
+        banner.classList.add('show');
+        setTimeout(() => banner.classList.remove('show'), 1500);
+      }
+    }
+
+    function returnHome(piece) {
+      piece.el.classList.add('animating');
+      piece.el.style.left = piece.homeLeft + 'px';
+      piece.el.style.top = piece.homeTop + 'px';
+    }
+
+    window.addEventListener('DOMContentLoaded', initStage);
+    window.addEventListener('resize', initStage);
+  </script>
+</body>
+</html>

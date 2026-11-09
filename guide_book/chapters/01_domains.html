@@ -51,6 +51,15 @@
       padding: 3px 9px;
       border-radius: 4px;
     }
+    a.example-tag {
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    a.example-tag:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
     .nav-pager {
       display: flex;
       justify-content: space-between;
@@ -81,29 +90,13 @@
     </div>
 
     <div class="sidebar-nav-group">
-      <div class="sidebar-nav-title">理論・設計論（全6章）</div>
+      <div class="sidebar-nav-title">理論・設計論（全5章）</div>
       <ul class="sidebar-nav-list">
         <li><a href="01_domains.html" class="active">第1章：生成AIで何ができる？</a></li>
         <li><a href="02_merits.html">第2章：学習アプリの5大メリットと具体物との使い分け</a></li>
         <li><a href="03_reinforcement_learning.html">第3章：アプリでの学習は、強化学習と似ている？</a></li>
         <li><a href="04_principles.html">第4章：学習用アプリの設計・実装思想</a></li>
-        <li><a href="05_subjects.html">第5章：教科・自立活動別の実践論</a></li>
-        <li><a href="06_operations.html">第6章：実装・運用のリアリズム</a></li>
-      </ul>
-    </div>
-
-    <div class="sidebar-nav-group">
-      <div class="sidebar-nav-title">検証用実動デモ</div>
-      <ul class="sidebar-nav-list">
-        <li><a href="../demos/07_drag_vs_tap.html">✋ デモG：型はめ（ドラッグvsタップ）</a></li>
-        <li><a href="../demos/01_drag_lab.html">🧪 デモA：ドラッグ操作ラボ</a></li>
-        <li><a href="../demos/08_target_contrast.html">🎯 デモH：操作対象と終点の視覚化</a></li>
-        <li><a href="../demos/06_trace_lab.html">✏️ デモF：視線誘導なぞり書き</a></li>
-        <li><a href="../demos/09_bg_contrast.html">🎨 デモI：背景色＆コントラスト</a></li>
-        <li><a href="../demos/02_count_lab.html">🔢 デモB：数の学習（円 vs 車）</a></li>
-        <li><a href="../demos/03_writing_lab.html">✍️ デモC：消去 & キーボード</a></li>
-        <li><a href="../demos/04_guard_lab.html">🔒 デモD：現場防衛トリプルタップ</a></li>
-        <li><a href="../demos/05_suuji_narabe.html">🧩 デモE：数字カード並べ替え</a></li>
+        <li><a href="05_prompts.html">第5章：Geminiを活用したアプリ作り プロンプトについて</a></li>
       </ul>
     </div>
   </aside>
@@ -167,11 +160,11 @@
                 児童生徒が直接タブレットの画面を操作し、概念の獲得や反復練習を行う教材です。余計なノイズを排し、直感的なドラッグ操作とブレのない即時フィードバックによって、自分の力で「できた」という内発的な達成感を積み上げさせます。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">1対1対応</span>
-                <span class="example-tag">大きい・小さい</span>
-                <span class="example-tag">数えよう</span>
-                <span class="example-tag">平仮名キーボード</span>
-                <span class="example-tag">カルタ など</span>
+                <a href="../../1tai1/index.html" target="_blank" class="example-tag">1対1対応 ↗</a>
+                <a href="../../ookii_chiisai/index.html" target="_blank" class="example-tag">大きい・小さい ↗</a>
+                <a href="../../kazoeyou_kiso/index.html" target="_blank" class="example-tag">数えよう ↗</a>
+                <a href="../../keyboard/index.html" target="_blank" class="example-tag">平仮名キーボード ↗</a>
+                <a href="../../karuta/index.html" target="_blank" class="example-tag">カルタ ↗</a>
               </div>
               <p>
                 特別支援教育において、具体物を操作しながら学習することは非常に重要です。その考え方に基づくと、アプリでの学習はふさわしくないのではないかという疑念も生じますが、実践からアプリの意義を強く感じています。十分検証されていない内容ではありますが、アプリで概念形成の基盤を築き、具体物で概念を深めて汎化させるという指導の道筋も有効なのではないかと考えています。この内容については第2章以降で説明します。
@@ -185,9 +178,9 @@
                 教師が操作し、教室前方の大型モニター等に映し出し、学習内容やルール等を提示するためのツールです。従来PowerPointや画像、動画で提示してきた内容ですが、アプリを使用することでより柔軟な提示が可能となります。
               </p>
               <div class="example-tag-list">
-                <span class="example-tag">スケジュール時計</span>
-                <span class="example-tag">リズム視覚化ツール</span>
-                <span class="example-tag">視覚支援動画プレイヤー など</span>
+                <a href="../時計＆スケジュール.html" target="_blank" class="example-tag">スケジュール時計 ↗</a>
+                <a href="../../rythm_visualizer/index.html" target="_blank" class="example-tag">リズム視覚化ツール ↗</a>
+                <a href="../../movie_player/index.html" target="_blank" class="example-tag">視覚支援動画プレイヤー ↗</a>
               </div>
               <p>
                 児童生徒の操作を伴わないため、学習アプリより学習効率は落ちます。メインの学習手段ではなく、補助的ツールという位置付けが望ましいです。自分の好みや使用状況に併せてカスタマイズできるため、既存のツールより直感的で扱いやすいものができる可能性もあります。
@@ -202,7 +195,7 @@
               </p>
               <div class="example-tag-list">
                 <span class="example-tag">計算プリントメーカー</span>
-                <span class="example-tag">ひらがな単語プリントメーカー など</span>
+                <a href="../平仮名単語書きプリントメーカー.html" target="_blank" class="example-tag">ひらがな単語プリントメーカー ↗</a>
               </div>
               <p>
                 従来Excel等で作成していたプリントも、アプリ化することができます。問題の自動生成が大きな特徴で、児童生徒ごとに設定を変更して保存しておき、必要な児童の分だけ問題生成、印刷するということもできます。すでにマクロや計算式で問題を生成できるExcelファイルが存在する場合、わざわざアプリ化する必要はありません。プリントを新しく作成する場合には、アプリ化することも検討しても良いかもしれません。

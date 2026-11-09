@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimal Media Player</title>
+<!-- ZIP解凍用ライブラリ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    touch-action: manipulation;
+  }
+  body {
+    background-color: #0a0a0a;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+  }
+  body.hide-cursor {
+    cursor: none;
+  }
+
+  /* メディア表示領域 */
+  #mediaContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    background-color: #000;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+  }
+
+  /* ドロップゾーン（未読み込み時） */
+  #dropZone {
+    position: absolute;
+    z-index: 2;
+    text-align: center;
+    border: 2px dashed #444;
+    padding: 30px 40px;
+    border-radius: 16px;
+    color: #aaa;
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    max-width: 90%;
+    width: 440px;
+  }
+
+  .file-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .file-input-label {
+    display: block;
+    background-color: #0a84ff;
+    color: #ffffff;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .file-input-label:hover {
+    background-color: #0071e3;
+  }
+  .file-input-label.zip-btn {
+    background-color: #30d158;
+  }
+  .file-input-label.zip-btn:hover {
+    background-color: #28b84c;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  /* 音声再生時のシンプル表示 */
+  #audioModeDisplay {
+    display: none;
+    z-index: 2;
+    text-align: center;
+    font-size: 1.05rem;
+    color: #ddd;
+    max-width: 85%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(255, 255, 255, 0.07);
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* コントロールバー（目立たない薄型オーバーレイ） */
+  #controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background: rgba(12, 12, 12, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 12px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+  }
+  #controls.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    pointer-events: none;
+  }
+
+  /* タイムライン行 */
+  .timeline-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+    font-family: monospace;
+    color: #aaa;
+  }
+  
+  .seeker {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: #333;
+    outline: none;
+    cursor: pointer;
+  }
+  .seeker::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #bbb;
+    cursor: pointer;
+  }
+  .seeker::-webkit-slider-thumb:hover {
+    background: #fff;
+  }
+
+  /* ボタン・速度スライダー行 */
+  .button-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  button, select, .ctrl-file-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ccc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s, color 0.2s;
+    display: inline-flex;
+    align-items: center;
+  }
+  button:hover, select:hover, .ctrl-file-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+  button.active {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #fff;
+  }
+
+  select.track-select {
+    max-width: 160px;
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+    text-overflow: ellipsis;
+  }
+
+  /* 横長再生速度スライダー */
+  .speed-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .speed-slider {
+    width: 150px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2563eb;
+    cursor: pointer;
+  }
+
+  .btn-reset-speed {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+  }
+
+  .ab-status {
+    font-size: 0.75rem;
+    color: #60a5fa;
+    margin-left: 2px;
+    font-family: monospace;
+  }
+
+  /* ツールバー復帰用下部判定エリア */
+  #hoverTrigger {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    z-index: 9;
+  }
+</style>
+</head>
+<body>
+
+<div id="mediaContainer">
+  <video id="mediaPlayer" playsinline></video>
+  
+  <div id="dropZone">
+    <div style="font-size: 1.05rem; font-weight: 600;">Minimal Media Player</div>
+    
+    <div class="file-button-group">
+      <!-- HTML Viewerの拡張子指定を真似たinput要素 -->
+      <label class="file-input-label">
+        📄 メディアファイルを選択
+        <input type="file" id="fileInput" accept=".mp3,.mp4,.m4a,.wav,.aac,.flac,.ogg,.webm,.mkv,.mov">
+      </label>
+
+      <label class="file-input-label zip-btn">
+        📦 ZIPファイルを選択
+        <input type="file" id="zipInput" accept=".zip,application/zip,application/x-zip-compressed">
+      </label>
+    </div>
+
+    <div style="font-size: 0.75rem; color: #888; margin-top: 12px;">
+      またはここにドラッグ＆ドロップ
+    </div>
+  </div>
+
+  <div id="audioModeDisplay">🎵 </div>
+</div>
+
+<div id="hoverTrigger"></div>
+
+<div id="controls">
+  <!-- シークバーと時間表示 -->
+  <div class="timeline-row">
+    <span id="currentTime">00:00</span>
+    <input type="range" id="seeker" class="seeker" value="0" min="0" max="100" step="0.1">
+    <span id="duration">00:00</span>
+  </div>
+
+  <!-- 操作ボタン群 -->
+  <div class="button-row">
+    <div class="group">
+      <button id="btnPlayPause">再生</button>
+      <button id="btnLoop">全リピート: OFF</button>
+      
+      <!-- ツールバーからのファイル選択 -->
+      <label class="ctrl-file-btn">
+        ファイル開く
+        <input type="file" id="ctrlFileInput" accept=".mp3,.mp4,.m4a,.wav,.aac,.flac,.ogg,.webm,.mkv,.mov,.zip,application/zip,application/x-zip-compressed">
+      </label>
+
+      <select id="trackSelect" class="track-select" style="display: none;"></select>
+    </div>
+
+    <!-- A-Bリピート -->
+    <div class="group">
+      <button id="btnSetA">A地点</button>
+      <button id="btnSetB">B地点</button>
+      <button id="btnResetAB">A-B解除</button>
+      <span id="abStatus" class="ab-status"></span>
+    </div>
+
+    <!-- 再生速度 ＆ ツールバー隠すボタン -->
+    <div class="group">
+      <div class="speed-container">
+        <span>速度:</span>
+        <input type="range" id="speedSlider" class="speed-slider" min="0.3" max="3.0" step="0.1" value="1.0">
+        <span id="speedVal" style="min-width: 32px;">1.0x</span>
+        <button id="btnResetSpeed" class="btn-reset-speed" title="1.0倍に戻す">1.0x</button>
+      </div>
+      <button id="btnHideControls" title="ツールバーを隠す">隠す ✕</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const player = document.getElementById('mediaPlayer');
+  const fileInput = document.getElementById('fileInput');
+  const zipInput = document.getElementById('zipInput');
+  const ctrlFileInput = document.getElementById('ctrlFileInput');
+  const dropZone = document.getElementById('dropZone');
+  const audioModeDisplay = document.getElementById('audioModeDisplay');
+  const controls = document.getElementById('controls');
+  const hoverTrigger = document.getElementById('hoverTrigger');
+  const trackSelect = document.getElementById('trackSelect');
+  
+  const btnPlayPause = document.getElementById('btnPlayPause');
+  const btnLoop = document.getElementById('btnLoop');
+  const seeker = document.getElementById('seeker');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationEl = document.getElementById('duration');
+  
+  const btnSetA = document.getElementById('btnSetA');
+  const btnSetB = document.getElementById('btnSetB');
+  const btnResetAB = document.getElementById('btnResetAB');
+  const abStatus = document.getElementById('abStatus');
+
+  const speedSlider = document.getElementById('speedSlider');
+  const speedVal = document.getElementById('speedVal');
+  const btnResetSpeed = document.getElementById('btnResetSpeed');
+  const btnHideControls = document.getElementById('btnHideControls');
+
+  let pointA = null;
+  let pointB = null;
+  let isLoaded = false;
+  let createdBlobUrls = [];
+  let zipTracks = [];
+  let currentTrackIndex = 0;
+
+  function formatTime(sec) {
+    if (isNaN(sec) || sec === Infinity) return "00:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  function clearBlobUrls() {
+    createdBlobUrls.forEach(url => URL.revokeObjectURL(url));
+    createdBlobUrls = [];
+  }
+
+  function isVideoFile(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    return ['mp4', 'webm', 'mkv', 'mov', 'avi', 'flv', '3gp', 'm4v'].includes(ext);
+  }
+
+  async function processSelectedFile(file) {
+    if (!file) return;
+
+    const lowerName = file.name.toLowerCase();
+
+    // ZIPファイルの場合の処理
+    if (lowerName.endsWith('.zip')) {
+      try {
+        const zip = await JSZip.loadAsync(file);
+        clearBlobUrls();
+        zipTracks = [];
+
+        for (const [relativePath, entry] of Object.entries(zip.files)) {
+          if (entry.dir) continue;
+          const cleanName = relativePath.split('/').pop();
+          if (cleanName.startsWith('.')) continue; // 隠しファイル除外
+
+          const ext = cleanName.split('.').pop().toLowerCase();
+          
+          if (['mp3', 'mp4', 'wav', 'm4a', 'aac', 'flac', 'webm', 'mkv', 'mov', 'ogg'].includes(ext)) {
+            const blob = await entry.async('blob');
+            const url = URL.createObjectURL(blob);
+            createdBlobUrls.push(url);
+
+            zipTracks.push({
+              name: cleanName,
+              fullPath: relativePath,
+              url: url,
+              isVideo: isVideoFile(cleanName)
+            });
+          }
+        }
+
+        if (zipTracks.length === 0) {
+          alert('ZIP内に再生可能な音声・動画ファイルが見つかりませんでした。');
+          return;
+        }
+
+        setupTrackSelector();
+        playTrack(0);
+
+      } catch (err) {
+        console.error(err);
+        alert('ZIPファイルの解凍・読み込みに失敗しました。');
+      }
+    } else {
+      // 単一ファイルの場合
+      clearBlobUrls();
+      zipTracks = [];
+      setupTrackSelector();
+
+      const url = URL.createObjectURL(file);
+      createdBlobUrls.push(url);
+      
+      loadAndPlay(url, file.name, isVideoFile(file.name));
+    }
+  }
+
+  function setupTrackSelector() {
+    trackSelect.innerHTML = '';
+    if (zipTracks.length > 1) {
+      zipTracks.forEach((t, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `🎵 ${t.name}`;
+        trackSelect.appendChild(opt);
+      });
+      trackSelect.style.display = 'inline-block';
+    } else {
+      trackSelect.style.display = 'none';
+    }
+  }
+
+  trackSelect.addEventListener('change', (e) => {
+    playTrack(parseInt(e.target.value, 10));
+  });
+
+  function playTrack(index) {
+    if (index < 0 || index >= zipTracks.length) return;
+    currentTrackIndex = index;
+    trackSelect.value = index;
+    const item = zipTracks[index];
+    loadAndPlay(item.url, item.name, item.isVideo);
+  }
+
+  function loadAndPlay(url, fileName, isVideo) {
+    player.src = url;
+
+    if (isVideo) {
+      player.style.display = 'block';
+      audioModeDisplay.style.display = 'none';
+    } else {
+      player.style.display = 'none';
+      audioModeDisplay.style.display = 'block';
+      audioModeDisplay.textContent = `🎵 ${fileName}`;
+    }
+
+    dropZone.style.display = 'none';
+    isLoaded = true;
+    resetAB();
+    player.play().catch(() => {});
+    showControls();
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) processSelectedFile(e.target.files[0]);
+  });
+  
+  zipInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) processSelectedFile(e.target.files[0]);
+  });
+
+  ctrlFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) processSelectedFile(e.target.files[0]);
+  });
+
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) processSelectedFile(e.dataTransfer.files[0]);
+  });
+
+  // ツールバーの表示・非表示機能（常時表示・手動切替のみ）
+  function showControls() {
+    controls.classList.remove('hidden');
+    document.body.classList.remove('hide-cursor');
+  }
+
+  function hideControls() {
+    controls.classList.add('hidden');
+    document.body.classList.add('hide-cursor');
+  }
+
+  // 非表示時の復帰トリガー
+  hoverTrigger.addEventListener('mouseenter', () => showControls());
+  document.getElementById('mediaContainer').addEventListener('click', () => {
+    if (controls.classList.contains('hidden')) {
+      showControls();
+    }
+  });
+
+  btnHideControls.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideControls();
+  });
+
+  // 再生 / 一時停止
+  btnPlayPause.addEventListener('click', () => {
+    if (player.paused) player.play(); else player.pause();
+  });
+
+  player.addEventListener('play', () => {
+    btnPlayPause.textContent = '一時停止';
+  });
+
+  player.addEventListener('pause', () => {
+    btnPlayPause.textContent = '再生';
+    showControls();
+  });
+
+  // トラック終了時、全リピートOFFかつZIP内に次の曲があれば自動連送
+  player.addEventListener('ended', () => {
+    if (!player.loop && zipTracks.length > 1 && currentTrackIndex < zipTracks.length - 1) {
+      playTrack(currentTrackIndex + 1);
+    }
+  });
+
+  btnLoop.addEventListener('click', () => {
+    player.loop = !player.loop;
+    btnLoop.textContent = `全リピート: ${player.loop ? 'ON' : 'OFF'}`;
+    btnLoop.classList.toggle('active', player.loop);
+  });
+
+  player.addEventListener('loadedmetadata', () => {
+    seeker.max = player.duration;
+    durationEl.textContent = formatTime(player.duration);
+  });
+
+  player.addEventListener('timeupdate', () => {
+    if (!seeker.matches(':active')) {
+      seeker.value = player.currentTime;
+    }
+    currentTimeEl.textContent = formatTime(player.currentTime);
+
+    if (pointA !== null && pointB !== null && player.currentTime >= pointB) {
+      player.currentTime = pointA;
+    }
+  });
+
+  seeker.addEventListener('input', () => {
+    player.currentTime = seeker.value;
+  });
+
+  // 再生速度制御
+  function setSpeed(val) {
+    const num = parseFloat(val).toFixed(1);
+    speedSlider.value = num;
+    player.playbackRate = num;
+    speedVal.textContent = `${num}x`;
+  }
+
+  speedSlider.addEventListener('input', () => setSpeed(speedSlider.value));
+  btnResetSpeed.addEventListener('click', () => setSpeed(1.0));
+
+  // A-Bリピート
+  btnSetA.addEventListener('click', () => {
+    pointA = player.currentTime;
+    if (pointB !== null && pointB <= pointA) pointB = null;
+    updateABUI();
+  });
+
+  btnSetB.addEventListener('click', () => {
+    if (pointA === null) pointA = 0;
+    pointB = player.currentTime;
+    if (pointB <= pointA) {
+      const temp = pointA;
+      pointA = pointB;
+      pointB = temp;
+    }
+    updateABUI();
+  });
+
+  btnResetAB.addEventListener('click', () => resetAB());
+
+  function resetAB() {
+    pointA = null;
+    pointB = null;
+    updateABUI();
+  }
+
+  function updateABUI() {
+    if (pointA === null && pointB === null) {
+      abStatus.textContent = '';
+      btnSetA.classList.remove('active');
+      btnSetB.classList.remove('active');
+    } else if (pointA !== null && pointB === null) {
+      abStatus.textContent = `A: ${formatTime(pointA)} ~`;
+      btnSetA.classList.add('active');
+      btnSetB.classList.remove('active');
+    } else {
+      abStatus.textContent = `A-B: ${formatTime(pointA)} - ${formatTime(pointB)}`;
+      btnSetA.classList.add('active');
+      btnSetB.classList.add('active');
+    }
+  }
+
+  // ショートカットキー (スペースで再生/一時停止)
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+      e.preventDefault();
+      if (player.paused) player.play(); else player.pause();
+    }
+  });
+</script>
+</body>
+</html>

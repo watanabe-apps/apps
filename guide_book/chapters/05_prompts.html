@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第5章：Geminiを活用したアプリ作り プロンプトについて - 特別支援教育 アプリ開発ハンドブック</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* プロンプト表示ボックス */
+    .prompt-box {
+      background: #f8fafc;
+      border: 1.5px solid var(--border-mid);
+      border-left: 5px solid var(--primary);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+    .prompt-content {
+      font-family: Consolas, "SF Mono", Monaco, "UD Digi Kyokasho NK-R", monospace;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #1e293b;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: all;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .copy-btn:hover {
+      background: var(--primary-focus);
+    }
+    .copy-btn.copied {
+      background: #10b981;
+    }
+
+    /* オプションプロンプトカード */
+    .option-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .option-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .option-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .option-prompt {
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      font-family: Consolas, "SF Mono", Monaco, monospace;
+      font-size: 0.84rem;
+      color: #0f172a;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: all;
+      border: 1px dashed var(--border-mid);
+    }
+    .option-note {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-top: 0.75rem;
+      line-height: 1.6;
+    }
+
+    /* 解説テーブル */
+    .explanation-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+    .explanation-table th,
+    .explanation-table td {
+      border: 1px solid var(--border-mid);
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.65;
+    }
+    .explanation-table th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .explanation-table th:first-child,
+    .explanation-table td:first-child {
+      width: 32%;
+      font-weight: 700;
+      color: var(--primary-focus);
+      background: #f8fafc;
+    }
+
+    .nav-pager {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-mid);
+    }
+    .nav-pager a {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- サイドバーナビゲーション -->
+  <aside class="site-sidebar no-select">
+    <div>
+      <h1>特別支援教育<br>アプリ開発ハンドブック</h1>
+      <p class="sidebar-subtitle">認知特性・UI設計・現場運用の体系化</p>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">総合案内</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="../index.html">🏠 はじめに・全体目次</a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-nav-group">
+      <div class="sidebar-nav-title">理論・設計論（全5章）</div>
+      <ul class="sidebar-nav-list">
+        <li><a href="01_domains.html">第1章：生成AIで何ができる？</a></li>
+        <li><a href="02_merits.html">第2章：学習アプリの5大メリットと具体物との使い分け</a></li>
+        <li><a href="03_reinforcement_learning.html">第3章：アプリでの学習は、強化学習と似ている？</a></li>
+        <li><a href="04_principles.html">第4章：学習用アプリの設計・実装思想</a></li>
+        <li><a href="05_prompts.html" class="active">第5章：Geminiを活用したアプリ作り プロンプトについて</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- メインコンテンツ -->
+  <main class="main-wrapper">
+    <header class="doc-header">
+      <div class="doc-meta">
+        <span>Chapter 05</span>
+        <span>•</span>
+        <span>AI App Development & Prompts</span>
+      </div>
+      <h1 class="doc-title">第5章：Geminiを活用したアプリ作り　プロンプトについて</h1>
+      <div class="doc-intro">
+        GeminiおよびGeminiのCanvas機能を活用し、第4章までの設計思想を反映した特別支援教育向けWebアプリを実際に作成するためのマスタープロンプトと、各指示の教育的・技術的な解説を掲載します。
+      </div>
+    </header>
+
+    <div class="content-body">
+
+      <!-- 1 プロンプト例 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.1</span>
+          <h2 class="section-title">プロンプト例</h2>
+        </div>
+        <div class="prose-block">
+          <p>
+            以下のプロンプトをコピーし、【作成したいアプリの概要】を編集して使用してください。あくまで一例なので、自由に書き換えてください。
+          </p>
+
+          <div class="prompt-box">
+            <button class="copy-btn" onclick="copyMasterPrompt(this)">
+              <span>📋 プロンプトをコピー</span>
+            </button>
+            <div class="prompt-content" id="masterPrompt">特別支援学校の児童生徒が使うためのWebアプリ（HTML5/JavaScript）を作成してください。
+ 
+【作成したいアプリの概要】
+（※分からなかったり指定がなかったりする項目は空欄のままで構いません。Gemini側で使いやすく補完してください）
+・アプリ名：［例：たべものタッチゲーム］
+・アプリのテーマ・目的：［例：画面を流れる果物をタッチして捕まえる］
+・画面の見た目・配置：［例：上にスコア表示、中央に大きな描画エリア］
+・児童生徒の操作：［例：画面上を動く絵文字を直接タップする］
+・フィードバック・演出：［例：タップ成功で「パチン！」と音が鳴り、星のエフェクトが出る］
+・その他こだわり：［例：失敗してもゲームオーバーにならず、ずっと遊べる］
+ 
+【必須の技術・UI仕様】
+1. **ファイル形式**:
+   - HTML、CSS、JavaScriptをすべて「1つのHTMLファイル」にまとめて出力してください。
+2. **フォント指定**:
+   - Google Fontsから「Klee One」を読み込み、アプリ全体（テキスト、ボタン等）のフォントに設定してください。
+3. **視覚要素（画像ファイル不可・絵文字 / HTML5 &lt;canvas&gt; 活用）**:
+   - 外部の画像ファイル（png, jpg等）は使用せず、視覚要素は「絵文字（Emoji）」、CSSグラフィック、またはHTML5の「&lt;canvas&gt; タグ」を使って描画・表現してください。
+4. **音声処理（外部音声ファイル不可・Web Audio API活用）**:
+   - 外部の音声ファイル（mp3, wav等）は一切使用せず、効果音・BGMはすべてWeb Audio API（オシレーター等）を用いてJavaScriptコード内でシンセサイズして再生してください。
+5. **iPad対応（PWA / 画面拡大・文字選択・システム誤作動の防止）**:
+   - 「ホーム画面に追加」して使えるよう、&lt;head&gt;内に以下のメタタグを含めてください。
+     • &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;
+     • &lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;
+     • &lt;meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"&gt;
+   - **【誤操作防止】** ダブルタップやピンチアウトによる画面拡大を防ぐため、CSS（`touch-action: manipulation;`）およびJavaScript（`gesturestart` イベントのキャンセル等）でズーム動作を完全に無効化してください。
+   - **【文字選択防止】** 画面の長押しで文字やボタンが青く選択されたり、コピー等のポップアップメニューが出たりしないよう、CSS（`user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;`）をアプリ全体に適用してください。
+   - **【システム誤作動防止】** 画面下端からのスワイプ（ホーム復帰）や上端からのスワイプ（通知・コントロールセンター）の誤動作を防ぐため、画面の最上部および最下部には操作ボタンやドラッグ対象を配置せず、上下に適切な余白（マージン）を設けてください。
+6. **画面構成（スタート画面と設定ボタン）**:
+   - アプリ起動時はまず「アプリ名」と「大きなスタートボタン」がある【スタート画面】を表示してください。
+   - スタートボタンをタップするとWeb Audio APIのAudioContextを初期化・アンロック（準備）し、メインの操作画面に切り替わるようにしてください。
+   - 教員用の設定画面（モーダルまたは別画面）を開くための「設定ボタン（アイコン）」は、この【スタート画面】上に配置してください。
+   - 設定項目が多くなった場合でも確実にすべての項目を操作できるよう、設定画面内は上下スクロール（`overflow-y: auto;`）ができるようにしてください。
+7. **誤操作防止（設定ボタンのトリプルタップ・干渉対策）**:
+   - 児童生徒の誤操作を防ぐため、設定ボタンは「アイコンをトリプルタップ（3回連続タップ）」した時のみ設定画面が開く仕様にしてください。
+   - **【重要】** 画面全体のダブルタップ防止処理と競合しないよう、設定ボタンには `pointerdown` イベントとタップの経過時間（例: 500ms以内に3回タップ）を用いた独立した連打判定ロジックを実装してください。
+8. **設定データの永続保存（localStorageの使用）**:
+   - 設定画面で変更した内容（難易度や問題リスト等）は、ブラウザを閉じても保持されるよう `localStorage` に保存・読み込みできるようにしてください。
+   - 同一ドメイン内の他アプリとのデータ競合（上書き）を防ぐため、`localStorage` のキー名には必ず「このアプリ固有のプレフィックス（例: アプリ名_settings）」を付与してください。
+9. **アクセシビリティ**:
+   - タップターゲットは大きく押しやすいデザインにし、タッチ操作に最適化してください。
+10. **完全なコードの出力（最重要）**:
+    - 描画処理やJavaScriptも含め、コードを絶対に途中で省略（「// ここに処理を記述」など）せず、そのままCanvas上でプレビュー動作する完全なHTMLコードとして出力してください。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 追加プロンプト例 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.2</span>
+          <h2 class="section-title">追加プロンプト例</h2>
+        </div>
+        <div class="prose-block">
+          <p>
+            用途に応じて以下のプロンプトを追加してください。
+          </p>
+
+          <!-- オプション1 -->
+          <div class="option-card">
+            <div class="option-title">🏷️ オプション１：ホーム画面用アイコンを設定する</div>
+            <div class="option-desc">iPadのホーム画面にショートカットを追加した際のアイコン画像を指定します。</div>
+            <div class="option-prompt">【指示プロンプト】
+ホーム画面に追加したときに表示されるアプリアイコンを設定したいです。HTMLと同じフォルダにある icon.png を読み込むタグを &lt;head&gt; 内に追加してください。</div>
+            <div class="option-note">
+              <strong>注意点:</strong> HTMLファイルと同じフォルダ内に、正方形の画像ファイル（180×180ピクセル推奨）を <code>icon.png</code> という名前で保存しておく必要があります。
+            </div>
+          </div>
+
+          <!-- オプション2 -->
+          <div class="option-card">
+            <div class="option-title">🖼️ オプション２：端末内の画像を登録・保存する（IndexedDB）</div>
+            <div class="option-desc">写真やイラストをアップロードして教材に使い、ブラウザを閉じても消えないようにします。</div>
+            <div class="option-prompt">【指示プロンプト】
+教員向けの設定画面から、端末内の画像ファイル（png/jpg）をアップロードして登録・表示できるようにしてください。 容量制限によるエラーを防ぐため、画像の保存には localStorage ではなく IndexedDB を使用してください。 また、不要になったデータを完全に消去できるよう、設定画面内に「登録画像とデータをすべて初期化する」完全削除ボタンを設置してください。</div>
+            <div class="option-note">
+              <strong>個人情報に関する注意:</strong> 児童生徒の顔写真や個別情報を登録した端末を共用あるいは別の児童生徒用に変更する場合は、「初期化ボタン」でデータを削除するか、特定の個人が識別できない画像（イラストやフリー素材等）を使用してください。
+            </div>
+          </div>
+
+          <!-- オプション3 -->
+          <div class="option-card">
+            <div class="option-title">📦 オプション３：データを書き出し・読み込みして他のiPadと共有する</div>
+            <div class="option-desc">１台の端末で作成した単語リストや画像データをファイルとして出力し、別のiPadに一括で取り込みます。</div>
+            <div class="option-prompt">【指示プロンプト】
+別のiPadでも同じ教材データを使えるようにしたいです。 設定画面に以下の2つのボタンを追加してください。
+「データを書き出す」ボタン：登録した画像や設定内容を1つのJSONファイル（画像はBase64形式）として端末にダウンロード保存する処理。
+「データを読み込む」ボタン：書き出したJSONファイルを選択してアップロードすると、現在のIndexedDBにデータを取り込んで即座に反映する処理。</div>
+            <div class="option-note">
+              <strong>運用のメリット:</strong> AirDrop等でJSONファイルを他のiPadに送り、別のiPadで読み込むだけで、全端末に同じ教材環境を配付できます。端末のブラウザキャッシュが消えた際のバックアップとしても機能します。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 プロンプト解説 -->
+      <section class="section-block">
+        <div class="section-header">
+          <span class="section-badge">5.3</span>
+          <h2 class="section-title">プロンプト解説</h2>
+        </div>
+        <div class="prose-block">
+          <p>
+            マスタープロンプトに含まれる各指示の背景にある、教育的配慮や技術的な理由を解説します。
+          </p>
+
+          <table class="explanation-table">
+            <thead>
+              <tr>
+                <th>プロンプトの記述（項目・指示内容）</th>
+                <th>解説（なぜこの指示を入れるのか）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>【作成したいアプリの概要】<br><small>（アプリ名、テーマ、画面配置、操作、フィードバック等）</small></td>
+                <td>
+                  <strong>◯ AIに教材の核となるアイデアを伝える部分</strong><br>
+                  ここを書き換えます。未定の項目は空欄でもAIが適当な値を補ってくれます。可能な限り具体的に記入したほうが、イメージに近い結果を得やすいです。なお、画面配置については、イメージ画像をプロンプトに貼り付けることも効果的です。
+                </td>
+              </tr>
+              <tr>
+                <td>1. ファイル形式<br><small>HTML、CSS、JSを1つのHTMLファイルにまとめる</small></td>
+                <td>
+                  <strong>◯ Canvas対応とファイル管理のトラブルを減らすため</strong><br>
+                  通常はこれらのファイルを別々に保存して連携させますが、使用する「Geminiの作業画面（Canvas機能）」でその場ですぐに動作確認（プレビュー）を行うには、1つのHTMLファイルにまとまっている必要があります。また、どのファイルを書き換えるか迷わないようにします。ただし、コードが長くなりすぎた場合、一つのファイルに収まらなかったり、無理に一つのファイルに収めようとして機能が削られたりすることもあります。その場合は、複数ファイルに分けることを検討してください。
+                </td>
+              </tr>
+              <tr>
+                <td>2. フォント指定<br><small>Google Fontsの「Klee One」を適用</small></td>
+                <td>
+                  <strong>◯ 読みやすさと教育的配慮のため</strong><br>
+                  教科書体に近いフリーのフォントを指定しています。文字の形を捉えやすく、特別な準備なしで全端末で同じ見た目になります。
+                </td>
+              </tr>
+              <tr>
+                <td>3. 視覚要素（画像ファイル不可）<br><small>絵文字、CSS、Canvasで描画する</small></td>
+                <td>
+                  <strong>◯ 著作権保護、画像準備の手間とリンク切れを防ぐため</strong><br>
+                  勝手に外部の画像を使用して著作権を侵害することを防ぎます。また、外部画像を指定すると、画像の保存やパス設定が必要になります。OS標準の「絵文字」やコード描画に限定することで、追加素材なしですぐに視覚的な教材が作れます。なお、OSによって絵文字は異なるので注意が必要です。
+                </td>
+              </tr>
+              <tr>
+                <td>4. 音声処理（外部音声ファイル不可）<br><small>Web Audio APIでコード内で音を合成する</small></td>
+                <td>
+                  <strong>◯ 著作権保護、音声ファイルの用意を不要にするため</strong><br>
+                  勝手に外部の音源を使用して著作権を侵害することを防ぎます。mp3ファイル等を用意させると作業手順が複雑になります。ブラウザの機能（電子音の計算合成）で「ピピッ」「パチン」といった効果音をコード単体で鳴らします。
+                </td>
+              </tr>
+              <tr>
+                <td>5. iPad対応（誤操作・拡大防止）<br><small>viewport設定、ダブルタップ拡大禁止、文字選択禁止</small></td>
+                <td>
+                  <strong>◯ 授業中の「動かなくなった」トラブルを防ぐため</strong><br>
+                  児童生徒が画面を連打したときに画面が勝手にズームしたり、長押しで青い選択枠や「コピー」メニューが出たりするiPad特有の誤動作を完全に封じます。また、画面端からドラッグして意図せずアプリを切り替えたりコントロールセンター等が出たりするのを防ぎます。
+                </td>
+              </tr>
+              <tr>
+                <td>6. 画面構成（スタート画面）<br><small>スタート画面の設置と音声アンロック、設定画面のスクロール許可</small></td>
+                <td>
+                  <strong>◯ iPadで確実に音を鳴らし、設定操作を担保するため</strong><br>
+                  iPad（iOS Safari）の安全仕様上、ユーザーが画面を一度タップしないと音声再生が許可されません。スタートボタンを踏ませることで、確実に音が出る状態を作ります。また、全体でスクロールを禁止していても設定画面内はスクロール可能にしておくことで、設定項目が増えても操作不能になるトラブルを防ぎます。
+                </td>
+              </tr>
+              <tr>
+                <td>7. 誤操作防止（設定ボタン）<br><small>トリプルタップ（3回連続）で設定を開く</small></td>
+                <td>
+                  <strong>◯ 児童生徒が設定を変えてしまうのを防ぐため</strong><br>
+                  1回タップやダブルタップだと誤って設定が開きます。3回連続タップという教員のみが知る操作にすることで、授業の進行を妨げません。
+                </td>
+              </tr>
+              <tr>
+                <td>8. 設定データの永続保存<br><small>localStorageと固有プレフィックスの使用</small></td>
+                <td>
+                  <strong>◯ 端末の電源を切っても設定を残すため</strong><br>
+                  難易度や出題設定をブラウザ内に記憶させます。また、プレフィックス（識別名）を付けることで、同じドメイン内で別のアプリを作ったときにデータが混ざって上書きされる事故を防ぎます。
+                </td>
+              </tr>
+              <tr>
+                <td>9. アクセシビリティ<br><small>タップターゲットを大きくする</small></td>
+                <td>
+                  <strong>◯ 運動面の操作性に配慮するため</strong><br>
+                  指先の細かいコントロールが苦手な児童生徒でも、押し間違えずに意図した操作ができるようにボタンサイズを強制的に確保させます。
+                </td>
+              </tr>
+              <tr>
+                <td>10. 完全なコードの出力<br><small>コードを途中で省略させない</small></td>
+                <td>
+                  <strong>◯ コピー＆ペーストだけで完成させるため</strong><br>
+                  AIはコードが長くなると「// ここにロジックを追記」と処理を省略することがあります。この記述をしていてもコードを省略する場合があるので、その場合は「フルコードを出力」と指示してください。
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 前後の章へのナビゲーション -->
+      <nav class="nav-pager">
+        <a href="04_principles.html">◀ 第4章：学習用アプリの設計・実装思想へ</a>
+        <a href="../index.html">目次（ホーム）へ戻る 🏠</a>
+      </nav>
+
+    </div>
+  </main>
+
+  <script>
+    function copyMasterPrompt(btn) {
+      const text = document.getElementById('masterPrompt').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '<span>✅ コピー完了！</span>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<span>📋 プロンプトをコピー</span>';
+        }, 2000);
+      }).catch(err => {
+        alert('コピーに失敗しました。手動で選択してコピーしてください。');
+      });
+    }
+  </script>
+</body>
+</html>

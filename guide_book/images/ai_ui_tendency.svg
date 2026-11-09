@@ -1,119 +1,141 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 500" width="100%" height="auto" style="background:#ffffff; border-radius:12px; font-family:-apple-system, BlinkMacSystemFont, 'UD Digi Kyokasho NK-R', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 470" width="100%" height="auto" style="background:#ffffff; border-radius:12px; font-family:-apple-system, BlinkMacSystemFont, 'UD Digi Kyokasho NK-R', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;">
   <defs>
-    <!-- ドロップシャドウ -->
-    <filter id="card-shadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0284c7" flood-opacity="0.25"/>
-    </filter>
-    <filter id="panel-shadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.06"/>
+    <filter id="card-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0284c7" flood-opacity="0.2"/>
     </filter>
   </defs>
 
   <!-- ==================== 左側：AIが作成した画面実例（タブレット） ==================== -->
-  <!-- タブレットベゼル -->
-  <rect x="20" y="20" width="580" height="460" rx="16" fill="#0f172a"/>
-  <!-- 液晶画面エリア -->
-  <rect x="34" y="34" width="552" height="432" rx="6" fill="#ffffff"/>
+  <g transform="translate(14, 14)">
+    <!-- タブレット外枠（ベゼル） -->
+    <rect x="0" y="0" width="480" height="442" rx="14" fill="#0f172a"/>
+    <!-- 液晶画面エリア -->
+    <rect x="10" y="10" width="460" height="422" rx="6" fill="#ffffff"/>
 
-  <!-- [② ヘッダー] 上部ヘッダーバー -->
-  <rect x="34" y="34" width="552" height="42" fill="#334155"/>
-  <text x="50" y="60" font-size="14" font-weight="bold" fill="#ffffff">🧩 たのしいくだものあわせ</text>
-  <rect x="440" y="44" width="130" height="22" rx="4" fill="#1e293b"/>
-  <text x="455" y="59" font-size="11" font-weight="bold" fill="#38bdf8">もんだい 1 / 5 ⭐️</text>
+    <!-- [② ヘッダー] 上部ヘッダーバー -->
+    <rect x="10" y="10" width="460" height="40" fill="#334155"/>
+    <text x="22" y="35" font-size="13" font-weight="bold" fill="#ffffff">🧩 ひらがな ならべかえ</text>
+    <rect x="350" y="20" width="105" height="20" rx="4" fill="#1e293b"/>
+    <text x="360" y="34" font-size="10.5" font-weight="bold" fill="#38bdf8">もんだい 1 / 5 ⭐️</text>
+    <!-- ② バッジピン -->
+    <circle cx="334" cy="30" r="11" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+    <text x="334" y="34.5" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">②</text>
 
-  <!-- 文字指示文バナー（ノイズ） -->
-  <rect x="46" y="84" width="528" height="30" rx="6" fill="#fef08a" stroke="#eab308" stroke-width="1.5"/>
-  <text x="58" y="104" font-size="11" font-weight="bold" fill="#854d0e">⚠️ しじ：したの ３つのわくのなかに、くだものをいれてね！</text>
+    <!-- 文字指示文バナー -->
+    <rect x="20" y="58" width="440" height="26" rx="4" fill="#fef08a" stroke="#eab308" stroke-width="1"/>
+    <text x="30" y="75" font-size="10.5" font-weight="bold" fill="#854d0e">⚠️ しじ：したの もじを うえの わくに いれて「りんご」にしてね！</text>
 
-  <!-- [④ 枠の多用] 上部受け皿セクション枠 -->
-  <rect x="46" y="122" width="528" height="122" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
-  <text x="58" y="140" font-size="11" font-weight="bold" fill="#64748b">【うけざらエリア（不要な外枠）】</text>
+    <!-- [④ 枠の多用] 上部解答セクション枠 -->
+    <rect x="20" y="92" width="440" height="114" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="30" y="108" font-size="9.5" font-weight="bold" fill="#64748b">【もんだい・かいとう枠（不要な外枠）】</text>
+    <!-- ④ バッジピン（右上） -->
+    <circle cx="446" cy="106" r="11" fill="#0284c7" stroke="#ffffff" stroke-width="2"/>
+    <text x="446" y="110.5" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">④</text>
 
-  <!-- [① 隙間・角丸] スロット枠 -->
-  <rect x="110" y="152" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
-  <text x="135" y="196" font-size="13" font-weight="bold" fill="#94a3b8">枠 1</text>
+    <!-- [③ カード化] 枠の左に配置したカード化りんごイラスト -->
+    <g transform="translate(32, 116)" filter="url(#card-shadow)">
+      <rect x="0" y="0" width="76" height="76" rx="10" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="18" y="53" font-size="40">🍎</text>
+    </g>
+    <!-- ③ バッジピン -->
+    <circle cx="110" cy="122" r="11" fill="#0284c7" stroke="#ffffff" stroke-width="2"/>
+    <text x="110" y="126.5" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">③</text>
 
-  <rect x="272" y="152" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
-  <text x="297" y="196" font-size="13" font-weight="bold" fill="#94a3b8">枠 2</text>
+    <!-- [① 隙間・角丸] 3文字の解答枠 -->
+    <rect x="144" y="116" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4"/>
+    <text x="175" y="160" font-size="14" font-weight="bold" fill="#cbd5e1">１</text>
 
-  <rect x="434" y="152" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5"/>
-  <text x="459" y="196" font-size="13" font-weight="bold" fill="#94a3b8">枠 3</text>
+    <rect x="250" y="116" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4"/>
+    <text x="281" y="160" font-size="14" font-weight="bold" fill="#cbd5e1">２</text>
 
-  <!-- 隙間（gap）の図示矢印 -->
-  <line x1="190" y1="190" x2="268" y2="190" stroke="#ef4444" stroke-width="2" stroke-dasharray="3,3"/>
-  <text x="206" y="183" font-size="11" font-weight="bold" fill="#ef4444">隙間 (gap)</text>
+    <rect x="356" y="116" width="76" height="76" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4"/>
+    <text x="387" y="160" font-size="14" font-weight="bold" fill="#cbd5e1">３</text>
 
-  <line x1="352" y1="190" x2="430" y2="190" stroke="#ef4444" stroke-width="2" stroke-dasharray="3,3"/>
-  <text x="368" y="183" font-size="11" font-weight="bold" fill="#ef4444">隙間 (gap)</text>
+    <!-- 隙間（gap）の図示矢印 -->
+    <line x1="222" y1="154" x2="248" y2="154" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="225" y="147" font-size="9" font-weight="bold" fill="#ef4444">隙間</text>
 
-  <!-- [④ 枠の多用] 下部くだもの置き場セクション枠 -->
-  <rect x="46" y="254" width="528" height="136" rx="8" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
-  <text x="58" y="272" font-size="11" font-weight="bold" fill="#64748b">【くだものトレイ（さらに二重枠）】</text>
+    <line x1="328" y1="154" x2="354" y2="154" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="331" y="147" font-size="9" font-weight="bold" fill="#ef4444">隙間</text>
+    <!-- ① バッジピン -->
+    <circle cx="438" cy="154" r="11" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+    <text x="438" y="158.5" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">①</text>
 
-  <!-- [③ カード化] りんご・バナナ・ぶどう -->
-  <g transform="translate(110, 286)" filter="url(#card-shadow)">
-    <rect x="0" y="0" width="76" height="76" rx="12" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
-    <text x="20" y="52" font-size="38">🍎</text>
+    <!-- [④ 枠の多用] 下部文字トレイ枠 -->
+    <rect x="20" y="216" width="440" height="136" rx="6" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="30" y="234" font-size="9.5" font-weight="bold" fill="#64748b">【もじトレイ（さらに二重枠）】</text>
+
+    <!-- ランダムな文字ピース（ご・り・ん） -->
+    <g transform="translate(80, 248)" filter="url(#card-shadow)">
+      <rect x="0" y="0" width="76" height="76" rx="10" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="38" y="53" font-size="40" font-weight="bold" fill="#0f172a" text-anchor="middle">ご</text>
+    </g>
+
+    <g transform="translate(202, 248)" filter="url(#card-shadow)">
+      <rect x="0" y="0" width="76" height="76" rx="10" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="38" y="53" font-size="40" font-weight="bold" fill="#0f172a" text-anchor="middle">り</text>
+    </g>
+
+    <g transform="translate(324, 248)" filter="url(#card-shadow)">
+      <rect x="0" y="0" width="76" height="76" rx="10" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="38" y="53" font-size="40" font-weight="bold" fill="#0f172a" text-anchor="middle">ん</text>
+    </g>
   </g>
 
-  <g transform="translate(272, 286)" filter="url(#card-shadow)">
-    <rect x="0" y="0" width="76" height="76" rx="12" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
-    <text x="20" y="52" font-size="38">🍌</text>
+
+  <!-- ==================== 右側：①〜④の要点パネル（大文字・明瞭） ==================== -->
+  <g transform="translate(506, 14)">
+
+    <!-- ① 枠と枠の間の隙間【要調整】 -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="260" height="102" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1.5"/>
+      <rect x="8" y="8" width="244" height="24" rx="4" fill="#fee2e2"/>
+      <text x="14" y="25" font-size="12.5" font-weight="bold" fill="#b91c1c">① 枠と枠の隙間（gap）</text>
+      <rect x="180" y="11" width="66" height="18" rx="3" fill="#ef4444"/>
+      <text x="213" y="24" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">要調整</text>
+
+      <text x="12" y="52" font-size="11.5" fill="#334155">・3文字の枠間に不要な隙間と角丸</text>
+      <text x="12" y="71" font-size="11.5" fill="#334155">・紙プリント（正方形連結）と乖離</text>
+      <text x="12" y="90" font-size="11.5" font-weight="bold" fill="#dc2626">➜ 特段の理由がなければ枠をつなぐ</text>
+    </g>
+
+    <!-- ② ヘッダーの配置【要調整】 -->
+    <g transform="translate(0, 114)">
+      <rect x="0" y="0" width="260" height="102" rx="8" fill="#ffffff" stroke="#fca5a5" stroke-width="1.5"/>
+      <rect x="8" y="8" width="244" height="24" rx="4" fill="#fee2e2"/>
+      <text x="14" y="25" font-size="12.5" font-weight="bold" fill="#b91c1c">② ヘッダーの配置</text>
+      <rect x="180" y="11" width="66" height="18" rx="3" fill="#ef4444"/>
+      <text x="213" y="24" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">要調整</text>
+
+      <text x="12" y="52" font-size="11.5" fill="#334155">・上部にタイトルバーを置きがち</text>
+      <text x="12" y="71" font-size="11.5" fill="#334155">・横長画面の貴重な上下幅を圧迫</text>
+      <text x="12" y="90" font-size="11.5" font-weight="bold" fill="#dc2626">➜ ヘッダー廃止、問題数は端に小さく</text>
+    </g>
+
+    <!-- ③ イラストのカード化【使い分け】 -->
+    <g transform="translate(0, 228)">
+      <rect x="0" y="0" width="260" height="102" rx="8" fill="#ffffff" stroke="#7dd3fc" stroke-width="1.5"/>
+      <rect x="8" y="8" width="244" height="24" rx="4" fill="#e0f2fe"/>
+      <text x="14" y="25" font-size="12.5" font-weight="bold" fill="#0369a1">③ イラストのカード化</text>
+      <rect x="180" y="11" width="66" height="18" rx="3" fill="#0284c7"/>
+      <text x="213" y="24" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">使い分け</text>
+
+      <text x="12" y="52" font-size="11.5" fill="#334155">👍 見本（🍎）の輪郭が明瞭になる</text>
+      <text x="12" y="71" font-size="11.5" fill="#334155">⚠️ 余白圧迫や認知差の可能性も</text>
+      <text x="12" y="90" font-size="11.5" font-weight="bold" fill="#0284c7">➜ 文字はカード化、画像は目的で選ぶ</text>
+    </g>
+
+    <!-- ④ 枠の多用（重層枠）【使い分け】 -->
+    <g transform="translate(0, 342)">
+      <rect x="0" y="0" width="260" height="102" rx="8" fill="#ffffff" stroke="#7dd3fc" stroke-width="1.5"/>
+      <rect x="8" y="8" width="244" height="24" rx="4" fill="#e0f2fe"/>
+      <text x="14" y="25" font-size="12.5" font-weight="bold" fill="#0369a1">④ 枠の多用（重層枠）</text>
+      <rect x="180" y="11" width="66" height="18" rx="3" fill="#0284c7"/>
+      <text x="213" y="24" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">使い分け</text>
+
+      <text x="12" y="52" font-size="11.5" fill="#334155">👍 エリアの「構造化」として有効</text>
+      <text x="12" y="71" font-size="11.5" fill="#334155">⚠️ 何重もの枠線でノイズになる場合も</text>
+      <text x="12" y="90" font-size="11.5" font-weight="bold" fill="#0284c7">➜ 構造化かノイズかで使い分ける</text>
+    </g>
   </g>
-
-  <g transform="translate(434, 286)" filter="url(#card-shadow)">
-    <rect x="0" y="0" width="76" height="76" rx="12" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
-    <text x="20" y="52" font-size="38">🍇</text>
-  </g>
-
-
-  <!-- ==================== 右側：本文4.6の項目と完全一致した解説 ==================== -->
-
-  <!-- ① 枠と枠の間に隙間を空けて配置する -->
-  <g transform="translate(620, 24)" filter="url(#panel-shadow)">
-    <rect x="0" y="0" width="300" height="98" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-    <rect x="10" y="10" width="280" height="24" rx="4" fill="#fee2e2"/>
-    <text x="18" y="26" font-size="12" font-weight="bold" fill="#b91c1c">① 枠と枠の間に隙間を空ける</text>
-    <text x="14" y="52" font-size="11" fill="#475569">・マス同士の間に不要な隙間（gap）ができる</text>
-    <text x="14" y="70" font-size="11" fill="#475569">・角丸の四角形になり、紙プリントと形が乖離</text>
-    <text x="14" y="86" font-size="10" font-weight="bold" fill="#0284c7">➜ 対策：プリント同様に枠をつなげて配置</text>
-  </g>
-  <!-- 引き出し線 ① -->
-  <path d="M 620 73 L 420 178" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
-
-  <!-- ② ヘッダーを配置する -->
-  <g transform="translate(620, 136)" filter="url(#panel-shadow)">
-    <rect x="0" y="0" width="300" height="98" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-    <rect x="10" y="10" width="280" height="24" rx="4" fill="#fee2e2"/>
-    <text x="18" y="26" font-size="12" font-weight="bold" fill="#b91c1c">② ヘッダーを配置する</text>
-    <text x="14" y="52" font-size="11" fill="#475569">・上部にタイトルバー等をドカンと置きがち</text>
-    <text x="14" y="70" font-size="11" fill="#475569">・横長タブレットの貴重な上下幅を圧迫する</text>
-    <text x="14" y="86" font-size="10" font-weight="bold" fill="#0284c7">➜ 対策：ヘッダー廃止、問題数は端に小さく</text>
-  </g>
-  <!-- 引き出し線 ② -->
-  <path d="M 620 185 L 586 55" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
-
-  <!-- ③ オブジェクトをカード化する -->
-  <g transform="translate(620, 248)" filter="url(#panel-shadow)">
-    <rect x="0" y="0" width="300" height="98" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-    <rect x="10" y="10" width="280" height="24" rx="4" fill="#fee2e2"/>
-    <text x="18" y="26" font-size="12" font-weight="bold" fill="#b91c1c">③ オブジェクトをカード化する</text>
-    <text x="14" y="52" font-size="11" fill="#475569">・画像をそのまま出さず四角い枠・影を付与</text>
-    <text x="14" y="70" font-size="11" fill="#475569">・「りんごを動かす」感覚が薄れ枠幅も消費</text>
-    <text x="14" y="86" font-size="10" font-weight="bold" fill="#0284c7">➜ 対策：枠なしイラストそのままでもOK</text>
-  </g>
-  <!-- 引き出し線 ③ -->
-  <path d="M 620 297 L 515 324" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
-
-  <!-- ④ 枠を多用する -->
-  <g transform="translate(620, 360)" filter="url(#panel-shadow)">
-    <rect x="0" y="0" width="300" height="98" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
-    <rect x="10" y="10" width="280" height="24" rx="4" fill="#fee2e2"/>
-    <text x="18" y="26" font-size="12" font-weight="bold" fill="#b91c1c">④ 枠を多用する（重層の囲み枠）</text>
-    <text x="14" y="52" font-size="11" fill="#475569">・エリアごとに何重もの枠線で囲ってしまう</text>
-    <text x="14" y="70" font-size="11" fill="#475569">・構造化のつもりが画面の情報量過多・ノイズに</text>
-    <text x="14" y="86" font-size="10" font-weight="bold" fill="#0284c7">➜ 対策：不要な外枠を削り主役を際立たせる</text>
-  </g>
-  <!-- 引き出し線 ④ -->
-  <path d="M 620 409 L 574 270" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
 </svg>

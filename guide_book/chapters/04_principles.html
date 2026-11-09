@@ -135,29 +135,13 @@
     </div>
 
     <div class="sidebar-nav-group">
-      <div class="sidebar-nav-title">理論・設計論（全6章）</div>
+      <div class="sidebar-nav-title">理論・設計論（全5章）</div>
       <ul class="sidebar-nav-list">
         <li><a href="01_domains.html">第1章：生成AIで何ができる？</a></li>
         <li><a href="02_merits.html">第2章：学習アプリの5大メリットと具体物との使い分け</a></li>
         <li><a href="03_reinforcement_learning.html">第3章：アプリでの学習は、強化学習と似ている？</a></li>
         <li><a href="04_principles.html" class="active">第4章：学習用アプリの設計・実装思想</a></li>
-        <li><a href="05_subjects.html">第5章：教科・自立活動別の実践論</a></li>
-        <li><a href="06_operations.html">第6章：実装・運用のリアリズム</a></li>
-      </ul>
-    </div>
-
-    <div class="sidebar-nav-group">
-      <div class="sidebar-nav-title">検証用実動デモ</div>
-      <ul class="sidebar-nav-list">
-        <li><a href="../demos/07_drag_vs_tap.html">✋ デモG：型はめ（ドラッグvsタップ）</a></li>
-        <li><a href="../demos/01_drag_lab.html">🧪 デモA：ドラッグ操作ラボ</a></li>
-        <li><a href="../demos/08_target_contrast.html">🎯 デモH：操作対象と終点の視覚化</a></li>
-        <li><a href="../demos/06_trace_lab.html">✏️ デモF：視線誘導なぞり書き</a></li>
-        <li><a href="../demos/09_bg_contrast.html">🎨 デモI：背景色＆コントラスト</a></li>
-        <li><a href="../demos/02_count_lab.html">🔢 デモB：数の学習（円 vs 車）</a></li>
-        <li><a href="../demos/03_writing_lab.html">✍️ デモC：消去 & キーボード</a></li>
-        <li><a href="../demos/04_guard_lab.html">🔒 デモD：現場防衛トリプルタップ</a></li>
-        <li><a href="../demos/05_suuji_narabe.html">🧩 デモE：数字カード並べ替え</a></li>
+        <li><a href="05_prompts.html">第5章：Geminiを活用したアプリ作り プロンプトについて</a></li>
       </ul>
     </div>
   </aside>
@@ -224,7 +208,7 @@
           
           <h3 class="sub-section-title">① 操作はドラッグを基本、タップは慣れてから</h3>
           <p>
-            型はめのアプリを想定します。画面上部に見本となる図形があり、下部に選択肢が並んでいます。このようなアプリでは、認知発達の観点から考えてもドラッグ操作の方が望ましいと言えます。理由としては色々ありますが、「感覚と運動の高次化理論」では〇〇と説明できます。他にも、ドラッグすることで見本と選択肢を近距離で見比べたり、重ねたりすることができ、視覚的にわかりやすくなることも考えられます。
+            型はめのアプリ（実践例：<a href="../../shapes.html" target="_blank" class="external-link">図形あそび ↗</a>）を想定します。画面上部に見本となる図形があり、下部に選択肢が並んでいます。このようなアプリでは、認知発達の観点から考えてもドラッグ操作の方が望ましいと言えます。理由としては色々ありますが、「感覚と運動の高次化理論」では〇〇と説明できます。他にも、ドラッグすることで見本と選択肢を近距離で見比べたり、重ねたりすることができ、視覚的にわかりやすくなることも考えられます。
           </p>
           <p>
             また、別の観点として、具体物の教材には基本的にタップという操作はありません。今まで具体物を操作して学習してきたことを生かす、また、今後具体物を操作して学習するということにつなげるためにも、ドラッグ操作の方が望ましいとも言えます。
@@ -486,10 +470,10 @@
             ただし、「点タップ」やなぞり書き等、あまり思考を必要とせずワーキングメモリを消費しない単純なアプリについては、意欲向上、集中力の持続を目的として演出を追加することも効果的です。
           </p>
 
-          <!-- サンプルアプリ（ノイズ除去・演出比較ラボ）開閉アコーディオン -->
+          <!-- サンプルアプリ（演出比較ラボ）開閉アコーディオン -->
           <details class="demo-embed-details">
             <summary class="demo-embed-summary">
-              <span>🔢 サンプルアプリをこの画面で開く（数の学習：ノイズ除去・演出比較ラボ）</span>
+              <span>🔢 サンプルアプリをこの画面で開く（数の学習：演出比較ラボ 円 vs 車）</span>
               <span class="demo-toggle-icon">▼</span>
             </summary>
             <div class="demo-iframe-container" style="height: 480px;">
@@ -510,6 +494,20 @@
             「触ると音が鳴る」という因果関係を見つけると、本来の学習課題を放棄し、枠にはまったアイテムを猛烈に連打してカチカチ音を鳴らす遊びを行いがちです。一度正解したらドラッグできない、音が出ないという設定にし、注意が別の対象に向くことを防ぐ必要があります。
           </p>
 
+          <!-- サンプルアプリ（連打対策ラボ）開閉アコーディオン -->
+          <details class="demo-embed-details">
+            <summary class="demo-embed-summary">
+              <span>🔨 サンプルアプリをこの画面で開く（連打対策ラボ：正解後の挙動比較）</span>
+              <span class="demo-toggle-icon">▼</span>
+            </summary>
+            <div class="demo-iframe-container" style="height: 480px;">
+              <div class="demo-iframe-toolbar">
+                <a href="../demos/10_rapid_tap_lab.html" target="_blank" class="external-link">別ウィンドウで大きく開く ↗</a>
+              </div>
+              <iframe src="../demos/10_rapid_tap_lab.html" loading="lazy"></iframe>
+            </div>
+          </details>
+
           <h3 class="sub-section-title">⑤ ボタン数の削減</h3>
           <p>
             基本的に、ボタンがあればまずタップします。ボタンの文字が読めなくても、ボタンと認識できる見た目であればタップします。わかりにくくしていても、教師が一度タップすれば真似してタップします。そして意図しない挙動により困る、パニックになるということがよくあります。この対策として、必要ないボタンは表示しない、ボタンの表示/非表示を設定できるように設計するといったことが有効です。
@@ -528,11 +526,11 @@
             AIの作成するアプリは、一定の傾向があります。これらは全てが悪い訳ではありませんが、全てをそのまま受け入れるのではなく、目的に応じて調整することが必要です。いくつか例を紹介します。
           </p>
 
-          <!-- AIがやりがちな画面の典型例画像 -->
-          <figure style="margin: 1.5rem 0; text-align: center;">
-            <img src="../images/ai_ui_tendency.svg" alt="AIが生成しがちなノイズ過多な画面構成の実例" style="max-width: 100%; height: auto; border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+          <!-- AIが生成するUIの傾向図解 -->
+          <figure style="margin: 1.8rem 0; text-align: center;">
+            <img src="../images/ai_ui_tendency.svg" alt="AIが生成するUIの傾向（要調整と使い分けの実例図解）" style="width: 100%; max-width: 780px; height: auto; border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
             <figcaption style="font-size: 0.82rem; color: var(--text-muted); margin-top: 8px; font-weight: 600;">
-              ▲【実例】AIが生成した典型的なノイズ過多画面（不要なヘッダー・長大な指示文・二重の囲み枠・カード化の多用）
+              ▲【実例図解】AIが生成するUIの4大傾向（①②は要調整・改善、③④は目的に応じた使い分け）
             </figcaption>
           </figure>
 
@@ -631,7 +629,7 @@
       <!-- 前後の章へのナビゲーション -->
       <div class="nav-pager">
         <a href="03_reinforcement_learning.html">⬅ 第3章：アプリでの学習は、強化学習と似ている？</a>
-        <a href="05_subjects.html">第5章：教科・自立活動別の実践論 ➜</a>
+        <a href="05_prompts.html">第5章：Geminiを活用したアプリ作り プロンプトについて ➜</a>
       </div>
 
     </div>
