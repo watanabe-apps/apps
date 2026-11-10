@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自立活動 課題関連図</title>
+  <link rel="stylesheet" href="diagram.css">
+</head>
+<body>
+
+  <!-- 上部ツールバー -->
+  <header class="diagram-header no-print">
+    <div class="header-left">
+      <span class="diagram-title">📊 課題関連図（実態・課題の関連整理）</span>
+      <span id="studentNameBadge" class="badge">生徒名</span>
+    </div>
+
+    <!-- 矢印・操作ツール -->
+    <div class="header-tools">
+      <span class="tool-label">結線モード:</span>
+      <button type="button" class="tool-btn active" data-mode="solid" title="通常の実線矢印">実線 ( → )</button>
+      <button type="button" class="tool-btn" data-mode="dashed" title="破線矢印">破線 ( ⇢ )</button>
+      <button type="button" class="tool-btn" data-mode="bidirectional" title="両矢印">両方向 ( ↔ )</button>
+      <button type="button" class="tool-btn" data-mode="delete-line" title="線をクリックして削除">線削除 ✕</button>
+
+      <div class="divider"></div>
+
+      <button type="button" id="btnAddCustomCard" class="btn" title="新しいフリーカードを追加">+ カード追加</button>
+      <button type="button" id="btnToggleSidebar" class="btn" title="カード表示管理">カード一覧</button>
+      <button type="button" id="btnResetLayout" class="btn" title="カード配置を初期整列">自動整列</button>
+      <button type="button" id="btnPrintDiagram" class="btn btn-primary">印刷 / PDF</button>
+      <button type="button" id="btnCloseDiagram" class="btn">閉じる</button>
+    </div>
+  </header>
+
+  <!-- メインワークスペース -->
+  <div class="diagram-workspace" id="workspaceContainer">
+    
+    <!-- SVG結線レイヤー -->
+    <svg id="diagramSvgLayer" class="diagram-svg-layer">
+      <defs>
+        <!-- 実線用マーカー (黒) -->
+        <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#1e293b" />
+        </marker>
+        <!-- 破線用マーカー (青) -->
+        <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#2563eb" />
+        </marker>
+        <!-- 双方向矢印用マーカー (緑) -->
+        <marker id="arrow-bi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#059669" />
+        </marker>
+      </defs>
+    </svg>
+
+    <!-- カード描画キャンバス -->
+    <div id="cardCanvas" class="card-canvas">
+      <!-- JSでカードが配置されます -->
+    </div>
+
+    <!-- サイドバー（カード一覧・表示トグル） -->
+    <aside id="diagramSidebar" class="diagram-sidebar no-print">
+      <div class="sidebar-header">
+        <h4>カードの表示／非表示</h4>
+        <button id="btnCloseSidebar" class="btn-xs">✕</button>
+      </div>
+      <div class="sidebar-content" id="cardToggleList">
+        <!-- JSで一覧生成 -->
+      </div>
+    </aside>
+
+  </div>
+
+  <script src="diagram.js"></script>
+</body>
+</html>

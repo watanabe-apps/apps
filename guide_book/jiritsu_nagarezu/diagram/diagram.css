@@ -1,0 +1,372 @@
+/* =============================================================================
+   自立活動 課題関連図 スタイルシート (diagram.css)
+   ============================================================================= */
+
+:root {
+  --primary: #1e293b;
+  --accent: #2563eb;
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #cbd5e1;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  background-color: var(--bg-color);
+  color: #0f172a;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ツールバー */
+.diagram-header {
+  height: 52px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diagram-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.badge {
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tool-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #64748b;
+  margin-right: 2px;
+}
+
+.tool-btn, .btn {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tool-btn:hover, .btn:hover {
+  background: #f1f5f9;
+}
+
+.tool-btn.active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  font-weight: bold;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+/* ワークスペース */
+.diagram-workspace {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+  background-color: #f1f5f9;
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+.diagram-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3000px;
+  height: 2000px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3000px;
+  height: 2000px;
+  z-index: 2;
+}
+
+/* カードスタイル */
+.diagram-card {
+  position: absolute;
+  width: 240px;
+  background: var(--card-bg);
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  cursor: move;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.diagram-card:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.14);
+  border-color: var(--accent);
+}
+
+.diagram-card.selected-source {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+.card-header {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 7px 7px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* 区分選択セレクトボックス */
+.card-category-select {
+  border: none;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+
+.card-category-select option {
+  background: #ffffff;
+  color: #1e293b;
+}
+
+/* 区分別カラー設定 */
+.tag-kenkou { background-color: #10b981; }
+.tag-shinri { background-color: #f59e0b; }
+.tag-ningen { background-color: #8b5cf6; }
+.tag-kankyou { background-color: #06b6d4; }
+.tag-shintai { background-color: #3b82f6; }
+.tag-comm   { background-color: #ec4899; }
+.tag-step2_2 { background-color: #64748b; }
+
+.card-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.7rem;
+}
+
+/* 区分別ヘッダーカラー */
+.tag-kenkou { background: #10b981; }
+.tag-shinri { background: #f59e0b; }
+.tag-ningen { background: #8b5cf6; }
+.tag-kankyou { background: #06b6d4; }
+.tag-shintai { background: #3b82f6; }
+.tag-comm { background: #ec4899; }
+.tag-step2_2 { background: #64748b; }
+.tag-step2_3 { background: #475569; }
+.tag-custom { background: #334155; }
+
+.btn-card-hide {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.btn-card-hide:hover {
+  color: #ef4444;
+}
+
+.card-body {
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #1e293b;
+  word-break: break-word;
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+/* 結線ノードボタン（カードの四隅/中央） */
+.card-connect-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  cursor: crosshair;
+  z-index: 10;
+  display: none;
+}
+
+.diagram-card:hover .card-connect-handle,
+.diagram-card.selected-source .card-connect-handle {
+  display: block;
+}
+
+.handle-top { top: -7px; left: 50%; transform: translateX(-50%); }
+.handle-bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+.handle-left { left: -7px; top: 50%; transform: translateY(-50%); }
+.handle-right { right: -7px; top: 50%; transform: translateY(-50%); }
+
+/* SVGパス */
+.diagram-link {
+  fill: none;
+  cursor: pointer;
+  pointer-events: stroke;
+  transition: stroke 0.15s, stroke-width 0.15s;
+}
+
+.diagram-link.solid {
+  stroke: #1e293b;
+  stroke-width: 2.2;
+}
+
+.diagram-link.dashed {
+  stroke: #2563eb;
+  stroke-width: 2.2;
+  stroke-dasharray: 6, 4;
+}
+
+.diagram-link.bidirectional {
+  stroke: #059669;
+  stroke-width: 2.2;
+}
+
+.diagram-link:hover {
+  stroke: #ef4444 !important;
+  stroke-width: 4 !important;
+}
+
+/* サイドバー */
+.diagram-sidebar {
+  position: fixed;
+  top: 52px;
+  right: 0;
+  width: 280px;
+  height: calc(100vh - 52px);
+  background: #ffffff;
+  border-left: 1px solid var(--border);
+  box-shadow: -2px 0 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+.diagram-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8rem;
+}
+
+.toggle-item label {
+  flex: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 印刷用 */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body, .diagram-workspace {
+    background: #ffffff !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .diagram-card {
+    box-shadow: none !important;
+    border: 1px solid #000000 !important;
+    page-break-inside: avoid !important;
+  }
+}

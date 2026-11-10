@@ -1,0 +1,772 @@
+/* =============================================================================
+   自立活動 指導計画作成支援システム スタイルシート (style.css)
+   ============================================================================= */
+
+:root {
+  --base-font-size: 13px;
+  --primary-color: #1e293b;
+  --accent-color: #2563eb;
+  --bg-color: #f1f5f9;
+  --paper-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-sub: #475569;
+  --border-color: #cbd5e1;
+  --border-dark: #64748b;
+  --table-th-bg: #f8fafc;
+  --ref-width: 380px;
+}
+
+body[data-theme="paper"] {
+  --bg-color: #e2e8f0;
+  --paper-bg: #fcfbf9;
+  --border-color: #94a3b8;
+}
+
+body[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --paper-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-sub: #cbd5e1;
+  --border-color: #334155;
+  --table-th-bg: #0f172a;
+}
+
+body[data-theme="high-contrast"] {
+  --bg-color: #000000;
+  --paper-bg: #ffffff;
+  --text-main: #000000;
+  --border-color: #000000;
+  --table-th-bg: #e5e5e5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "BIZ UDPGothic", Meiryo, sans-serif;
+  font-size: var(--base-font-size);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ツールバー */
+.app-header {
+  height: 48px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: var(--primary-color);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.header-controls select,
+.header-controls button {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.header-controls button.btn-primary {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+  font-weight: bold;
+}
+
+.header-controls button.btn-clear {
+  background: red;
+  color: #ffffff;
+  border-color: rgb(180, 1, 1);
+  font-weight: bold;
+}
+
+/* メインレイアウト */
+.app-body {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 左側：エディタペイン */
+.editor-pane {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* A4用紙スタイル */
+.paper-sheet {
+  width: 100%;
+  max-width: 880px;
+  background: var(--paper-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.sheet-title-banner {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--text-main);
+  padding-bottom: 5px;
+  letter-spacing: 0.05em;
+}
+
+/* 各種見出し・テーブル */
+.step-header {
+  font-weight: bold;
+  font-size: 0.84rem;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+  table-layout: fixed;
+  background: var(--paper-bg);
+}
+
+.form-table th,
+.form-table td {
+  border: 1px solid var(--border-dark);
+  padding: 4px 6px;
+  font-size: var(--base-font-size);
+  vertical-align: top;
+}
+
+.form-table th {
+  background-color: var(--table-th-bg);
+  text-align: center;
+  font-weight: bold;
+}
+
+.header-info-table th {
+  text-align: left;
+  padding-left: 8px;
+}
+
+.single-line-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: var(--base-font-size);
+  background: transparent;
+  color: var(--text-main);
+  padding: 3px 4px;
+}
+
+/* テキストエリア */
+textarea {
+  width: 100%;
+  min-height: 56px;
+  height: 64px;
+  resize: vertical;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: var(--base-font-size);
+  line-height: 1.45;
+  padding: 3px 4px;
+  display: block;
+}
+
+#field_step1 {
+  min-height: 90px;
+  height: 120px;
+}
+
+#field_step2_2,
+#field_step2_3,
+#field_step3,
+#field_step4 {
+  min-height: 54px;
+  height: 64px;
+}
+
+#field_step5,
+#field_step7 {
+  min-height: 48px;
+  height: 56px;
+}
+
+.grid-textarea {
+  min-height: 60px;
+  height: 72px;
+}
+
+.sub-note {
+  font-size: 0.73rem;
+  color: var(--text-sub);
+  text-align: right;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.bottom-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-sub);
+  margin-top: 10px;
+}
+
+/* ⑥〜⑧ 結線セクション */
+.direct-link-container {
+  position: relative;
+  width: 100%;
+}
+
+.direct-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6;
+  overflow: visible;
+}
+
+.direct-link-path {
+  stroke: var(--accent-color);
+  stroke-width: 2.2;
+  fill: none;
+  cursor: pointer;
+  pointer-events: stroke;
+  transition: stroke 0.15s, stroke-width 0.15s;
+}
+
+.direct-link-path:hover {
+  stroke: #ef4444;
+  stroke-width: 4;
+}
+
+/* ノードアンカー（ドット判定を最前面にしてクリック優先） */
+.step6-table,
+.step8-table {
+  position: relative;
+  z-index: 5;
+}
+
+.step6-cell {
+  position: relative;
+  padding-bottom: 14px !important;
+}
+
+.node-anchor-bottom {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100; /* 線より最前面 */
+  pointer-events: auto;
+}
+
+.step8-cell {
+  position: relative;
+  background: transparent !important;
+  padding-top: 14px !important;
+}
+
+.node-anchor-top {
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100; /* 線より最前面 */
+  pointer-events: auto;
+}
+
+.connect-node {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.15s;
+  pointer-events: auto;
+  position: relative;
+  z-index: 101;
+}
+
+.connect-node:hover {
+  transform: scale(1.35);
+}
+
+.connect-node.selected {
+  background: #ef4444 !important;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.slash-btn {
+  font-size: 0.65rem;
+  padding: 1px 4px;
+  margin-top: 2px;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.slash-btn.active {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.step6-cell.slashed {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(100, 116, 139, 0.2),
+    rgba(100, 116, 139, 0.2) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+}
+
+/* ⑦ Step7のレイヤー構造 */
+.step7-wrapper {
+  position: relative;
+  margin: 14px 0;
+  z-index: 10;
+  background: transparent;
+}
+
+.step7-wrapper .step-header {
+  background: transparent;
+}
+
+.step7-wrapper .form-table {
+  background: var(--paper-bg);
+  position: relative;
+  z-index: 3;
+}
+
+.step7-wrapper textarea {
+  background: var(--paper-bg);
+}
+
+/* スプリッター */
+.panel-resizer {
+  width: 6px;
+  background: var(--border-color);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.panel-resizer:hover,
+.panel-resizer.dragging {
+  background: var(--accent-color);
+}
+
+/* 右側：解説パネル */
+.ref-panel {
+  width: var(--ref-width);
+  min-width: 240px;
+  max-width: 60vw;
+  background: #ffffff;
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  font-size: var(--base-font-size);
+}
+
+.ref-panel.collapsed {
+  display: none;
+}
+
+.ref-header {
+  height: 42px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+}
+
+.ref-header h3 {
+  font-size: 0.9em;
+  color: var(--primary-color);
+}
+
+.btn-xs {
+  font-size: 0.8em;
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ref-search-box {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ref-search-box input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.9em;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  outline: none;
+}
+
+.ref-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.category-group {
+  margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.category-head {
+  background: #f1f5f9;
+  padding: 6px 10px;
+  font-size: 0.92em;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+}
+
+.item-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  font-size: 0.88em;
+  background: #fafafa;
+}
+
+.item-card-summary {
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 500;
+  gap: 6px;
+}
+
+.item-title-text {
+  flex: 1;
+}
+
+.btn-insert-item {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  background: #eff6ff;
+  color: var(--accent-color);
+  border: 1px solid #bfdbfe;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.btn-insert-item:hover {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+.item-card-body {
+  padding: 6px 8px;
+  background: #ffffff;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.item-section-title {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-top: 4px;
+}
+
+.item-card-desc {
+  font-size: 0.95em;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* モーダル */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 90%;
+  max-width: 380px;
+  border-radius: 6px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.modal-field {
+  margin-bottom: 12px;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.modal-field input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.error-msg {
+  color: #ef4444;
+  font-size: 0.75rem;
+  display: none;
+  margin-top: 2px;
+}
+
+/* ③ タグ挿入ボタンスタイル */
+.step-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.tag-btn {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--primary-color);
+  transition: all 0.15s;
+}
+
+.tag-btn:hover {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+/* =============================================================================
+   印刷専用スタイル（A4 2枚固定・SVG描画完全保持）
+   ============================================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 7mm 7mm; /* 左右余白を8mmに少し絞って印刷領域を確保 */
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box !important; /* 枠線や余白を含めた幅計算に統一 */
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    font-size: 9.5pt !important;
+  }
+
+  /* ドットのみ非表示（アンカー位置のサイズは維持して計算ズレを防ぐ） */
+  .no-print {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .app-header,
+  .ref-panel,
+  .panel-resizer {
+    display: none !important;
+  }
+
+  .app-body, .editor-pane {
+    display: block !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 【修正点】固定幅190mmから100%に変更し、枠内へ強制収容 */
+  .paper-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .paper-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .form-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    page-break-inside: avoid !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 【修正点】文字溢れによる枠の突き出しを防止 */
+  .form-table th, .form-table td {
+    border: 1px solid #000000 !important;
+    padding: 2px 4px !important;
+    word-break: break-all !important;
+  }
+
+  .step8-table,
+  .step8-cell,
+  .step6-table,
+  .step6-cell {
+    background: transparent !important;
+  }
+
+  /* ⑦ Step7の表を線の前面（z-index: 100）へ持ち上げ、白背景で背面の線を隠す */
+  .step7-wrapper {
+    position: relative !important;
+    z-index: 100 !important;
+    background: transparent !important;
+  }
+
+  .step7-wrapper .step-header {
+    background: transparent !important;
+  }
+
+  .step7-wrapper .form-table,
+  .step7-wrapper textarea {
+    position: relative !important;
+    z-index: 101 !important;
+    background: #ffffff !important;
+  }
+
+  textarea {
+    resize: none !important;
+    overflow: hidden !important;
+  }
+
+  .direct-link-container {
+    width: 100% !important;
+    position: relative !important;
+    overflow: visible !important;
+  }
+
+  .direct-svg-layer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 50 !important;
+    overflow: visible !important;
+  }
+
+  .direct-link-path {
+    stroke: #000000 !important;
+    stroke-width: 1.5pt !important;
+    fill: none !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自立活動 指導計画作成支援システム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="standard">
+
+  <!-- ヘッダーツールバー -->
+  <header class="app-header no-print">
+    <div class="header-title-area">
+      <span class="header-title">自立活動 指導計画作成支援システム</span>
+    </div>
+
+    <div class="header-controls">
+      <!-- 生徒選択 -->
+      <select id="studentSelect" title="対象児童生徒を選択"></select>
+      <button id="btnNewStudent" title="新規児童生徒を追加">+ 新規生徒</button>
+      <button id="btnEditStudent" title="生徒名編集/削除">管理</button>
+
+      <!-- バージョン -->
+      <select id="versionSelect" title="版の切り替え"></select>
+      <button id="btnNewVersion" title="現在の内容を元に新しい版を作成">+ 新版作成</button>
+
+      <!-- 保存・読込 -->
+      <button id="btnExportEncrypted" class="btn-primary" title="暗号化ファイル(.enc)として保存">保存(エクスポート)</button>
+      <button id="btnImportEncrypted" title="暗号化ファイル(.enc)を読み込む">読込(インポート)</button>
+      <button id="btnClearCache" class="btn-clear" title="このアプリのローカルデータをクリアして初期化します">キャッシュ削除</button>
+      <input type="file" id="importFileInput" style="display:none" accept=".enc,.json">
+
+      <!-- 表示設定 -->
+      <select id="fontSizeSelect">
+        <option value="11px">文字: 極小</option>
+        <option value="12px">文字: 小</option>
+        <option value="13px" selected>文字: 中</option>
+        <option value="14.5px">文字: 大</option>
+      </select>
+
+      <select id="themeSelect">
+        <option value="standard">標準テーマ</option>
+        <option value="paper">公文書ペーパー</option>
+        <option value="dark">ダークモード</option>
+        <option value="high-contrast">ハイコントラスト</option>
+      </select>
+
+      <button id="btnPrint" class="btn-primary" title="印刷またはPDF保存">印刷/PDF</button>
+      <button id="btnToggleRef" title="6区分27項目解説パネル開閉">6区分27項目解説</button>
+    </div>
+  </header>
+
+  <!-- メインエリア -->
+  <div class="app-body">
+    <!-- 帳票エディタ（左ペイン） -->
+    <main class="editor-pane" id="editorContainer">
+
+      <!-- PAGE 1: 実態把握・整理 -->
+      <div class="paper-sheet" id="sheetPage1">
+        <div class="sheet-title-banner">自立活動の指導計画作成プロセス（実態把握〜整理）</div>
+        
+        <table class="form-table header-info-table">
+          <tr>
+            <th style="width: 18%;">学部・学年</th>
+            <td style="width: 82%;"><input type="text" id="field_grade" class="single-line-input" placeholder="例：小学部・第5学年"></td>
+          </tr>
+          <tr>
+            <th>障害の種類・程度や状態等</th>
+            <td><input type="text" id="field_disability" class="single-line-input" placeholder="例：視覚障害。視力の程度は両眼とも光覚である。"></td>
+          </tr>
+          <tr>
+            <th>事例の概要（指導課題）</th>
+            <td><input type="text" id="field_summary" class="single-line-input" placeholder="例：学校近辺の安全な道路における白杖を用いた歩行指導"></td>
+          </tr>
+        </table>
+
+        <!-- Step 1 -->
+        <div class="step-header">
+          <span class="step-num">① 障害の状態，発達や経験の程度，興味・関心，学習や生活の中で見られる長所やよさ，課題等について情報収集</span>
+        </div>
+        <table class="form-table" style="margin-bottom:8px;">
+          <tr>
+            <td>
+              <textarea id="field_step1" class="step1-expandable" placeholder="実態や長所、課題を記入（右下をドラッグして上下に広げられます）"></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Step 2-1 -->
+        <div class="step-header">
+          <span class="step-num">②－１ 収集した情報（①）を自立活動の区分に即して整理する段階</span>
+        </div>
+        <table class="form-table step2-1-table">
+          <thead>
+            <tr>
+              <th style="width: 16.666%;">健康の保持</th>
+              <th style="width: 16.666%;">心理的な<br>安定</th>
+              <th style="width: 16.666%;">人間関係<br>の形成</th>
+              <th style="width: 16.666%;">環境の把握</th>
+              <th style="width: 16.666%;">身体の動き</th>
+              <th style="width: 16.666%;">コミュニ<br>ケーション</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><textarea id="field_step2_1_kenkou" class="auto-expand grid-textarea"></textarea></td>
+              <td><textarea id="field_step2_1_shinri" class="auto-expand grid-textarea"></textarea></td>
+              <td><textarea id="field_step2_1_ningen" class="auto-expand grid-textarea"></textarea></td>
+              <td><textarea id="field_step2_1_kankyou" class="auto-expand grid-textarea"></textarea></td>
+              <td><textarea id="field_step2_1_shintai" class="auto-expand grid-textarea"></textarea></td>
+              <td><textarea id="field_step2_1_comm" class="auto-expand grid-textarea"></textarea></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Step 2-2 -->
+        <div class="step-header">
+          <span class="step-num">②－２ 収集した情報（①）を学習上又は生活上の困難，これまでの学習状況の視点から整理する段階</span>
+        </div>
+        <table class="form-table" style="margin-bottom:4px;">
+          <tr>
+            <td>
+              <textarea id="field_step2_2" class="auto-expand compact-textarea" placeholder="各項目の末尾に（環）（身）等の区分を付記"></textarea>
+            </td>
+          </tr>
+        </table>
+        <div class="sub-note">※各項目の末尾の（ ）は、②－１における自立活動の区分を示している。</div>
+
+        <!-- Step 2-3 -->
+        <div class="step-header">
+          <span class="step-num">②－３ 収集した情報（①）を○○年後の姿の観点から整理する段階</span>
+        </div>
+        <table class="form-table">
+          <tr>
+            <td>
+              <textarea id="field_step2_3" class="auto-expand compact-textarea" placeholder="将来の自立や社会参加を見据えた姿と願い"></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Step 3 -->
+        <div class="step-header">
+          <span class="step-num">③ ①をもとに②－１，②－２，②－３で整理した情報から課題を抽出する段階 <small>※項目ごとに改行する。</small></span>
+          <div class="step-actions no-print">
+            <button type="button" class="tag-btn" data-tag="健">健</button>
+            <button type="button" class="tag-btn" data-tag="心">心</button>
+            <button type="button" class="tag-btn" data-tag="人">人</button>
+            <button type="button" class="tag-btn" data-tag="環">環</button>
+            <button type="button" class="tag-btn" data-tag="身">身</button>
+            <button type="button" class="tag-btn" data-tag="コ">コ</button>
+          </div>
+        </div>
+        <table class="form-table">
+          <tr>
+            <td>
+              <textarea id="field_step3" class="auto-expand" placeholder="整理した情報から抽出した課題を記入"></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <div class="bottom-caption">（第1面：実態把握と整理）</div>
+      </div>
+
+      <!-- PAGE 2: 目標設定〜指導内容 -->
+      <div class="paper-sheet" id="sheetPage2">
+        <div class="sheet-title-banner">自立活動の指導計画作成プロセス（目標設定〜指導内容）</div>
+
+        <!-- Step 4 -->
+        <div class="step-header">
+          <span class="step-num">④ ③で整理した課題同士がどのように関連しているかを整理し，中心的な課題を導き出す段階</span>
+          <button type="button" id="btnOpenDiagram" class="btn-primary no-print" style="font-size:0.75rem; padding:2px 8px; margin-left:auto;">📊 課題関連図を開く</button>
+        </div>
+        <table class="form-table" style="margin-bottom:10px;">
+          <tr>
+            <td>
+              <textarea id="field_step4" class="auto-expand compact-textarea" placeholder="中心的な課題の整理"></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Step 5 -->
+        <table class="form-table" style="margin-bottom:8px;">
+          <tr>
+            <th style="width: 22%; font-size:0.75rem; text-align:center; vertical-align:middle; line-height:1.2;">
+              課題同士の関係を整理する中で今指導すべき目標として
+            </th>
+            <td style="width: 78%; padding:0;">
+              <div class="step-header" style="border:none; border-bottom:1px solid var(--border-color); font-size:0.8rem; margin:0; padding:4px 8px;">
+                <span class="step-num">⑤ ④に基づき設定した指導目標を記す段階</span>
+              </div>
+              <textarea id="field_step5" class="auto-expand compact-textarea" placeholder="指導目標（ねらい）"></textarea>
+            </td>
+          </tr>
+        </table>
+
+        <!-- ⑥〜⑧ 結線統合セクション -->
+        <div class="direct-link-container" id="directLinkSection">
+          <svg class="direct-svg-layer" id="directSvgLayer"></svg>
+
+          <!-- Step 6 -->
+          <table class="form-table step6-table" id="step6Table" style="margin-bottom:0;">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width: 16%; font-size:0.75rem; line-height:1.2;">指導目標を<br>達成するために必要な<br>項目の選定</th>
+                <th colspan="6" style="text-align:left; padding:3px 6px; font-size:0.8rem;">⑥ ⑤を達成するために必要な項目を選定する段階</th>
+              </tr>
+              <tr>
+                <th id="th_step6_kenkou" style="width: 14%;">健康の保持<br><button class="slash-btn no-print" data-col="kenkou">斜線</button></th>
+                <th id="th_step6_shinri" style="width: 14%;">心理的な<br>安定<br><button class="slash-btn no-print" data-col="shinri">斜線</button></th>
+                <th id="th_step6_ningen" style="width: 14%;">人間関係<br>の形成<br><button class="slash-btn no-print" data-col="ningen">斜線</button></th>
+                <th id="th_step6_kankyou" style="width: 14%;">環境の把握<br><button class="slash-btn no-print" data-col="kankyou">斜線</button></th>
+                <th id="th_step6_shintai" style="width: 14%;">身体の動き<br><button class="slash-btn no-print" data-col="shintai">斜線</button></th>
+                <th id="th_step6_comm" style="width: 14%;">コミュニ<br>ケーション<br><button class="slash-btn no-print" data-col="comm">斜線</button></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="background:rgba(0,0,0,0.02);"></td>
+                <td class="step6-cell" id="td_step6_kenkou">
+                  <textarea id="field_step6_kenkou" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_kenkou" title="健康の保持から結線"></div>
+                  </div>
+                </td>
+                <td class="step6-cell" id="td_step6_shinri">
+                  <textarea id="field_step6_shinri" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_shinri" title="心理的な安定から結線"></div>
+                  </div>
+                </td>
+                <td class="step6-cell" id="td_step6_ningen">
+                  <textarea id="field_step6_ningen" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_ningen" title="人間関係の形成から結線"></div>
+                  </div>
+                </td>
+                <td class="step6-cell" id="td_step6_kankyou">
+                  <textarea id="field_step6_kankyou" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_kankyou" title="環境の把握から結線"></div>
+                  </div>
+                </td>
+                <td class="step6-cell" id="td_step6_shintai">
+                  <textarea id="field_step6_shintai" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_shintai" title="身体の動きから結線"></div>
+                  </div>
+                </td>
+                <td class="step6-cell" id="td_step6_comm">
+                  <textarea id="field_step6_comm" class="auto-expand grid-textarea"></textarea>
+                  <div class="node-anchor-bottom no-print">
+                    <div class="connect-node" data-node="step6_comm" title="コミュニケーションから結線"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Step 7（前面配置） -->
+          <div class="step7-wrapper" style="margin: 12px 0;">
+            <div class="step-header" style="margin-bottom:0;">
+              <span class="step-num">⑦ 項目と項目を関連付ける際のポイント</span>
+            </div>
+            <table class="form-table" style="margin-bottom:0;">
+              <tr>
+                <td>
+                  <textarea id="field_step7" class="auto-expand compact-textarea" placeholder="・＜〜のために＞（区）(番)と（区）(番)とを関連付けて設定した具体的な指導内容が、⑧アである。"></textarea>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Step 8 -->
+          <table class="form-table step8-table" id="step8Table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width: 16%; font-size:0.75rem; line-height:1.2;">選定した項目を関連付けて具体的な指導内容を設定</th>
+                <th colspan="4" style="text-align:left; padding:3px 6px; font-size:0.8rem;">⑧ 具体的な指導内容を設定する段階</th>
+              </tr>
+              <tr>
+                <th id="th_step8_a" style="width: 21%;">ア</th>
+                <th id="th_step8_i" style="width: 21%;">イ</th>
+                <th id="th_step8_u" style="width: 21%;">ウ</th>
+                <th id="th_step8_e" style="width: 21%;">エ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="background:rgba(0,0,0,0.02);"></td>
+                <td id="td_step8_a" class="step8-cell">
+                  <div class="node-anchor-top no-print">
+                    <div class="connect-node" data-node="step8_a" title="⑧ アへ接続"></div>
+                  </div>
+                  <textarea id="field_step8_a" class="auto-expand grid-textarea"></textarea>
+                </td>
+                <td id="td_step8_i" class="step8-cell">
+                  <div class="node-anchor-top no-print">
+                    <div class="connect-node" data-node="step8_i" title="⑧ イへ接続"></div>
+                  </div>
+                  <textarea id="field_step8_i" class="auto-expand grid-textarea"></textarea>
+                </td>
+                <td id="td_step8_u" class="step8-cell">
+                  <div class="node-anchor-top no-print">
+                    <div class="connect-node" data-node="step8_u" title="⑧ ウへ接続"></div>
+                  </div>
+                  <textarea id="field_step8_u" class="auto-expand grid-textarea"></textarea>
+                </td>
+                <td id="td_step8_e" class="step8-cell">
+                  <div class="node-anchor-top no-print">
+                    <div class="connect-node" data-node="step8_e" title="⑧ エへ接続"></div>
+                  </div>
+                  <textarea id="field_step8_e" class="auto-expand grid-textarea"></textarea>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bottom-caption">（第2面：目標と指導内容の設定）</div>
+      </div>
+
+    </main>
+
+    <!-- 幅調整用スプリッター（リサイザー） -->
+    <div class="panel-resizer no-print" id="panelResizer" title="ドラッグして解説欄の横幅を変更"></div>
+
+    <!-- 右側：6区分27項目解説パネル（単独スクロール・幅ドラッグ可変） -->
+    <aside class="ref-panel no-print" id="refPanel">
+      <div class="ref-header">
+        <h3>自立活動 6区分27項目 解説（原文）</h3>
+        <button id="btnCloseRef" class="btn-xs">閉じる ✕</button>
+      </div>
+      <div class="ref-search-box">
+        <input type="text" id="refSearchInput" placeholder="キーワード・項目名で検索...">
+      </div>
+      <div class="ref-content" id="refContentList"></div>
+    </aside>
+  </div>
+
+  <!-- 暗号化パスワードモーダル -->
+  <div class="modal-overlay no-print" id="passwordModal">
+    <div class="modal-box">
+      <h3 id="pwdModalTitle">暗号化パスワードの入力</h3>
+      <p id="pwdModalDesc" style="font-size:0.8rem; color:#64748b; margin-bottom:12px;">
+        データはブラウザ内でAES-GCM (256bit) により暗号化されます。
+      </p>
+      
+      <div class="modal-field" id="pwdField1Group">
+        <label for="inputPassword" id="pwdLabel1">パスワード</label>
+        <input type="password" id="inputPassword" autocomplete="new-password">
+      </div>
+
+      <div class="modal-field" id="pwdField2Group">
+        <label for="inputPasswordConfirm">パスワード（確認用）</label>
+        <input type="password" id="inputPasswordConfirm" placeholder="確認のためもう一度入力" autocomplete="new-password">
+        <div class="error-msg" id="pwdMismatchError">パスワードが一致しません</div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btnCancelPassword">キャンセル</button>
+        <button id="btnSubmitPassword" class="btn-primary">実行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 生徒管理モーダル -->
+  <div class="modal-overlay no-print" id="studentModal">
+    <div class="modal-box">
+      <h3>児童生徒プロファイルの管理</h3>
+      <div class="modal-field">
+        <label for="studentNameInput">生徒識別名・管理ID</label>
+        <input type="text" id="studentNameInput">
+      </div>
+      <div class="modal-actions">
+        <button id="btnDeleteStudent" class="btn-danger" style="margin-right:auto;">この生徒を削除</button>
+        <button id="btnCancelStudent">閉じる</button>
+        <button id="btnSaveStudent" class="btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- データベースとアプリ本体 -->
+  <script src="js/data_jiritsu.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
