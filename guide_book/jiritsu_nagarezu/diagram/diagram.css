@@ -96,6 +96,11 @@ body {
   font-weight: bold;
 }
 
+.tool-btn[data-mode="delete-line"].active {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
 .btn-primary {
   background: var(--accent);
   color: #ffffff;
@@ -140,6 +145,7 @@ body {
   left: 0;
   width: 3000px;
   height: 2000px;
+  pointer-events: none;
   z-index: 2;
 }
 
@@ -154,6 +160,7 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
+  pointer-events: auto;
   cursor: move;
   transition: box-shadow 0.15s, border-color 0.15s;
 }
@@ -263,17 +270,37 @@ body {
   display: block;
 }
 
+.mode-delete-line .card-connect-handle {
+  display: none !important;
+}
+
+.mode-delete-line .diagram-svg-layer {
+  z-index: 3;
+}
+
 .handle-top { top: -7px; left: 50%; transform: translateX(-50%); }
 .handle-bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
 .handle-left { left: -7px; top: 50%; transform: translateY(-50%); }
 .handle-right { right: -7px; top: 50%; transform: translateY(-50%); }
 
 /* SVGパス */
+.diagram-link-group {
+  cursor: pointer;
+}
+
 .diagram-link {
   fill: none;
-  cursor: pointer;
-  pointer-events: stroke;
+  pointer-events: none;
   transition: stroke 0.15s, stroke-width 0.15s;
+}
+
+.diagram-link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  stroke-linecap: round;
+  pointer-events: stroke;
+  cursor: pointer;
 }
 
 .diagram-link.solid {
@@ -292,7 +319,7 @@ body {
   stroke-width: 2.2;
 }
 
-.diagram-link:hover {
+.diagram-link-group:hover .diagram-link {
   stroke: #ef4444 !important;
   stroke-width: 4 !important;
 }
