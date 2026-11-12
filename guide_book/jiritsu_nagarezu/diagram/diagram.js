@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const cardCanvas = document.getElementById("cardCanvas");
   const svgLayer = document.getElementById("diagramSvgLayer");
+  const workspaceContainer = document.getElementById("workspaceContainer");
   const studentNameBadge = document.getElementById("studentNameBadge");
   const cardToggleList = document.getElementById("cardToggleList");
 
@@ -49,6 +50,9 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       currentToolMode = btn.getAttribute("data-mode");
+      if (workspaceContainer) {
+        workspaceContainer.classList.toggle("mode-delete-line", currentToolMode === "delete-line");
+      }
       resetConnectingState();
     });
   });
@@ -286,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const newLink = {
-      id: "link_" + Date.now(),
+      id: `link_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       fromCard: connectingSourceNode.cardId,
       fromAnchor: connectingSourceNode.anchor,
       toCard: cardId,
@@ -307,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 6. SVGライン描画
   function redrawAllDiagramLines() {
-    svgLayer.querySelectorAll(".diagram-link").forEach(el => el.remove());
+    svgLayer.querySelectorAll(".diagram-link-group, .diagram-link").forEach(el => el.remove());
 
     links.forEach(link => {
       const fromCard = cards.find(c => c.id === link.fromCard);
@@ -321,9 +325,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const p1 = getAnchorCoordinate(fromEl, link.fromAnchor);
       const p2 = getAnchorCoordinate(toEl, link.toAnchor);
+      const d = createCurvedPath(p1.x, p1.y, p2.x, p2.y, link.fromAnchor, link.toAnchor);
+
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.setAttribute("class", "diagram-link-group");
 
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      const d = createCurvedPath(p1.x, p1.y, p2.x, p2.y, link.fromAnchor, link.toAnchor);
       path.setAttribute("d", d);
       path.setAttribute("class", `diagram-link ${link.type}`);
 
@@ -336,16 +343,23 @@ document.addEventListener("DOMContentLoaded", () => {
         path.setAttribute("marker-end", "url(#arrow-bi)");
       }
 
-      path.addEventListener("click", (e) => {
+      const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hitPath.setAttribute("d", d);
+      hitPath.setAttribute("class", "diagram-link-hit");
+
+      group.appendChild(path);
+      group.appendChild(hitPath);
+
+      group.addEventListener("click", (e) => {
         e.stopPropagation();
         if (currentToolMode === "delete-line" || confirm("この矢印を削除しますか？")) {
-          links = links.filter(l => l.id !== link.id);
+          links = links.filter(l => l !== link);
           redrawAllDiagramLines();
           saveDiagramLayout();
         }
       });
 
-      svgLayer.appendChild(path);
+      svgLayer.appendChild(group);
     });
   }
 
@@ -441,6 +455,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // データの保存（本体側へリアルタイム同期）
   function saveDiagramLayout() {
     const layoutData = { cards, links };
+    const rawSource = localStorage.getItem("jiritsu_diagram_source_data");
+    if (rawSource) {
+      try {
+        const parsedSource = JSON.parse(rawSource);
+        parsedSource.savedLayout = layoutData;
+        localStorage.setItem("jiritsu_diagram_source_data", JSON.stringify(parsedSource));
+      } catch (e) {
+        console.error(e);
+      }
+    }
     // 本体側ウィンドウに同期イベントを発火させる
     localStorage.setItem("jiritsu_diagram_saved_layout_sync", JSON.stringify(layoutData));
   }
