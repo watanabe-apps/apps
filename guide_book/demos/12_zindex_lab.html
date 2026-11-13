@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>4.3 ③ 重なりへの対応（z-index）ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-focus: #0369a1;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1.5px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      height: 44px;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-reset:hover {
+      background: var(--primary-focus);
+    }
+
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .pill-group {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 3px;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s ease;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    }
+
+    .status-summary {
+      background: #e0f2fe;
+      border-bottom: 1px solid #bae6fd;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0369a1;
+      flex-shrink: 0;
+    }
+
+    #stage {
+      flex: 1;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .drag-card {
+      position: absolute;
+      width: 140px;
+      height: 150px;
+      background: #ffffff;
+      border: 3px solid #334155;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: grab;
+      touch-action: none;
+      transition: box-shadow 0.12s ease, transform 0.1s ease;
+    }
+    .drag-card.dragging {
+      cursor: grabbing;
+      transform: scale(1.04);
+      box-shadow: 0 16px 32px rgba(2, 132, 199, 0.25);
+      border-color: var(--primary);
+    }
+
+    .card-emoji {
+      font-size: 3.2rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .card-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      pointer-events: none;
+    }
+    .card-z {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #0369a1;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      padding: 2px 10px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="header-title">4.3 ③ 重なりへの対応（z-index）ラボ</span>
+    <button class="btn-reset" onclick="initCards()">リセット</button>
+  </header>
+
+  <div class="settings-bar">
+    <span style="font-weight:700; font-size:0.82rem; color:#475569;">z-index設定:</span>
+    <div class="pill-group">
+      <button class="pill-btn active" id="btn-fixed" onclick="setZMode('fixed')">① 調整なし（初期順）</button>
+      <button class="pill-btn" id="btn-front" onclick="setZMode('front')">② ドラッグ時に最前面（推奨）</button>
+    </div>
+  </div>
+
+  <div class="status-summary" id="statusSummary">
+    ① 調整なし：カードを動かすと他のカードの下に潜り込み、隠れて操作できなくなることがあります
+  </div>
+
+  <main id="stage"></main>
+
+  <script>
+    const CARD_DEFS = [
+      { id: 'apple', emoji: '🍎', name: 'りんご', baseZ: 1, bg: '#fff1f2', border: '#e11d48' },
+      { id: 'banana', emoji: '🍌', name: 'ばなな', baseZ: 2, bg: '#fefce8', border: '#ca8a04' },
+      { id: 'grape', emoji: '🍇', name: 'ぶどう', baseZ: 3, bg: '#faf5ff', border: '#9333ea' }
+    ];
+
+    let zMode = 'fixed'; // 'fixed' | 'front'
+    let topZ = 10;
+    let cards = [];
+
+    function setZMode(mode) {
+      zMode = mode;
+      document.getElementById('btn-fixed').classList.toggle('active', mode === 'fixed');
+      document.getElementById('btn-front').classList.toggle('active', mode === 'front');
+
+      const summary = document.getElementById('statusSummary');
+      if (mode === 'fixed') {
+        summary.textContent = '① 調整なし：カードを動かすと他のカードの下に潜り込み、隠れて操作できなくなることがあります';
+        cards.forEach(c => {
+          c.z = c.baseZ;
+          c.el.style.zIndex = c.z;
+          c.zBadge.textContent = `z-index: ${c.z}`;
+        });
+      } else {
+        summary.textContent = '② 最前面化：ドラッグしたカードの z-index を大きくして、常に前面に表示・操作できます';
+      }
+    }
+
+    function initCards() {
+      const stage = document.getElementById('stage');
+      stage.innerHTML = '';
+      cards = [];
+      topZ = 10;
+
+      const rect = stage.getBoundingClientRect();
+      const w = rect.width || window.innerWidth;
+      const h = rect.height || (window.innerHeight - 120);
+      const cardW = 140;
+      const cardH = 150;
+      const gap = Math.min(36, Math.max(12, (w - cardW * 3) / 4));
+      const totalW = cardW * 3 + gap * 2;
+      const startX = Math.max(16, (w - totalW) / 2);
+      const centerY = Math.max(20, (h - cardH) / 2);
+
+      CARD_DEFS.forEach((def, idx) => {
+        const el = document.createElement('div');
+        el.className = 'drag-card';
+        el.style.backgroundColor = def.bg;
+        el.style.borderColor = def.border;
+
+        const left = startX + idx * (cardW + gap);
+        const top = centerY;
+        el.style.left = left + 'px';
+        el.style.top = top + 'px';
+        el.style.zIndex = def.baseZ;
+
+        const emojiEl = document.createElement('div');
+        emojiEl.className = 'card-emoji';
+        emojiEl.textContent = def.emoji;
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'card-name';
+        nameEl.textContent = def.name;
+
+        const zBadge = document.createElement('div');
+        zBadge.className = 'card-z';
+        zBadge.textContent = `z-index: ${def.baseZ}`;
+
+        el.appendChild(emojiEl);
+        el.appendChild(nameEl);
+        el.appendChild(zBadge);
+        stage.appendChild(el);
+
+        const cardObj = {
+          id: def.id,
+          baseZ: def.baseZ,
+          z: def.baseZ,
+          el,
+          zBadge
+        };
+        bindDrag(cardObj);
+        cards.push(cardObj);
+      });
+    }
+
+    function bindDrag(card) {
+      const el = card.el;
+      let dragging = false;
+      let pointerId = null;
+      let startX = 0;
+      let startY = 0;
+      let initLeft = 0;
+      let initTop = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault();
+        dragging = true;
+        pointerId = e.pointerId;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+
+        startX = e.clientX;
+        startY = e.clientY;
+        initLeft = parseFloat(el.style.left) || 0;
+        initTop = parseFloat(el.style.top) || 0;
+
+        if (zMode === 'front') {
+          card.z = ++topZ;
+          el.style.zIndex = card.z;
+          card.zBadge.textContent = `z-index: ${card.z}`;
+        }
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!dragging || pointerId !== e.pointerId) return;
+        const stageRect = document.getElementById('stage').getBoundingClientRect();
+        const maxLeft = Math.max(0, stageRect.width - el.offsetWidth);
+        const maxTop = Math.max(0, stageRect.height - el.offsetHeight);
+
+        const nextLeft = Math.min(maxLeft, Math.max(0, initLeft + (e.clientX - startX)));
+        const nextTop = Math.min(maxTop, Math.max(0, initTop + (e.clientY - startY)));
+
+        el.style.left = nextLeft + 'px';
+        el.style.top = nextTop + 'px';
+      });
+
+      function endDrag(e) {
+        if (!dragging || (e.pointerId !== undefined && pointerId !== e.pointerId)) return;
+        dragging = false;
+        try { el.releasePointerCapture(pointerId); } catch (_) {}
+        pointerId = null;
+        el.classList.remove('dragging');
+      }
+
+      el.addEventListener('pointerup', endDrag);
+      el.addEventListener('pointercancel', endDrag);
+    }
+
+    initCards();
+    window.addEventListener('resize', initCards);
+  </script>
+</body>
+</html>

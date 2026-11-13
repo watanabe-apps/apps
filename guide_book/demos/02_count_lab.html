@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>デモB：数の学習（演出比較ラボ）</title>
+  <title>4.5 ② 数の学習（演出比較ラボ）</title>
   <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -293,23 +293,16 @@
       window.addEventListener(evt, initAudio, { once: true });
     });
 
-    // シンプル音（数唱音階：ド・レ・ミ）
-    function playSimpleBeep(count) {
-      initAudio();
-      if (!audioCtx) return;
-      const pitches = [523.25, 587.33, 659.25]; // C5, D5, E5
-      const freq = pitches[count - 1] || 659.25;
+    const COUNT_WORDS = ['いち', 'に', 'さん'];
 
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.25);
+    function speakCount(count) {
+      const text = COUNT_WORDS[count - 1];
+      if (!text || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
     }
 
     // 過剰なエンジン音
@@ -339,6 +332,7 @@
     }
 
     function initCountLab() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       snappedCount = 0;
       document.getElementById('correct-banner').classList.remove('show');
       document.getElementById('stage').classList.remove('shaking');
@@ -457,10 +451,10 @@
           targetSlot.occupant = piece;
 
           snappedCount++;
-          document.getElementById('countBadge').innerText = `${snappedCount} こ`;
+          document.getElementById('countBadge').innerText = `${snappedCount}`;
 
           if (mode === 'circle') {
-            playSimpleBeep(snappedCount);
+            speakCount(snappedCount);
           } else {
             playEngineSound();
             const stage = document.getElementById('stage');

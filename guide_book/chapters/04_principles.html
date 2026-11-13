@@ -131,6 +131,7 @@
       <div class="sidebar-nav-title">総合案内</div>
       <ul class="sidebar-nav-list">
         <li><a href="../index.html">🏠 はじめに・全体目次</a></li>
+        <li><a href="../slides.html">📽️ 研修・解説用スライド</a></li>
       </ul>
     </div>
 
@@ -287,6 +288,20 @@
             <li><strong>④ 長押し：</strong>③と同じく、基本的に使いません。トリプルタップは連打していれば偶然反応することがありますが、長押しは偶然の可能性が低いため、誤操作防止に効果的です。</li>
           </ul>
 
+          <!-- サンプルアプリ（いろいろなタップ比較ラボ）開閉アコーディオン -->
+          <details class="demo-embed-details">
+            <summary class="demo-embed-summary">
+              <span>👆 サンプルアプリをこの画面で開く（いろいろなタップ比較ラボ）</span>
+              <span class="demo-toggle-icon">▼</span>
+            </summary>
+            <div class="demo-iframe-container" style="height: 520px;">
+              <div class="demo-iframe-toolbar">
+                <a href="../demos/11_tap_types_lab.html" target="_blank" class="external-link">別ウィンドウで大きく開く ↗</a>
+              </div>
+              <iframe src="../demos/11_tap_types_lab.html" loading="lazy"></iframe>
+            </div>
+          </details>
+
           <h3 class="sub-section-title">④ ドラッグとタップの使い分け</h3>
           <p>
             これは本当に感覚的な話になってしまい、根拠の薄い内容になってしまいますが、大まかに「文字や数を学習する、あるいはそれ以前の段階はドラッグ中心」、「文字や数を活用して学習する段階ではタップに移行」というようにイメージしています。
@@ -378,6 +393,19 @@
           <p>
             具体物の教材では、操作対象が上下に重なることはあまりありませんが、アプリでは特別な設定をしない限り操作対象が上下（前面、背面）に重なってしまいます。これにより、操作対象が隠れたり、操作不能になったりすることがあります。これを防ぐために、前面、背面を表す「z-index」の調整が必要となります。z-indexの数値が大きいほど前面に、小さいほど背面に表示されるため、ドラッグしている最中のものはz-indexを大きく（最前面に）する、ドラッグ後は必要に応じてz-indexを小さく（背面に）するといった工夫が必要です。
           </p>
+
+          <details class="demo-embed-details">
+            <summary class="demo-embed-summary">
+              <span>🃏 サンプルアプリをこの画面で開く（重なり順 z-index ラボ）</span>
+              <span class="demo-toggle-icon">▼</span>
+            </summary>
+            <div class="demo-iframe-container" style="height: 480px;">
+              <div class="demo-iframe-toolbar">
+                <a href="../demos/12_zindex_lab.html" target="_blank" class="external-link">別ウィンドウで大きく開く ↗</a>
+              </div>
+              <iframe src="../demos/12_zindex_lab.html" loading="lazy"></iframe>
+            </div>
+          </details>
 
           <h3 class="sub-section-title">④ 背景色とコントラストの選択基準（白 vs 薄グレー vs 黒）</h3>
           <p>
@@ -512,6 +540,20 @@
           <p>
             基本的に、ボタンがあればまずタップします。ボタンの文字が読めなくても、ボタンと認識できる見た目であればタップします。わかりにくくしていても、教師が一度タップすれば真似してタップします。そして意図しない挙動により困る、パニックになるということがよくあります。この対策として、必要ないボタンは表示しない、ボタンの表示/非表示を設定できるように設計するといったことが有効です。
           </p>
+
+          <!-- サンプルアプリ（ボタン数の削減ラボ）開閉アコーディオン -->
+          <details class="demo-embed-details">
+            <summary class="demo-embed-summary">
+              <span>🔘 サンプルアプリをこの画面で開く（ボタン数の削減ラボ：ボタン多め vs ボタン無し）</span>
+              <span class="demo-toggle-icon">▼</span>
+            </summary>
+            <div class="demo-iframe-container" style="height: 480px;">
+              <div class="demo-iframe-toolbar">
+                <a href="../demos/13_button_noise_lab.html" target="_blank" class="external-link">別ウィンドウで大きく開く ↗</a>
+              </div>
+              <iframe src="../demos/13_button_noise_lab.html" loading="lazy"></iframe>
+            </div>
+          </details>
         </div>
       </section>
 

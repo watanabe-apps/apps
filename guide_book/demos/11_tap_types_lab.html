@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>4.2 ③ いろいろなタップ比較ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-focus: #0369a1;
+      --bg: #f8fafc;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --success: #16a34a;
+      --warn: #d97706;
+      --danger: #dc2626;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1.5px solid var(--border);
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      height: 44px;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+    .btn-reset {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-reset:hover {
+      background: var(--primary-focus);
+    }
+
+    .settings-bar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pill-group {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s ease;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+    }
+    .sub-pill-wrap {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #475569;
+    }
+    .sub-pill-wrap.visible {
+      display: flex;
+    }
+
+    .status-summary {
+      background: #e0f2fe;
+      border-bottom: 1px solid #bae6fd;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    #stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 18px;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .mode-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .mode-badge.recommend {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
+    .mode-badge.guard {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fcd34d;
+    }
+
+    /* メインのタップ対象 */
+    #tapTarget {
+      width: min(320px, 78vw);
+      height: min(176px, 34vh);
+      min-height: 132px;
+      background: #ffffff;
+      border: 3px solid #334155;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.08s ease, background-color 0.12s ease, border-color 0.12s ease;
+    }
+    #tapTarget.pressing {
+      background: #e0f2fe;
+      border-color: var(--primary);
+      transform: scale(0.97);
+    }
+    #tapTarget.flash-hit {
+      background: #dcfce7;
+      border-color: var(--success);
+      transform: scale(1.03);
+    }
+
+    .target-icon {
+      font-size: 3.1rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .target-label {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      pointer-events: none;
+    }
+    .target-sub {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* 長押し＆連打インジケータ */
+    .progress-track {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      display: none;
+      pointer-events: none;
+    }
+    .progress-track.visible {
+      display: block;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--primary);
+      transition: none;
+    }
+
+    .tap-dots {
+      display: none;
+      gap: 10px;
+      margin-top: 2px;
+      pointer-events: none;
+    }
+    .tap-dots.visible {
+      display: flex;
+    }
+    .tap-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #94a3b8;
+      background: #ffffff;
+      transition: all 0.1s ease;
+    }
+    .tap-dot.filled {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: scale(1.15);
+    }
+
+    /* フィードバック・カウンタエリア */
+    .feedback-panel {
+      width: min(520px, 92vw);
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .feedback-main {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      min-height: 1.5em;
+    }
+    .feedback-main.hit { color: var(--success); }
+    .feedback-main.miss { color: var(--danger); }
+    .feedback-main.wait { color: var(--primary-focus); }
+
+    .feedback-stats {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    /* 設定画面モーダル（③④で開いたとき） */
+    #settingsOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+    #settingsOverlay.open {
+      display: flex;
+    }
+    .modal-card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 2px solid var(--primary);
+      padding: 22px 26px;
+      width: min(400px, 90vw);
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary-focus);
+    }
+    .modal-desc {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .btn-close-modal {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      align-self: center;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="header-title">4.2 ③ いろいろなタップ比較ラボ</span>
+    <button class="btn-reset" onclick="resetStats()">リセット</button>
+  </header>
+
+  <div class="settings-bar">
+    <div class="pill-group" role="tablist" aria-label="タップ方式の切り替え">
+      <button class="pill-btn active" id="mode-release" onclick="setMode('release')">① 離した時</button>
+      <button class="pill-btn" id="mode-down" onclick="setMode('down')">② 触れた瞬間（推奨）</button>
+      <button class="pill-btn" id="mode-multi" onclick="setMode('multi')">③ ダブル/トリプル</button>
+      <button class="pill-btn" id="mode-long" onclick="setMode('long')">④ 長押し</button>
+    </div>
+
+    <div class="sub-pill-wrap" id="multiSubWrap">
+      <span>回数:</span>
+      <div class="pill-group">
+        <button class="pill-btn" id="sub-double" onclick="setMultiCount(2)">ダブル (2回)</button>
+        <button class="pill-btn active" id="sub-triple" onclick="setMultiCount(3)">トリプル (3回)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-summary" id="statusSummary">
+    <span>① 一般的なタップ：指を離した時に反応（押したまま・ずらすと反応しません）</span>
+  </div>
+
+  <main id="stage">
+    <div class="mode-badge" id="modeBadge">一般的なタップ（スマホ標準）</div>
+
+    <div id="tapTarget" role="button" tabindex="0">
+      <div class="target-icon" id="targetIcon">🍎</div>
+      <div class="target-label" id="targetLabel">ここをタップ</div>
+      <div class="target-sub" id="targetSub">指を離すと反応します</div>
+      <div class="tap-dots" id="tapDots"></div>
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="feedback-panel">
+      <div class="feedback-main" id="feedbackMain">中央の枠を操作して挙動を比較してみてください</div>
+      <div class="feedback-stats">
+        <span id="statSuccess">反応成功: 0 回</span>
+        <span id="statMiss">無反応 / 失敗: 0 回</span>
+        <span id="statBgTap" style="display:none;">枠外タップ: 0 回</span>
+      </div>
+    </div>
+
+    <div id="settingsOverlay">
+      <div class="modal-card">
+        <div class="modal-title" id="modalTitle">🔓 設定画面が開きました</div>
+        <div class="modal-desc" id="modalDesc"></div>
+        <button class="btn-close-modal" onclick="closeModal()">閉じる</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const LONG_PRESS_MS = 800;
+    const MULTI_TAP_WINDOW_MS = 550;
+    const DRAG_CANCEL_PX = 18;
+
+    let currentMode = 'release'; // 'release' | 'down' | 'multi' | 'long'
+    let requiredTaps = 3; // 2 or 3 for 'multi'
+
+    let successCount = 0;
+    let missCount = 0;
+    let bgTapCount = 0;
+
+    // 離した時用状態
+    let activePointerId = null;
+    let startX = 0;
+    let startY = 0;
+
+    // ダブル/トリプル用状態
+    let multiTapStep = 0;
+    let multiTapTimer = null;
+
+    // 長押し用状態
+    let longPressRaf = null;
+    let longPressStartTime = 0;
+    let longPressCompleted = false;
+
+    // Web Audio API
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      window.addEventListener(evt, initAudio, { once: true });
+    });
+
+    function playHitSound() {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(1174.66, t + 0.08);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.18);
+    }
+
+    function playTickSound(step) {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(420 + step * 110, t);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
+
+    function playCancelSound() {
+      initAudio();
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(240, t);
+      osc.frequency.linearRampToValueAtTime(170, t + 0.1);
+      gain.gain.setValueAtTime(0.1, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.11);
+    }
+
+    const tapTarget = document.getElementById('tapTarget');
+    const stage = document.getElementById('stage');
+
+    function setMode(mode) {
+      currentMode = mode;
+      ['release', 'down', 'multi', 'long'].forEach(m => {
+        document.getElementById('mode-' + m).classList.toggle('active', m === mode);
+      });
+      document.getElementById('multiSubWrap').classList.toggle('visible', mode === 'multi');
+      resetStats();
+      updateModeUI();
+    }
+
+    function setMultiCount(n) {
+      requiredTaps = n;
+      document.getElementById('sub-double').classList.toggle('active', n === 2);
+      document.getElementById('sub-triple').classList.toggle('active', n === 3);
+      resetStats();
+      updateModeUI();
+    }
+
+    function clearTimersAndStates() {
+      activePointerId = null;
+      multiTapStep = 0;
+      if (multiTapTimer) {
+        clearTimeout(multiTapTimer);
+        multiTapTimer = null;
+      }
+      if (longPressRaf) {
+        cancelAnimationFrame(longPressRaf);
+        longPressRaf = null;
+      }
+      longPressCompleted = false;
+      tapTarget.classList.remove('pressing', 'flash-hit');
+      document.getElementById('progressFill').style.width = '0%';
+      renderTapDots();
+    }
+
+    function resetStats() {
+      clearTimersAndStates();
+      successCount = 0;
+      missCount = 0;
+      bgTapCount = 0;
+      closeModal();
+      updateStatsUI();
+      setFeedback('中央の枠を操作して挙動を比較してみてください', '');
+    }
+
+    function updateModeUI() {
+      const summary = document.getElementById('statusSummary');
+      const badge = document.getElementById('modeBadge');
+      const icon = document.getElementById('targetIcon');
+      const label = document.getElementById('targetLabel');
+      const sub = document.getElementById('targetSub');
+      const dots = document.getElementById('tapDots');
+      const track = document.getElementById('progressTrack');
+      const statBg = document.getElementById('statBgTap');
+
+      badge.className = 'mode-badge';
+      dots.classList.remove('visible');
+      track.classList.remove('visible');
+      statBg.style.display = 'none';
+
+      if (currentMode === 'release') {
+        summary.textContent = '① 一般的なタップ：指を離した時に反応（押したまま待つ・少しずらすと反応しません）';
+        badge.textContent = '一般的なタップ（指を離した時）';
+        icon.textContent = '🍎';
+        label.textContent = 'ここをタップ';
+        sub.textContent = '押したままでは反応せず、離すと確定';
+      } else if (currentMode === 'down') {
+        summary.textContent = '② おすすめ：触れた瞬間に即反応（Webアプリ・身体操作に◎／誤タップ配慮は必要）';
+        badge.textContent = '★ おすすめ（触れた瞬間に反応）';
+        badge.classList.add('recommend');
+        icon.textContent = '🍎';
+        label.textContent = 'ここをタップ';
+        sub.textContent = '触れた瞬間に 0秒 で反応します';
+        statBg.style.display = 'inline';
+      } else if (currentMode === 'multi') {
+        const name = requiredTaps === 2 ? 'ダブルタップ (2回)' : 'トリプルタップ (3回)';
+        summary.textContent = `③ ${name}：誤操作防止用（連打していると偶然反応する場合があります）`;
+        badge.textContent = `誤操作防止テスト（${name}）`;
+        badge.classList.add('guard');
+        icon.textContent = '⚙️';
+        label.textContent = '設定を開く';
+        sub.textContent = `素早く ${requiredTaps} 回タップ（連打で開くか実験）`;
+        dots.classList.add('visible');
+        renderTapDots();
+      } else if (currentMode === 'long') {
+        summary.textContent = '④ 長押し：誤操作防止に効果的（連打しても偶然ではまず開きません）';
+        badge.textContent = '誤操作防止テスト（長押し 0.8秒）';
+        badge.classList.add('guard');
+        icon.textContent = '⚙️';
+        label.textContent = '設定を開く';
+        sub.textContent = '0.8秒 押し続ける（連打では反応しません）';
+        track.classList.add('visible');
+      }
+    }
+
+    function renderTapDots() {
+      const dots = document.getElementById('tapDots');
+      dots.innerHTML = '';
+      for (let i = 0; i < requiredTaps; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'tap-dot' + (i < multiTapStep ? ' filled' : '');
+        dots.appendChild(dot);
+      }
+    }
+
+    function setFeedback(text, type) {
+      const el = document.getElementById('feedbackMain');
+      el.textContent = text;
+      el.className = 'feedback-main' + (type ? ' ' + type : '');
+    }
+
+    function updateStatsUI() {
+      document.getElementById('statSuccess').textContent = `反応成功: ${successCount} 回`;
+      document.getElementById('statMiss').textContent = `無反応 / 失敗: ${missCount} 回`;
+      document.getElementById('statBgTap').textContent = `枠外タップ: ${bgTapCount} 回`;
+    }
+
+    function flashSuccess() {
+      tapTarget.classList.remove('flash-hit');
+      void tapTarget.offsetWidth;
+      tapTarget.classList.add('flash-hit');
+      setTimeout(() => tapTarget.classList.remove('flash-hit'), 180);
+    }
+
+    function isInsideTarget(clientX, clientY) {
+      const rect = tapTarget.getBoundingClientRect();
+      return (
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom
+      );
+    }
+
+    function openSettingsModal(triggerLabel, detailText) {
+      playHitSound();
+      document.getElementById('modalTitle').textContent = `🔓 設定画面が開きました（${triggerLabel}）`;
+      document.getElementById('modalDesc').textContent = detailText;
+      document.getElementById('settingsOverlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('settingsOverlay').classList.remove('open');
+    }
+
+    // 背景誤タップ実験（②モード時）
+    stage.addEventListener('pointerdown', (e) => {
+      if (currentMode !== 'down') return;
+      if (e.target === stage || e.target.closest('.feedback-panel') || e.target.closest('.mode-badge')) {
+        bgTapCount++;
+        updateStatsUI();
+        setFeedback('枠外に触れました（触れた瞬間反応では誤タップ配慮も検討）', 'miss');
+      }
+    });
+
+    tapTarget.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      initAudio();
+
+      if (currentMode === 'down') {
+        successCount++;
+        playHitSound();
+        flashSuccess();
+        updateStatsUI();
+        setFeedback(`触れた瞬間に即反応！（${successCount} 回目）`, 'hit');
+        return;
+      }
+
+      if (currentMode === 'release') {
+        activePointerId = e.pointerId;
+        tapTarget.setPointerCapture(e.pointerId);
+        startX = e.clientX;
+        startY = e.clientY;
+        return;
+      }
+
+      if (currentMode === 'multi') {
+        flashMultiStep();
+        return;
+      }
+
+      if (currentMode === 'long') {
+        activePointerId = e.pointerId;
+        tapTarget.setPointerCapture(e.pointerId);
+        startX = e.clientX;
+        startY = e.clientY;
+        longPressCompleted = false;
+        longPressStartTime = performance.now();
+        tapTarget.classList.add('pressing');
+        setFeedback('押し続け中… 途中で離すとリセットされます', 'wait');
+        startLongPressLoop();
+      }
+    });
+
+    tapTarget.addEventListener('pointermove', (e) => {
+      if (activePointerId !== e.pointerId) return;
+
+      if (currentMode === 'long' && !longPressCompleted) {
+        if (!isInsideTarget(e.clientX, e.clientY)) {
+          cancelLongPress('枠外へずれたためキャンセル（反応しません）');
+        }
+      }
+    });
+
+    tapTarget.addEventListener('pointerup', (e) => {
+      if (activePointerId !== e.pointerId) return;
+      try { tapTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+      activePointerId = null;
+
+      if (currentMode === 'release') {
+        const inside = isInsideTarget(e.clientX, e.clientY);
+        const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+        if (inside && dist <= DRAG_CANCEL_PX) {
+          successCount++;
+          playHitSound();
+          flashSuccess();
+          setFeedback(`指を離して反応しました（${successCount} 回目）`, 'hit');
+        } else {
+          missCount++;
+          setFeedback('反応しませんでした（離す前にずれた／外れた）', '');
+        }
+        updateStatsUI();
+      } else if (currentMode === 'long') {
+        tapTarget.classList.remove('pressing');
+        if (!longPressCompleted) {
+          cancelLongPress('途中で離したため開きません（連打では反応不可）');
+        }
+      }
+    });
+
+    tapTarget.addEventListener('pointercancel', (e) => {
+      if (activePointerId !== e.pointerId) return;
+      activePointerId = null;
+      if (currentMode === 'release') {
+        missCount++;
+        updateStatsUI();
+      } else if (currentMode === 'long') {
+        tapTarget.classList.remove('pressing');
+        if (!longPressCompleted) {
+          cancelLongPress('中断されました');
+        }
+      }
+    });
+
+    function flashMultiStep() {
+      if (multiTapTimer) clearTimeout(multiTapTimer);
+      multiTapStep++;
+      renderTapDots();
+
+      if (multiTapStep >= requiredTaps) {
+        successCount++;
+        multiTapStep = 0;
+        renderTapDots();
+        flashSuccess();
+        updateStatsUI();
+        const label = requiredTaps === 2 ? 'ダブルタップ' : 'トリプルタップ';
+        setFeedback(`${label}成立！設定画面が開きました（連打でも反応します）`, 'hit');
+        openSettingsModal(
+          label,
+          `${requiredTaps}回連続タップで開きました。1回の誤タップは防げますが、連打すると偶然開くことがあります。`
+        );
+        return;
+      }
+
+      playTickSound(multiTapStep);
+      setFeedback(`あと ${requiredTaps - multiTapStep} 回素早くタップ…（1回だけでは開きません）`, 'wait');
+
+      multiTapTimer = setTimeout(() => {
+        if (multiTapStep > 0) {
+          multiTapStep = 0;
+          missCount++;
+          renderTapDots();
+          updateStatsUI();
+          playCancelSound();
+          setFeedback('時間切れ：単発タップでは反応しません（誤操作防止）', 'miss');
+        }
+      }, MULTI_TAP_WINDOW_MS);
+    }
+
+    function startLongPressLoop() {
+      if (longPressRaf) cancelAnimationFrame(longPressRaf);
+      const fill = document.getElementById('progressFill');
+
+      function step(now) {
+        if (currentMode !== 'long' || activePointerId === null) return;
+        const elapsed = now - longPressStartTime;
+        const ratio = Math.min(1, elapsed / LONG_PRESS_MS);
+        fill.style.width = (ratio * 100).toFixed(1) + '%';
+
+        if (ratio >= 1) {
+          longPressCompleted = true;
+          try { tapTarget.releasePointerCapture(activePointerId); } catch (_) {}
+          activePointerId = null;
+          tapTarget.classList.remove('pressing');
+          successCount++;
+          updateStatsUI();
+          flashSuccess();
+          setFeedback('長押し成功！設定画面が開きました', 'hit');
+          openSettingsModal(
+            '長押し 0.8秒',
+            'しっかり押し続けた時だけ開きます。連打しても偶然開く可能性が低く、誤操作防止に効果的です。'
+          );
+          setTimeout(() => { fill.style.width = '0%'; }, 250);
+          return;
+        }
+        longPressRaf = requestAnimationFrame(step);
+      }
+      longPressRaf = requestAnimationFrame(step);
+    }
+
+    function cancelLongPress(msg) {
+      if (longPressRaf) {
+        cancelAnimationFrame(longPressRaf);
+        longPressRaf = null;
+      }
+      document.getElementById('progressFill').style.width = '0%';
+      tapTarget.classList.remove('pressing');
+      missCount++;
+      playCancelSound();
+      updateStatsUI();
+      setFeedback(msg, 'miss');
+    }
+
+    window.addEventListener('DOMContentLoaded', updateModeUI);
+  </script>
+</body>
+</html>

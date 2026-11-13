@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>4.5 ⑤ ボタン数の削減ラボ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --bg: #f1f5f9;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "UD Digi Kyokasho NK-R", "UD Digital Kyokasho NK-R", "Klee One", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ラボ外枠コントロール */
+    .lab-header {
+      background: #ffffff;
+      border-bottom: 1.5px solid var(--border);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .lab-title {
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .lab-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill-group {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 3px;
+    }
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.16);
+    }
+    .lab-reset-btn {
+      background: #475569;
+      color: #ffffff;
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+    .lab-reset-btn:hover {
+      background: #334155;
+    }
+
+    /* 模擬アプリ画面コンテナ */
+    .app-shell {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      min-height: 0;
+    }
+    .app-screen {
+      width: 100%;
+      max-width: 760px;
+      background: #ffffff;
+      border: 2px solid #94a3b8;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== ホーム画面 ===== */
+    .home-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      gap: 16px;
+      position: relative;
+    }
+    .home-view.hidden {
+      display: none;
+    }
+    .home-preview-icons {
+      display: flex;
+      gap: 18px;
+      font-size: 2.2rem;
+      align-items: center;
+    }
+    .home-title {
+      font-size: clamp(1.5rem, 3.8vw, 2.1rem);
+      font-weight: 800;
+      color: var(--text);
+      text-align: center;
+    }
+    .home-start-btn {
+      background: #16a34a;
+      color: #ffffff;
+      border: none;
+      padding: 14px 48px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 5px 0 #15803d;
+      touch-action: manipulation;
+      transition: transform 0.08s ease;
+    }
+    .home-start-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #15803d;
+    }
+
+    .cluttered-home-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 460px;
+    }
+    .app-btn {
+      background: #f8fafc;
+      border: 1.5px solid #94a3b8;
+      color: #334155;
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 0 #cbd5e1;
+    }
+    .app-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #cbd5e1;
+    }
+    .app-btn.warn-style {
+      background: #fff7ed;
+      border-color: #fb923c;
+      color: #c2410c;
+    }
+    .app-btn.info-style {
+      background: #eff6ff;
+      border-color: #60a5fa;
+      color: #1d4ed8;
+    }
+    .app-btn.danger-style {
+      background: #fef2f2;
+      border-color: #f87171;
+      color: #b91c1c;
+    }
+
+    /* ===== プレイ画面 ===== */
+    .play-view {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+    }
+    .play-view.active {
+      display: flex;
+    }
+
+    .cluttered-topbar {
+      background: #f8fafc;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .cluttered-topbar-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .stage-meta {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: #475569;
+      background: #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .cluttered-bottombar {
+      background: #f8fafc;
+      border-top: 1.5px solid #cbd5e1;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    /* プレイステージ */
+    .play-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      padding: 12px;
+      background: #ffffff;
+      min-height: 0;
+    }
+    .play-hint-text {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #475569;
+    }
+    .hint-toast {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fef9c3;
+      border: 1.5px solid #eab308;
+      color: #854d0e;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      display: none;
+      z-index: 40;
+      white-space: nowrap;
+    }
+    .hint-toast.show {
+      display: block;
+    }
+
+    .slots-row, .pieces-row {
+      display: flex;
+      gap: clamp(16px, 5vw, 44px);
+      align-items: center;
+      justify-content: center;
+    }
+    .shape-slot {
+      width: 78px;
+      height: 78px;
+      border: 2.5px dashed #64748b;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f8fafc;
+      position: relative;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .shape-slot.filled {
+      border-style: solid;
+      border-color: #16a34a;
+      background: #f0fdf4;
+    }
+    @keyframes slot-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(234, 179, 8, 0.25); border-color: #eab308; }
+    }
+    .shape-slot.hint-glow {
+      animation: slot-pulse 0.7s ease-in-out 2;
+    }
+    .slot-ghost {
+      font-size: 2.5rem;
+      opacity: 0.26;
+      pointer-events: none;
+    }
+    .piece-anchor {
+      width: 78px;
+      height: 78px;
+    }
+    .shape-piece {
+      position: absolute;
+      width: 78px;
+      height: 78px;
+      border-radius: 14px;
+      background: #ffffff;
+      border: 2.5px solid #0f172a;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      cursor: grab;
+      touch-action: none;
+      z-index: 10;
+    }
+    .shape-piece.dragging {
+      cursor: grabbing;
+      transform: scale(1.08);
+      z-index: 50;
+      border-color: var(--primary);
+      box-shadow: 0 10px 22px rgba(2, 132, 199, 0.25);
+    }
+    .shape-piece.locked {
+      cursor: default;
+      border-color: #16a34a;
+      box-shadow: none;
+    }
+    .app-screen.large-size .shape-slot,
+    .app-screen.large-size .piece-anchor,
+    .app-screen.large-size .shape-piece {
+      width: 88px;
+      height: 88px;
+    }
+    .app-screen.large-size .slot-ghost,
+    .app-screen.large-size .shape-piece {
+      font-size: 3rem;
+    }
+
+    /* 正解演出 */
+    .clear-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      z-index: 60;
+      pointer-events: none;
+    }
+    .clear-overlay.show {
+      display: flex;
+    }
+    .clear-circle {
+      font-size: 6rem;
+      color: #ef4444;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .clear-sub {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* ポーズ画面 / 各モーダル */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 360px;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 2px solid #cbd5e1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .modal-body {
+      font-size: 0.86rem;
+      color: #334155;
+      line-height: 1.55;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 700;
+    }
+    .toggle-btn {
+      background: #e2e8f0;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+    .toggle-btn.on {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .modal-btn {
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+    .modal-btn.cancel {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .modal-btn.ok {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .modal-btn.danger {
+      background: #dc2626;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 比較切り替えバー -->
+  <header class="lab-header">
+    <span class="lab-title">4.5 ⑤ ボタン数の削減ラボ</span>
+    <div class="lab-controls">
+      <div class="pill-group">
+        <button class="pill-btn active" id="btn-cluttered" onclick="setPattern('cluttered')">① ボタン多め（通常アプリ）</button>
+        <button class="pill-btn" id="btn-simple" onclick="setPattern('simple')">② シンプル（ボタン無し・推奨）</button>
+      </div>
+      <button class="lab-reset-btn" onclick="goHome()">ホームへ戻る</button>
+    </div>
+  </header>
+
+  <!-- 模擬アプリ本体 -->
+  <div class="app-shell">
+    <div class="app-screen" id="appScreen">
+
+      <!-- ホーム画面 -->
+      <section class="home-view" id="homeView">
+        <div class="home-preview-icons" aria-hidden="true">
+          <span style="color:#ef4444;">●</span>
+          <span style="color:#2563eb;">▲</span>
+          <span style="color:#16a34a;">■</span>
+        </div>
+        <h1 class="home-title">かたちあわせ</h1>
+
+        <button class="home-start-btn" onclick="startGame()">▶ スタート</button>
+
+        <!-- パターン①のみ表示されるボタン群 -->
+        <div class="cluttered-home-btns" id="clutteredHomeBtns">
+          <button class="app-btn info-style" onclick="openSettings()">⚙ 設定</button>
+          <button class="app-btn" onclick="openHowTo()">📖 あそびかた</button>
+          <button class="app-btn" onclick="openRecords()">📊 きろく</button>
+          <button class="app-btn" id="homeSoundBtn" onclick="toggleSound()">🔊 おと: ON</button>
+          <button class="app-btn warn-style" onclick="openThemePick()">🎨 もんだい変更</button>
+        </div>
+      </section>
+
+      <!-- プレイ画面 -->
+      <section class="play-view" id="playView">
+        <!-- パターン①のみ表示：上部バー -->
+        <div class="cluttered-topbar" id="clutteredTopbar">
+          <div class="cluttered-topbar-group">
+            <button class="app-btn danger-style" onclick="confirmBackHome()">← もどる</button>
+            <button class="app-btn" onclick="openPause()">⏸ ポーズ</button>
+            <span class="stage-meta" id="stageCounter">だい 1 もん</span>
+            <span class="stage-meta" id="timerBadge" style="display:none;">⏱ 0秒</span>
+          </div>
+          <div class="cluttered-topbar-group">
+            <button class="app-btn info-style" onclick="showRealHint()">💡 ヒント</button>
+            <button class="app-btn" onclick="openSettings()">⚙ 設定</button>
+            <button class="app-btn" id="playSoundBtn" onclick="toggleSound()">🔊 おと: ON</button>
+          </div>
+        </div>
+
+        <!-- プレイステージ -->
+        <div class="play-stage" id="playStage">
+          <div class="hint-toast" id="hintToast"></div>
+          <div class="play-hint-text" id="playPromptText">おなじ かたちに いれよう！</div>
+
+          <div class="slots-row" id="slotsRow"></div>
+          <div class="pieces-row" id="piecesRow"></div>
+
+          <div class="clear-overlay" id="clearOverlay">
+            <div class="clear-circle">◯</div>
+            <div class="clear-sub" id="clearSubText">できました！</div>
+          </div>
+        </div>
+
+        <!-- パターン①のみ表示：下部バー -->
+        <div class="cluttered-bottombar" id="clutteredBottombar">
+          <button class="app-btn warn-style" onclick="resetCurrentQuestion()">↻ やりなおし</button>
+          <button class="app-btn" onclick="skipQuestion()">⏭ スキップ</button>
+          <button class="app-btn" onclick="openHelp()">❓ ヘルプ</button>
+          <button class="app-btn" onclick="goHome()">🏠 ホーム</button>
+        </div>
+      </section>
+
+      <!-- 汎用モーダル（設定・あそびかた・きろく・ポーズ・確認・ヘルプ） -->
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal-box">
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-body" id="modalBody"></div>
+          <div class="modal-actions" id="modalActions"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const QUESTION_SETS = [
+      {
+        name: 'きほんのかたち',
+        items: [
+          { key: 'circle',   symbol: '●', color: '#ef4444', label: 'あかい まる' },
+          { key: 'triangle', symbol: '▲', color: '#2563eb', label: 'あおい さんかく' },
+          { key: 'square',   symbol: '■', color: '#16a34a', label: 'みどりの しかく' }
+        ]
+      },
+      {
+        name: 'マーク',
+        items: [
+          { key: 'star',    symbol: '★', color: '#eab308', label: 'きいろい ほし' },
+          { key: 'heart',   symbol: '♥', color: '#ec4899', label: 'ピンクの ハート' },
+          { key: 'diamond', symbol: '◆', color: '#06b6d4', label: 'みずいろの ひしがた' }
+        ]
+      },
+      {
+        name: 'くだもの',
+        items: [
+          { key: 'apple',  symbol: '🍎', color: '#dc2626', label: 'りんご' },
+          { key: 'banana', symbol: '🍌', color: '#ca8a04', label: 'ばなな' },
+          { key: 'grape',  symbol: '🍇', color: '#9333ea', label: 'ぶどう' }
+        ]
+      }
+    ];
+
+    let pattern = 'cluttered'; // 'cluttered' | 'simple'
+    let screenState = 'home';  // 'home' | 'play'
+    let questionIndex = 0;
+
+    // 実際に動作するアプリ設定・記録
+    const state = {
+      soundOn: true,
+      largeSize: false,
+      showTimer: false,
+      playCount: 0,
+      clearCount: 0,
+      skipCount: 0
+    };
+
+    let pieces = [];
+    let solvedCount = 0;
+    let clearTimer = null;
+    let hintTimer = null;
+    let elapsedTimer = null;
+    let elapsedSec = 0;
+    let isPaused = false;
+    let topZ = 10;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, dur = 0.14) {
+      if (!state.soundOn) return;
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + dur);
+    }
+
+    function setPattern(nextPattern) {
+      pattern = nextPattern;
+      document.getElementById('btn-cluttered').classList.toggle('active', pattern === 'cluttered');
+      document.getElementById('btn-simple').classList.toggle('active', pattern === 'simple');
+      closeModal();
+      updatePatternUI();
+      if (screenState === 'play') {
+        setupPlayStage();
+      }
+    }
+
+    function updatePatternUI() {
+      const isCluttered = pattern === 'cluttered';
+      document.getElementById('clutteredHomeBtns').style.display = isCluttered ? 'flex' : 'none';
+      document.getElementById('clutteredTopbar').style.display = isCluttered ? 'flex' : 'none';
+      document.getElementById('clutteredBottombar').style.display = isCluttered ? 'flex' : 'none';
+      document.getElementById('playPromptText').style.display = isCluttered ? 'block' : 'none';
+      document.getElementById('appScreen').classList.toggle('large-size', state.largeSize);
+
+      const soundLabel = state.soundOn ? '🔊 おと: ON' : '🔇 おと: OFF';
+      document.getElementById('homeSoundBtn').textContent = soundLabel;
+      document.getElementById('playSoundBtn').textContent = soundLabel;
+      document.getElementById('timerBadge').style.display = (isCluttered && state.showTimer) ? 'inline-block' : 'none';
+    }
+
+    function stopTimer() {
+      if (elapsedTimer) {
+        clearInterval(elapsedTimer);
+        elapsedTimer = null;
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      elapsedTimer = setInterval(() => {
+        if (!isPaused && screenState === 'play') {
+          elapsedSec++;
+          document.getElementById('timerBadge').textContent = `⏱ ${elapsedSec}秒`;
+        }
+      }, 1000);
+    }
+
+    function goHome() {
+      if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+      if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+      stopTimer();
+      isPaused = false;
+      closeModal();
+      clearPieces();
+      screenState = 'home';
+      document.getElementById('homeView').classList.remove('hidden');
+      document.getElementById('playView').classList.remove('active');
+      document.getElementById('clearOverlay').classList.remove('show');
+      document.getElementById('hintToast').classList.remove('show');
+      updatePatternUI();
+    }
+
+    function startGame() {
+      playTone(587.33, 0.12);
+      state.playCount++;
+      elapsedSec = 0;
+      document.getElementById('timerBadge').textContent = '⏱ 0秒';
+      isPaused = false;
+      closeModal();
+      screenState = 'play';
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('playView').classList.add('active');
+      updatePatternUI();
+      setupPlayStage();
+      startTimer();
+    }
+
+    /* ===== 実動作ボタン処理 ===== */
+    function toggleSound() {
+      state.soundOn = !state.soundOn;
+      updatePatternUI();
+      if (state.soundOn) playTone(659.25, 0.1);
+    }
+
+    function openSettings() {
+      isPaused = true;
+      showModal('設定', (body, actions) => {
+        body.innerHTML = `
+          <div class="setting-row">
+            <span>効果音</span>
+            <button class="toggle-btn ${state.soundOn ? 'on' : ''}" id="setSoundBtn">${state.soundOn ? 'ON' : 'OFF'}</button>
+          </div>
+          <div class="setting-row">
+            <span>ピースの大きさ</span>
+            <button class="toggle-btn ${state.largeSize ? 'on' : ''}" id="setSizeBtn">${state.largeSize ? 'おおきめ' : 'ふつう'}</button>
+          </div>
+          <div class="setting-row">
+            <span>タイマー表示</span>
+            <button class="toggle-btn ${state.showTimer ? 'on' : ''}" id="setTimerBtn">${state.showTimer ? 'ON' : 'OFF'}</button>
+          </div>
+        `;
+        body.querySelector('#setSoundBtn').onclick = (e) => {
+          state.soundOn = !state.soundOn;
+          e.target.classList.toggle('on', state.soundOn);
+          e.target.textContent = state.soundOn ? 'ON' : 'OFF';
+          updatePatternUI();
+          if (state.soundOn) playTone(659.25, 0.1);
+        };
+        body.querySelector('#setSizeBtn').onclick = (e) => {
+          state.largeSize = !state.largeSize;
+          e.target.classList.toggle('on', state.largeSize);
+          e.target.textContent = state.largeSize ? 'おおきめ' : 'ふつう';
+          updatePatternUI();
+          if (screenState === 'play') setupPlayStage();
+        };
+        body.querySelector('#setTimerBtn').onclick = (e) => {
+          state.showTimer = !state.showTimer;
+          e.target.classList.toggle('on', state.showTimer);
+          e.target.textContent = state.showTimer ? 'ON' : 'OFF';
+          updatePatternUI();
+        };
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-btn ok';
+        closeBtn.textContent = 'OK';
+        closeBtn.onclick = closeModal;
+        actions.appendChild(closeBtn);
+      });
+    }
+
+    function openHowTo() {
+      showModal('あそびかた', (body, actions) => {
+        body.innerHTML = `
+          <div>1. 「スタート」をおします。</div>
+          <div>2. 下にあるピースをゆびでうごかします。</div>
+          <div>3. 上のおなじ かたちの わくに いれます。</div>
+          <div>4. 3つ ぜんぶ はいったら クリアです！</div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = 'modal-btn ok';
+        btn.textContent = 'とじる';
+        btn.onclick = closeModal;
+        actions.appendChild(btn);
+      });
+    }
+
+    function openRecords() {
+      showModal('きろく', (body, actions) => {
+        const renderStats = () => {
+          body.innerHTML = `
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-num">${state.playCount}</div>
+                <div class="stat-label">あそんだ回数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">${state.clearCount}</div>
+                <div class="stat-label">クリア回数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">${state.skipCount}</div>
+                <div class="stat-label">スキップ回数</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-num">${QUESTION_SETS[questionIndex].name}</div>
+                <div class="stat-label">現在のテーマ</div>
+              </div>
+            </div>
+          `;
+        };
+        renderStats();
+
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'modal-btn danger';
+        resetBtn.textContent = 'きろくを消す';
+        resetBtn.onclick = () => {
+          state.playCount = 0;
+          state.clearCount = 0;
+          state.skipCount = 0;
+          renderStats();
+        };
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-btn cancel';
+        closeBtn.textContent = 'とじる';
+        closeBtn.onclick = closeModal;
+        actions.append(resetBtn, closeBtn);
+      });
+    }
+
+    function openThemePick() {
+      showModal('もんだいテーマをえらぶ', (body, actions) => {
+        QUESTION_SETS.forEach((set, idx) => {
+          const row = document.createElement('button');
+          row.className = 'app-btn';
+          row.style.justifyContent = 'space-between';
+          row.style.padding = '10px 12px';
+          if (idx === questionIndex) row.style.borderColor = '#0284c7';
+          row.innerHTML = `<span>${idx + 1}. ${set.name}</span><span>${set.items.map(i => i.symbol).join(' ')}</span>`;
+          row.onclick = () => {
+            questionIndex = idx;
+            closeModal();
+          };
+          body.appendChild(row);
+        });
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'modal-btn cancel';
+        closeBtn.textContent = 'とじる';
+        closeBtn.onclick = closeModal;
+        actions.appendChild(closeBtn);
+      });
+    }
+
+    function confirmBackHome() {
+      isPaused = true;
+      showModal('ホームにもどる？', (body, actions) => {
+        body.textContent = 'とちゅうの もんだいは リセットされます。';
+        const stayBtn = document.createElement('button');
+        stayBtn.className = 'modal-btn cancel';
+        stayBtn.textContent = 'つづける';
+        stayBtn.onclick = closeModal;
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'modal-btn danger';
+        leaveBtn.textContent = 'もどる';
+        leaveBtn.onclick = goHome;
+        actions.append(stayBtn, leaveBtn);
+      });
+    }
+
+    function openPause() {
+      isPaused = true;
+      showModal('⏸ いちじていし', (body, actions) => {
+        body.textContent = 'ゲームを いったん とめています。';
+        const homeBtn = document.createElement('button');
+        homeBtn.className = 'modal-btn cancel';
+        homeBtn.textContent = 'ホームへ';
+        homeBtn.onclick = goHome;
+        const resumeBtn = document.createElement('button');
+        resumeBtn.className = 'modal-btn ok';
+        resumeBtn.textContent = 'さいかい';
+        resumeBtn.onclick = closeModal;
+        actions.append(homeBtn, resumeBtn);
+      });
+    }
+
+    function showRealHint() {
+      playTone(784, 0.1);
+      const unsolvedPiece = pieces.find(p => !p.locked);
+      if (!unsolvedPiece) return;
+      const targetSlot = document.querySelector(`.shape-slot[data-key="${unsolvedPiece.key}"]`);
+      const qSet = QUESTION_SETS[questionIndex];
+      const item = qSet.items.find(i => i.key === unsolvedPiece.key);
+
+      if (targetSlot) {
+        targetSlot.classList.remove('hint-glow');
+        void targetSlot.offsetWidth;
+        targetSlot.classList.add('hint-glow');
+      }
+      const toast = document.getElementById('hintToast');
+      toast.textContent = `💡 ヒント：「${item.label}」を ひかる枠に いれよう！`;
+      toast.classList.add('show');
+      if (hintTimer) clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    function resetCurrentQuestion() {
+      playTone(440, 0.1);
+      setupPlayStage();
+    }
+
+    function skipQuestion() {
+      playTone(523.25, 0.1);
+      state.skipCount++;
+      questionIndex = (questionIndex + 1) % QUESTION_SETS.length;
+      setupPlayStage();
+    }
+
+    function openHelp() {
+      isPaused = true;
+      showModal('❓ ヘルプ', (body, actions) => {
+        body.innerHTML = `
+          <div>・下のカードを ゆびで押さえたまま 上の同じ形のわくへ 動かします。</div>
+          <div>・場所がわからないときは「💡 ヒント」を押すと 枠がひかります。</div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = 'modal-btn ok';
+        btn.textContent = 'わかった';
+        btn.onclick = closeModal;
+        actions.appendChild(btn);
+      });
+    }
+
+    function showModal(title, builder) {
+      document.getElementById('modalTitle').textContent = title;
+      const body = document.getElementById('modalBody');
+      const actions = document.getElementById('modalActions');
+      body.innerHTML = '';
+      actions.innerHTML = '';
+      builder(body, actions);
+      document.getElementById('modalBackdrop').classList.add('show');
+    }
+
+    function closeModal() {
+      isPaused = false;
+      document.getElementById('modalBackdrop').classList.remove('show');
+    }
+
+    /* ===== ゲーム盤面生成・ドラッグ処理 ===== */
+    function clearPieces() {
+      pieces.forEach(p => {
+        if (p.el && p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      });
+      pieces = [];
+    }
+
+    function setupPlayStage() {
+      if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
+      if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+      clearPieces();
+      solvedCount = 0;
+      topZ = 10;
+      document.getElementById('clearOverlay').classList.remove('show');
+      document.getElementById('hintToast').classList.remove('show');
+      document.getElementById('stageCounter').textContent = `だい ${questionIndex + 1} もん`;
+
+      const qSet = QUESTION_SETS[questionIndex];
+      const slotsRow = document.getElementById('slotsRow');
+      const piecesRow = document.getElementById('piecesRow');
+      slotsRow.innerHTML = '';
+      piecesRow.innerHTML = '';
+
+      const slotEls = [];
+      qSet.items.forEach(item => {
+        const slot = document.createElement('div');
+        slot.className = 'shape-slot';
+        slot.dataset.key = item.key;
+        const ghost = document.createElement('span');
+        ghost.className = 'slot-ghost';
+        ghost.style.color = item.color;
+        ghost.textContent = item.symbol;
+        slot.appendChild(ghost);
+        slotsRow.appendChild(slot);
+        slotEls.push(slot);
+      });
+
+      // 下段の並びは1つずらして配置
+      const rotated = [qSet.items[1], qSet.items[2], qSet.items[0]];
+      const anchors = rotated.map(item => {
+        const anchor = document.createElement('div');
+        anchor.className = 'piece-anchor';
+        anchor.dataset.key = item.key;
+        piecesRow.appendChild(anchor);
+        return { anchor, item };
+      });
+
+      requestAnimationFrame(() => {
+        const stage = document.getElementById('playStage');
+        const stageRect = stage.getBoundingClientRect();
+        if (!stageRect.width || !stageRect.height) return;
+
+        anchors.forEach(({ anchor, item }) => {
+          const aRect = anchor.getBoundingClientRect();
+          const startX = aRect.left - stageRect.left;
+          const startY = aRect.top - stageRect.top;
+
+          const el = document.createElement('div');
+          el.className = 'shape-piece';
+          el.textContent = item.symbol;
+          el.style.color = item.color;
+          el.style.left = startX + 'px';
+          el.style.top = startY + 'px';
+          el.style.zIndex = ++topZ;
+          stage.appendChild(el);
+
+          const pieceObj = {
+            key: item.key,
+            el,
+            startX,
+            startY,
+            locked: false
+          };
+          bindDrag(pieceObj, stage, slotEls);
+          pieces.push(pieceObj);
+        });
+      });
+    }
+
+    function bindDrag(piece, stage, slotEls) {
+      const el = piece.el;
+      let dragging = false;
+      let pid = null;
+      let ox = 0;
+      let oy = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (piece.locked || isPaused) return;
+        e.preventDefault();
+        initAudio();
+        dragging = true;
+        pid = e.pointerId;
+        el.setPointerCapture(pid);
+        el.classList.add('dragging');
+        el.style.zIndex = ++topZ;
+
+        const rect = el.getBoundingClientRect();
+        ox = e.clientX - rect.left;
+        oy = e.clientY - rect.top;
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!dragging || pid !== e.pointerId) return;
+        const sRect = stage.getBoundingClientRect();
+        const maxX = Math.max(0, sRect.width - el.offsetWidth);
+        const maxY = Math.max(0, sRect.height - el.offsetHeight);
+        const nx = Math.min(maxX, Math.max(0, e.clientX - sRect.left - ox));
+        const ny = Math.min(maxY, Math.max(0, e.clientY - sRect.top - oy));
+        el.style.left = nx + 'px';
+        el.style.top = ny + 'px';
+      });
+
+      function endDrag(e) {
+        if (!dragging || (e.pointerId !== undefined && pid !== e.pointerId)) return;
+        dragging = false;
+        try { el.releasePointerCapture(pid); } catch (_) {}
+        pid = null;
+        el.classList.remove('dragging');
+
+        const sRect = stage.getBoundingClientRect();
+        const pRect = el.getBoundingClientRect();
+        const pCx = pRect.left + pRect.width / 2;
+        const pCy = pRect.top + pRect.height / 2;
+
+        const targetSlot = slotEls.find(s => s.dataset.key === piece.key);
+        if (targetSlot) {
+          const tRect = targetSlot.getBoundingClientRect();
+          const tCx = tRect.left + tRect.width / 2;
+          const tCy = tRect.top + tRect.height / 2;
+          if (Math.hypot(pCx - tCx, pCy - tCy) < 62) {
+            el.style.left = (tRect.left - sRect.left) + 'px';
+            el.style.top = (tRect.top - sRect.top) + 'px';
+            piece.locked = true;
+            el.classList.add('locked');
+            targetSlot.classList.add('filled');
+            targetSlot.classList.remove('hint-glow');
+            playTone(659.25, 0.14);
+
+            solvedCount++;
+            if (solvedCount === slotEls.length) {
+              state.clearCount++;
+              stopTimer();
+              setTimeout(() => playTone(880, 0.25), 140);
+              document.getElementById('clearSubText').textContent = pattern === 'simple'
+                ? 'できました！'
+                : `できました！（${elapsedSec}秒）`;
+              document.getElementById('clearOverlay').classList.add('show');
+              clearTimer = setTimeout(() => {
+                questionIndex = (questionIndex + 1) % QUESTION_SETS.length;
+                goHome();
+              }, 1100);
+            }
+            return;
+          }
+        }
+
+        el.style.left = piece.startX + 'px';
+        el.style.top = piece.startY + 'px';
+      }
+
+      el.addEventListener('pointerup', endDrag);
+      el.addEventListener('pointercancel', endDrag);
+    }
+
+    updatePatternUI();
+    window.addEventListener('resize', () => {
+      if (screenState === 'play') setupPlayStage();
+    });
+  </script>
+</body>
+</html>

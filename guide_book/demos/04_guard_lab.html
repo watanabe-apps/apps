@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>デモD：現場防衛ロック検証ラボ</title>
+  <title>現場防衛ロック検証ラボ</title>
   <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -99,14 +99,16 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      touch-action: manipulation;
+      touch-action: none;
       position: relative;
       transition: all 0.15s ease;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .guard-target-btn:active {
+    .guard-target-btn:active,
+    .guard-target-btn.tap-pulse {
       transform: scale(0.97);
-      background: #f1f5f9;
+      border-color: var(--primary);
+      background: #e0f2fe;
     }
     .guard-target-btn.pressing {
       border-color: var(--primary);
@@ -267,6 +269,7 @@
     let pressTimer = null;
     let pressStartTime = 0;
     let gaugeInterval = null;
+    let isUnlocked = false;
     let audioCtx = null;
 
     function initAudio() {
@@ -295,6 +298,23 @@
       } catch (e) {}
     }
 
+    function playTick(step) {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420 + step * 90, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch (e) {}
+    }
+
     function playError() {
       initAudio();
       if (!audioCtx) return;
@@ -314,11 +334,14 @@
 
     function changeMode(newMode) {
       mode = newMode;
+      const sel = document.getElementById('guard-mode');
+      if (sel) sel.blur();
       resetState();
     }
 
     function resetState() {
       tapCount = 0;
+      isUnlocked = false;
       clearTimeout(tapTimer);
       clearTimeout(pressTimer);
       clearInterval(gaugeInterval);
@@ -364,6 +387,9 @@
 
     // ポインターイベント（長押し & タップ管理）
     targetBtn.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (isUnlocked) return;
+      e.preventDefault();
       initAudio();
 
       if (mode === 'single') {
@@ -394,11 +420,14 @@
       if (mode === 'triple') {
         tapCount++;
         updateDots(tapCount, 3);
+        targetBtn.classList.add('tap-pulse');
+        setTimeout(() => targetBtn.classList.remove('tap-pulse'), 110);
         clearTimeout(tapTimer);
 
         if (tapCount >= 3) {
           unlockSuccess('素早い3回タップが成功しました！大人は手軽に開け、子どもの単発タップは防ぎます。');
         } else {
+          playTick(tapCount);
           tapTimer = setTimeout(() => {
             tapCount = 0;
             updateDots(0, 3);
@@ -423,6 +452,9 @@
         }
 
         updateDots(tapCount, 5);
+        playTick(tapCount);
+        targetBtn.classList.add('tap-pulse');
+        setTimeout(() => targetBtn.classList.remove('tap-pulse'), 110);
 
         // 5回叩いた後、一瞬（600ms）手を止めたら成功！
         if (tapCount === 5) {
@@ -468,6 +500,8 @@
     }
 
     function unlockSuccess(msg) {
+      if (isUnlocked) return;
+      isUnlocked = true;
       playSuccess();
       targetBtn.classList.add('success');
       document.getElementById('modalMessage').innerText = msg;
@@ -480,7 +514,7 @@
       resetState();
     }
 
-    window.addEventListener('load', resetState);
+    resetState();
   </script>
 </body>
 </html>
