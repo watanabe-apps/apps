@@ -411,6 +411,15 @@
       lockMode = mode;
       const el = document.getElementById('sel-lock');
       if (el) el.value = mode;
+      // 既に枠に入っているカードの状態も現在のモードに同期
+      cards.forEach(c => {
+        const assigned = slots.find(s => s.answer === c.num);
+        if (assigned && assigned.num === c.num) {
+          const shouldLock = (mode === 'locked');
+          c.isLocked = shouldLock;
+          c.el.classList.toggle('is-locked', shouldLock);
+        }
+      });
       updateStatusText();
     }
 
@@ -520,14 +529,18 @@
 
         // スロットから外す
         const assigned = slots.find(s => s.answer === card.num);
-        if (assigned) assigned.answer = null;
+        if (assigned) {
+          assigned.answer = null;
+          document.getElementById('correct-banner').classList.remove('show');
+        }
         card.isLocked = false;
         card.el.classList.remove('is-locked');
 
         activeDrags.set(e.pointerId, {
           card: card,
           offsetX: offsetX,
-          offsetY: offsetY
+          offsetY: offsetY,
+          ignoreSlot: assigned || null
         });
       });
 
@@ -548,7 +561,19 @@
           const cardCenterY = newY + CARD_SIZE / 2;
           const threshold = CARD_SIZE * 0.7;
 
+          // 外した元の枠から十分離れたら、再吸着の除外を解除
+          if (dragInfo.ignoreSlot) {
+            const igCenterX = dragInfo.ignoreSlot.x + CARD_SIZE / 2;
+            const igCenterY = dragInfo.ignoreSlot.y + CARD_SIZE / 2;
+            const igDist = Math.hypot(cardCenterX - igCenterX, cardCenterY - igCenterY);
+            if (igDist >= threshold * 1.1) {
+              dragInfo.ignoreSlot = null;
+            }
+          }
+
           for (let slot of slots) {
+            if (slot === dragInfo.ignoreSlot) continue;
+
             const slotCenterX = slot.x + CARD_SIZE / 2;
             const slotCenterY = slot.y + CARD_SIZE / 2;
             const dist = Math.hypot(cardCenterX - slotCenterX, cardCenterY - slotCenterY);
