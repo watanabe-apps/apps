@@ -366,6 +366,24 @@
         </button>
       </div>
 
+      <!-- 弱化なしモード（マイナス0オプション） -->
+      <div class="theme-card-sub border rounded-xl px-3 py-2 flex items-center justify-between shadow-sm cursor-pointer select-none transition" id="container-no-punishment" title="火山に落ちても歩いてもマイナス点がつかなくなります（間違いのフィードバックなし）。">
+        <div class="flex items-center gap-2">
+          <span class="text-base" id="icon-no-punishment">🫧</span>
+          <div>
+            <div class="text-xs font-bold flex items-center gap-1.5">
+              <span>弱化なし (マイナス0)</span>
+              <span id="badge-no-punishment" class="text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-700 text-slate-300">OFF</span>
+            </div>
+            <p class="text-[9.5px] theme-text-muted leading-tight">失敗が0点になり間違いに気づけない</p>
+          </div>
+        </div>
+        <!-- トグルスイッチ -->
+        <button id="toggle-no-punishment" type="button" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-700 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="false">
+          <span id="toggle-no-punishment-circle" class="translate-x-0 pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+        </button>
+      </div>
+
       <!-- 操作ボタンエリア -->
       <div class="flex flex-col gap-1.5">
         <!-- リアルタイム走行ボタン -->
@@ -482,6 +500,21 @@
             これは心理学でいう<strong class="text-amber-300">「学習性無力感」</strong>の再現です。学びを支えるには、まず小さな成功体験（スモールステップ）を重ねて「自信」を育むことが何より大切であることを示しています。
           </p>
         </section>
+
+        <section class="theme-card-sub p-3 rounded-xl border theme-border border-sky-500/30 bg-sky-500/5">
+          <h3 class="font-bold text-sky-400 mb-1 flex items-center gap-1">
+            <span>6.</span> なぜ「弱化なし（マイナス0）」では迷走するのか？（弱化の必要性）
+          </h3>
+          <p class="leading-relaxed">
+            「弱化なし」をONにすると、火山に落ちても歩いても<strong>マイナス点がつかず 0点</strong>になります。これは学習で言えば<strong>「正解した時だけ褒められ、間違えても指摘されずやり直しになる（エラーのフィードバックがない）」</strong>状態です。
+          </p>
+          <p class="mt-1.5 leading-relaxed">
+            すると、偶然ゴール（+100）にたどり着くまで盤面の数字がずっと <strong>0</strong> のままで手がかりが作られず、同じ火山に何度も飛び込んだり遠回りを修正できなかったりします。
+          </p>
+          <p class="mt-1.5 theme-text-muted leading-relaxed">
+            適切な「弱化（ここは違うよ、という明確なフィードバック）」は、萎縮させるためではなく<strong class="text-sky-300">「失敗を次のヒントに変えるため」</strong>に不可欠であることを示しています。
+          </p>
+        </section>
       </div>
     </div>
   </div>
@@ -526,6 +559,7 @@
     let totalEpisodes = 0;
     let totalWins = 0;
     let avoidNegativeMode = false; // マイナス進入禁止モード
+    let noPunishmentMode = false;  // 弱化なし（マイナス0）モード
     let isFreezing = false;        // 自信喪失・立ちすくみ演出中フラグ
 
     // 実行制御
@@ -687,39 +721,105 @@
     const badgeAvoidNegative = document.getElementById('badge-avoid-negative');
     const iconAvoidNegative = document.getElementById('icon-avoid-negative');
     const toggleCircle = document.getElementById('toggle-circle');
+    const containerNoPunishment = document.getElementById('container-no-punishment');
+    const toggleNoPunishment = document.getElementById('toggle-no-punishment');
+    const badgeNoPunishment = document.getElementById('badge-no-punishment');
+    const iconNoPunishment = document.getElementById('icon-no-punishment');
+    const toggleNoPunishmentCircle = document.getElementById('toggle-no-punishment-circle');
     const guideMessage = document.getElementById('guide-message');
+
+    // ガイドメッセージの表示を更新
+    function updateGuideMessage() {
+      if (!guideMessage || isFreezing) return;
+      if (avoidNegativeMode && noPunishmentMode) {
+        guideMessage.innerHTML = '【両モード ON】失敗が0点になるため手がかりがなく、すでに負の値があるマスでは進入拒否が働きます。';
+      } else if (avoidNegativeMode) {
+        guideMessage.innerHTML = '【マイナス進入禁止 ON】マイナス評価（Q&lt;0）の手を拒否します。全方向がマイナスになると自信を失い立ちすくみます。';
+      } else if (noPunishmentMode) {
+        guideMessage.innerHTML = '【弱化なし ON】火山も歩数も0点になり間違いを指摘されません。ゴールするまで手がかりが作られず迷走しやすくなります。';
+      } else {
+        guideMessage.innerHTML = '「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。';
+      }
+    }
+
+    // トグルスイッチの見た目更新共通ヘルパー
+    function applyToggleUI({ enabled, toggleBtn, circleEl, badgeEl, containerEl, onBgClass, badgeOnClass, containerOnClasses }) {
+      if (!toggleBtn || !circleEl || !badgeEl || !containerEl) return;
+      toggleBtn.setAttribute('aria-checked', enabled ? 'true' : 'false');
+      if (enabled) {
+        toggleBtn.classList.remove('bg-slate-700');
+        toggleBtn.classList.add(onBgClass);
+        circleEl.classList.replace('translate-x-0', 'translate-x-4');
+        badgeEl.textContent = 'ON';
+        badgeEl.className = `text-[9px] px-1.5 py-0.2 rounded font-semibold ${badgeOnClass}`;
+        containerEl.classList.add(...containerOnClasses);
+      } else {
+        toggleBtn.classList.remove(onBgClass);
+        toggleBtn.classList.add('bg-slate-700');
+        circleEl.classList.replace('translate-x-4', 'translate-x-0');
+        badgeEl.textContent = 'OFF';
+        badgeEl.className = 'text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-700 text-slate-300';
+        containerEl.classList.remove(...containerOnClasses);
+      }
+    }
 
     // マイナス進入禁止モードの切り替え
     function setAvoidNegativeMode(enabled) {
       avoidNegativeMode = !!enabled;
-
-      if (toggleAvoidNegative && toggleCircle && badgeAvoidNegative && containerAvoidNegative) {
-        if (avoidNegativeMode) {
-          toggleAvoidNegative.setAttribute('aria-checked', 'true');
-          toggleAvoidNegative.classList.replace('bg-slate-700', 'bg-amber-600');
-          toggleCircle.classList.replace('translate-x-0', 'translate-x-4');
-          badgeAvoidNegative.textContent = 'ON';
-          badgeAvoidNegative.className = 'text-[9px] px-1.5 py-0.2 rounded font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/40';
-          containerAvoidNegative.classList.add('border-amber-500/40', 'bg-amber-500/5');
-          if (guideMessage && !isFreezing) {
-            guideMessage.innerHTML = '【マイナス進入禁止 ON】マイナス評価（Q&lt;0）の手を拒否します。全方向がマイナスになると自信を失い立ちすくみます。';
-          }
-        } else {
-          toggleAvoidNegative.setAttribute('aria-checked', 'false');
-          toggleAvoidNegative.classList.replace('bg-amber-600', 'bg-slate-700');
-          toggleCircle.classList.replace('translate-x-4', 'translate-x-0');
-          badgeAvoidNegative.textContent = 'OFF';
-          badgeAvoidNegative.className = 'text-[9px] px-1.5 py-0.2 rounded font-semibold bg-slate-700 text-slate-300';
-          containerAvoidNegative.classList.remove('border-amber-500/40', 'bg-amber-500/5');
-          if (guideMessage && !isFreezing) {
-            guideMessage.innerHTML = '「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。';
-          }
-        }
-      }
-
+      applyToggleUI({
+        enabled: avoidNegativeMode,
+        toggleBtn: toggleAvoidNegative,
+        circleEl: toggleCircle,
+        badgeEl: badgeAvoidNegative,
+        containerEl: containerAvoidNegative,
+        onBgClass: 'bg-amber-600',
+        badgeOnClass: 'bg-amber-500/20 text-amber-400 border border-amber-500/40',
+        containerOnClasses: ['border-amber-500/40', 'bg-amber-500/5']
+      });
+      updateGuideMessage();
       try {
         localStorage.setItem('rl_avoid_negative', avoidNegativeMode ? 'true' : 'false');
       } catch (e) {}
+    }
+
+    // 弱化なし（マイナス0）モードの切り替え
+    function setNoPunishmentMode(enabled) {
+      noPunishmentMode = !!enabled;
+      applyToggleUI({
+        enabled: noPunishmentMode,
+        toggleBtn: toggleNoPunishment,
+        circleEl: toggleNoPunishmentCircle,
+        badgeEl: badgeNoPunishment,
+        containerEl: containerNoPunishment,
+        onBgClass: 'bg-sky-600',
+        badgeOnClass: 'bg-sky-500/20 text-sky-400 border border-sky-500/40',
+        containerOnClasses: ['border-sky-500/40', 'bg-sky-500/5']
+      });
+      updateGuideMessage();
+      try {
+        localStorage.setItem('rl_no_punishment', noPunishmentMode ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    // 遷移先の報酬と終端状態を計算（弱化なしモード対応）
+    function evaluateTransition(nextState) {
+      if (nextState === goalPos) {
+        return { reward: REWARD_GOAL, done: true, isGoal: true, isTrap: false };
+      }
+      if (traps.has(nextState)) {
+        return {
+          reward: noPunishmentMode ? 0 : REWARD_TRAP,
+          done: true,
+          isGoal: false,
+          isTrap: true
+        };
+      }
+      return {
+        reward: noPunishmentMode ? 0 : REWARD_STEP,
+        done: false,
+        isGoal: false,
+        isTrap: false
+      };
     }
 
     // 数字サイズ（フォントスケール）の変更
@@ -974,14 +1074,7 @@
       const freezeDuration = Math.max(900, Math.min(1800, getStepInterval() * 3.5));
       freezeTimer = setTimeout(() => {
         clearFreezeState();
-
-        if (guideMessage) {
-          if (avoidNegativeMode) {
-            guideMessage.innerHTML = '【マイナス進入禁止 ON】マイナス評価（Q&lt;0）の手を拒否します。全方向がマイナスになると自信を失い立ちすくみます。';
-          } else {
-            guideMessage.innerHTML = '「学習スタート」でロボットが試行錯誤し、ゴール🏆に達する安全最短ルートを発見するとマスのQ値が上昇します。';
-          }
-        }
+        updateGuideMessage();
 
         robotPos = startPos;
         testStepCount = 0;
@@ -1156,20 +1249,7 @@
       playBeep(320 + action * 40, 'sine', 0.05, 0.04);
 
       // 報酬と終端判定
-      let reward = REWARD_STEP;
-      let done = false;
-      let isGoal = false;
-      let isTrap = false;
-
-      if (nextState === goalPos) {
-        reward = REWARD_GOAL;
-        done = true;
-        isGoal = true;
-      } else if (traps.has(nextState)) {
-        reward = REWARD_TRAP;
-        done = true;
-        isTrap = true;
-      }
+      let { reward, done, isGoal, isTrap } = evaluateTransition(nextState);
 
       // 実力テスト(forceGreedy)時の無限ループ防止上限
       if (forceGreedy) {
@@ -1209,10 +1289,19 @@
         if (isGoal) {
           playChord([523, 659, 784, 1046], 'triangle', 0.25);
         } else if (isTrap) {
-          playBeep(140, 'sawtooth', 0.2, 0.12);
+          if (noPunishmentMode) {
+            // 弱化なし時は叱責ブザーではなく淡々とした音＋無表情でやり直し
+            playBeep(260, 'sine', 0.06, 0.03);
+            const avatar = document.getElementById('robot-avatar');
+            if (avatar) avatar.textContent = '😶';
+          } else {
+            playBeep(140, 'sawtooth', 0.2, 0.12);
+          }
         }
 
         setTimeout(() => {
+          const avatar = document.getElementById('robot-avatar');
+          if (avatar) avatar.textContent = '🤖';
           robotPos = startPos;
           testStepCount = 0;
           isEpisodeEnding = false;
@@ -1264,16 +1353,9 @@
           }
           const nextS = getNextState(s, a);
 
-          let r = REWARD_STEP;
-          let done = false;
-
-          if (nextS === goalPos) {
-            r = REWARD_GOAL;
-            done = true;
+          const { reward: r, done, isGoal } = evaluateTransition(nextS);
+          if (isGoal) {
             totalWins++;
-          } else if (traps.has(nextS)) {
-            r = REWARD_TRAP;
-            done = true;
           }
 
           const validNextQ = getValidActions(nextS).map(act => qTable[nextS][act]);
@@ -1427,20 +1509,26 @@
     btnTrain1000.addEventListener('click', () => batchTrain(1000));
     btnReset.addEventListener('click', resetAll);
 
-    // マイナス進入禁止トグルのクリック
-    if (containerAvoidNegative) {
-      containerAvoidNegative.addEventListener('click', () => {
-        initAudio();
-        setAvoidNegativeMode(!avoidNegativeMode);
-      });
+    // トグルカード・スイッチ共通クリックバインド
+    function bindToggleClick(container, button, onToggle) {
+      if (container) {
+        container.addEventListener('click', () => {
+          initAudio();
+          onToggle();
+        });
+      }
+      if (button) {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          initAudio();
+          onToggle();
+        });
+      }
     }
-    if (toggleAvoidNegative) {
-      toggleAvoidNegative.addEventListener('click', (e) => {
-        e.stopPropagation();
-        initAudio();
-        setAvoidNegativeMode(!avoidNegativeMode);
-      });
-    }
+
+    // マイナス進入禁止トグル / 弱化なしトグルのクリック登録
+    bindToggleClick(containerAvoidNegative, toggleAvoidNegative, () => setAvoidNegativeMode(!avoidNegativeMode));
+    bindToggleClick(containerNoPunishment, toggleNoPunishment, () => setNoPunishmentMode(!noPunishmentMode));
 
     // 音声トグル
     btnSound.addEventListener('click', () => {
@@ -1513,9 +1601,11 @@
       const savedTheme = localStorage.getItem('rl_theme') || 'night';
       applyTheme(savedTheme);
 
-      // マイナス進入禁止モードの復元
+      // マイナス進入禁止モード / 弱化なしモードの復元
       const savedAvoidNeg = localStorage.getItem('rl_avoid_negative') === 'true';
       setAvoidNegativeMode(savedAvoidNeg);
+      const savedNoPunishment = localStorage.getItem('rl_no_punishment') === 'true';
+      setNoPunishmentMode(savedNoPunishment);
 
       // 保存数字サイズの復元
       try {
