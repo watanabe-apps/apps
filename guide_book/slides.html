@@ -133,21 +133,24 @@
       position: relative;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       background: var(--bg-dark);
     }
 
-    /* スライド共通レイアウト（全体的に画面中央に寄せる） */
+    @keyframes slideFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* スライド共通レイアウト（非表示スライドはdisplay:noneでメモリ負荷・iframe同時起動を防止） */
     .slide {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease-out;
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -157,9 +160,9 @@
     }
 
     .slide.active {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex;
       z-index: 2;
+      animation: slideFadeIn 0.18s ease-out;
     }
 
     /* ヘッダー：中央コンテナ幅に連動（チャプタータイトルを大きく視認性抜群に） */
@@ -1081,8 +1084,8 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       z-index: 90;
       pointer-events: none;
       touch-action: none;
@@ -1309,10 +1312,82 @@
         padding-right: 0;
         padding-bottom: 16px;
       }
+      .agenda-content {
+        white-space: normal;
+        flex-wrap: wrap;
+      }
+      .feature-row {
+        flex-wrap: wrap;
+        gap: 6px 12px;
+      }
+      .feature-row-title {
+        min-width: 0;
+        white-space: normal;
+      }
       .demo-split-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: auto minmax(340px, 1fr);
+        grid-template-rows: auto;
+        height: auto;
       }
+      .demo-main-iframe-box {
+        height: 54vh;
+        height: 54dvh;
+        min-height: 300px;
+      }
+      /* モバイルSafari等でのGPU・メモリ負荷軽減 */
+      .card-item, .compare-box, .demo-side-ctrl, .app-link-pill,
+      .feature-row, .prompt-box, .top-ctrl-btn, .theme-menu,
+      .draw-sub-bar, #nav-bar, #overview-modal {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .top-ctrl-bar { top: 8px; right: 10px; gap: 6px; }
+      .top-ctrl-btn { width: 32px; height: 32px; font-size: 14px; }
+      .draw-sub-bar { top: 46px; right: 10px; }
+      .slide { padding: 48px 16px 62px; }
+      .slide-header { padding-right: 0; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 10px; }
+      .badge-chapter { font-size: 12px; padding: 3px 10px; }
+      .slide-section-title { font-size: 17px; line-height: 1.3; }
+      .headline-main { font-size: clamp(22px, 6vw, 28px); margin-bottom: 10px; }
+      .big-list-item { font-size: clamp(16px, 4.2vw, 20px); line-height: 1.45; gap: 10px; }
+      .accent-border-box { padding-left: 14px; }
+      .card-item { padding: 12px 14px; }
+      .card-item-tag { font-size: 13px; }
+      .card-item-h { font-size: clamp(17px, 4.6vw, 22px); }
+      .card-item-p { font-size: clamp(14px, 3.8vw, 17px); line-height: 1.45; }
+      .cover-h1 { font-size: clamp(28px, 8vw, 38px); }
+      .cover-lead { font-size: 16px; }
+      .door-wrap { padding-left: 4px; }
+      .door-chapter-title { font-size: clamp(28px, 7.6vw, 38px); }
+      .agenda-sidebar-title { font-size: 26px; margin-bottom: 8px; }
+      .agenda-sidebar-desc { font-size: 15px; }
+      .agenda-row { padding: 10px 12px; gap: 12px; }
+      .agenda-num { font-size: 20px; min-width: 32px; }
+      .agenda-title { font-size: 16px; }
+      .feature-row-num { font-size: 20px; min-width: 30px; }
+      .feature-row-title { font-size: 18px; }
+      .feature-row-desc { font-size: 15px; width: 100%; }
+      .font-compare-row { flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+      .font-compare-label { font-size: 14px; }
+      .font-compare-sample { font-size: clamp(24px, 7vw, 32px); letter-spacing: 0.12em; white-space: normal; }
+      .prompt-box { padding: 14px; }
+      .prompt-box-text { font-size: 16px; }
+      .prompt-box-note { font-size: 14px; }
+      .demo-side-title { font-size: 20px; }
+      .demo-qr-box { padding: 6px; margin: 4px auto; }
+      .demo-qr-box img { width: 88px !important; }
+      #nav-bar { padding: 0 10px; }
+      .nav-left { max-width: calc(50% - 82px); gap: 6px; }
+      #nav-title { display: none; }
+      .nav-btn { width: 34px; height: 34px; font-size: 1rem; }
+      .nav-center { gap: 8px; }
+      .nav-right { font-size: 14px; gap: 8px; }
+      #fs-toggle-btn { display: none; }
+      #overview-modal { padding: 16px; }
+      .overview-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding-right: 0; }
     }
 
     /* フルサイズアプリ表示専用（説明なし全画面埋め込み） */
@@ -1328,10 +1403,15 @@
     .slide.slide-full-app .demo-main-iframe-box {
       width: 100%;
       height: 100%;
+      min-height: 0;
       flex: 1;
     }
     @media (max-height: 760px), (max-width: 1180px) {
       .slide.slide-full-app { padding: 10px 12px 58px; }
+    }
+    @media (max-width: 600px) {
+      .slide.slide-full-app { padding: 48px 8px 58px; }
+      .slide.slide-full-app .demo-main-iframe-box { height: 100%; min-height: 0; }
     }
   </style>
 </head>
@@ -1421,7 +1501,7 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="my_concept.html" loading="lazy"></iframe>
+            <iframe data-src="my_concept.html"></iframe>
           </div>
         </div>
       </div>
@@ -2202,7 +2282,7 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/05_suuji_narabe.html" loading="lazy"></iframe>
+            <iframe data-src="demos/05_suuji_narabe.html"></iframe>
           </div>
         </div>
       </div>
@@ -2272,7 +2352,7 @@
     <div class="slide slide-full-app" data-chapter="Ch.03" data-title="コラム">
       <div class="slide-body">
         <div class="demo-main-iframe-box">
-          <iframe src="3d.html" loading="lazy"></iframe>
+          <iframe data-src="3d.html"></iframe>
         </div>
       </div>
     </div>
@@ -2281,7 +2361,7 @@
          第4章：学習用アプリの設計・実装思想
          ========================================== -->
 
-    <!-- Slide 39: 第4章 扉 -->
+    <!-- Slide 40: 第4章 扉 -->
     <div class="slide" data-chapter="Ch.04" data-title="第4章 扉">
       <div class="slide-body">
         <div class="door-wrap">
@@ -2291,7 +2371,7 @@
       </div>
     </div>
 
-    <!-- Slide 40: 4.1 目的の明確化 -->
+    <!-- Slide 41: 4.1 目的の明確化 -->
     <div class="slide" data-chapter="Ch.04" data-title="目的の明確化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2307,7 +2387,7 @@
       </div>
     </div>
 
-    <!-- Slide 41: 4.1 汎用性をどう考える？ -->
+    <!-- Slide 42: 4.1 汎用性をどう考える？ -->
     <div class="slide" data-chapter="Ch.04" data-title="目的の明確化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2323,7 +2403,7 @@
       </div>
     </div>
 
-    <!-- Slide 42: 4.2 操作性の最適化（ドラッグとタップの使い分け） -->
+    <!-- Slide 43: 4.2 操作性の最適化（ドラッグとタップの使い分け） -->
     <div class="slide" data-chapter="Ch.04" data-title="操作の使い分け">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2349,7 +2429,7 @@
       </div>
     </div>
 
-    <!-- Slide 43: 【実動デモ & QR】Demo 型はめ操作比較ラボ（図形あそびリンク付き） -->
+    <!-- Slide 44: 【実動デモ & QR】Demo 型はめ操作比較ラボ（図形あそびリンク付き） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：型はめ操作比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2381,13 +2461,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/07_drag_vs_tap.html" loading="lazy"></iframe>
+            <iframe data-src="demos/07_drag_vs_tap.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 44: 【実動デモ & QR】Demo ドラッグ挙動パラメータ比較 -->
+    <!-- Slide 45: 【実動デモ & QR】Demo ドラッグ挙動パラメータ比較 -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：ドラッグ挙動ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2424,13 +2504,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/01_drag_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/01_drag_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 45: 4.2 ③ いろいろなタップ -->
+    <!-- Slide 46: 4.2 ③ いろいろなタップ -->
     <div class="slide" data-chapter="Ch.04" data-title="いろいろなタップ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2462,7 +2542,7 @@
       </div>
     </div>
 
-    <!-- Slide 46: 4.2 ③ いろいろなタップ（Demo） -->
+    <!-- Slide 47: 4.2 ③ いろいろなタップ（Demo） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：いろいろなタップ比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2498,13 +2578,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/11_tap_types_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/11_tap_types_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 47: 4.2 ④ ドラッグとタップの使い分け -->
+    <!-- Slide 48: 4.2 ④ ドラッグとタップの使い分け -->
     <div class="slide" data-chapter="Ch.04" data-title="ドラッグとタップの使い分け">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2531,7 +2611,7 @@
       </div>
     </div>
 
-    <!-- Slide 48: 4.2 ⑤ 「できた/つぎへ」ボタン（比較） -->
+    <!-- Slide 49: 4.2 ⑤ 「できた/つぎへ」ボタン（比較） -->
     <div class="slide" data-chapter="Ch.04" data-title="「できた/つぎへ」ボタンの検討">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2559,7 +2639,7 @@
       </div>
     </div>
 
-    <!-- Slide 49: 4.2 ⑤ 「できた/つぎへ」ボタン（使い分けの目安） -->
+    <!-- Slide 50: 4.2 ⑤ 「できた/つぎへ」ボタン（使い分けの目安） -->
     <div class="slide" data-chapter="Ch.04" data-title="「できた/つぎへ」ボタンの目安">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2574,7 +2654,7 @@
       </div>
     </div>
 
-    <!-- Slide 50: 4.3 認知特性に配慮した画面設計 -->
+    <!-- Slide 51: 4.3 認知特性に配慮した画面設計 -->
     <div class="slide" data-chapter="Ch.04" data-title="非言語的な構造化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2603,7 +2683,7 @@
       </div>
     </div>
 
-    <!-- Slide 51: 【実動デモ & QR】Demo 操作対象と終点の視覚化 -->
+    <!-- Slide 52: 【実動デモ & QR】Demo 操作対象と終点の視覚化 -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：操作対象と終点ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2636,13 +2716,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/08_target_contrast.html" loading="lazy"></iframe>
+            <iframe data-src="demos/08_target_contrast.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 52: 【実動デモ & QR】Demo 視線誘導なぞり書き -->
+    <!-- Slide 53: 【実動デモ & QR】Demo 視線誘導なぞり書き -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：視線誘導なぞり書き">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2676,13 +2756,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/06_trace_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/06_trace_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 53: 4.3 ③ 重なりへの対応（z-index） -->
+    <!-- Slide 54: 4.3 ③ 重なりへの対応（z-index） -->
     <div class="slide" data-chapter="Ch.04" data-title="重なりへの対応（z-index）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2698,7 +2778,7 @@
       </div>
     </div>
 
-    <!-- Slide 54: 【実動デモ & QR】Demo 重なり順（z-index） -->
+    <!-- Slide 55: 【実動デモ & QR】Demo 重なり順（z-index） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：重なり順（z-index）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2731,13 +2811,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/12_zindex_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/12_zindex_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 55: 【実動デモ & QR】Demo 背景色＆コントラスト -->
+    <!-- Slide 56: 【実動デモ & QR】Demo 背景色＆コントラスト -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：背景色＆コントラスト">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2771,13 +2851,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/09_bg_contrast.html" loading="lazy"></iframe>
+            <iframe data-src="demos/09_bg_contrast.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 56: 4.4 端末の特性への対応（① 画面端配置・② Klee One） -->
+    <!-- Slide 57: 4.4 端末の特性への対応（① 画面端配置・② Klee One） -->
     <div class="slide" data-chapter="Ch.04" data-title="端末の特性への対応（①〜②）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2816,7 +2896,7 @@
       </div>
     </div>
 
-    <!-- Slide 57: 4.4 端末の特性への対応（③ 拡大・スクロール禁止＋補足） -->
+    <!-- Slide 58: 4.4 端末の特性への対応（③ 拡大・スクロール禁止＋補足） -->
     <div class="slide" data-chapter="Ch.04" data-title="端末の特性への対応（③＋補足）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2847,7 +2927,7 @@
       </div>
     </div>
 
-    <!-- Slide 58: 4.5 ノイズの徹底的な除去 -->
+    <!-- Slide 59: 4.5 ノイズの徹底的な除去 -->
     <div class="slide" data-chapter="Ch.04" data-title="ノイズの徹底除去">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2884,7 +2964,7 @@
       </div>
     </div>
 
-    <!-- Slide 59: 【実動デモ & QR】Demo 数の学習：演出比較ラボ -->
+    <!-- Slide 60: 【実動デモ & QR】Demo 数の学習：演出比較ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：演出比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2917,13 +2997,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/02_count_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/02_count_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 60: 【実動デモ & QR】Demo 連打対策ラボ -->
+    <!-- Slide 61: 【実動デモ & QR】Demo 連打対策ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：連打対策ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2955,13 +3035,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/10_rapid_tap_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/10_rapid_tap_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 61: 【実動デモ & QR】Demo ボタン数の削減ラボ -->
+    <!-- Slide 62: 【実動デモ & QR】Demo ボタン数の削減ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：ボタン数の削減ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2994,13 +3074,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/13_button_noise_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/13_button_noise_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 62: 4.6 AIの傾向 -->
+    <!-- Slide 63: 4.6 AIの傾向 -->
     <div class="slide" data-chapter="Ch.04" data-title="4.6 AIの傾向">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3033,7 +3113,7 @@
       </div>
     </div>
 
-    <!-- Slide 63: 4.6 AIのUI傾向 実例図解 -->
+    <!-- Slide 64: 4.6 AIのUI傾向 実例図解 -->
     <div class="slide" data-chapter="Ch.04" data-title="AIのUI傾向 実例図解">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3047,7 +3127,7 @@
       </div>
     </div>
 
-    <!-- Slide 64: 4.7 その他（①〜④） -->
+    <!-- Slide 65: 4.7 その他（①〜④） -->
     <div class="slide" data-chapter="Ch.04" data-title="4.7 その他（①〜④）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3091,7 +3171,7 @@
       </div>
     </div>
 
-    <!-- Slide 65: 【実動デモ & QR】Demo 現場防衛トリプルタップ -->
+    <!-- Slide 66: 【実動デモ & QR】Demo 現場防衛トリプルタップ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：現場防衛トリプルタップ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3124,13 +3204,13 @@
           </div>
 
           <div class="demo-main-iframe-box">
-            <iframe src="demos/04_guard_lab.html" loading="lazy"></iframe>
+            <iframe data-src="demos/04_guard_lab.html"></iframe>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 66: 4.7 その他（⑤〜⑧） -->
+    <!-- Slide 67: 4.7 その他（⑤〜⑧） -->
     <div class="slide" data-chapter="Ch.04" data-title="4.7 その他（⑤〜⑧）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3178,7 +3258,7 @@
          第5章：Geminiを活用したアプリ作り プロンプトについて
          ========================================== -->
 
-    <!-- Slide 67: 第5章 扉 -->
+    <!-- Slide 68: 第5章 扉 -->
     <div class="slide" data-chapter="Ch.05" data-title="第5章 扉">
       <div class="slide-body">
         <div class="door-wrap">
@@ -3188,7 +3268,7 @@
       </div>
     </div>
 
-    <!-- Slide 68: 開発環境：Gemini ＋ Canvas -->
+    <!-- Slide 69: 開発環境：Gemini ＋ Canvas -->
     <div class="slide" data-chapter="Ch.05" data-title="開発環境：Gemini ＋ Canvas">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3215,7 +3295,7 @@
       </div>
     </div>
 
-    <!-- Slide 69: プロンプトの構造 -->
+    <!-- Slide 70: プロンプトの構造 -->
     <div class="slide" data-chapter="Ch.05" data-title="プロンプトの2大構成">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3248,7 +3328,7 @@
       </div>
     </div>
 
-    <!-- Slide 70: 教員が指定するアプリ概要 -->
+    <!-- Slide 71: 教員が指定するアプリ概要 -->
     <div class="slide" data-chapter="Ch.05" data-title="アプリ概要の指定項目">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3279,7 +3359,7 @@
       </div>
     </div>
 
-    <!-- Slide 71: 必須技術仕様 1〜2 -->
+    <!-- Slide 72: 必須技術仕様 1〜2 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 1〜2">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3318,7 +3398,7 @@
       </div>
     </div>
 
-    <!-- Slide 72: 必須技術仕様 3〜4 -->
+    <!-- Slide 73: 必須技術仕様 3〜4 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 3〜4">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3348,7 +3428,7 @@
       </div>
     </div>
 
-    <!-- Slide 73: 必須技術仕様 5（iPad対応） -->
+    <!-- Slide 74: 必須技術仕様 5（iPad対応） -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 5：iPad対応">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3382,7 +3462,7 @@
       </div>
     </div>
 
-    <!-- Slide 74: 必須技術仕様 6〜7 -->
+    <!-- Slide 75: 必須技術仕様 6〜7 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 6〜7">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3412,7 +3492,7 @@
       </div>
     </div>
 
-    <!-- Slide 75: 必須技術仕様 8〜10 -->
+    <!-- Slide 76: 必須技術仕様 8〜10 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 8〜10">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3451,7 +3531,7 @@
       </div>
     </div>
 
-    <!-- Slide 76: 追加プロンプト例：オプション1 -->
+    <!-- Slide 77: 追加プロンプト例：オプション1 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション1：アプリアイコン">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3471,7 +3551,7 @@
       </div>
     </div>
 
-    <!-- Slide 77: 追加プロンプト例：オプション2 -->
+    <!-- Slide 78: 追加プロンプト例：オプション2 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション2：IndexedDB">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3491,7 +3571,7 @@
       </div>
     </div>
 
-    <!-- Slide 78: 追加プロンプト例：オプション3 -->
+    <!-- Slide 79: 追加プロンプト例：オプション3 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション3：JSONデータ共有">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3511,7 +3591,7 @@
       </div>
     </div>
 
-    <!-- Slide 79: 3. プロンプト解説 -->
+    <!-- Slide 80: 3. プロンプト解説 -->
     <div class="slide" data-chapter="Ch.05" data-title="プロンプト解説の意義">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3535,7 +3615,7 @@
     <div class="slide slide-full-app" data-chapter="Outro" data-title="結び：重さのアプリ">
       <div class="slide-body">
         <div class="demo-main-iframe-box">
-          <iframe src="my_concept.html" loading="lazy"></iframe>
+          <iframe data-src="my_concept.html"></iframe>
         </div>
       </div>
     </div>
@@ -3581,10 +3661,31 @@
     const totalSlides = slides.length;
 
     
+    function syncSlideIframes() {
+      slides.forEach((s, idx) => {
+        const frames = s.querySelectorAll('iframe[data-src]');
+        frames.forEach((frame) => {
+          const targetSrc = frame.dataset.src;
+          if (!targetSrc) return;
+          if (idx === currentSlide) {
+            if (!frame.getAttribute('src')) {
+              frame.setAttribute('src', targetSrc);
+            }
+          } else if (frame.getAttribute('src')) {
+            // 非アクティブスライドのiframeを破棄し、スマホでのメモリ・WebGLクラッシュを防止
+            const fresh = frame.cloneNode(false);
+            fresh.removeAttribute('src');
+            frame.replaceWith(fresh);
+          }
+        });
+      });
+    }
+
     function updateSlide() {
       slides.forEach((s, idx) => {
         s.classList.toggle('active', idx === currentSlide);
       });
+      syncSlideIframes();
 
       const activeEl = slides[currentSlide];
       const chapter = activeEl.dataset.chapter || '';
@@ -3608,9 +3709,11 @@
       }
 
       // 現在のスライド番号をURLハッシュとlocalStorageに常時保存（Live Server再読み込み対策）
-      if (history.replaceState) {
-        history.replaceState(null, '', '#' + (currentSlide + 1));
-      }
+      try {
+        if (history.replaceState) {
+          history.replaceState(null, '', '#' + (currentSlide + 1));
+        }
+      } catch (e) {}
       try {
         localStorage.setItem('presentation-current-slide', String(currentSlide));
       } catch (e) {}
@@ -3635,9 +3738,6 @@
         currentSlide = idx;
         updateSlide();
         closeOverview();
-        if (history.replaceState) {
-          history.replaceState(null, '', '#' + (idx + 1));
-        }
       }
     }
 
@@ -3841,7 +3941,7 @@
     }
 
     function resizeDrawCanvas() {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = window.innerWidth;
       const h = window.innerHeight;
       drawCanvas.width = Math.floor(w * dpr);
@@ -4025,10 +4125,8 @@
     }
 
     resizeDrawCanvas();
-    window.addEventListener('load', () => {
-      resizeDrawCanvas();
-      restoreInitialSlide();
-    });
+    restoreInitialSlide();
+    window.addEventListener('load', resizeDrawCanvas);
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash.replace('#', '');
       const hashNum = parseInt(hash, 10);
