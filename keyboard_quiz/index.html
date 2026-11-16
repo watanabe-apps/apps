@@ -216,8 +216,20 @@
             font-size: min(20vw, 12vh);
             /* 上下の余裕を持たせるため微縮小 */
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
             transition: transform 0.1s;
+        }
+
+        #emoji-display .word-illust {
+            width: min(24vw, 15vh);
+            height: min(24vw, 15vh);
+            object-fit: contain;
+            display: block;
+            border-radius: 10px;
+            pointer-events: none;
         }
 
         #emoji-display:active {
@@ -531,6 +543,17 @@
 
         .word-label {
             flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 1.5vw;
+        }
+
+        .word-thumb {
+            width: 4vh;
+            height: 4vh;
+            object-fit: contain;
+            border-radius: 6px;
+            flex-shrink: 0;
         }
 
         .word-stat {
@@ -864,69 +887,247 @@
 
         const defaultWords = [
             { word: "あいす", emoji: "🍨", types: ["清音のみ"] },
+            { word: "あおむし", image: "../common/images/d_aomushi.png", tts: "青虫", types: ["清音のみ"] },
+            { word: "あかちゃん", image: "../common/images/h_akachan.png", tts: "赤ちゃん", types: ["拗音"] },
+            { word: "あし", image: "../common/images/m_ashi.png", tts: "足", types: ["清音のみ"] },
+            { word: "あたま", image: "../common/images/m_atama.png", tts: "頭", types: ["清音のみ"] },
             { word: "あり", emoji: "🐜", types: ["清音のみ"] },
             { word: "いか", emoji: "🦑", types: ["清音のみ"] },
+            { word: "いす", image: "../common/images/m_isu.png", tts: "椅子", types: ["清音のみ"] },
+            { word: "いちご", image: "../common/images/t_ichigo.png", tts: "イチゴ", types: ["濁音"] },
             { word: "いぬ", emoji: "🐶", types: ["清音のみ"] },
+            { word: "いのしし", image: "../common/images/d_inoshishi.png", tts: "イノシシ", types: ["清音のみ"] },
+            { word: "いるか", image: "../common/images/d_iruka.png", tts: "イルカ", types: ["清音のみ"] },
+            { word: "いろえんぴつ", image: "../common/images/m_iroenpitsu.png", tts: "色鉛筆", types: ["半濁音"] },
+            { word: "うさぎ", image: "../common/images/d_usagi.png", tts: "ウサギ", types: ["濁音"] },
             { word: "うし", emoji: "🐮", types: ["清音のみ"] },
+            { word: "うどん", image: "../common/images/t_udon.png", types: ["濁音"] },
             { word: "うま", emoji: "🐴", types: ["清音のみ"] },
+            { word: "えあこん", image: "../common/images/m_eakon.png", tts: "エアコン", types: ["清音のみ"] },
+            { word: "えだまめ", image: "../common/images/t_edamame.png", tts: "枝豆", types: ["濁音"] },
+            { word: "えのぐ", image: "../common/images/m_enogu.png", tts: "絵の具", types: ["濁音"] },
+            { word: "えび", image: "../common/images/d_ebi.png", tts: "エビ", types: ["濁音"] },
+            { word: "えびふらい", image: "../common/images/t_ebifurai.png", tts: "エビフライ", types: ["濁音"] },
             { word: "えんぴつ", emoji: "✏️", types: ["半濁音"] },
+            { word: "おいしゃさん", image: "../common/images/h_oishasan.png", tts: "お医者さん", types: ["拗音"] },
+            { word: "おじいさん", image: "../common/images/h_ojiisan.png", tts: "お爺さん", types: ["濁音"] },
+            { word: "おたまじゃくし", image: "../common/images/d_otamajakushi.png", tts: "オタマジャクシ", types: ["濁音", "拗音"] },
+            { word: "おでん", image: "../common/images/t_oden.png", types: ["濁音"] },
+            { word: "おなか", image: "../common/images/m_onaka.png", tts: "お腹", types: ["清音のみ"] },
             { word: "おに", emoji: "👹", types: ["清音のみ"] },
             { word: "おにぎり", emoji: "🍙", types: ["濁音"] },
+            { word: "おばあさん", image: "../common/images/h_obaasan.png", tts: "お婆さん", types: ["濁音"] },
+            { word: "おはし", image: "../common/images/m_ohashi.png", tts: "お箸", types: ["清音のみ"] },
+            { word: "おひめさま", image: "../common/images/h_ohimesama.png", tts: "お姫様", types: ["清音のみ"] },
+            { word: "おむらいす", image: "../common/images/t_omuraisu.png", tts: "オムライス", types: ["清音のみ"] },
+            { word: "おりがみ", image: "../common/images/m_origami.png", tts: "折り紙", types: ["濁音"] },
             { word: "かえる", emoji: "🐸", types: ["清音のみ"] },
+            { word: "かき", image: "../common/images/t_kaki.png", tts: "柿", types: ["清音のみ"] },
+            { word: "かきごおり", image: "../common/images/t_kakigoori.png", tts: "かき氷", types: ["濁音"] },
             { word: "かさ", emoji: "☂️", types: ["清音のみ"] },
+            { word: "かたつむり", image: "../common/images/d_katatsumuri.png", tts: "カタツムリ", types: ["清音のみ"] },
+            { word: "かに", image: "../common/images/d_kani.png", tts: "カニ", types: ["清音のみ"] },
+            { word: "かば", image: "../common/images/d_kaba.png", tts: "カバ", types: ["濁音"] },
+            { word: "かばん", image: "../common/images/m_kaban.png", tts: "カバン", types: ["濁音"] },
+            { word: "かぶとむし", image: "../common/images/d_kabutomushi.png", tts: "カブトムシ", types: ["濁音"] },
+            { word: "かぼちゃ", image: "../common/images/t_kabocha.png", types: ["濁音", "拗音"] },
+            { word: "かまきり", image: "../common/images/d_kamakiri.png", tts: "カマキリ", types: ["清音のみ"] },
             { word: "かめ", emoji: "🐢", types: ["清音のみ"] },
+            { word: "かめら", image: "../common/images/m_kamera.png", tts: "カメラ", types: ["清音のみ"] },
+            { word: "からあげ", image: "../common/images/t_karaage.png", tts: "唐揚げ", types: ["濁音"] },
+            { word: "からす", image: "../common/images/d_karasu.png", tts: "カラス", types: ["清音のみ"] },
+            { word: "きかんしゃ", image: "../common/images/n_kikansha.png", tts: "機関車", types: ["拗音"] },
+            { word: "ききゅう", image: "../common/images/n_kikyuu.png", tts: "気球", types: ["拗音"] },
             { word: "きつね", emoji: "🦊", types: ["清音のみ"] },
+            { word: "きゃべつ", image: "../common/images/t_kyabetsu.png", tts: "キャベツ", types: ["濁音", "拗音"] },
+            { word: "きゅうきゅうしゃ", image: "../common/images/n_kyuukyuusha.png", tts: "救急車", types: ["拗音"] },
+            { word: "ぎゅうにゅう", image: "../common/images/t_gyuunyuu.png", tts: "牛乳", types: ["濁音", "拗音"] },
+            { word: "きゅうり", image: "../common/images/t_kyuuri.png", tts: "キュウリ", types: ["拗音"] },
+            { word: "ぎょうざ", image: "../common/images/t_gyouza.png", tts: "餃子", types: ["濁音", "拗音"] },
             { word: "きりん", emoji: "🦒", types: ["清音のみ"] },
             { word: "きんぎょ", emoji: "🐠", types: ["濁音", "拗音"] },
+            { word: "くじら", image: "../common/images/d_kujira.png", tts: "クジラ", types: ["濁音"] },
+            { word: "くち", image: "../common/images/m_kuchi.png", tts: "口", types: ["清音のみ"] },
             { word: "くつ", emoji: "👞", types: ["清音のみ"] },
+            { word: "くつした", image: "../common/images/m_kutsushita.png", tts: "靴下", types: ["清音のみ"] },
+            { word: "くま", image: "../common/images/d_kuma.png", tts: "熊", types: ["清音のみ"] },
+            { word: "ぐみ", image: "../common/images/t_gumi.png", tts: "グミ", types: ["濁音"] },
             { word: "くも", emoji: "☁️", types: ["清音のみ"] },
+            { word: "くらげ", image: "../common/images/d_kurage.png", tts: "クラゲ", types: ["濁音"] },
+            { word: "くり", image: "../common/images/t_kuri.png", tts: "栗", types: ["清音のみ"] },
+            { word: "くるま", image: "../common/images/n_kuruma.png", types: ["清音のみ"] },
+            { word: "くれよん", image: "../common/images/m_kureyon.png", tts: "クレヨン", types: ["清音のみ"] },
+            { word: "くわがた", image: "../common/images/d_kuwagata.png", tts: "クワガタ", types: ["濁音"] },
+            { word: "けいさつかん", image: "../common/images/h_keisatsukan.png", tts: "警察官", types: ["清音のみ"] },
+            { word: "けしごむ", image: "../common/images/m_keshigomu.png", tts: "消しゴム", types: ["濁音"] },
+            { word: "こあら", image: "../common/images/d_koara.png", tts: "コアラ", types: ["清音のみ"] },
+            { word: "こうもり", image: "../common/images/d_koumori.png", tts: "コウモリ", types: ["清音のみ"] },
             { word: "こっぷ", emoji: "🥛", types: ["半濁音", "促音"] },
+            { word: "ごはん", image: "../common/images/t_gohan.png", tts: "ご飯", types: ["濁音"] },
+            { word: "こま", image: "../common/images/m_koma.png", tts: "コマ", types: ["清音のみ"] },
+            { word: "ごみばこ", image: "../common/images/m_gomibako.png", tts: "ゴミ箱", types: ["濁音"] },
+            { word: "ごりら", image: "../common/images/d_gorira.png", tts: "ゴリラ", types: ["濁音"] },
+            { word: "さい", image: "../common/images/d_sai.png", tts: "サイ", types: ["清音のみ"] },
+            { word: "さいふ", image: "../common/images/m_saifu.png", tts: "財布", types: ["清音のみ"] },
             { word: "さかな", emoji: "🐟", types: ["清音のみ"] },
+            { word: "さくらんぼ", image: "../common/images/t_sakuranbo.png", types: ["濁音"] },
+            { word: "さつまいも", image: "../common/images/t_satsumaimo.png", tts: "サツマイモ", types: ["清音のみ"] },
+            { word: "さめ", image: "../common/images/d_same.png", tts: "サメ", types: ["清音のみ"] },
+            { word: "さら", image: "../common/images/m_osara.png", types: ["清音のみ"] },
+            { word: "さらだ", image: "../common/images/t_sarada.png", tts: "サラダ", types: ["濁音"] },
             { word: "さる", emoji: "🐵", types: ["清音のみ"] },
+            { word: "さんだる", image: "../common/images/m_sandaru.png", tts: "サンダル", types: ["濁音"] },
+            { word: "さんどいっち", image: "../common/images/t_sandoicchi.png", tts: "サンドイッチ", types: ["濁音", "促音"] },
+            { word: "さんりんしゃ", image: "../common/images/n_sanrinsha.png", tts: "三輪車", types: ["拗音"] },
             { word: "しか", emoji: "🦌", types: ["清音のみ"] },
+            { word: "じてんしゃ", image: "../common/images/n_jitensha.png", tts: "自転車", types: ["濁音", "拗音"] },
+            { word: "しまうま", image: "../common/images/d_shimauma.png", tts: "シマウマ", types: ["清音のみ"] },
+            { word: "じゃがいも", image: "../common/images/t_jagaimo.png", tts: "ジャガイモ", types: ["濁音", "拗音"] },
+            { word: "しゃぼんだま", image: "../common/images/m_shabondama.png", tts: "シャボン玉", types: ["濁音", "拗音"] },
+            { word: "しょうぼうし", image: "../common/images/h_shouboushi.png", tts: "消防士", types: ["濁音", "拗音"] },
+            { word: "しょうぼうしゃ", image: "../common/images/n_shoubousha.png", tts: "消防車", types: ["濁音", "拗音"] },
+            { word: "しろくま", image: "../common/images/d_shirokuma.png", tts: "白くま", types: ["清音のみ"] },
+            { word: "しんかんせん", image: "../common/images/n_shinkansen.png", tts: "新幹線", types: ["清音のみ"] },
             { word: "すいか", emoji: "🍉", types: ["清音のみ"] },
+            { word: "すいとう", image: "../common/images/m_suitou.png", tts: "水筒", types: ["清音のみ"] },
+            { word: "すし", image: "../common/images/t_sushi.png", tts: "寿司", types: ["清音のみ"] },
+            { word: "すずめ", image: "../common/images/d_suzume.png", tts: "スズメ", types: ["濁音"] },
+            { word: "すなば", image: "../common/images/m_sunaba.png", tts: "砂場", types: ["濁音"] },
+            { word: "すぱげってぃ", image: "../common/images/t_supagetti.png", tts: "スパゲッティ", types: ["濁音", "半濁音", "拗音", "促音"] },
+            { word: "すべりだい", image: "../common/images/m_suberidai.png", tts: "滑り台", types: ["濁音"] },
+            { word: "ずぼん", image: "../common/images/m_zubon.png", tts: "ズボン", types: ["濁音"] },
             { word: "せっけん", emoji: "🧼", types: ["促音"] },
+            { word: "せみ", image: "../common/images/d_semi.png", tts: "セミ", types: ["清音のみ"] },
+            { word: "せんすいかん", image: "../common/images/n_sensuikan.png", tts: "潜水艦", types: ["清音のみ"] },
+            { word: "せんたくき", image: "../common/images/m_sentakuki.png", tts: "洗濯機", types: ["清音のみ"] },
+            { word: "せんぷうき", image: "../common/images/m_senpuuki.png", tts: "扇風機", types: ["半濁音"] },
+            { word: "せんべい", image: "../common/images/t_senbei.png", types: ["濁音"] },
+            { word: "ぞう", image: "../common/images/d_zou.png", tts: "象", types: ["濁音"] },
+            { word: "そうじき", image: "../common/images/m_soujiki.png", tts: "掃除機", types: ["濁音"] },
+            { word: "だいこん", image: "../common/images/t_daikon.png", tts: "大根", types: ["濁音"] },
+            { word: "たいやき", image: "../common/images/t_taiyaki.png", tts: "たい焼き", types: ["清音のみ"] },
+            { word: "たおる", image: "../common/images/m_taoru.png", tts: "タオル", types: ["清音のみ"] },
             { word: "たこ", emoji: "🐙", types: ["清音のみ"] },
+            { word: "たこやき", image: "../common/images/t_takoyaki.png", tts: "たこ焼き", types: ["清音のみ"] },
+            { word: "たまご", image: "../common/images/t_tamago.png", tts: "卵", types: ["濁音"] },
+            { word: "たまねぎ", image: "../common/images/t_tamanegi.png", tts: "玉ねぎ", types: ["濁音"] },
+            { word: "だんご", image: "../common/images/t_dango.png", types: ["濁音"] },
             { word: "ちきゅう", emoji: "🌍", types: ["拗音"] },
+            { word: "ちゃわん", image: "../common/images/m_ochawan.png", tts: "茶碗", types: ["拗音"] },
             { word: "ちょうちょ", emoji: "🦋", types: ["拗音"] },
             { word: "つき", emoji: "🌙", types: ["清音のみ"] },
+            { word: "つくえ", image: "../common/images/m_tsukue.png", tts: "机", types: ["清音のみ"] },
+            { word: "つみき", image: "../common/images/m_tsumiki.png", tts: "積み木", types: ["清音のみ"] },
+            { word: "つめきり", image: "../common/images/m_tsumekiri.png", tts: "爪切り", types: ["清音のみ"] },
+            { word: "て", image: "../common/images/m_te.png", tts: "手", types: ["清音のみ"] },
+            { word: "てぃっしゅ", image: "../common/images/m_tisshu.png", tts: "ティッシュ", types: ["拗音", "促音"] },
             { word: "てがみ", emoji: "✉️", types: ["濁音"] },
+            { word: "てつぼう", image: "../common/images/m_tetsubou.png", tts: "鉄棒", types: ["濁音"] },
+            { word: "てぶくろ", image: "../common/images/m_tebukuro.png", tts: "手袋", types: ["濁音"] },
+            { word: "てれび", image: "../common/images/m_terebi.png", tts: "テレビ", types: ["濁音"] },
             { word: "でんしゃ", emoji: "🚃", types: ["濁音", "拗音"] },
+            { word: "でんしれんじ", image: "../common/images/m_denshirenji.png", tts: "電子レンジ", types: ["濁音"] },
+            { word: "てんとうむし", image: "../common/images/d_tentoumushi.png", tts: "テントウムシ", types: ["清音のみ"] },
+            { word: "でんわ", image: "../common/images/m_denwa.png", tts: "電話", types: ["濁音"] },
+            { word: "といれ", image: "../common/images/s_toire.png", tts: "トイレ", types: ["清音のみ"] },
+            { word: "とうもろこし", image: "../common/images/t_toumorokoshi.png", tts: "トウモロコシ", types: ["清音のみ"] },
             { word: "とけい", emoji: "⌚", types: ["清音のみ"] },
+            { word: "とまと", image: "../common/images/t_tomato.png", tts: "トマト", types: ["清音のみ"] },
+            { word: "とら", image: "../common/images/d_tora.png", tts: "虎", types: ["清音のみ"] },
+            { word: "とらっく", image: "../common/images/n_torakku.png", tts: "トラック", types: ["促音"] },
+            { word: "どらやき", image: "../common/images/t_dorayaki.png", tts: "どら焼き", types: ["濁音"] },
+            { word: "とらんぷ", image: "../common/images/m_toranpu.png", tts: "トランプ", types: ["半濁音"] },
             { word: "とり", emoji: "🐦", types: ["清音のみ"] },
+            { word: "とんぼ", image: "../common/images/d_tonbo.png", tts: "トンボ", types: ["濁音"] },
+            { word: "ながぐつ", image: "../common/images/m_nagagutsu.png", tts: "長靴", types: ["濁音"] },
+            { word: "なし", image: "../common/images/t_nashi.png", tts: "梨", types: ["清音のみ"] },
             { word: "なす", emoji: "🍆", types: ["清音のみ"] },
-            { word: "にんじん", emoji: "🥕", types: ["濁音"] },
+            { word: "なべ", image: "../common/images/m_nabe.png", types: ["濁音"] },
+            { word: "なわとび", image: "../common/images/m_nawatobi.png", tts: "縄跳び", types: ["濁音"] },
             { word: "にわとり", emoji: "🐔", types: ["清音のみ"] },
+            { word: "にんぎょう", image: "../common/images/m_ningyou.png", types: ["濁音", "拗音"] },
+            { word: "にんじゃ", image: "../common/images/h_ninja.png", tts: "忍者", types: ["濁音", "拗音"] },
+            { word: "にんじん", emoji: "🥕", types: ["濁音"] },
+            { word: "ぬいぐるみ", image: "../common/images/m_nuigurumi.png", types: ["濁音"] },
             { word: "ねこ", emoji: "🐱", types: ["清音のみ"] },
             { word: "ねずみ", emoji: "🐭", types: ["濁音"] },
             { word: "のこぎり", emoji: "🪚", types: ["濁音"] },
+            { word: "のり", image: "../common/images/m_nori.png", types: ["清音のみ"] },
+            { word: "ばいく", image: "../common/images/n_baiku.png", tts: "バイク", types: ["濁音"] },
+            { word: "ぱいなっぷる", image: "../common/images/t_painappuru.png", tts: "パイナップル", types: ["半濁音", "促音"] },
+            { word: "はさみ", image: "../common/images/m_hasami.png", tts: "ハサミ", types: ["清音のみ"] },
+            { word: "ばす", image: "../common/images/n_basu.png", tts: "バス", types: ["濁音"] },
+            { word: "ぱずる", image: "../common/images/m_pazuru.png", tts: "パズル", types: ["濁音", "半濁音"] },
+            { word: "ぱそこん", image: "../common/images/m_pasokon.png", tts: "パソコン", types: ["半濁音"] },
             { word: "はち", emoji: "🐝", types: ["清音のみ"] },
+            { word: "ばった", image: "../common/images/d_batta.png", tts: "バッタ", types: ["濁音", "促音"] },
+            { word: "はと", image: "../common/images/d_hato.png", tts: "ハト", types: ["清音のみ"] },
             { word: "はな", emoji: "👃", types: ["清音のみ"] },
             { word: "ばなな", emoji: "🍌", types: ["濁音"] },
+            { word: "はぶらし", image: "../common/images/m_haburashi.png", tts: "歯ブラシ", types: ["濁音"] },
+            { word: "はりねずみ", image: "../common/images/d_harinezumi.png", tts: "ハリネズミ", types: ["濁音"] },
             { word: "ぱん", emoji: "🍞", types: ["半濁音"] },
+            { word: "はんかち", image: "../common/images/m_hankachi.png", tts: "ハンカチ", types: ["清音のみ"] },
+            { word: "ばんそうこう", image: "../common/images/m_bandoeido.png", tts: "絆創膏", types: ["濁音"] },
             { word: "ぱんだ", emoji: "🐼", types: ["濁音", "半濁音"] },
+            { word: "ひこうき", image: "../common/images/n_hikouki.png", tts: "飛行機", types: ["清音のみ"] },
+            { word: "ぴざ", image: "../common/images/t_piza.png", tts: "ピザ", types: ["濁音", "半濁音"] },
             { word: "ひつじ", emoji: "🐑", types: ["濁音"] },
+            { word: "ひとで", image: "../common/images/d_hitode.png", tts: "ヒトデ", types: ["濁音"] },
             { word: "ひまわり", emoji: "🌻", types: ["清音のみ"] },
+            { word: "ひよこ", image: "../common/images/d_hiyoko.png", types: ["清音のみ"] },
+            { word: "ふうせん", image: "../common/images/m_fuusen.png", tts: "風船", types: ["清音のみ"] },
+            { word: "ふくろう", image: "../common/images/d_fukurou.png", tts: "フクロウ", types: ["清音のみ"] },
+            { word: "ぶた", image: "../common/images/d_buta.png", tts: "豚", types: ["濁音"] },
+            { word: "ふでばこ", image: "../common/images/m_fudebako.png", tts: "筆箱", types: ["濁音"] },
+            { word: "ぶどう", image: "../common/images/t_budou.png", tts: "ブドウ", types: ["濁音"] },
+            { word: "ふとん", image: "../common/images/m_futon.png", tts: "布団", types: ["清音のみ"] },
             { word: "ふね", emoji: "🚢", types: ["清音のみ"] },
+            { word: "ふらいぱん", image: "../common/images/m_furaipan.png", tts: "フライパン", types: ["半濁音"] },
+            { word: "ぶらんこ", image: "../common/images/m_buranko.png", tts: "ブランコ", types: ["濁音"] },
+            { word: "ぷりん", image: "../common/images/t_purin.png", tts: "プリン", types: ["半濁音"] },
+            { word: "ぶろっく", image: "../common/images/m_burokku.png", tts: "ブロック", types: ["濁音", "促音"] },
+            { word: "べっど", image: "../common/images/m_beddo.png", tts: "ベッド", types: ["濁音", "促音"] },
             { word: "へび", emoji: "🐍", types: ["濁音"] },
+            { word: "ぺんぎん", image: "../common/images/d_pengin.png", tts: "ペンギン", types: ["濁音", "半濁音"] },
+            { word: "ほうき", image: "../common/images/m_houki.png", types: ["清音のみ"] },
+            { word: "ぼうし", image: "../common/images/m_boushi.png", tts: "帽子", types: ["濁音"] },
+            { word: "ほうちょう", image: "../common/images/m_houchou.png", tts: "包丁", types: ["拗音"] },
             { word: "ほし", emoji: "⭐", types: ["清音のみ"] },
+            { word: "ほっとどっぐ", image: "../common/images/t_hottodoggu.png", tts: "ホットドッグ", types: ["濁音", "促音"] },
             { word: "ほん", emoji: "📖", types: ["清音のみ"] },
+            { word: "まくら", image: "../common/images/m_makura.png", tts: "枕", types: ["清音のみ"] },
+            { word: "ますく", image: "../common/images/m_masuku.png", tts: "マスク", types: ["清音のみ"] },
             { word: "まど", emoji: "🪟", types: ["濁音"] },
+            { word: "まないた", image: "../common/images/m_manaita.png", tts: "まな板", types: ["清音のみ"] },
             { word: "みかん", emoji: "🍊", types: ["清音のみ"] },
+            { word: "みそしる", image: "../common/images/t_misoshiru.png", tts: "味噌汁", types: ["清音のみ"] },
             { word: "みみ", emoji: "👂", types: ["清音のみ"] },
             { word: "むしめがね", emoji: "🔍", types: ["濁音"] },
+            { word: "め", image: "../common/images/m_me.png", tts: "目", types: ["清音のみ"] },
             { word: "めがね", emoji: "👓", types: ["濁音"] },
+            { word: "めだまやき", image: "../common/images/t_medamayaki.png", tts: "目玉焼き", types: ["濁音"] },
+            { word: "めろん", image: "../common/images/t_meron.png", tts: "メロン", types: ["清音のみ"] },
+            { word: "もぐら", image: "../common/images/d_mogura.png", tts: "モグラ", types: ["濁音"] },
             { word: "もも", emoji: "🍑", types: ["清音のみ"] },
+            { word: "やかん", image: "../common/images/m_yakan.png", types: ["清音のみ"] },
+            { word: "やぎ", image: "../common/images/d_yagi.png", tts: "ヤギ", types: ["濁音"] },
             { word: "やま", emoji: "⛰️", types: ["清音のみ"] },
             { word: "ゆきだるま", emoji: "⛄", types: ["濁音"] },
             { word: "よっと", emoji: "⛵", types: ["促音"] },
             { word: "らいおん", emoji: "🦁", types: ["清音のみ"] },
             { word: "らくだ", emoji: "🐪", types: ["濁音"] },
             { word: "らっぱ", emoji: "🎺", types: ["半濁音", "促音"] },
+            { word: "らんどせる", image: "../common/images/m_randoseru.png", tts: "ランドセル", types: ["濁音"] },
+            { word: "りす", image: "../common/images/d_risu.png", tts: "リス", types: ["清音のみ"] },
+            { word: "りもこん", image: "../common/images/m_rimokon.png", tts: "リモコン", types: ["清音のみ"] },
+            { word: "りゅっく", image: "../common/images/m_ryukku.png", types: ["拗音", "促音"] },
             { word: "りんご", emoji: "🍎", types: ["濁音"] },
+            { word: "れいぞうこ", image: "../common/images/m_reizouko.png", tts: "冷蔵庫", types: ["濁音"] },
             { word: "れもん", emoji: "🍋", types: ["清音のみ"] },
             { word: "ろうそく", emoji: "🕯️", types: ["清音のみ"] },
             { word: "ろけっと", emoji: "🚀", types: ["促音"] },
+            { word: "わたあめ", image: "../common/images/t_wataame.png", types: ["清音のみ"] },
             { word: "わに", emoji: "🐊", types: ["清音のみ"] }
         ];
 
@@ -1026,7 +1227,12 @@
             isFirstTry = true;
             cursorIndex = 0;
 
-            document.getElementById('emoji-display').innerText = currentWordObj.emoji;
+            const emojiEl = document.getElementById('emoji-display');
+            if (currentWordObj.image) {
+                emojiEl.innerHTML = `<img src="${currentWordObj.image}" alt="${currentWordObj.word}" class="word-illust" draggable="false">`;
+            } else {
+                emojiEl.textContent = currentWordObj.emoji || '';
+            }
 
             const btnDekita = document.getElementById('btn-dekita');
             btnDekita.classList.remove('hidden');
@@ -1036,16 +1242,23 @@
 
             renderBoxes();
 
-            if (appSettings.autoReadWord) speakText(currentWordObj.word);
+            if (appSettings.autoReadWord) speakText(currentWordObj.tts || currentWordObj.word);
         }
 
         function renderBoxes() {
             const container = document.getElementById('boxes-area');
             container.innerHTML = '';
-            for (let i = 0; i < currentWordObj.word.length; i++) {
+            const len = currentWordObj.word.length;
+            const boxVw = Math.min(13, 66 / Math.max(len, 1));
+            for (let i = 0; i < len; i++) {
                 const box = document.createElement('div');
                 box.className = 'char-box';
                 box.id = `box-${i}`;
+                if (len > 5) {
+                    box.style.width = `min(${boxVw.toFixed(2)}vw, 10vh)`;
+                    box.style.height = `min(${boxVw.toFixed(2)}vw, 10vh)`;
+                    box.style.fontSize = `min(${(boxVw * 0.54).toFixed(2)}vw, 6vh)`;
+                }
                 box.addEventListener('click', () => {
                     if (currentInput[i]?.locked) return;
                     cursorIndex = i;
@@ -1267,7 +1480,7 @@
 
         function spkCurrentWord(e) {
             if (e) e.preventDefault();
-            speakText(currentWordObj.word);
+            speakText(currentWordObj.tts || currentWordObj.word);
         }
 
         /* === 5. キーボード構築 === */
@@ -1430,7 +1643,17 @@
 
                 const label = document.createElement('span');
                 label.className = 'word-label';
-                label.innerText = `${item.emoji} ${item.word}`;
+                if (item.image) {
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = item.word;
+                    img.className = 'word-thumb';
+                    img.loading = 'lazy';
+                    label.appendChild(img);
+                    label.appendChild(document.createTextNode(item.word));
+                } else {
+                    label.textContent = `${item.emoji} ${item.word}`;
+                }
 
                 const stat = document.createElement('span');
                 stat.className = 'word-stat';

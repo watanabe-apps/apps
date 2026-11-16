@@ -147,6 +147,7 @@
       <ul class="sidebar-nav-list">
         <li><a href="../index.html">🏠 はじめに・全体目次</a></li>
         <li><a href="../slides.html">📽️ 研修・解説用スライド</a></li>
+        <li><a href="../guidebook_notebook.txt" target="_blank">📄 Notebook用テキスト (.txt)</a></li>
       </ul>
     </div>
 
@@ -177,6 +178,20 @@
     </header>
 
     <div class="content-body">
+
+      <!-- 使い方の基本方針（Notebookソース読み込み vs プロンプト） -->
+      <div class="summary-box">
+        <h3>📘 基本の使い方：Notebookソース読み込み ／ プロンプトの使い分け</h3>
+        <ul>
+          <li><strong>基本（Gemini Notebook 等を使う場合）：</strong>第1章〜第5章を1ファイルにまとめた専用テキストをソースとして読み込ませて使うのが基本です。設計思想や注意点・技術仕様をAIが把握した状態になるため、作りたいアプリの概要を伝えるだけで作成できます（出力後、「ガイドブックの仕様を満たしているか確認して」と点検させると抜け漏れを防げます）。</li>
+          <li><strong>別のAIを使う場合・単発で使う場合：</strong>下の <strong>5.1 プロンプト例</strong>（必須仕様込みのテンプレート）をコピーしてそのまま使用してください。</li>
+        </ul>
+        <p class="notebook-actions" style="margin-top: 0.85rem; margin-bottom: 0; font-size: 0.9rem; font-weight: 700;">
+          <a href="../guidebook_notebook.txt" target="_blank">📄 ソース用テキスト（guidebook_notebook.txt）を開く ↗</a>
+          <span style="margin: 0 0.6rem; color: var(--border-dark);">|</span>
+          <a href="../guidebook_notebook.txt" download="guidebook_notebook.txt">ダウンロード ⬇</a>
+        </p>
+      </div>
 
       <!-- 1 プロンプト例 -->
       <section class="section-block">
@@ -213,7 +228,7 @@
    - 外部の画像ファイル（png, jpg等）は使用せず、視覚要素は「絵文字（Emoji）」、CSSグラフィック、またはHTML5の「&lt;canvas&gt; タグ」を使って描画・表現してください。
 4. **音声処理（外部音声ファイル不可・Web Audio API活用）**:
    - 外部の音声ファイル（mp3, wav等）は一切使用せず、効果音・BGMはすべてWeb Audio API（オシレーター等）を用いてJavaScriptコード内でシンセサイズして再生してください。
-5. **iPad対応（PWA / 画面拡大・文字選択・システム誤作動の防止）**:
+5. **iPad対応（PWA / 画面拡大・文字選択・システム誤作動・マルチタッチ誤動作の防止）**:
    - 「ホーム画面に追加」して使えるよう、&lt;head&gt;内に以下のメタタグを含めてください。
      • &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"&gt;
      • &lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;
@@ -221,6 +236,7 @@
    - **【誤操作防止】** ダブルタップやピンチアウトによる画面拡大を防ぐため、CSS（`touch-action: manipulation;`）およびJavaScript（`gesturestart` イベントのキャンセル等）でズーム動作を完全に無効化してください。
    - **【文字選択防止】** 画面の長押しで文字やボタンが青く選択されたり、コピー等のポップアップメニューが出たりしないよう、CSS（`user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;`）をアプリ全体に適用してください。
    - **【システム誤作動防止】** 画面下端からのスワイプ（ホーム復帰）や上端からのスワイプ（通知・コントロールセンター）の誤動作を防ぐため、画面の最上部および最下部には操作ボタンやドラッグ対象を配置せず、上下に適切な余白（マージン）を設けてください。
+   - **【オブジェクト残留・複製防止】** ドラッグ操作がある場合は `pointerId` 等で現在操作中の1本の指だけを排他管理し、ドラッグ中に別の指が元の位置や他の対象に触れてもオブジェクトの複製や処理の競合が起きないようにしてください。また、`pointercancel` 時も確実に元の状態へ戻し、問題終了・画面遷移・リセット時には生成したオブジェクトや一時要素を画面から漏れなく削除して残り続けないようにしてください。
 6. **画面構成（スタート画面と設定ボタン）**:
    - アプリ起動時はまず「アプリ名」と「大きなスタートボタン」がある【スタート画面】を表示してください。
    - スタートボタンをタップするとWeb Audio APIのAudioContextを初期化・アンロック（準備）し、メインの操作画面に切り替わるようにしてください。
@@ -343,10 +359,10 @@
                 </td>
               </tr>
               <tr>
-                <td>5. iPad対応（誤操作・拡大防止）<br><small>viewport設定、ダブルタップ拡大禁止、文字選択禁止</small></td>
+                <td>5. iPad対応（誤操作・拡大・バグ防止）<br><small>viewport設定、拡大・文字選択禁止、残留・複製防止</small></td>
                 <td>
-                  <strong>◯ 授業中の「動かなくなった」トラブルを防ぐため</strong><br>
-                  児童生徒が画面を連打したときに画面が勝手にズームしたり、長押しで青い選択枠や「コピー」メニューが出たりするiPad特有の誤動作を完全に封じます。また、画面端からドラッグして意図せずアプリを切り替えたりコントロールセンター等が出たりするのを防ぎます。
+                  <strong>◯ 授業中の「動かなくなった・変になる」トラブルを防ぐため</strong><br>
+                  児童生徒が画面を連打したときに画面が勝手にズームしたり、長押しで青い選択枠や「コピー」メニューが出たりするiPad特有の誤動作を完全に封じます。また、画面端からドラッグして意図せずアプリを切り替えたりコントロールセンター等が出たりするのを防ぎます。さらに、両手・複数指でドラッグ対象を触った際の複製・画面残留バグや、問題終了後の消し忘れも予防します。
                 </td>
               </tr>
               <tr>

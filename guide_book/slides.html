@@ -208,7 +208,8 @@
       letter-spacing: -0.015em;
       line-height: 1.25;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
       line-break: strict;
     }
@@ -241,7 +242,8 @@
       margin-bottom: clamp(16px, 2.2vh, 24px);
       width: 100%;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
       line-break: strict;
     }
@@ -272,7 +274,8 @@
       align-items: flex-start;
       gap: 16px;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
       line-break: strict;
     }
@@ -325,7 +328,8 @@
       color: var(--text-main);
       margin-bottom: 32px;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
     }
 
@@ -337,7 +341,8 @@
       border-left: 4px solid var(--accent-red);
       padding-left: 28px;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
     }
 
     /* 扉スライド */
@@ -375,7 +380,8 @@
       letter-spacing: -0.025em;
       max-width: 1260px;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
     }
 
@@ -388,10 +394,10 @@
       margin: auto 0;
       align-items: stretch;
     }
-    .grid-cards.cols-2 { grid-template-columns: repeat(2, 1fr); }
-    .grid-cards.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-cards.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-cards.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .grid-cards.cols-4 {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       grid-template-rows: auto auto;
     }
 
@@ -408,6 +414,7 @@
       overflow: hidden;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: var(--card-shadow);
+      min-width: 0;
       min-height: auto;
     }
     .card-item.highlight {
@@ -443,7 +450,8 @@
       margin-bottom: 8px;
       letter-spacing: -0.015em;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
       line-break: strict;
     }
@@ -455,7 +463,8 @@
       line-height: 1.5;
       font-weight: 500;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
       line-break: strict;
     }
@@ -489,7 +498,7 @@
     /* 並列・対比レイアウト（上下の間延びを解消） */
     .compare-wrap {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: clamp(20px, 2.5vw, 36px);
       width: 100%;
       height: auto;
@@ -508,6 +517,8 @@
       justify-content: center;
       backdrop-filter: blur(10px);
       box-shadow: var(--card-shadow);
+      min-width: 0;
+      overflow: hidden;
     }
     .compare-box.highlight {
       border-color: var(--accent-red-border);
@@ -802,7 +813,8 @@
       color: var(--text-main);
       letter-spacing: -0.01em;
       text-wrap: balance;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
     }
 
     .agenda-sub {
@@ -810,7 +822,8 @@
       font-weight: 500;
       color: var(--text-muted);
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
     }
 
     .agenda-arrow {
@@ -877,7 +890,8 @@
       font-weight: 500;
       line-height: 1.5;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
     }
 
@@ -915,7 +929,8 @@
       color: var(--text-main);
       font-weight: 500;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
     }
     .prompt-box-note {
@@ -925,7 +940,8 @@
       border-top: 1px solid var(--border-subtle);
       padding-top: 14px;
       text-wrap: pretty;
-      word-break: keep-all;
+      word-break: normal;
+      word-break: auto-phrase;
       overflow-wrap: break-word;
     }
 
@@ -1412,6 +1428,25 @@
     @media (max-width: 600px) {
       .slide.slide-full-app { padding: 48px 8px 58px; }
       .slide.slide-full-app .demo-main-iframe-box { height: 100%; min-height: 0; }
+    }
+
+    /* 日本語文節<wbr>注入時のみkeep-allを有効化し、単語途中の不自然な改行を防止 */
+    html.ja-wbr-ready .slide-section-title,
+    html.ja-wbr-ready .headline-main,
+    html.ja-wbr-ready .big-list-item,
+    html.ja-wbr-ready .cover-h1,
+    html.ja-wbr-ready .cover-lead,
+    html.ja-wbr-ready .door-chapter-title,
+    html.ja-wbr-ready .card-item-h,
+    html.ja-wbr-ready .card-item-p,
+    html.ja-wbr-ready .agenda-title,
+    html.ja-wbr-ready .agenda-sub,
+    html.ja-wbr-ready .feature-row-title,
+    html.ja-wbr-ready .feature-row-desc,
+    html.ja-wbr-ready .prompt-box-text,
+    html.ja-wbr-ready .prompt-box-note {
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
   </style>
 </head>
@@ -1919,7 +1954,35 @@
       </div>
     </div>
 
-    <!-- Slide 20: メリット2 ブレのない機械的判定 -->
+    <!-- Slide 20: メリット2 評価遅延の弊害と即時強化 -->
+    <div class="slide" data-chapter="Ch.02" data-title="メリット2：評価遅延の弊害と即時強化">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 02</span>
+        <span class="slide-section-title">メリット 2. 評価の遅れと即時強化</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">評価が遅れるリスクと<br><span class="text-red">行動分析学「即時強化」</span></h2>
+        <div class="grid-cards cols-3">
+          <div class="card-item">
+            <div class="card-item-tag">弊害 ①</div>
+            <div class="card-item-h">注意がそれる</div>
+            <div class="card-item-p">別の対象へ注意が向き、自分の回答と結びつかない</div>
+          </div>
+          <div class="card-item">
+            <div class="card-item-tag">弊害 ②</div>
+            <div class="card-item-h">記憶が薄れる</div>
+            <div class="card-item-p">ワーキングメモリの弱さから自分の回答を忘れる</div>
+          </div>
+          <div class="card-item highlight">
+            <div class="card-item-tag">原則 ③</div>
+            <div class="card-item-h text-red">即時強化の重要性</div>
+            <div class="card-item-p">行動直後の強化が基本。1秒遅れるだけでも強化効率は大きく低下</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 21: メリット2 ブレのない機械的判定 -->
     <div class="slide" data-chapter="Ch.02" data-title="ブレのない判定の意義">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -1942,7 +2005,7 @@
       </div>
     </div>
 
-    <!-- Slide 21: メリット3 難易度調整（パズルの例・リンク付き） -->
+    <!-- Slide 22: メリット3 難易度調整（パズルの例・リンク付き） -->
     <div class="slide" data-chapter="Ch.02" data-title="メリット3：難易度調整">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -1966,23 +2029,23 @@
       </div>
     </div>
 
-    <!-- Slide 22: メリット3 実態把握 -->
-    <div class="slide" data-chapter="Ch.02" data-title="メリット3：難易度調整">
+    <!-- Slide 23: メリット3 実態把握 -->
+    <div class="slide" data-chapter="Ch.02" data-title="メリット3：手軽な実態把握">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
-        <span class="slide-section-title">メリット 3. 難易度調整</span>
+        <span class="slide-section-title">メリット 3. 手軽な実態把握</span>
       </div>
       <div class="slide-body">
-        <h2 class="headline-main">その場で瞬時に<br><span class="text-red">実態把握</span></h2>
+        <h2 class="headline-main">最低限の準備で試せる<br><span class="text-red">手軽な実態把握</span></h2>
         <div class="big-list accent-border-box">
-          <div class="big-list-item">やや高いレベルの課題</div>
-          <div class="big-list-item">抜け落ちの確認</div>
-          <div class="big-list-item">最終的に「できた」で終える</div>
+          <div class="big-list-item">設定変更だけで難易度を瞬時に変えて試せる</div>
+          <div class="big-list-item">反応を見ながらその場でステップを調整・確認</div>
+          <div class="big-list-item">留意点：アプリでできても具体物でできるとは限らない（逆も同様）</div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 23: メリット4 ノイズ除去（みかんの模型の例） -->
+    <!-- Slide 24: メリット4 ノイズ除去（みかんの模型の例） -->
     <div class="slide" data-chapter="Ch.02" data-title="メリット4：ノイズ除去">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2005,7 +2068,7 @@
       </div>
     </div>
 
-    <!-- Slide 24: メリット4 2次元（平面）操作の利点 -->
+    <!-- Slide 25: メリット4 2次元（平面）操作の利点 -->
     <div class="slide" data-chapter="Ch.02" data-title="2次元操作とノイズ低減">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2021,7 +2084,7 @@
       </div>
     </div>
 
-    <!-- Slide 25: メリット5 反復学習の高密度化 -->
+    <!-- Slide 26: メリット5 反復学習の高密度化 -->
     <div class="slide" data-chapter="Ch.02" data-title="メリット5：反復学習の高密度化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2044,7 +2107,7 @@
       </div>
     </div>
 
-    <!-- Slide 26: その他のメリット -->
+    <!-- Slide 27: その他のメリット -->
     <div class="slide" data-chapter="Ch.02" data-title="その他のメリット">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2068,7 +2131,7 @@
       </div>
     </div>
 
-    <!-- Slide 27: 概念の基礎学習における仮説 -->
+    <!-- Slide 28: 概念の基礎学習における仮説 -->
     <div class="slide" data-chapter="Ch.02" data-title="仮説：概念の基礎学習">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2091,7 +2154,81 @@
       </div>
     </div>
 
-    <!-- Slide 28: 具体物の不可欠性 -->
+    <!-- Slide 29: 2.2 仮説：新規獲得と経験の体系化 -->
+    <div class="slide" data-chapter="Ch.02" data-title="仮説：新規獲得と経験の体系化">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 02</span>
+        <span class="slide-section-title">2.2 仮説：概念形成と体系化</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">アプリを通した概念形成<br><span class="text-red">新規概念の獲得＆既知経験の体系化</span></h2>
+        <div class="compare-wrap">
+          <div class="compare-box">
+            <div class="card-item-tag">側面 ①</div>
+            <div class="card-item-h">未知の概念の基礎獲得</div>
+            <div class="card-item-p">数・大小・平仮名などをゼロから学ぶ入り口づくり</div>
+          </div>
+          <div class="compare-box highlight">
+            <div class="card-item-tag">側面 ②</div>
+            <div class="card-item-h text-red">既知経験の体系化</div>
+            <div class="card-item-p">日常で知覚・経験しているが頭の中で未整理のものを整理</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 30: 2.2 仮説：後押しする3つの理由 -->
+    <div class="slide" data-chapter="Ch.02" data-title="仮説：後押しする3つの理由">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 02</span>
+        <span class="slide-section-title">2.2 仮説：概念形成を後押しする3つの理由</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">なぜアプリが概念の整理を<br><span class="text-red">強力に後押しするのか</span></h2>
+        <div class="grid-cards cols-3">
+          <div class="card-item">
+            <div class="card-item-tag">理由 ①</div>
+            <div class="card-item-h">ノイズ除去とWM負荷軽減</div>
+            <div class="card-item-p">注目属性を絞り身体操作を簡略化 → 本質へ注意集中</div>
+          </div>
+          <div class="card-item">
+            <div class="card-item-tag">理由 ②</div>
+            <div class="card-item-h">非言語の構造化</div>
+            <div class="card-item-p">枠組みや「吸着」等、具体物に無い動きからもルール理解</div>
+          </div>
+          <div class="card-item highlight">
+            <div class="card-item-tag">理由 ③</div>
+            <div class="card-item-h text-red">強化学習の成立</div>
+            <div class="card-item-p">即時FB×難易度調整で未学習から成功体験を積む</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 31: 2.2 仮説：適用範囲と留意点 -->
+    <div class="slide" data-chapter="Ch.02" data-title="仮説：身体感覚と可能性の余地">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 02</span>
+        <span class="slide-section-title">2.2 仮説：適用範囲と留意点</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">すべての概念に万能ではない<br><span class="text-red">身体感覚と可能性の視点</span></h2>
+        <div class="compare-wrap">
+          <div class="compare-box">
+            <div class="card-item-tag">具体物必須の領域</div>
+            <div class="card-item-h">身体感覚を伴う概念</div>
+            <div class="card-item-p">「熱さ」「硬さ」などは実体験そのものが必須</div>
+          </div>
+          <div class="compare-box highlight">
+            <div class="card-item-tag">安易に決めつけない</div>
+            <div class="card-item-h text-red">可能性を狭めない視点</div>
+            <div class="card-item-p">アプリで何が学べ、何が学べないかは実践を通じ検証</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 32: 具体物の不可欠性 -->
     <div class="slide" data-chapter="Ch.02" data-title="具体物の不可欠性">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2107,7 +2244,7 @@
       </div>
     </div>
 
-    <!-- Slide 29: 役割分担：「アプリから具体物へ」 -->
+    <!-- Slide 33: 役割分担：「アプリから具体物へ」 -->
     <div class="slide" data-chapter="Ch.02" data-title="「アプリから具体物へ」の順序性">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2129,7 +2266,30 @@
       </div>
     </div>
 
-    <!-- Slide 30: 実践例：数えよう（基礎）の移行プロセス（リンク付き） -->
+    <!-- Slide 34: 2.3 移行プロセスの詳細 -->
+    <div class="slide" data-chapter="Ch.02" data-title="2.3 移行プロセスの詳細">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 02</span>
+        <span class="slide-section-title">2.3 「アプリから具体物へ」移行のポイント</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">人工的に「できる状態」から<br><span class="text-red">環境に依存しない概念へ</span></h2>
+        <div class="compare-wrap">
+          <div class="compare-box">
+            <div class="card-item-tag">STEP 1 の見極め</div>
+            <div class="card-item-h">ランダム・ヒント排除</div>
+            <div class="card-item-p">偶然や補助の手がかりを除いて高正答率なら基礎形成の根拠に</div>
+          </div>
+          <div class="compare-box highlight">
+            <div class="card-item-tag">STEP 2 の段階的移行</div>
+            <div class="card-item-h text-red">同配置から徐々に変化</div>
+            <div class="card-item-p">まず画面と全く同じ位置関係で具体物を置き、材質・枠・位置を変化</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 35: 実践例：数えよう（基礎）の移行プロセス（リンク付き） -->
     <div class="slide" data-chapter="Ch.02" data-title="実践例：数えようの移行">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 02</span>
@@ -2161,7 +2321,7 @@
          第3章：アプリでの学習は、強化学習と似ている？
          ========================================== -->
 
-    <!-- Slide 31: 第3章 扉 -->
+    <!-- Slide 36: 第3章 扉 -->
     <div class="slide" data-chapter="Ch.03" data-title="第3章 扉">
       <div class="slide-body">
         <div class="door-wrap">
@@ -2171,7 +2331,7 @@
       </div>
     </div>
 
-    <!-- Slide 32: 迷路を進むAIの仕組み（シミュレータリンク付き） -->
+    <!-- Slide 37: 迷路を進むAIの仕組み（シミュレータリンク付き） -->
     <div class="slide" data-chapter="Ch.03" data-title="迷路を進むAIの仕組み">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2190,7 +2350,7 @@
       </div>
     </div>
 
-    <!-- Slide 33: 迷路の広さと学習 -->
+    <!-- Slide 38: 迷路の広さと学習 -->
     <div class="slide" data-chapter="Ch.03" data-title="迷路の広さと学習成立">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2214,7 +2374,7 @@
       </div>
     </div>
 
-    <!-- Slide 34: アプリ学習との類似性 -->
+    <!-- Slide 39: アプリ学習との類似性 -->
     <div class="slide" data-chapter="Ch.03" data-title="アプリ学習との類似性">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2247,7 +2407,7 @@
       </div>
     </div>
 
-    <!-- Slide 35: 【実動デモ & QR】Demo 数字カード並べ替え -->
+    <!-- Slide 40: 【実動デモ & QR】Demo 数字カード並べ替え -->
     <div class="slide" data-chapter="Ch.03" data-title="Demo：数字カード並べ替え">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2288,7 +2448,7 @@
       </div>
     </div>
 
-    <!-- Slide 36: 適切な難易度と圧倒的な試行回数 -->
+    <!-- Slide 41: 適切な難易度と圧倒的な試行回数 -->
     <div class="slide" data-chapter="Ch.03" data-title="適切な難易度と圧倒的な試行回数">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2304,7 +2464,7 @@
       </div>
     </div>
 
-    <!-- Slide 37: 不正解の扱いと「強化」の視点 -->
+    <!-- Slide 42: 不正解の扱いと「強化」の視点 -->
     <div class="slide" data-chapter="Ch.03" data-title="弱化の難しさと強化の視点">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2330,7 +2490,7 @@
       </div>
     </div>
 
-    <!-- Slide 38: 3.5 アプリ設計における「強化できるか？」という視点 -->
+    <!-- Slide 43: 3.5 アプリ設計における「強化できるか？」という視点 -->
     <div class="slide" data-chapter="Ch.03" data-title="設計のものさし：強化できるか">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 03</span>
@@ -2348,7 +2508,7 @@
       </div>
     </div>
 
-    <!-- Slide 39: 3Dモデル：ラピュタモデル -->
+    <!-- Slide 44: 3Dモデル：ラピュタモデル -->
     <div class="slide slide-full-app" data-chapter="Ch.03" data-title="コラム">
       <div class="slide-body">
         <div class="demo-main-iframe-box">
@@ -2361,7 +2521,7 @@
          第4章：学習用アプリの設計・実装思想
          ========================================== -->
 
-    <!-- Slide 40: 第4章 扉 -->
+    <!-- Slide 45: 第4章 扉 -->
     <div class="slide" data-chapter="Ch.04" data-title="第4章 扉">
       <div class="slide-body">
         <div class="door-wrap">
@@ -2371,7 +2531,7 @@
       </div>
     </div>
 
-    <!-- Slide 41: 4.1 目的の明確化 -->
+    <!-- Slide 46: 4.1 目的の明確化 -->
     <div class="slide" data-chapter="Ch.04" data-title="目的の明確化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2387,7 +2547,7 @@
       </div>
     </div>
 
-    <!-- Slide 42: 4.1 汎用性をどう考える？ -->
+    <!-- Slide 47: 4.1 汎用性をどう考える？ -->
     <div class="slide" data-chapter="Ch.04" data-title="目的の明確化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2403,7 +2563,7 @@
       </div>
     </div>
 
-    <!-- Slide 43: 4.2 操作性の最適化（ドラッグとタップの使い分け） -->
+    <!-- Slide 48: 4.2 操作性の最適化（ドラッグとタップの使い分け） -->
     <div class="slide" data-chapter="Ch.04" data-title="操作の使い分け">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2429,7 +2589,7 @@
       </div>
     </div>
 
-    <!-- Slide 44: 【実動デモ & QR】Demo 型はめ操作比較ラボ（図形あそびリンク付き） -->
+    <!-- Slide 49: 【実動デモ & QR】Demo 型はめ操作比較ラボ（図形あそびリンク付き） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：型はめ操作比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2467,7 +2627,7 @@
       </div>
     </div>
 
-    <!-- Slide 45: 【実動デモ & QR】Demo ドラッグ挙動パラメータ比較 -->
+    <!-- Slide 50: 【実動デモ & QR】Demo ドラッグ挙動パラメータ比較 -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：ドラッグ挙動ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2510,7 +2670,7 @@
       </div>
     </div>
 
-    <!-- Slide 46: 4.2 ③ いろいろなタップ -->
+    <!-- Slide 51: 4.2 ③ いろいろなタップ -->
     <div class="slide" data-chapter="Ch.04" data-title="いろいろなタップ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2542,7 +2702,7 @@
       </div>
     </div>
 
-    <!-- Slide 47: 4.2 ③ いろいろなタップ（Demo） -->
+    <!-- Slide 52: 4.2 ③ いろいろなタップ（Demo） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：いろいろなタップ比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2584,7 +2744,7 @@
       </div>
     </div>
 
-    <!-- Slide 48: 4.2 ④ ドラッグとタップの使い分け -->
+    <!-- Slide 53: 4.2 ④ ドラッグとタップの使い分け -->
     <div class="slide" data-chapter="Ch.04" data-title="ドラッグとタップの使い分け">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2611,7 +2771,7 @@
       </div>
     </div>
 
-    <!-- Slide 49: 4.2 ⑤ 「できた/つぎへ」ボタン（比較） -->
+    <!-- Slide 54: 4.2 ⑤ 「できた/つぎへ」ボタン（比較） -->
     <div class="slide" data-chapter="Ch.04" data-title="「できた/つぎへ」ボタンの検討">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2639,7 +2799,7 @@
       </div>
     </div>
 
-    <!-- Slide 50: 4.2 ⑤ 「できた/つぎへ」ボタン（使い分けの目安） -->
+    <!-- Slide 55: 4.2 ⑤ 「できた/つぎへ」ボタン（使い分けの目安） -->
     <div class="slide" data-chapter="Ch.04" data-title="「できた/つぎへ」ボタンの目安">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2654,7 +2814,7 @@
       </div>
     </div>
 
-    <!-- Slide 51: 4.3 認知特性に配慮した画面設計 -->
+    <!-- Slide 56: 4.3 認知特性に配慮した画面設計 -->
     <div class="slide" data-chapter="Ch.04" data-title="非言語的な構造化">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2683,7 +2843,7 @@
       </div>
     </div>
 
-    <!-- Slide 52: 【実動デモ & QR】Demo 操作対象と終点の視覚化 -->
+    <!-- Slide 57: 【実動デモ & QR】Demo 操作対象と終点の視覚化 -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：操作対象と終点ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2722,7 +2882,7 @@
       </div>
     </div>
 
-    <!-- Slide 53: 【実動デモ & QR】Demo 視線誘導なぞり書き -->
+    <!-- Slide 58: 【実動デモ & QR】Demo 視線誘導なぞり書き -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：視線誘導なぞり書き">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2762,7 +2922,7 @@
       </div>
     </div>
 
-    <!-- Slide 54: 4.3 ③ 重なりへの対応（z-index） -->
+    <!-- Slide 59: 4.3 ③ 重なりへの対応（z-index） -->
     <div class="slide" data-chapter="Ch.04" data-title="重なりへの対応（z-index）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2778,7 +2938,7 @@
       </div>
     </div>
 
-    <!-- Slide 55: 【実動デモ & QR】Demo 重なり順（z-index） -->
+    <!-- Slide 60: 【実動デモ & QR】Demo 重なり順（z-index） -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：重なり順（z-index）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2817,7 +2977,7 @@
       </div>
     </div>
 
-    <!-- Slide 56: 【実動デモ & QR】Demo 背景色＆コントラスト -->
+    <!-- Slide 61: 【実動デモ & QR】Demo 背景色＆コントラスト -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：背景色＆コントラスト">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2857,7 +3017,7 @@
       </div>
     </div>
 
-    <!-- Slide 57: 4.4 端末の特性への対応（① 画面端配置・② Klee One） -->
+    <!-- Slide 62: 4.4 端末の特性への対応（① 画面端配置・② Klee One） -->
     <div class="slide" data-chapter="Ch.04" data-title="端末の特性への対応（①〜②）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2896,7 +3056,7 @@
       </div>
     </div>
 
-    <!-- Slide 58: 4.4 端末の特性への対応（③ 拡大・スクロール禁止＋補足） -->
+    <!-- Slide 63: 4.4 端末の特性への対応（③ 拡大・スクロール禁止＋補足） -->
     <div class="slide" data-chapter="Ch.04" data-title="端末の特性への対応（③＋補足）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2927,7 +3087,7 @@
       </div>
     </div>
 
-    <!-- Slide 59: 4.5 ノイズの徹底的な除去 -->
+    <!-- Slide 64: 4.5 ノイズの徹底的な除去 -->
     <div class="slide" data-chapter="Ch.04" data-title="ノイズの徹底除去">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -2964,7 +3124,7 @@
       </div>
     </div>
 
-    <!-- Slide 60: 【実動デモ & QR】Demo 数の学習：演出比較ラボ -->
+    <!-- Slide 65: 【実動デモ & QR】Demo 数の学習：演出比較ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：演出比較ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3003,7 +3163,7 @@
       </div>
     </div>
 
-    <!-- Slide 61: 【実動デモ & QR】Demo 連打対策ラボ -->
+    <!-- Slide 66: 【実動デモ & QR】Demo 連打対策ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：連打対策ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3041,7 +3201,7 @@
       </div>
     </div>
 
-    <!-- Slide 62: 【実動デモ & QR】Demo ボタン数の削減ラボ -->
+    <!-- Slide 67: 【実動デモ & QR】Demo ボタン数の削減ラボ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：ボタン数の削減ラボ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3080,7 +3240,7 @@
       </div>
     </div>
 
-    <!-- Slide 63: 4.6 AIの傾向 -->
+    <!-- Slide 68: 4.6 AIの傾向 -->
     <div class="slide" data-chapter="Ch.04" data-title="4.6 AIの傾向">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3113,7 +3273,7 @@
       </div>
     </div>
 
-    <!-- Slide 64: 4.6 AIのUI傾向 実例図解 -->
+    <!-- Slide 69: 4.6 AIのUI傾向 実例図解 -->
     <div class="slide" data-chapter="Ch.04" data-title="AIのUI傾向 実例図解">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3127,7 +3287,34 @@
       </div>
     </div>
 
-    <!-- Slide 65: 4.7 その他（①〜④） -->
+    <!-- Slide 70: 4.6 AIの傾向（動作・実装バグ ⑤〜⑥） -->
+    <div class="slide" data-chapter="Ch.04" data-title="AIの動作バグ傾向（⑤〜⑥）">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 04</span>
+        <span class="slide-section-title">4.6 AIの傾向（動作・実装バグ）</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">見た目以外にも頻発する<br><span class="text-red">動作・状態管理の2大トラブル</span></h2>
+        <div class="grid-cards cols-2">
+          <div class="card-item">
+            <div class="card-item-tag">⑤ 消し忘れ</div>
+            <div class="card-item-h">問題終了後のオブジェクト残留</div>
+            <div class="card-item-p">
+              画面切替や終了時に前の問題の絵・カードを削除し忘れる
+            </div>
+          </div>
+          <div class="card-item highlight">
+            <div class="card-item-tag">⑥ マルチタッチ不備</div>
+            <div class="card-item-h text-red">別指タッチで複製・一生残るバグ</div>
+            <div class="card-item-p">
+              ドラッグ中に元位置を別指で触ると複製＆後処理が破綻し、更新するまで画面に居座る（<code>pointerId</code>排他制御が必須）
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 71: 4.7 その他（①〜④） -->
     <div class="slide" data-chapter="Ch.04" data-title="4.7 その他（①〜④）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3171,7 +3358,7 @@
       </div>
     </div>
 
-    <!-- Slide 66: 【実動デモ & QR】Demo 現場防衛トリプルタップ -->
+    <!-- Slide 72: 【実動デモ & QR】Demo 現場防衛トリプルタップ -->
     <div class="slide" data-chapter="Ch.04" data-title="Demo：現場防衛トリプルタップ">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3210,7 +3397,7 @@
       </div>
     </div>
 
-    <!-- Slide 67: 4.7 その他（⑤〜⑧） -->
+    <!-- Slide 73: 4.7 その他（⑤〜⑧） -->
     <div class="slide" data-chapter="Ch.04" data-title="4.7 その他（⑤〜⑧）">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 04</span>
@@ -3258,7 +3445,7 @@
          第5章：Geminiを活用したアプリ作り プロンプトについて
          ========================================== -->
 
-    <!-- Slide 68: 第5章 扉 -->
+    <!-- Slide 74: 第5章 扉 -->
     <div class="slide" data-chapter="Ch.05" data-title="第5章 扉">
       <div class="slide-body">
         <div class="door-wrap">
@@ -3268,7 +3455,7 @@
       </div>
     </div>
 
-    <!-- Slide 69: 開発環境：Gemini ＋ Canvas -->
+    <!-- Slide 75: 開発環境：Gemini ＋ Canvas -->
     <div class="slide" data-chapter="Ch.05" data-title="開発環境：Gemini ＋ Canvas">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3295,7 +3482,36 @@
       </div>
     </div>
 
-    <!-- Slide 70: プロンプトの構造 -->
+    <!-- Slide 76: 基本の作り方（Notebook読込 vs プロンプト） -->
+    <div class="slide" data-chapter="Ch.05" data-title="基本：Notebook読込 vs プロンプト">
+      <div class="slide-header">
+        <span class="badge-chapter">CHAPTER 05</span>
+        <span class="slide-section-title">5.1 基本の活用フロー</span>
+      </div>
+      <div class="slide-body">
+        <h2 class="headline-main">場面に応じた使い分け<br><span class="text-red">Notebook読込 ／ プロンプト</span></h2>
+        <div class="compare-wrap">
+          <div class="compare-box highlight">
+            <div class="card-item-tag">基本（Gemini Notebook等）</div>
+            <div class="card-item-h text-red">専用テキスト（.txt）を読込</div>
+            <div class="card-item-p">
+              全章の設計思想・仕様をAIが把握済み<br>
+              「概要伝達 ＋ 後から仕様点検」で作成
+            </div>
+          </div>
+          <div class="compare-box">
+            <div class="card-item-tag">別のAI・単発利用時</div>
+            <div class="card-item-h">プロンプト例をコピー使用</div>
+            <div class="card-item-p">
+              前提知識を持たないAI向けに<br>
+              必須仕様10項目をそのまま貼り付け
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 77: プロンプトの構造 -->
     <div class="slide" data-chapter="Ch.05" data-title="プロンプトの2大構成">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3328,7 +3544,7 @@
       </div>
     </div>
 
-    <!-- Slide 71: 教員が指定するアプリ概要 -->
+    <!-- Slide 78: 教員が指定するアプリ概要 -->
     <div class="slide" data-chapter="Ch.05" data-title="アプリ概要の指定項目">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3359,7 +3575,7 @@
       </div>
     </div>
 
-    <!-- Slide 72: 必須技術仕様 1〜2 -->
+    <!-- Slide 79: 必須技術仕様 1〜2 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 1〜2">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3398,7 +3614,7 @@
       </div>
     </div>
 
-    <!-- Slide 73: 必須技術仕様 3〜4 -->
+    <!-- Slide 80: 必須技術仕様 3〜4 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 3〜4">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3428,7 +3644,7 @@
       </div>
     </div>
 
-    <!-- Slide 74: 必須技術仕様 5（iPad対応） -->
+    <!-- Slide 81: 必須技術仕様 5（iPad対応） -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 5：iPad対応">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3436,7 +3652,7 @@
       </div>
       <div class="slide-body">
         <h2 class="headline-main">iPad特有の誤操作を<br><span class="text-red">完全遮断</span></h2>
-        <div class="grid-cards cols-3">
+        <div class="grid-cards cols-4">
           <div class="card-item">
             <div class="card-item-h">画面拡大禁止</div>
             <div class="card-item-p">
@@ -3458,11 +3674,18 @@
               ホーム・通知の誤動作防止
             </div>
           </div>
+          <div class="card-item highlight">
+            <div class="card-item-h text-red">残留・複製防止</div>
+            <div class="card-item-p">
+              <code>pointerId</code>排他制御・遷移時削除<br>
+              マルチタッチ二重掴み防止
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 75: 必須技術仕様 6〜7 -->
+    <!-- Slide 82: 必須技術仕様 6〜7 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 6〜7">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3492,7 +3715,7 @@
       </div>
     </div>
 
-    <!-- Slide 76: 必須技術仕様 8〜10 -->
+    <!-- Slide 83: 必須技術仕様 8〜10 -->
     <div class="slide" data-chapter="Ch.05" data-title="必須仕様 8〜10">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3531,7 +3754,7 @@
       </div>
     </div>
 
-    <!-- Slide 77: 追加プロンプト例：オプション1 -->
+    <!-- Slide 84: 追加プロンプト例：オプション1 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション1：アプリアイコン">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3551,7 +3774,7 @@
       </div>
     </div>
 
-    <!-- Slide 78: 追加プロンプト例：オプション2 -->
+    <!-- Slide 85: 追加プロンプト例：オプション2 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション2：IndexedDB">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3571,7 +3794,7 @@
       </div>
     </div>
 
-    <!-- Slide 79: 追加プロンプト例：オプション3 -->
+    <!-- Slide 86: 追加プロンプト例：オプション3 -->
     <div class="slide" data-chapter="Ch.05" data-title="追加オプション3：JSONデータ共有">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3591,7 +3814,7 @@
       </div>
     </div>
 
-    <!-- Slide 80: 3. プロンプト解説 -->
+    <!-- Slide 87: 3. プロンプト解説 -->
     <div class="slide" data-chapter="Ch.05" data-title="プロンプト解説の意義">
       <div class="slide-header">
         <span class="badge-chapter">CHAPTER 05</span>
@@ -3611,7 +3834,7 @@
          結び
          ========================================== -->
 
-    <!-- Slide 81: 結び（最初の重さのアプリ） -->
+    <!-- Slide 88: 結び（最初の重さのアプリ） -->
     <div class="slide slide-full-app" data-chapter="Outro" data-title="結び：重さのアプリ">
       <div class="slide-body">
         <div class="demo-main-iframe-box">
@@ -3641,7 +3864,7 @@
     </div>
 
     <div class="nav-right">
-      <span id="nav-page-num">01 / 81</span>
+      <span id="nav-page-num">01 / 88</span>
       <button class="nav-btn" onclick="toggleFullScreen()" title="全画面表示（F / ダブルクリック）">⛶</button>
     </div>
   </nav>
@@ -4124,6 +4347,94 @@
       updateSlide();
     }
 
+    function splitJapanesePhrases(str, seg) {
+      const tokens = Array.from(seg.segment(str)).map(x => x.segment);
+      const attachPrev = /^[ぁ-ん、。・：；！？!?）)」』】＆％%〜~～]+$|^(?:を通|によ|につ|にお|とし|でも|では|には|への|との|での|からの|までの)[ぁ-ん一-龠]*$/;
+      const attachNext = /^[（(「『【・]+$/;
+      const chunks = [];
+      let pendingPrefix = '';
+      for (let i = 0; i < tokens.length; i++) {
+        let t = tokens[i];
+        if (/^\s+$/.test(t)) {
+          if (pendingPrefix) { chunks.push(pendingPrefix); pendingPrefix = ''; }
+          chunks.push(t);
+          continue;
+        }
+        if (attachNext.test(t) && (chunks.length === 0 || /^\s+$/.test(chunks[chunks.length - 1]) || !/^[、。・：；）)」』】〜~～]+$/.test(t))) {
+          if (t === '・' && chunks.length > 0 && !/^\s+$/.test(chunks[chunks.length - 1])) {
+            chunks[chunks.length - 1] += t;
+          } else {
+            pendingPrefix += t;
+          }
+          continue;
+        }
+        if (pendingPrefix) {
+          t = pendingPrefix + t;
+          pendingPrefix = '';
+          chunks.push(t);
+          continue;
+        }
+        if (chunks.length > 0 && !/^\s+$/.test(chunks[chunks.length - 1]) && attachPrev.test(t)) {
+          chunks[chunks.length - 1] += t;
+        } else if (chunks.length > 0 && /[〜~～]$/.test(chunks[chunks.length - 1])) {
+          chunks[chunks.length - 1] += t;
+        } else if (chunks.length > 0 && /^[ァ-ヶー]+$/.test(t) && /^[ァ-ヶー]{1,2}$/.test(chunks[chunks.length - 1])) {
+          chunks[chunks.length - 1] += t;
+        } else if (chunks.length > 0 && /^[一-龠]$/.test(t) && /^[一-龠]+$/.test(chunks[chunks.length - 1])) {
+          chunks[chunks.length - 1] += t;
+        } else if (chunks.length > 0 && /^[一-龠]$/.test(chunks[chunks.length - 1]) && /^[一-龠]/.test(t)) {
+          chunks[chunks.length - 1] += t;
+        } else if (chunks.length > 0 && /^[\/]+$/.test(t) && /[\/「]$/.test(chunks[chunks.length - 1])) {
+          chunks[chunks.length - 1] += t;
+        } else {
+          chunks.push(t);
+        }
+      }
+      if (pendingPrefix && chunks.length) chunks[chunks.length - 1] += pendingPrefix;
+      else if (pendingPrefix) chunks.push(pendingPrefix);
+      return chunks;
+    }
+
+    function applyJapanesePhraseBreaks() {
+      if (typeof Intl === 'undefined' || !Intl.Segmenter) return;
+      try {
+        const seg = new Intl.Segmenter('ja', { granularity: 'word' });
+        const targets = document.querySelectorAll(
+          '.slide-section-title, .headline-main, .big-list-item, .cover-h1, .cover-lead, .door-chapter-title, .card-item-h, .card-item-p, .agenda-title, .agenda-sub, .feature-row-title, .feature-row-desc, .prompt-box-text, .prompt-box-note'
+        );
+        targets.forEach((el) => {
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+              const p = node.parentElement;
+              if (!p || p.closest('code, script, style, .font-compare-sample')) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              return /[\u3040-\u30ff\u4e00-\u9fff]/.test(node.nodeValue)
+                ? NodeFilter.FILTER_ACCEPT
+                : NodeFilter.FILTER_SKIP;
+            }
+          });
+          const textNodes = [];
+          let cur;
+          while ((cur = walker.nextNode())) textNodes.push(cur);
+          textNodes.forEach((tn) => {
+            const chunks = splitJapanesePhrases(tn.nodeValue, seg);
+            if (chunks.length <= 1) return;
+            const frag = document.createDocumentFragment();
+            chunks.forEach((chunk, i) => {
+              if (i > 0 && /\S/.test(chunk) && /\S/.test(chunks[i - 1])) {
+                frag.appendChild(document.createElement('wbr'));
+              }
+              frag.appendChild(document.createTextNode(chunk));
+            });
+            tn.replaceWith(frag);
+          });
+        });
+        document.documentElement.classList.add('ja-wbr-ready');
+      } catch (e) {}
+    }
+
+    applyJapanesePhraseBreaks();
     resizeDrawCanvas();
     restoreInitialSlide();
     window.addEventListener('load', resizeDrawCanvas);
