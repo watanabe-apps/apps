@@ -2402,7 +2402,7 @@
     "image": "images/t_dorayaki.png",
     "file": "t_dorayaki.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pair of Japanese pancake-like dorayaki patties sandwiched with sweet red bean paste, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
-    "tts_text": "どら焼き",
+    "tts_text": "どらやき",
     "subCategory": "oyatsu",
     "subCategoryName": "おやつ"
   },
@@ -5695,6 +5695,102 @@
     "subCategoryName": "ふれあい・あそび"
   },
   {
+    "id": "asobi_oumasan",
+    "name": "おうまさん",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_oumasan.png",
+    "file": "asobi_oumasan.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a cheerful father on all fours giving his happy toddler a piggyback horsey ride on his back (おうまさん), warm playful family bond, gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "お馬さん",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_dakko",
+    "name": "だっこ",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_dakko.png",
+    "file": "asobi_dakko.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a smiling father warmly hugging and holding his cheerful toddler in his arms (だっこ), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "だっこ",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_takaitakai",
+    "name": "たかいたかい",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_takaitakai.png",
+    "file": "asobi_takaitakai.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a joyful father lifting his laughing toddler high up into the air (たかいたかい), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "たかいたかい",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_hikouki",
+    "name": "ひこうき",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_hikouki.png",
+    "file": "asobi_hikouki.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a smiling father lying on his back balancing his delighted toddler on his shins and hands like an airplane (ひこうき), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "ひこうき",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_inaiinaibaa",
+    "name": "いないいないばあ",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_inaiinaibaa.png",
+    "file": "asobi_inaiinaibaa.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a smiling father playing peekaboo with open hands in front of his laughing toddler (いないいないばあ), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "いないいないばあ",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_tonneru",
+    "name": "とんねる",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_tonneru.png",
+    "file": "asobi_tonneru.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a cheerful father making a bridge tunnel with his hands and feet on the floor while his happy toddler crawls underneath (とんねる), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "とんねる",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_kurukuru",
+    "name": "くるくる",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_kurukuru.png",
+    "file": "asobi_kurukuru.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a happy father spinning his laughing toddler gently around while holding both hands (くるくる), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "くるくる",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
+    "id": "asobi_janpu",
+    "name": "じゃんぷ",
+    "category": "ugoki",
+    "categoryName": "うごき",
+    "image": "images/asobi_janpu.png",
+    "file": "asobi_janpu.png",
+    "prompt": "A realistic-leaning educational picture book illustration of a joyful father and his happy toddler holding hands and jumping happily into the air together (じゃんぷ), gentle watercolor wash and soft pencil contours, isolated on pure white background (#ffffff).",
+    "tts_text": "じゃんぷ",
+    "subCategory": "fureai_asobi",
+    "subCategoryName": "ふれあい・あそび"
+  },
+  {
     "id": "m_me",
     "name": "め",
     "category": "midikanamono",
@@ -6560,7 +6656,7 @@
   },
   {
     "id": "h_kokkusan",
-    "name": "コックさん",
+    "name": "こっくさん",
     "category": "hito",
     "categoryName": "ひと",
     "image": "images/h_kokkusan.png",
@@ -6572,7 +6668,7 @@
   },
   {
     "id": "h_panyasan",
-    "name": "パンやさん",
+    "name": "ぱんやさん",
     "category": "hito",
     "categoryName": "ひと",
     "image": "images/h_panyasan.png",
@@ -6632,7 +6728,7 @@
   },
   {
     "id": "h_santakuro-su",
-    "name": "サンタクロース",
+    "name": "さんたくろーす",
     "category": "hito",
     "categoryName": "ひと",
     "image": "images/h_santakuro-su.png",
@@ -6680,7 +6776,7 @@
   },
   {
     "id": "h_hi-ro-",
-    "name": "ヒーロー",
+    "name": "ひーろー",
     "category": "hito",
     "categoryName": "ひと",
     "image": "images/h_hi-ro-.png",
@@ -6767,6 +6863,7 @@
   "kimochi_hyoujou": "きもち・ひょうじょう",
   "tsutaeru_aisatsu": "つたえる・あいさつ",
   "fureai_nakayoshi": "ふれあい・なかよし",
+  "fureai_asobi": "ふれあい・あそび",
   "karada": "からだ",
   "karada_kenkou": "からだ・けんこう",
   "gakkou": "がっこう・しせつ"
