@@ -223,12 +223,17 @@
             transition: transform 0.1s;
         }
 
+        #emoji-display.has-illust {
+            filter: none;
+        }
+
         #emoji-display .word-illust {
             width: min(24vw, 15vh);
             height: min(24vw, 15vh);
             object-fit: contain;
             display: block;
             border-radius: 10px;
+            mix-blend-mode: multiply;
             pointer-events: none;
         }
 
@@ -1131,6 +1136,7 @@
             { word: "わに", emoji: "🐊", types: ["清音のみ"] }
         ];
 
+        const VOCAB_FILTER_VERSION = 2;
         let appSettings = {
             questionOrder: 'random', questionCount: '5', instantLock: false, autoReadWord: true,
             showDakuon: true, showYoon: true, showHomeBtn: true, showHint: false,
@@ -1140,21 +1146,56 @@
         let playHistory = [];
         let currentSessionLogs = [];
 
-        function loadSettingsLocal() {
-            const data = localStorage.getItem('hiraganaAppConfig');
-            if (data) {
-                const parsed = JSON.parse(data);
-                if (parsed.appSettings) appSettings = { ...appSettings, ...parsed.appSettings };
-                if (parsed.wordSettings) wordSettings = { ...wordSettings, ...parsed.wordSettings };
-                if (parsed.playHistory) playHistory = parsed.playHistory;
-            }
-            defaultWords.forEach(w => {
-                if (!wordSettings[w.word]) wordSettings[w.word] = { isActive: true, asked: 0, correct: 0 };
+        function isWordAllowedByTypes(item) {
+            return item.types.every(type => {
+                if (type === "清音のみ") return !!appSettings.allowedTypes.seion;
+                if (type === "濁音" || type === "半濁音") return !!appSettings.allowedTypes.dakuon;
+                if (type === "拗音") return !!appSettings.allowedTypes.yoon;
+                if (type === "促音") return !!appSettings.allowedTypes.sokuon;
+                return true;
             });
         }
 
+        function loadSettingsLocal() {
+            const data = localStorage.getItem('hiraganaAppConfig');
+            let savedFilterVersion = 0;
+            if (data) {
+                const parsed = JSON.parse(data);
+                if (parsed.appSettings) {
+                    appSettings = {
+                        ...appSettings,
+                        ...parsed.appSettings,
+                        allowedTypes: { ...appSettings.allowedTypes, ...(parsed.appSettings.allowedTypes || {}) }
+                    };
+                }
+                if (parsed.wordSettings) wordSettings = { ...wordSettings, ...parsed.wordSettings };
+                if (parsed.playHistory) playHistory = parsed.playHistory;
+                savedFilterVersion = parsed.vocabFilterVersion || 0;
+            }
+            let needsSave = false;
+            defaultWords.forEach(w => {
+                const allowed = isWordAllowedByTypes(w);
+                if (!wordSettings[w.word]) {
+                    wordSettings[w.word] = { isActive: allowed, asked: 0, correct: 0 };
+                } else if (savedFilterVersion < VOCAB_FILTER_VERSION && !allowed && wordSettings[w.word].isActive) {
+                    wordSettings[w.word].isActive = false;
+                    needsSave = true;
+                }
+            });
+            if (data && savedFilterVersion < VOCAB_FILTER_VERSION) {
+                saveSettingsLocal();
+            } else if (needsSave) {
+                saveSettingsLocal();
+            }
+        }
+
         function saveSettingsLocal() {
-            localStorage.setItem('hiraganaAppConfig', JSON.stringify({ appSettings, wordSettings, playHistory }));
+            localStorage.setItem('hiraganaAppConfig', JSON.stringify({
+                vocabFilterVersion: VOCAB_FILTER_VERSION,
+                appSettings,
+                wordSettings,
+                playHistory
+            }));
         }
 
         /* === 4. UI制御とゲームロジック === */
@@ -1200,7 +1241,7 @@
             playSound('start');
             spkFast("　");
 
-            activeQuestions = defaultWords.filter(w => wordSettings[w.word].isActive);
+            activeQuestions = defaultWords.filter(w => wordSettings[w.word].isActive && isWordAllowedByTypes(w));
             if (activeQuestions.length === 0) {
                 showToast("出題する単語がありません。設定から単語を有効にしてください。");
                 return;
@@ -1229,8 +1270,10 @@
 
             const emojiEl = document.getElementById('emoji-display');
             if (currentWordObj.image) {
+                emojiEl.classList.add('has-illust');
                 emojiEl.innerHTML = `<img src="${currentWordObj.image}" alt="${currentWordObj.word}" class="word-illust" draggable="false">`;
             } else {
+                emojiEl.classList.remove('has-illust');
                 emojiEl.textContent = currentWordObj.emoji || '';
             }
 
@@ -1596,6 +1639,24 @@
             document.getElementById('play-settings-modal').classList.add('hidden');
         }
 
+        function syncFilterCheckboxesFromWords() {
+            const activeTypes = { seion: false, dakuon: false, yoon: false, sokuon: false };
+            defaultWords.forEach(item => {
+                if (!wordSettings[item.word].isActive) return;
+                item.types.forEach(type => {
+                    if (type === "清音のみ") activeTypes.seion = true;
+                    if (type === "濁音" || type === "半濁音") activeTypes.dakuon = true;
+                    if (type === "拗音") activeTypes.yoon = true;
+                    if (type === "促音") activeTypes.sokuon = true;
+                });
+            });
+            appSettings.allowedTypes = activeTypes;
+            document.getElementById('f-seion').checked = activeTypes.seion;
+            document.getElementById('f-dakuon').checked = activeTypes.dakuon;
+            document.getElementById('f-yoon').checked = activeTypes.yoon;
+            document.getElementById('f-sokuon').checked = activeTypes.sokuon;
+        }
+
         function applyWordFilters() {
             appSettings.allowedTypes.seion = document.getElementById('f-seion').checked;
             appSettings.allowedTypes.dakuon = document.getElementById('f-dakuon').checked;
@@ -1603,14 +1664,7 @@
             appSettings.allowedTypes.sokuon = document.getElementById('f-sokuon').checked;
 
             defaultWords.forEach(item => {
-                let shouldBeActive = true;
-                item.types.forEach(type => {
-                    if (type === "清音のみ" && !appSettings.allowedTypes.seion) shouldBeActive = false;
-                    if ((type === "濁音" || type === "半濁音") && !appSettings.allowedTypes.dakuon) shouldBeActive = false;
-                    if (type === "拗音" && !appSettings.allowedTypes.yoon) shouldBeActive = false;
-                    if (type === "促音" && !appSettings.allowedTypes.sokuon) shouldBeActive = false;
-                });
-                wordSettings[item.word].isActive = shouldBeActive;
+                wordSettings[item.word].isActive = isWordAllowedByTypes(item);
             });
 
             renderWordList();
@@ -1637,8 +1691,8 @@
                 chk.checked = wordSettings[item.word].isActive;
                 chk.onchange = (e) => {
                     wordSettings[item.word].isActive = e.target.checked;
-                    if (e.target.checked) div.classList.remove('disabled');
-                    else div.classList.add('disabled');
+                    div.classList.toggle('disabled', !e.target.checked);
+                    syncFilterCheckboxesFromWords();
                 };
 
                 const label = document.createElement('span');
