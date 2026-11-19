@@ -654,6 +654,7 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      mix-blend-mode: multiply;
     }
 
     .word-name-text {
@@ -931,6 +932,7 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      mix-blend-mode: multiply;
     }
 
     /* マス目中央エリア（文字数に応じて動的サイジング） */
@@ -1297,6 +1299,7 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      mix-blend-mode: multiply;
     }
 
     .zukan-specimen-name {
@@ -1484,6 +1487,7 @@
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      mix-blend-mode: multiply;
     }
 
     .modal-word-title {
@@ -1983,70 +1987,265 @@
     const DAIKON_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 35 C42 12, 28 10, 24 16 C20 22, 38 34, 46 36" fill="%2322c55e"/><path d="M50 35 C48 8, 56 8, 56 16 C56 24, 52 33, 50 36" fill="%2316a34a"/><path d="M50 35 C58 12, 72 10, 76 16 C80 22, 62 34, 54 36" fill="%2322c55e"/><path d="M38 36 C38 32, 62 32, 62 36 C66 52, 62 72, 53 92 C51 95, 49 95, 47 92 C38 72, 34 52, 38 36 Z" fill="%23ffffff" stroke="%2394a3b8" stroke-width="2.5"/><line x1="44" y1="52" x2="52" y2="52" stroke="%23cbd5e1" stroke-width="2"/><line x1="48" y1="66" x2="56" y2="66" stroke="%23cbd5e1" stroke-width="2"/><line x1="46" y1="80" x2="53" y2="80" stroke="%23cbd5e1" stroke-width="2"/></svg>`;
 
     /* ========================================================
-       プリセット単語マスタ（大幅拡充・親しみやすい単語50選）
+       プリセット単語マスタ（キーボードクイズと完全一致・全243語）
        ======================================================== */
     const PRESET_WORDS = [
-      // くだもの (8)
-      { id: 'w_apple', category: 'くだもの', name: 'りんご', emoji: '🍎', image: null, audio: null },
-      { id: 'w_banana', category: 'くだもの', name: 'ばなな', emoji: '🍌', image: null, audio: null },
-      { id: 'w_grape', category: 'くだもの', name: 'ぶどう', emoji: '🍇', image: null, audio: null },
-      { id: 'w_strawberry', category: 'くだもの', name: 'いちご', emoji: '🍓', image: null, audio: null },
-      { id: 'w_mikan', category: 'くだもの', name: 'みかん', emoji: '🍊', image: null, audio: null },
-      { id: 'w_peach', category: 'くだもの', name: 'もも', emoji: '🍑', image: null, audio: null },
-      { id: 'w_watermelon', category: 'くだもの', name: 'すいか', emoji: '🍉', image: null, audio: null },
-      { id: 'w_melon', category: 'くだもの', name: 'めろん', emoji: '🍈', image: null, audio: null },
+      // くだもの (14)
+      { id: "w_strawberry", category: "くだもの", name: "いちご", emoji: "🍓", image: "../common/images/t_ichigo.png", tts: "イチゴ", audio: null },
+      { id: "w_t_kaki", category: "くだもの", name: "かき", emoji: "", image: "../common/images/t_kaki.png", tts: "柿", audio: null },
+      { id: "w_t_kuri", category: "くだもの", name: "くり", emoji: "", image: "../common/images/t_kuri.png", tts: "栗", audio: null },
+      { id: "w_t_sakuranbo", category: "くだもの", name: "さくらんぼ", emoji: "", image: "../common/images/t_sakuranbo.png", audio: null },
+      { id: "w_watermelon", category: "くだもの", name: "すいか", emoji: "🍉", image: null, audio: null },
+      { id: "w_t_nashi", category: "くだもの", name: "なし", emoji: "", image: "../common/images/t_nashi.png", tts: "梨", audio: null },
+      { id: "w_t_painappuru", category: "くだもの", name: "ぱいなっぷる", emoji: "", image: "../common/images/t_painappuru.png", tts: "パイナップル", audio: null },
+      { id: "w_banana", category: "くだもの", name: "ばなな", emoji: "🍌", image: null, audio: null },
+      { id: "w_grape", category: "くだもの", name: "ぶどう", emoji: "🍇", image: "../common/images/t_budou.png", tts: "ブドウ", audio: null },
+      { id: "w_mikan", category: "くだもの", name: "みかん", emoji: "🍊", image: null, audio: null },
+      { id: "w_melon", category: "くだもの", name: "めろん", emoji: "🍈", image: "../common/images/t_meron.png", tts: "メロン", audio: null },
+      { id: "w_peach", category: "くだもの", name: "もも", emoji: "🍑", image: null, audio: null },
+      { id: "w_apple", category: "くだもの", name: "りんご", emoji: "🍎", image: null, audio: null },
+      { id: "w_t_remon", category: "くだもの", name: "れもん", emoji: "🍋", image: null, audio: null },
 
-      // やさい (8)
-      { id: 'w_carrot', category: 'やさい', name: 'にんじん', emoji: '🥕', image: null, audio: null },
-      { id: 'w_tomato', category: 'やさい', name: 'とまと', emoji: '🍅', image: null, audio: null },
-      { id: 'w_corn', category: 'やさい', name: 'とうもろこし', emoji: '🌽', image: null, audio: null },
-      { id: 'w_cucumber', category: 'やさい', name: 'きゅうり', emoji: '🥒', image: null, audio: null },
-      { id: 'w_pepper', category: 'やさい', name: 'ぴーまん', emoji: '🫑', image: null, audio: null },
-      { id: 'w_daikon', category: 'やさい', name: 'だいこん', emoji: '🥬', image: DAIKON_SVG, audio: null },
-      { id: 'w_eggplant', category: 'やさい', name: 'なす', emoji: '🍆', image: null, audio: null },
-      { id: 'w_onion', category: 'やさい', name: 'たまねぎ', emoji: '🧅', image: null, audio: null },
+      // やさい (12)
+      { id: "w_t_edamame", category: "やさい", name: "えだまめ", emoji: "", image: "../common/images/t_edamame.png", tts: "枝豆", audio: null },
+      { id: "w_t_kabocha", category: "やさい", name: "かぼちゃ", emoji: "", image: "../common/images/t_kabocha.png", audio: null },
+      { id: "w_t_kyabetsu", category: "やさい", name: "きゃべつ", emoji: "", image: "../common/images/t_kyabetsu.png", tts: "キャベツ", audio: null },
+      { id: "w_cucumber", category: "やさい", name: "きゅうり", emoji: "🥒", image: "../common/images/t_kyuuri.png", tts: "キュウリ", audio: null },
+      { id: "w_t_satsumaimo", category: "やさい", name: "さつまいも", emoji: "", image: "../common/images/t_satsumaimo.png", tts: "サツマイモ", audio: null },
+      { id: "w_t_jagaimo", category: "やさい", name: "じゃがいも", emoji: "", image: "../common/images/t_jagaimo.png", tts: "ジャガイモ", audio: null },
+      { id: "w_daikon", category: "やさい", name: "だいこん", emoji: "🥬", image: "../common/images/t_daikon.png", tts: "大根", audio: null },
+      { id: "w_onion", category: "やさい", name: "たまねぎ", emoji: "🧅", image: "../common/images/t_tamanegi.png", tts: "玉ねぎ", audio: null },
+      { id: "w_corn", category: "やさい", name: "とうもろこし", emoji: "🌽", image: "../common/images/t_toumorokoshi.png", tts: "トウモロコシ", audio: null },
+      { id: "w_tomato", category: "やさい", name: "とまと", emoji: "🍅", image: "../common/images/t_tomato.png", tts: "トマト", audio: null },
+      { id: "w_eggplant", category: "やさい", name: "なす", emoji: "🍆", image: null, audio: null },
+      { id: "w_carrot", category: "やさい", name: "にんじん", emoji: "🥕", image: null, audio: null },
 
-      // どうぶつ (10)
-      { id: 'w_dog', category: 'どうぶつ', name: 'いぬ', emoji: '🐶', image: null, audio: null },
-      { id: 'w_cat', category: 'どうぶつ', name: 'ねこ', emoji: '🐱', image: null, audio: null },
-      { id: 'w_lion', category: 'どうぶつ', name: 'らいおん', emoji: '🦁', image: null, audio: null },
-      { id: 'w_elephant', category: 'どうぶつ', name: 'ぞう', emoji: '🐘', image: null, audio: null },
-      { id: 'w_giraffe', category: 'どうぶつ', name: 'きりん', emoji: '🦒', image: null, audio: null },
-      { id: 'w_rabbit', category: 'どうぶつ', name: 'うさぎ', emoji: '🐰', image: null, audio: null },
-      { id: 'w_bear', category: 'どうぶつ', name: 'くま', emoji: '🐻', image: null, audio: null },
-      { id: 'w_panda', category: 'どうぶつ', name: 'ぱんだ', emoji: '🐼', image: null, audio: null },
-      { id: 'w_monkey', category: 'どうぶつ', name: 'さる', emoji: '🐵', image: null, audio: null },
-      { id: 'w_tiger', category: 'どうぶつ', name: 'とら', emoji: '🐯', image: null, audio: null },
+      // どうぶつ (66)
+      { id: "w_d_aomushi", category: "どうぶつ", name: "あおむし", emoji: "", image: "../common/images/d_aomushi.png", tts: "青虫", audio: null },
+      { id: "w_d_ari", category: "どうぶつ", name: "あり", emoji: "🐜", image: null, audio: null },
+      { id: "w_d_ika", category: "どうぶつ", name: "いか", emoji: "🦑", image: null, audio: null },
+      { id: "w_dog", category: "どうぶつ", name: "いぬ", emoji: "🐶", image: null, audio: null },
+      { id: "w_d_inoshishi", category: "どうぶつ", name: "いのしし", emoji: "", image: "../common/images/d_inoshishi.png", tts: "イノシシ", audio: null },
+      { id: "w_d_iruka", category: "どうぶつ", name: "いるか", emoji: "", image: "../common/images/d_iruka.png", tts: "イルカ", audio: null },
+      { id: "w_rabbit", category: "どうぶつ", name: "うさぎ", emoji: "🐰", image: "../common/images/d_usagi.png", tts: "ウサギ", audio: null },
+      { id: "w_d_ushi", category: "どうぶつ", name: "うし", emoji: "🐮", image: null, audio: null },
+      { id: "w_d_uma", category: "どうぶつ", name: "うま", emoji: "🐴", image: null, audio: null },
+      { id: "w_d_ebi", category: "どうぶつ", name: "えび", emoji: "", image: "../common/images/d_ebi.png", tts: "エビ", audio: null },
+      { id: "w_d_otamajakushi", category: "どうぶつ", name: "おたまじゃくし", emoji: "", image: "../common/images/d_otamajakushi.png", tts: "オタマジャクシ", audio: null },
+      { id: "w_d_kaeru", category: "どうぶつ", name: "かえる", emoji: "🐸", image: null, audio: null },
+      { id: "w_d_katatsumuri", category: "どうぶつ", name: "かたつむり", emoji: "", image: "../common/images/d_katatsumuri.png", tts: "カタツムリ", audio: null },
+      { id: "w_d_kani", category: "どうぶつ", name: "かに", emoji: "", image: "../common/images/d_kani.png", tts: "カニ", audio: null },
+      { id: "w_d_kaba", category: "どうぶつ", name: "かば", emoji: "", image: "../common/images/d_kaba.png", tts: "カバ", audio: null },
+      { id: "w_d_kabutomushi", category: "どうぶつ", name: "かぶとむし", emoji: "", image: "../common/images/d_kabutomushi.png", tts: "カブトムシ", audio: null },
+      { id: "w_d_kamakiri", category: "どうぶつ", name: "かまきり", emoji: "", image: "../common/images/d_kamakiri.png", tts: "カマキリ", audio: null },
+      { id: "w_d_kame", category: "どうぶつ", name: "かめ", emoji: "🐢", image: null, audio: null },
+      { id: "w_d_karasu", category: "どうぶつ", name: "からす", emoji: "", image: "../common/images/d_karasu.png", tts: "カラス", audio: null },
+      { id: "w_d_kitsune", category: "どうぶつ", name: "きつね", emoji: "🦊", image: null, audio: null },
+      { id: "w_giraffe", category: "どうぶつ", name: "きりん", emoji: "🦒", image: null, audio: null },
+      { id: "w_d_kingyo", category: "どうぶつ", name: "きんぎょ", emoji: "🐠", image: null, audio: null },
+      { id: "w_d_kujira", category: "どうぶつ", name: "くじら", emoji: "", image: "../common/images/d_kujira.png", tts: "クジラ", audio: null },
+      { id: "w_bear", category: "どうぶつ", name: "くま", emoji: "🐻", image: "../common/images/d_kuma.png", tts: "熊", audio: null },
+      { id: "w_d_kurage", category: "どうぶつ", name: "くらげ", emoji: "", image: "../common/images/d_kurage.png", tts: "クラゲ", audio: null },
+      { id: "w_d_kuwagata", category: "どうぶつ", name: "くわがた", emoji: "", image: "../common/images/d_kuwagata.png", tts: "クワガタ", audio: null },
+      { id: "w_d_koara", category: "どうぶつ", name: "こあら", emoji: "", image: "../common/images/d_koara.png", tts: "コアラ", audio: null },
+      { id: "w_d_koumori", category: "どうぶつ", name: "こうもり", emoji: "", image: "../common/images/d_koumori.png", tts: "コウモリ", audio: null },
+      { id: "w_d_gorira", category: "どうぶつ", name: "ごりら", emoji: "", image: "../common/images/d_gorira.png", tts: "ゴリラ", audio: null },
+      { id: "w_d_sai", category: "どうぶつ", name: "さい", emoji: "", image: "../common/images/d_sai.png", tts: "サイ", audio: null },
+      { id: "w_d_sakana", category: "どうぶつ", name: "さかな", emoji: "🐟", image: null, audio: null },
+      { id: "w_d_same", category: "どうぶつ", name: "さめ", emoji: "", image: "../common/images/d_same.png", tts: "サメ", audio: null },
+      { id: "w_monkey", category: "どうぶつ", name: "さる", emoji: "🐵", image: null, audio: null },
+      { id: "w_d_shika", category: "どうぶつ", name: "しか", emoji: "🦌", image: null, audio: null },
+      { id: "w_d_shimauma", category: "どうぶつ", name: "しまうま", emoji: "", image: "../common/images/d_shimauma.png", tts: "シマウマ", audio: null },
+      { id: "w_d_shirokuma", category: "どうぶつ", name: "しろくま", emoji: "", image: "../common/images/d_shirokuma.png", tts: "白くま", audio: null },
+      { id: "w_d_suzume", category: "どうぶつ", name: "すずめ", emoji: "", image: "../common/images/d_suzume.png", tts: "スズメ", audio: null },
+      { id: "w_d_semi", category: "どうぶつ", name: "せみ", emoji: "", image: "../common/images/d_semi.png", tts: "セミ", audio: null },
+      { id: "w_elephant", category: "どうぶつ", name: "ぞう", emoji: "🐘", image: "../common/images/d_zou.png", tts: "象", audio: null },
+      { id: "w_d_tako", category: "どうぶつ", name: "たこ", emoji: "🐙", image: null, audio: null },
+      { id: "w_kq_129", category: "どうぶつ", name: "ちょうちょ", emoji: "🦋", image: null, audio: null },
+      { id: "w_d_tentoumushi", category: "どうぶつ", name: "てんとうむし", emoji: "", image: "../common/images/d_tentoumushi.png", tts: "テントウムシ", audio: null },
+      { id: "w_tiger", category: "どうぶつ", name: "とら", emoji: "🐯", image: "../common/images/d_tora.png", tts: "虎", audio: null },
+      { id: "w_kq_152", category: "どうぶつ", name: "とり", emoji: "🐦", image: null, audio: null },
+      { id: "w_d_tonbo", category: "どうぶつ", name: "とんぼ", emoji: "", image: "../common/images/d_tonbo.png", tts: "トンボ", audio: null },
+      { id: "w_d_niwatori", category: "どうぶつ", name: "にわとり", emoji: "🐔", image: null, audio: null },
+      { id: "w_cat", category: "どうぶつ", name: "ねこ", emoji: "🐱", image: null, audio: null },
+      { id: "w_kq_165", category: "どうぶつ", name: "ねずみ", emoji: "🐭", image: null, audio: null },
+      { id: "w_d_hachi", category: "どうぶつ", name: "はち", emoji: "🐝", image: null, audio: null },
+      { id: "w_d_batta", category: "どうぶつ", name: "ばった", emoji: "", image: "../common/images/d_batta.png", tts: "バッタ", audio: null },
+      { id: "w_d_hato", category: "どうぶつ", name: "はと", emoji: "", image: "../common/images/d_hato.png", tts: "ハト", audio: null },
+      { id: "w_d_harinezumi", category: "どうぶつ", name: "はりねずみ", emoji: "", image: "../common/images/d_harinezumi.png", tts: "ハリネズミ", audio: null },
+      { id: "w_panda", category: "どうぶつ", name: "ぱんだ", emoji: "🐼", image: null, audio: null },
+      { id: "w_d_hitsuji", category: "どうぶつ", name: "ひつじ", emoji: "🐑", image: null, audio: null },
+      { id: "w_d_hitode", category: "どうぶつ", name: "ひとで", emoji: "", image: "../common/images/d_hitode.png", tts: "ヒトデ", audio: null },
+      { id: "w_d_hiyoko", category: "どうぶつ", name: "ひよこ", emoji: "", image: "../common/images/d_hiyoko.png", audio: null },
+      { id: "w_d_fukurou", category: "どうぶつ", name: "ふくろう", emoji: "", image: "../common/images/d_fukurou.png", tts: "フクロウ", audio: null },
+      { id: "w_d_buta", category: "どうぶつ", name: "ぶた", emoji: "", image: "../common/images/d_buta.png", tts: "豚", audio: null },
+      { id: "w_d_hebi", category: "どうぶつ", name: "へび", emoji: "🐍", image: null, audio: null },
+      { id: "w_d_pengin", category: "どうぶつ", name: "ぺんぎん", emoji: "", image: "../common/images/d_pengin.png", tts: "ペンギン", audio: null },
+      { id: "w_d_mogura", category: "どうぶつ", name: "もぐら", emoji: "", image: "../common/images/d_mogura.png", tts: "モグラ", audio: null },
+      { id: "w_d_yagi", category: "どうぶつ", name: "やぎ", emoji: "", image: "../common/images/d_yagi.png", tts: "ヤギ", audio: null },
+      { id: "w_lion", category: "どうぶつ", name: "らいおん", emoji: "🦁", image: null, audio: null },
+      { id: "w_d_rakuda", category: "どうぶつ", name: "らくだ", emoji: "🐪", image: null, audio: null },
+      { id: "w_d_risu", category: "どうぶつ", name: "りす", emoji: "", image: "../common/images/d_risu.png", tts: "リス", audio: null },
+      { id: "w_d_wani", category: "どうぶつ", name: "わに", emoji: "🐊", image: null, audio: null },
 
-      // のりもの (8)
-      { id: 'w_car', category: 'のりもの', name: 'くるま', emoji: '🚗', image: null, audio: null },
-      { id: 'w_plane', category: 'のりもの', name: 'ひこうき', emoji: '✈️', image: null, audio: null },
-      { id: 'w_train', category: 'のりもの', name: 'でんしゃ', emoji: '🚃', image: null, audio: null },
-      { id: 'w_ship', category: 'のりもの', name: 'ふね', emoji: '🚢', image: null, audio: null },
-      { id: 'w_bus', category: 'のりもの', name: 'ばす', emoji: '🚌', image: null, audio: null },
-      { id: 'w_bullet', category: 'のりもの', name: 'しんかんせん', emoji: '🚅', image: null, audio: null },
-      { id: 'w_police', category: 'のりもの', name: 'ぱとかー', emoji: '🚓', image: null, audio: null },
-      { id: 'w_fire', category: 'のりもの', name: 'しょうぼうしゃ', emoji: '🚒', image: null, audio: null },
+      // のりもの (17)
+      { id: "w_n_kikansha", category: "のりもの", name: "きかんしゃ", emoji: "", image: "../common/images/n_kikansha.png", tts: "機関車", audio: null },
+      { id: "w_n_kikyuu", category: "のりもの", name: "ききゅう", emoji: "", image: "../common/images/n_kikyuu.png", tts: "気球", audio: null },
+      { id: "w_n_kyuukyuusha", category: "のりもの", name: "きゅうきゅうしゃ", emoji: "", image: "../common/images/n_kyuukyuusha.png", tts: "救急車", audio: null },
+      { id: "w_car", category: "のりもの", name: "くるま", emoji: "🚗", image: "../common/images/n_kuruma.png", audio: null },
+      { id: "w_n_sanrinsha", category: "のりもの", name: "さんりんしゃ", emoji: "", image: "../common/images/n_sanrinsha.png", tts: "三輪車", audio: null },
+      { id: "w_n_jitensha", category: "のりもの", name: "じてんしゃ", emoji: "", image: "../common/images/n_jitensha.png", tts: "自転車", audio: null },
+      { id: "w_fire", category: "のりもの", name: "しょうぼうしゃ", emoji: "🚒", image: "../common/images/n_shoubousha.png", tts: "消防車", audio: null },
+      { id: "w_bullet", category: "のりもの", name: "しんかんせん", emoji: "🚅", image: "../common/images/n_shinkansen.png", tts: "新幹線", audio: null },
+      { id: "w_n_sensuikan", category: "のりもの", name: "せんすいかん", emoji: "", image: "../common/images/n_sensuikan.png", tts: "潜水艦", audio: null },
+      { id: "w_train", category: "のりもの", name: "でんしゃ", emoji: "🚃", image: null, audio: null },
+      { id: "w_n_torakku", category: "のりもの", name: "とらっく", emoji: "", image: "../common/images/n_torakku.png", tts: "トラック", audio: null },
+      { id: "w_n_baiku", category: "のりもの", name: "ばいく", emoji: "", image: "../common/images/n_baiku.png", tts: "バイク", audio: null },
+      { id: "w_bus", category: "のりもの", name: "ばす", emoji: "🚌", image: "../common/images/n_basu.png", tts: "バス", audio: null },
+      { id: "w_plane", category: "のりもの", name: "ひこうき", emoji: "✈️", image: "../common/images/n_hikouki.png", tts: "飛行機", audio: null },
+      { id: "w_ship", category: "のりもの", name: "ふね", emoji: "🚢", image: null, audio: null },
+      { id: "w_n_yotto", category: "のりもの", name: "よっと", emoji: "⛵", image: null, audio: null },
+      { id: "w_n_roketto", category: "のりもの", name: "ろけっと", emoji: "🚀", image: null, audio: null },
 
-      // たべもの (8)
-      { id: 'w_onigiri', category: 'たべもの', name: 'おにぎり', emoji: '🍙', image: null, audio: null },
-      { id: 'w_ramen', category: 'たべもの', name: 'らーめん', emoji: '🍜', image: null, audio: null },
-      { id: 'w_bread', category: 'たべもの', name: 'ぱん', emoji: '🍞', image: null, audio: null },
-      { id: 'w_sushi', category: 'たべもの', name: 'すし', emoji: '🍣', image: null, audio: null },
-      { id: 'w_pudding', category: 'たべもの', name: 'ぷりん', emoji: '🍮', image: null, audio: null },
-      { id: 'w_icecream', category: 'たべもの', name: 'あいす', emoji: '🍦', image: null, audio: null },
-      { id: 'w_cake', category: 'たべもの', name: 'けーき', emoji: '🍰', image: null, audio: null },
-      { id: 'w_curry', category: 'たべもの', name: 'かれー', emoji: '🍛', image: null, audio: null },
+      // たべもの (29)
+      { id: "w_icecream", category: "たべもの", name: "あいす", emoji: "🍨", image: null, audio: null },
+      { id: "w_t_udon", category: "たべもの", name: "うどん", emoji: "", image: "../common/images/t_udon.png", audio: null },
+      { id: "w_t_ebifurai", category: "たべもの", name: "えびふらい", emoji: "", image: "../common/images/t_ebifurai.png", tts: "エビフライ", audio: null },
+      { id: "w_t_oden", category: "たべもの", name: "おでん", emoji: "", image: "../common/images/t_oden.png", audio: null },
+      { id: "w_onigiri", category: "たべもの", name: "おにぎり", emoji: "🍙", image: null, audio: null },
+      { id: "w_t_omuraisu", category: "たべもの", name: "おむらいす", emoji: "", image: "../common/images/t_omuraisu.png", tts: "オムライス", audio: null },
+      { id: "w_t_kakigoori", category: "たべもの", name: "かきごおり", emoji: "", image: "../common/images/t_kakigoori.png", tts: "かき氷", audio: null },
+      { id: "w_t_karaage", category: "たべもの", name: "からあげ", emoji: "", image: "../common/images/t_karaage.png", tts: "唐揚げ", audio: null },
+      { id: "w_t_gyuunyuu", category: "たべもの", name: "ぎゅうにゅう", emoji: "", image: "../common/images/t_gyuunyuu.png", tts: "牛乳", audio: null },
+      { id: "w_t_gyouza", category: "たべもの", name: "ぎょうざ", emoji: "", image: "../common/images/t_gyouza.png", tts: "餃子", audio: null },
+      { id: "w_t_gumi", category: "たべもの", name: "ぐみ", emoji: "", image: "../common/images/t_gumi.png", tts: "グミ", audio: null },
+      { id: "w_t_gohan", category: "たべもの", name: "ごはん", emoji: "", image: "../common/images/t_gohan.png", tts: "ご飯", audio: null },
+      { id: "w_t_sarada", category: "たべもの", name: "さらだ", emoji: "", image: "../common/images/t_sarada.png", tts: "サラダ", audio: null },
+      { id: "w_t_sandoicchi", category: "たべもの", name: "さんどいっち", emoji: "", image: "../common/images/t_sandoicchi.png", tts: "サンドイッチ", audio: null },
+      { id: "w_sushi", category: "たべもの", name: "すし", emoji: "🍣", image: "../common/images/t_sushi.png", tts: "寿司", audio: null },
+      { id: "w_t_supagetti", category: "たべもの", name: "すぱげってぃ", emoji: "", image: "../common/images/t_supagetti.png", tts: "スパゲッティ", audio: null },
+      { id: "w_t_senbei", category: "たべもの", name: "せんべい", emoji: "", image: "../common/images/t_senbei.png", audio: null },
+      { id: "w_t_taiyaki", category: "たべもの", name: "たいやき", emoji: "", image: "../common/images/t_taiyaki.png", tts: "たい焼き", audio: null },
+      { id: "w_t_takoyaki", category: "たべもの", name: "たこやき", emoji: "", image: "../common/images/t_takoyaki.png", tts: "たこ焼き", audio: null },
+      { id: "w_t_tamago", category: "たべもの", name: "たまご", emoji: "", image: "../common/images/t_tamago.png", tts: "卵", audio: null },
+      { id: "w_t_dango", category: "たべもの", name: "だんご", emoji: "", image: "../common/images/t_dango.png", audio: null },
+      { id: "w_t_dorayaki", category: "たべもの", name: "どらやき", emoji: "", image: "../common/images/t_dorayaki.png", audio: null },
+      { id: "w_bread", category: "たべもの", name: "ぱん", emoji: "🍞", image: null, audio: null },
+      { id: "w_t_piza", category: "たべもの", name: "ぴざ", emoji: "", image: "../common/images/t_piza.png", tts: "ピザ", audio: null },
+      { id: "w_pudding", category: "たべもの", name: "ぷりん", emoji: "🍮", image: "../common/images/t_purin.png", tts: "プリン", audio: null },
+      { id: "w_t_hottodoggu", category: "たべもの", name: "ほっとどっぐ", emoji: "", image: "../common/images/t_hottodoggu.png", tts: "ホットドッグ", audio: null },
+      { id: "w_t_misoshiru", category: "たべもの", name: "みそしる", emoji: "", image: "../common/images/t_misoshiru.png", tts: "味噌汁", audio: null },
+      { id: "w_t_medamayaki", category: "たべもの", name: "めだまやき", emoji: "", image: "../common/images/t_medamayaki.png", tts: "目玉焼き", audio: null },
+      { id: "w_t_wataame", category: "たべもの", name: "わたあめ", emoji: "", image: "../common/images/t_wataame.png", audio: null },
 
-      // みぢかなもの (8)
-      { id: 'w_hat', category: 'みぢかなもの', name: 'ぼうし', emoji: '🧢', image: null, audio: null },
-      { id: 'w_shoes', category: 'みぢかなもの', name: 'くつ', emoji: '👟', image: null, audio: null },
-      { id: 'w_umbrella', category: 'みぢかなもの', name: 'かさ', emoji: '☂️', image: null, audio: null },
-      { id: 'w_clock', category: 'みぢかなもの', name: 'とけい', emoji: '⏰', image: null, audio: null },
-      { id: 'w_flower', category: 'みぢかなもの', name: 'はな', emoji: '🌸', image: null, audio: null },
-      { id: 'w_star', category: 'みぢかなもの', name: 'ほし', emoji: '⭐', image: null, audio: null },
-      { id: 'w_sun', category: 'みぢかなもの', name: 'たいよう', emoji: '☀️', image: null, audio: null },
-      { id: 'w_moon', category: 'みぢかなもの', name: 'つき', emoji: '🌙', image: null, audio: null }
+      // みぢかなもの (96)
+      { id: "w_m_ashi", category: "みぢかなもの", name: "あし", emoji: "", image: "../common/images/m_ashi.png", tts: "足", audio: null },
+      { id: "w_m_atama", category: "みぢかなもの", name: "あたま", emoji: "", image: "../common/images/m_atama.png", tts: "頭", audio: null },
+      { id: "w_m_isu", category: "みぢかなもの", name: "いす", emoji: "", image: "../common/images/m_isu.png", tts: "椅子", audio: null },
+      { id: "w_m_iroenpitsu", category: "みぢかなもの", name: "いろえんぴつ", emoji: "", image: "../common/images/m_iroenpitsu.png", tts: "色鉛筆", audio: null },
+      { id: "w_m_eakon", category: "みぢかなもの", name: "えあこん", emoji: "", image: "../common/images/m_eakon.png", tts: "エアコン", audio: null },
+      { id: "w_m_enogu", category: "みぢかなもの", name: "えのぐ", emoji: "", image: "../common/images/m_enogu.png", tts: "絵の具", audio: null },
+      { id: "w_m_enpitsu", category: "みぢかなもの", name: "えんぴつ", emoji: "✏️", image: null, audio: null },
+      { id: "w_m_onaka", category: "みぢかなもの", name: "おなか", emoji: "", image: "../common/images/m_onaka.png", tts: "お腹", audio: null },
+      { id: "w_m_ohashi", category: "みぢかなもの", name: "おはし", emoji: "", image: "../common/images/m_ohashi.png", tts: "お箸", audio: null },
+      { id: "w_m_origami", category: "みぢかなもの", name: "おりがみ", emoji: "", image: "../common/images/m_origami.png", tts: "折り紙", audio: null },
+      { id: "w_umbrella", category: "みぢかなもの", name: "かさ", emoji: "☂️", image: null, audio: null },
+      { id: "w_m_kaban", category: "みぢかなもの", name: "かばん", emoji: "", image: "../common/images/m_kaban.png", tts: "カバン", audio: null },
+      { id: "w_m_kamera", category: "みぢかなもの", name: "かめら", emoji: "", image: "../common/images/m_kamera.png", tts: "カメラ", audio: null },
+      { id: "w_m_kuchi", category: "みぢかなもの", name: "くち", emoji: "", image: "../common/images/m_kuchi.png", tts: "口", audio: null },
+      { id: "w_shoes", category: "みぢかなもの", name: "くつ", emoji: "👞", image: null, audio: null },
+      { id: "w_m_kutsushita", category: "みぢかなもの", name: "くつした", emoji: "", image: "../common/images/m_kutsushita.png", tts: "靴下", audio: null },
+      { id: "w_kq_067", category: "みぢかなもの", name: "くも", emoji: "☁️", image: null, audio: null },
+      { id: "w_m_kureyon", category: "みぢかなもの", name: "くれよん", emoji: "", image: "../common/images/m_kureyon.png", tts: "クレヨン", audio: null },
+      { id: "w_m_keshigomu", category: "みぢかなもの", name: "けしごむ", emoji: "", image: "../common/images/m_keshigomu.png", tts: "消しゴム", audio: null },
+      { id: "w_m_koppu", category: "みぢかなもの", name: "こっぷ", emoji: "🥛", image: null, audio: null },
+      { id: "w_m_koma", category: "みぢかなもの", name: "こま", emoji: "", image: "../common/images/m_koma.png", tts: "コマ", audio: null },
+      { id: "w_m_gomibako", category: "みぢかなもの", name: "ごみばこ", emoji: "", image: "../common/images/m_gomibako.png", tts: "ゴミ箱", audio: null },
+      { id: "w_m_saifu", category: "みぢかなもの", name: "さいふ", emoji: "", image: "../common/images/m_saifu.png", tts: "財布", audio: null },
+      { id: "w_m_osara", category: "みぢかなもの", name: "さら", emoji: "", image: "../common/images/m_osara.png", audio: null },
+      { id: "w_m_sandaru", category: "みぢかなもの", name: "さんだる", emoji: "", image: "../common/images/m_sandaru.png", tts: "サンダル", audio: null },
+      { id: "w_m_shabondama", category: "みぢかなもの", name: "しゃぼんだま", emoji: "", image: "../common/images/m_shabondama.png", tts: "シャボン玉", audio: null },
+      { id: "w_m_suitou", category: "みぢかなもの", name: "すいとう", emoji: "", image: "../common/images/m_suitou.png", tts: "水筒", audio: null },
+      { id: "w_m_sunaba", category: "みぢかなもの", name: "すなば", emoji: "", image: "../common/images/m_sunaba.png", tts: "砂場", audio: null },
+      { id: "w_m_suberidai", category: "みぢかなもの", name: "すべりだい", emoji: "", image: "../common/images/m_suberidai.png", tts: "滑り台", audio: null },
+      { id: "w_m_zubon", category: "みぢかなもの", name: "ずぼん", emoji: "", image: "../common/images/m_zubon.png", tts: "ズボン", audio: null },
+      { id: "w_m_sekken", category: "みぢかなもの", name: "せっけん", emoji: "🧼", image: null, audio: null },
+      { id: "w_m_sentakuki", category: "みぢかなもの", name: "せんたくき", emoji: "", image: "../common/images/m_sentakuki.png", tts: "洗濯機", audio: null },
+      { id: "w_m_senpuuki", category: "みぢかなもの", name: "せんぷうき", emoji: "", image: "../common/images/m_senpuuki.png", tts: "扇風機", audio: null },
+      { id: "w_m_soujiki", category: "みぢかなもの", name: "そうじき", emoji: "", image: "../common/images/m_soujiki.png", tts: "掃除機", audio: null },
+      { id: "w_m_taoru", category: "みぢかなもの", name: "たおる", emoji: "", image: "../common/images/m_taoru.png", tts: "タオル", audio: null },
+      { id: "w_kq_127", category: "みぢかなもの", name: "ちきゅう", emoji: "🌍", image: null, audio: null },
+      { id: "w_m_ochawan", category: "みぢかなもの", name: "ちゃわん", emoji: "", image: "../common/images/m_ochawan.png", tts: "茶碗", audio: null },
+      { id: "w_moon", category: "みぢかなもの", name: "つき", emoji: "🌙", image: null, audio: null },
+      { id: "w_m_tsukue", category: "みぢかなもの", name: "つくえ", emoji: "", image: "../common/images/m_tsukue.png", tts: "机", audio: null },
+      { id: "w_m_tsumiki", category: "みぢかなもの", name: "つみき", emoji: "", image: "../common/images/m_tsumiki.png", tts: "積み木", audio: null },
+      { id: "w_m_tsumekiri", category: "みぢかなもの", name: "つめきり", emoji: "", image: "../common/images/m_tsumekiri.png", tts: "爪切り", audio: null },
+      { id: "w_m_te", category: "みぢかなもの", name: "て", emoji: "", image: "../common/images/m_te.png", tts: "手", audio: null },
+      { id: "w_m_tisshu", category: "みぢかなもの", name: "てぃっしゅ", emoji: "", image: "../common/images/m_tisshu.png", tts: "ティッシュ", audio: null },
+      { id: "w_kq_136", category: "みぢかなもの", name: "てがみ", emoji: "✉️", image: null, audio: null },
+      { id: "w_m_tetsubou", category: "みぢかなもの", name: "てつぼう", emoji: "", image: "../common/images/m_tetsubou.png", tts: "鉄棒", audio: null },
+      { id: "w_m_tebukuro", category: "みぢかなもの", name: "てぶくろ", emoji: "", image: "../common/images/m_tebukuro.png", tts: "手袋", audio: null },
+      { id: "w_m_terebi", category: "みぢかなもの", name: "てれび", emoji: "", image: "../common/images/m_terebi.png", tts: "テレビ", audio: null },
+      { id: "w_m_denshirenji", category: "みぢかなもの", name: "でんしれんじ", emoji: "", image: "../common/images/m_denshirenji.png", tts: "電子レンジ", audio: null },
+      { id: "w_m_denwa", category: "みぢかなもの", name: "でんわ", emoji: "", image: "../common/images/m_denwa.png", tts: "電話", audio: null },
+      { id: "w_s_toire", category: "みぢかなもの", name: "といれ", emoji: "", image: "../common/images/s_toire.png", tts: "トイレ", audio: null },
+      { id: "w_clock", category: "みぢかなもの", name: "とけい", emoji: "⌚", image: null, audio: null },
+      { id: "w_m_toranpu", category: "みぢかなもの", name: "とらんぷ", emoji: "", image: "../common/images/m_toranpu.png", tts: "トランプ", audio: null },
+      { id: "w_m_nagagutsu", category: "みぢかなもの", name: "ながぐつ", emoji: "", image: "../common/images/m_nagagutsu.png", tts: "長靴", audio: null },
+      { id: "w_m_nabe", category: "みぢかなもの", name: "なべ", emoji: "", image: "../common/images/m_nabe.png", audio: null },
+      { id: "w_m_nawatobi", category: "みぢかなもの", name: "なわとび", emoji: "", image: "../common/images/m_nawatobi.png", tts: "縄跳び", audio: null },
+      { id: "w_m_ningyou", category: "みぢかなもの", name: "にんぎょう", emoji: "", image: "../common/images/m_ningyou.png", audio: null },
+      { id: "w_m_nuigurumi", category: "みぢかなもの", name: "ぬいぐるみ", emoji: "", image: "../common/images/m_nuigurumi.png", audio: null },
+      { id: "w_kq_166", category: "みぢかなもの", name: "のこぎり", emoji: "🪚", image: null, audio: null },
+      { id: "w_m_nori", category: "みぢかなもの", name: "のり", emoji: "", image: "../common/images/m_nori.png", audio: null },
+      { id: "w_m_hasami", category: "みぢかなもの", name: "はさみ", emoji: "", image: "../common/images/m_hasami.png", tts: "ハサミ", audio: null },
+      { id: "w_m_pazuru", category: "みぢかなもの", name: "ぱずる", emoji: "", image: "../common/images/m_pazuru.png", tts: "パズル", audio: null },
+      { id: "w_m_pasokon", category: "みぢかなもの", name: "ぱそこん", emoji: "", image: "../common/images/m_pasokon.png", tts: "パソコン", audio: null },
+      { id: "w_flower", category: "みぢかなもの", name: "はな", emoji: "👃", image: null, audio: null },
+      { id: "w_m_haburashi", category: "みぢかなもの", name: "はぶらし", emoji: "", image: "../common/images/m_haburashi.png", tts: "歯ブラシ", audio: null },
+      { id: "w_m_hankachi", category: "みぢかなもの", name: "はんかち", emoji: "", image: "../common/images/m_hankachi.png", tts: "ハンカチ", audio: null },
+      { id: "w_m_bandoeido", category: "みぢかなもの", name: "ばんそうこう", emoji: "", image: "../common/images/m_bandoeido.png", tts: "絆創膏", audio: null },
+      { id: "w_kq_189", category: "みぢかなもの", name: "ひまわり", emoji: "🌻", image: null, audio: null },
+      { id: "w_m_fuusen", category: "みぢかなもの", name: "ふうせん", emoji: "", image: "../common/images/m_fuusen.png", tts: "風船", audio: null },
+      { id: "w_m_fudebako", category: "みぢかなもの", name: "ふでばこ", emoji: "", image: "../common/images/m_fudebako.png", tts: "筆箱", audio: null },
+      { id: "w_m_futon", category: "みぢかなもの", name: "ふとん", emoji: "", image: "../common/images/m_futon.png", tts: "布団", audio: null },
+      { id: "w_m_furaipan", category: "みぢかなもの", name: "ふらいぱん", emoji: "", image: "../common/images/m_furaipan.png", tts: "フライパン", audio: null },
+      { id: "w_m_buranko", category: "みぢかなもの", name: "ぶらんこ", emoji: "", image: "../common/images/m_buranko.png", tts: "ブランコ", audio: null },
+      { id: "w_m_burokku", category: "みぢかなもの", name: "ぶろっく", emoji: "", image: "../common/images/m_burokku.png", tts: "ブロック", audio: null },
+      { id: "w_m_beddo", category: "みぢかなもの", name: "べっど", emoji: "", image: "../common/images/m_beddo.png", tts: "ベッド", audio: null },
+      { id: "w_m_houki", category: "みぢかなもの", name: "ほうき", emoji: "", image: "../common/images/m_houki.png", audio: null },
+      { id: "w_hat", category: "みぢかなもの", name: "ぼうし", emoji: "🧢", image: "../common/images/m_boushi.png", tts: "帽子", audio: null },
+      { id: "w_m_houchou", category: "みぢかなもの", name: "ほうちょう", emoji: "", image: "../common/images/m_houchou.png", tts: "包丁", audio: null },
+      { id: "w_star", category: "みぢかなもの", name: "ほし", emoji: "⭐", image: null, audio: null },
+      { id: "w_m_hon", category: "みぢかなもの", name: "ほん", emoji: "📖", image: null, audio: null },
+      { id: "w_m_makura", category: "みぢかなもの", name: "まくら", emoji: "", image: "../common/images/m_makura.png", tts: "枕", audio: null },
+      { id: "w_m_masuku", category: "みぢかなもの", name: "ますく", emoji: "", image: "../common/images/m_masuku.png", tts: "マスク", audio: null },
+      { id: "w_kq_213", category: "みぢかなもの", name: "まど", emoji: "🪟", image: null, audio: null },
+      { id: "w_m_manaita", category: "みぢかなもの", name: "まないた", emoji: "", image: "../common/images/m_manaita.png", tts: "まな板", audio: null },
+      { id: "w_m_mimi", category: "みぢかなもの", name: "みみ", emoji: "👂", image: null, audio: null },
+      { id: "w_m_mushimegane", category: "みぢかなもの", name: "むしめがね", emoji: "🔍", image: null, audio: null },
+      { id: "w_m_me", category: "みぢかなもの", name: "め", emoji: "", image: "../common/images/m_me.png", tts: "目", audio: null },
+      { id: "w_m_megane", category: "みぢかなもの", name: "めがね", emoji: "👓", image: null, audio: null },
+      { id: "w_m_yakan", category: "みぢかなもの", name: "やかん", emoji: "", image: "../common/images/m_yakan.png", audio: null },
+      { id: "w_kq_227", category: "みぢかなもの", name: "やま", emoji: "⛰️", image: null, audio: null },
+      { id: "w_kq_228", category: "みぢかなもの", name: "ゆきだるま", emoji: "⛄", image: null, audio: null },
+      { id: "w_kq_232", category: "みぢかなもの", name: "らっぱ", emoji: "🎺", image: null, audio: null },
+      { id: "w_m_randoseru", category: "みぢかなもの", name: "らんどせる", emoji: "", image: "../common/images/m_randoseru.png", tts: "ランドセル", audio: null },
+      { id: "w_m_rimokon", category: "みぢかなもの", name: "りもこん", emoji: "", image: "../common/images/m_rimokon.png", tts: "リモコン", audio: null },
+      { id: "w_m_ryukku", category: "みぢかなもの", name: "りゅっく", emoji: "", image: "../common/images/m_ryukku.png", audio: null },
+      { id: "w_m_reizouko", category: "みぢかなもの", name: "れいぞうこ", emoji: "", image: "../common/images/m_reizouko.png", tts: "冷蔵庫", audio: null },
+      { id: "w_kq_240", category: "みぢかなもの", name: "ろうそく", emoji: "🕯️", image: null, audio: null },
+
+      // ひと (9)
+      { id: "w_h_akachan", category: "ひと", name: "あかちゃん", emoji: "", image: "../common/images/h_akachan.png", tts: "赤ちゃん", audio: null },
+      { id: "w_h_oishasan", category: "ひと", name: "おいしゃさん", emoji: "", image: "../common/images/h_oishasan.png", tts: "お医者さん", audio: null },
+      { id: "w_h_ojiisan", category: "ひと", name: "おじいさん", emoji: "", image: "../common/images/h_ojiisan.png", tts: "お爺さん", audio: null },
+      { id: "w_h_oni", category: "ひと", name: "おに", emoji: "👹", image: null, audio: null },
+      { id: "w_h_obaasan", category: "ひと", name: "おばあさん", emoji: "", image: "../common/images/h_obaasan.png", tts: "お婆さん", audio: null },
+      { id: "w_h_ohimesama", category: "ひと", name: "おひめさま", emoji: "", image: "../common/images/h_ohimesama.png", tts: "お姫様", audio: null },
+      { id: "w_h_keisatsukan", category: "ひと", name: "けいさつかん", emoji: "", image: "../common/images/h_keisatsukan.png", tts: "警察官", audio: null },
+      { id: "w_h_shouboushi", category: "ひと", name: "しょうぼうし", emoji: "", image: "../common/images/h_shouboushi.png", tts: "消防士", audio: null },
+      { id: "w_h_ninja", category: "ひと", name: "にんじゃ", emoji: "", image: "../common/images/h_ninja.png", tts: "忍者", audio: null }
     ];
 
     /* ========================================================
@@ -2280,7 +2479,8 @@
       'どうぶつ',
       'のりもの',
       'たべもの',
-      'みぢかなもの'
+      'みぢかなもの',
+      'ひと'
     ];
 
     /* 確実で偏りのないシャッフル（Fisher-Yates法） */
@@ -2497,22 +2697,41 @@
 
     async function loadMasterData() {
       const stored = await appState.db.getAllWords();
-      const existingIds = new Set(stored.map(w => w.id));
+      const existingById = new Map(stored.map(w => [w.id, w]));
+      const legacyRemovedIds = new Set(['w_police', 'w_cake', 'w_curry', 'w_pepper', 'w_sun', 'w_ramen']);
+
+      for (const id of legacyRemovedIds) {
+        if (existingById.has(id)) {
+          await appState.db.deleteWord(id);
+          existingById.delete(id);
+        }
+      }
+
       for (const pw of PRESET_WORDS) {
-        if (!existingIds.has(pw.id)) {
-          await appState.db.saveWord(pw);
+        const existing = existingById.get(pw.id);
+        if (!existing) {
+          await appState.db.saveWord({ ...pw });
+        } else {
+          const isCustomUploadedImg = typeof existing.image === 'string' && existing.image.startsWith('data:') && existing.image !== DAIKON_SVG;
+          const nextImage = isCustomUploadedImg ? existing.image : pw.image;
+          const nextTts = pw.tts || undefined;
+          const changed =
+            existing.category !== pw.category ||
+            existing.emoji !== pw.emoji ||
+            (existing.image || null) !== (nextImage || null) ||
+            (existing.tts || undefined) !== nextTts;
+          if (changed) {
+            existing.category = pw.category;
+            existing.emoji = pw.emoji;
+            existing.image = nextImage;
+            if (nextTts) existing.tts = nextTts;
+            else delete existing.tts;
+            await appState.db.saveWord(existing);
+          }
         }
       }
       const allWords = await appState.db.getAllWords();
       appState.words = sortWordsByCategory(allWords);
-
-      // だいこんの絵文字・画像を確実に修正
-      const daikonWord = appState.words.find(w => w.id === 'w_daikon' || w.name === 'だいこん');
-      if (daikonWord) {
-        daikonWord.emoji = '🥬';
-        daikonWord.image = DAIKON_SVG;
-        await appState.db.saveWord(daikonWord);
-      }
 
       // デフォルトですべて出題選択
       appState.words.forEach(w => appState.selectedWordIds.add(w.id));
@@ -2882,7 +3101,7 @@
         btnAudio.addEventListener('click', async () => {
           let played = false;
           if (word.audio) played = await playAudioBlob(word.audio);
-          if (!played) speakText(word.name, 1.0, true);
+          if (!played) speakText(word.tts || word.name, 1.0, true);
         });
 
         const btnEdit = document.createElement('button');
@@ -3122,6 +3341,7 @@
         }
 
         if (editingWordTarget) {
+          if (editingWordTarget.name !== name) delete editingWordTarget.tts;
           editingWordTarget.name = name;
           editingWordTarget.emoji = emoji || (imageData ? '' : editingWordTarget.emoji || '📝');
           if (imageData) editingWordTarget.image = imageData;
@@ -3344,7 +3564,7 @@
         warmUpSpeechEngine();
         let played = false;
         if (word.audio) played = await playAudioBlob(word.audio);
-        if (!played) speakText(word.name, 1.0, true);
+        if (!played) speakText(word.tts || word.name, 1.0, true);
       };
 
       const chars = word.name.split('');
@@ -3680,7 +3900,7 @@
       }
       // 録音データがない、または再生失敗・無音の場合は必ず合成音声で単語を読み上げる
       if (!playedAudio) {
-        await speakText(currentWord.name, 1.0, false);
+        await speakText(currentWord.tts || currentWord.name, 1.0, false);
       }
       appState.currentLetterSlots.forEach(s => s.container.classList.remove('highlight-speaking'));
 
@@ -3877,7 +4097,7 @@
           warmUpSpeechEngine();
           let played = false;
           if (item.word.audio) played = await playAudioBlob(item.word.audio);
-          if (!played) speakText(item.word.name, 1.0, true);
+          if (!played) speakText(item.word.tts || item.word.name, 1.0, true);
         });
 
         const name = document.createElement('div');
@@ -4108,7 +4328,7 @@
         warmUpSpeechEngine();
         let played = false;
         if (item.word.audio) played = await playAudioBlob(item.word.audio);
-        if (!played) speakText(item.word.name, 1.0, true);
+        if (!played) speakText(item.word.tts || item.word.name, 1.0, true);
       };
 
       document.getElementById('modal-title').textContent = item.word.name;
