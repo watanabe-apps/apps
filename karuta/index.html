@@ -297,6 +297,10 @@
             word-break: keep-all !important;
         }
 
+        .card-text-container.is-hidden {
+            display: none !important;
+        }
+
         .first-char, .remaining-char {
             font-weight: 600;
             color: #000;
@@ -332,6 +336,7 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            mix-blend-mode: multiply;
         }
 
         .card-image-container .emoji-img {
@@ -735,6 +740,45 @@
             flex-shrink: 0;
         }
 
+        .word-type-filter-box {
+            background: #fff;
+            border: 1px solid #d1d1d6;
+            border-radius: 8px;
+            padding: 8px 10px;
+            flex-shrink: 0;
+        }
+
+        .word-type-filter-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .word-type-filter-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            align-items: center;
+        }
+
+        .word-type-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #222;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .word-type-filter-note {
+            font-size: 0.72rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
         .batch-select-bar {
             display: flex;
             align-items: center;
@@ -815,7 +859,8 @@
         .item-thumb img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            mix-blend-mode: multiply;
         }
 
         .item-name-box {
@@ -1207,6 +1252,14 @@
                         <input type="checkbox" id="toggle-show-word" onchange="updateSetting('showTopWord', this.checked)">
                     </div>
                     <div class="setting-row">
+                        <span class="setting-label-text">問題の読み上げ</span>
+                        <input type="checkbox" id="toggle-read-aloud" onchange="updateSetting('readAloud', this.checked)">
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label-text">カードの文字を表示する</span>
+                        <input type="checkbox" id="toggle-show-card-text" onchange="updateSetting('showCardText', this.checked)">
+                    </div>
+                    <div class="setting-row">
                         <span class="setting-label-text">イラストを表示する</span>
                         <input type="checkbox" id="toggle-show-picture" onchange="updateSetting('showPicture', this.checked)">
                     </div>
@@ -1225,7 +1278,7 @@
                             <option value="auto">全画面フィット</option>
                         </select>
                     </div>
-                    <div class="setting-row">
+                    <div class="setting-row" id="row-text-display">
                         <span class="setting-label-text">文字の表示方法</span>
                         <select class="select-menu" id="select-text-display" onchange="updateSetting('textDisplay', this.value)">
                             <option value="sameSize">すべて同じ大きさ</option>
@@ -1233,7 +1286,7 @@
                             <option value="headOnly">頭文字のみ</option>
                         </select>
                     </div>
-                    <div class="setting-row">
+                    <div class="setting-row" id="row-text-pos">
                         <span class="setting-label-text">文字の配置</span>
                         <button class="btn-pos-selector" id="btn-text-pos" onclick="openPosModal('text')">左上 ▾</button>
                     </div>
@@ -1286,6 +1339,17 @@
 
         <!-- 2. 単語リストタブ -->
         <div class="words-content-pane" id="tab-words" style="display: none;">
+            <div class="word-type-filter-box">
+                <div class="word-type-filter-title">使用する文字の種類を指定</div>
+                <div class="word-type-filter-grid">
+                    <label class="word-type-chip"><input type="checkbox" id="f-seion" onchange="applyWordTypeFilters()"> 清音</label>
+                    <label class="word-type-chip"><input type="checkbox" id="f-dakuon" onchange="applyWordTypeFilters()"> 濁音・半濁音</label>
+                    <label class="word-type-chip"><input type="checkbox" id="f-yoon" onchange="applyWordTypeFilters()"> 拗音</label>
+                    <label class="word-type-chip"><input type="checkbox" id="f-sokuon" onchange="applyWordTypeFilters()"> 促音</label>
+                </div>
+                <div class="word-type-filter-note">※チェックを外すと、その文字を含む単語が停止中になり出題されません。</div>
+            </div>
+
             <div class="compact-filter-bar">
                 <input type="text" id="new-word-input" placeholder="新しい単語 (例: ぶどう)" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
                 <input type="file" id="new-word-file" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
@@ -1510,6 +1574,8 @@
             questionCount: 10,
             showBackButton: true,
             showTopWord: true,
+            readAloud: true,
+            showCardText: true,
             showPicture: true,
             writingMode: 'horizontal',
             cardAspectRatio: 'standard',
@@ -1519,7 +1585,8 @@
             ratioSameSize: 0.35,
             ratioHeadLargeFirst: 0.45,
             ratioHeadOnly: 0.5,
-            ratioOfPicture: 0.4
+            ratioOfPicture: 0.4,
+            allowedTypes: { seion: true, dakuon: true, yoon: true, sokuon: true }
         };
 
         const POS_LABELS = {
@@ -1665,7 +1732,11 @@
                     if (parsed.showTopWord === undefined && parsed.showWord !== undefined) {
                         parsed.showTopWord = parsed.showWord;
                     }
-                    setting = { ...setting, ...parsed };
+                    setting = {
+                        ...setting,
+                        ...parsed,
+                        allowedTypes: { ...setting.allowedTypes, ...(parsed.allowedTypes || {}) }
+                    };
                 } catch(e) {}
             }
             updateQuestionCountSliderRange();
@@ -1687,6 +1758,8 @@
             document.getElementById('preview-grid-info').innerText = `${setting.rows}×${setting.columns}`;
             document.getElementById('toggle-show-back-btn').checked = setting.showBackButton !== false;
             document.getElementById('toggle-show-word').checked = setting.showTopWord !== false;
+            document.getElementById('toggle-read-aloud').checked = setting.readAloud !== false;
+            document.getElementById('toggle-show-card-text').checked = setting.showCardText !== false;
             document.getElementById('toggle-show-picture').checked = setting.showPicture !== false;
             document.getElementById('select-writing-mode').value = setting.writingMode;
             document.getElementById('select-card-aspect').value = setting.cardAspectRatio || 'standard';
@@ -1720,10 +1793,16 @@
                 charSlider.value = setting.ratioHeadOnly || 0.5;
             }
 
+            const showCardText = setting.showCardText !== false;
+            document.getElementById('row-text-display').style.display = showCardText ? 'flex' : 'none';
+            document.getElementById('row-text-pos').style.display = showCardText ? 'flex' : 'none';
+            document.getElementById('row-slider-char-size').style.display = showCardText ? 'flex' : 'none';
+
             document.getElementById('slider-picture').value = setting.ratioOfPicture;
             document.getElementById('row-slider-picture').style.display = (setting.showPicture !== false) ? 'flex' : 'none';
             document.getElementById('row-pic-pos').style.display = (setting.showPicture !== false) ? 'flex' : 'none';
 
+            syncWordTypeCheckboxesFromCards();
             updateQuestionCountSliderRange();
         }
 
@@ -1780,25 +1859,75 @@
             }
         }
 
+        const KARUTA_VOCAB_VERSION = 2;
+
+        function mergeDefaultCardsInto(existingCards) {
+            const defaultByName = new Map(DEFAULT_CARDS.map(d => [d.name.normalize('NFC'), d]));
+            const existingNames = new Set();
+            const existingIds = new Set();
+
+            existingCards.forEach(c => {
+                if (c.name) c.name = c.name.normalize('NFC');
+                if (c.name) existingNames.add(c.name);
+                if (c.id) existingIds.add(c.id);
+
+                const def = c.name ? defaultByName.get(c.name) : null;
+                if (def) {
+                    if (def.tts && !c.tts) {
+                        c.tts = def.tts;
+                    }
+                    if (!c.imageData) {
+                        if (def.image) {
+                            c.image = def.image;
+                            c.emoji = def.emoji || null;
+                        } else if (def.emoji && !c.image) {
+                            c.emoji = def.emoji;
+                        }
+                    }
+                }
+            });
+
+            DEFAULT_CARDS.forEach(def => {
+                const name = def.name.normalize('NFC');
+                if (!existingNames.has(name)) {
+                    let newId = def.id;
+                    while (existingIds.has(newId)) {
+                        newId = `${def.id}_${Math.random().toString(36).substring(2, 6)}`;
+                    }
+                    existingIds.add(newId);
+                    existingNames.add(name);
+                    existingCards.push({ ...def, id: newId });
+                }
+            });
+        }
+
         function loadCardsData() {
             const saved = localStorage.getItem('karuta_cards');
+            const savedVersion = parseInt(localStorage.getItem('karuta_vocab_version') || '1', 10);
             if (saved) {
                 try {
                     cards = JSON.parse(saved);
-                    cards = cards.filter(c => c.name !== 'もぐら');
                     cards.forEach(c => {
                         if (c.name) c.name = c.name.normalize('NFC');
                     });
+                    if (savedVersion < KARUTA_VOCAB_VERSION) {
+                        mergeDefaultCardsInto(cards);
+                        localStorage.setItem('karuta_vocab_version', String(KARUTA_VOCAB_VERSION));
+                        localStorage.setItem('karuta_cards', JSON.stringify(cards));
+                    }
                 } catch(e) {
-                    cards = [...DEFAULT_CARDS];
+                    cards = DEFAULT_CARDS.map(c => ({ ...c }));
+                    localStorage.setItem('karuta_vocab_version', String(KARUTA_VOCAB_VERSION));
                 }
             } else {
-                cards = [...DEFAULT_CARDS];
+                cards = DEFAULT_CARDS.map(c => ({ ...c }));
+                localStorage.setItem('karuta_vocab_version', String(KARUTA_VOCAB_VERSION));
             }
         }
 
         function saveCardsData() {
             localStorage.setItem('karuta_cards', JSON.stringify(cards));
+            syncWordTypeCheckboxesFromCards();
             updateQuestionCountSliderRange();
             renderCardList();
             renderSamplePreviewScreen();
@@ -2163,6 +2292,9 @@
 
             const textContainer = document.createElement('div');
             textContainer.className = `card-text-container ${setting.writingMode === 'vertical' ? 'writing-vertical' : 'writing-horizontal'}`;
+            if (setting.showCardText === false) {
+                textContainer.classList.add('is-hidden');
+            }
 
             const firstSpan = document.createElement('span');
             firstSpan.className = 'first-char';
@@ -2184,9 +2316,11 @@
                 imgContainer.style.display = 'none';
             }
 
-            if (card.imageData) {
+            if (card.imageData || card.image) {
                 const img = document.createElement('img');
-                img.src = card.imageData;
+                img.src = card.imageData || card.image;
+                img.alt = card.name || '';
+                img.draggable = false;
                 imgContainer.appendChild(img);
             } else if (card.emoji) {
                 const emojiSpan = document.createElement('span');
@@ -2254,6 +2388,7 @@
             const ratioPic = setting.ratioOfPicture || 0.4;
             const maxLen = getMaxWordLength();
             const hasPic = setting.showPicture !== false;
+            const hasText = setting.showCardText !== false;
             const textPos = setting.textPosition || 'top-left';
             const picPos = setting.picturePosition || 'bottom-right';
 
@@ -2271,6 +2406,11 @@
                 }
             } else {
                 imgContainer.style.display = 'none';
+            }
+
+            textContainer.classList.toggle('is-hidden', !hasText);
+            if (!hasText) {
+                return;
             }
 
             textContainer.style.display = setting.writingMode === 'vertical' ? 'block' : 'flex';
@@ -2447,7 +2587,18 @@
 
             const targetWordLabel = document.getElementById('preview-word-target');
             if (targetWordLabel) {
-                targetWordLabel.innerText = (setting.showTopWord !== false) ? `${sampleCardsPool[0]?.name || 'おにぎり'} 🔊` : '🔊';
+                const showWord = setting.showTopWord !== false;
+                const readAloud = setting.readAloud !== false;
+                const sampleWord = sampleCardsPool[0]?.name || 'おにぎり';
+                if (showWord && readAloud) {
+                    targetWordLabel.innerText = `${sampleWord} 🔊`;
+                } else if (showWord) {
+                    targetWordLabel.innerText = sampleWord;
+                } else if (readAloud) {
+                    targetWordLabel.innerText = '🔊';
+                } else {
+                    targetWordLabel.innerText = '';
+                }
             }
 
             const previewBack = document.getElementById('preview-mini-back');
@@ -2460,6 +2611,7 @@
         function startGame() {
             initAudio();
             document.getElementById('word-display-text').innerText = '';
+            document.getElementById('btn-replay-inline').style.display = (setting.readAloud !== false) ? 'flex' : 'none';
 
             const activeCards = cards.filter(c => c.isActive);
             if (activeCards.length === 0) {
@@ -2590,7 +2742,8 @@
             }
 
             currentQuestionWrongPicks = [];
-            document.getElementById('btn-replay-inline').style.display = 'flex';
+            const shouldReadAloud = setting.readAloud !== false;
+            document.getElementById('btn-replay-inline').style.display = shouldReadAloud ? 'flex' : 'none';
             const randSlot = activeSlots[Math.floor(Math.random() * activeSlots.length)];
             targetCard = randSlot.card;
 
@@ -2600,12 +2753,14 @@
                 document.getElementById('word-display-text').innerText = '';
             }
 
-            speakOrPlayCardAudio(targetCard);
+            if (shouldReadAloud) {
+                speakOrPlayCardAudio(targetCard);
+            }
             ableToTap = true;
         }
 
         function replaySpeech() {
-            if (targetCard && ableToTap) {
+            if (setting.readAloud !== false && targetCard && ableToTap) {
                 speakOrPlayCardAudio(targetCard);
             }
         }
@@ -2696,7 +2851,9 @@
 
                 setTimeout(() => {
                     overlay.remove();
-                    speakOrPlayCardAudio(targetCard);
+                    if (setting.readAloud !== false) {
+                        speakOrPlayCardAudio(targetCard);
+                    }
                     ableToTap = true;
                 }, 800);
             }
@@ -2787,11 +2944,12 @@
         }
 
         function speakOrPlayCardAudio(card) {
+            const speechText = card ? (card.tts || card.name) : '';
             if (card && card.audioData) {
                 const audio = new Audio(card.audioData);
-                audio.play().catch(() => speakWord(card.name));
-            } else if (card) {
-                speakWord(card.name);
+                audio.play().catch(() => speakWord(speechText));
+            } else if (speechText) {
+                speakWord(speechText);
             }
         }
 
@@ -2869,6 +3027,65 @@
         }
 
         // --- 4. 単語リスト管理 ---
+        function getWordTypes(word) {
+            const s = (word || '').normalize('NFC');
+            const types = [];
+            if (/[がぎぐげござじずぜぞだぢづでどばびぶべぼガギグゲゴザジズゼゾダヂヅデドバビブベボ]/.test(s)) types.push('濁音');
+            if (/[ぱぴぷぺぽパピプペポ]/.test(s)) types.push('半濁音');
+            if (/[ゃゅょぁぃぅぇぉャュョァィゥェォ]/.test(s)) types.push('拗音');
+            if (/[っッ]/.test(s)) types.push('促音');
+            if (types.length === 0) types.push('清音のみ');
+            return types;
+        }
+
+        function isCardAllowedByTypes(card) {
+            const types = getWordTypes(card.name);
+            const allowed = setting.allowedTypes || { seion: true, dakuon: true, yoon: true, sokuon: true };
+            return types.every(type => {
+                if (type === '清音のみ') return !!allowed.seion;
+                if (type === '濁音' || type === '半濁音') return !!allowed.dakuon;
+                if (type === '拗音') return !!allowed.yoon;
+                if (type === '促音') return !!allowed.sokuon;
+                return true;
+            });
+        }
+
+        function syncWordTypeCheckboxesFromCards() {
+            const activeTypes = { seion: false, dakuon: false, yoon: false, sokuon: false };
+            cards.forEach(card => {
+                if (!card.isActive) return;
+                getWordTypes(card.name).forEach(type => {
+                    if (type === '清音のみ') activeTypes.seion = true;
+                    if (type === '濁音' || type === '半濁音') activeTypes.dakuon = true;
+                    if (type === '拗音') activeTypes.yoon = true;
+                    if (type === '促音') activeTypes.sokuon = true;
+                });
+            });
+            setting.allowedTypes = activeTypes;
+            const fSeion = document.getElementById('f-seion');
+            const fDakuon = document.getElementById('f-dakuon');
+            const fYoon = document.getElementById('f-yoon');
+            const fSokuon = document.getElementById('f-sokuon');
+            if (fSeion) fSeion.checked = activeTypes.seion;
+            if (fDakuon) fDakuon.checked = activeTypes.dakuon;
+            if (fYoon) fYoon.checked = activeTypes.yoon;
+            if (fSokuon) fSokuon.checked = activeTypes.sokuon;
+        }
+
+        function applyWordTypeFilters() {
+            setting.allowedTypes = {
+                seion: document.getElementById('f-seion').checked,
+                dakuon: document.getElementById('f-dakuon').checked,
+                yoon: document.getElementById('f-yoon').checked,
+                sokuon: document.getElementById('f-sokuon').checked
+            };
+            cards.forEach(card => {
+                card.isActive = isCardAllowedByTypes(card);
+            });
+            saveCardsData();
+            localStorage.setItem('karuta_setting', JSON.stringify(setting));
+        }
+
         function getFilteredCards() {
             return cards.filter(card => {
                 const name = (card.name || '').normalize('NFC');
@@ -2914,8 +3131,12 @@
 
                 const thumb = document.createElement('div');
                 thumb.className = 'item-thumb';
-                if (card.imageData) {
-                    thumb.innerHTML = `<img src="${card.imageData}">`;
+                if (card.imageData || card.image) {
+                    const img = document.createElement('img');
+                    img.src = card.imageData || card.image;
+                    img.alt = card.name || '';
+                    img.loading = 'lazy';
+                    thumb.appendChild(img);
                 } else {
                     thumb.innerText = card.emoji || '🎴';
                 }
@@ -3013,6 +3234,9 @@
             }
             const card = cards.find(c => c.id === editingCardId);
             if (card) {
+                if (card.name !== newName) {
+                    card.tts = null;
+                }
                 card.name = newName;
                 saveCardsData();
                 showToast("単語名を更新しました");
@@ -3080,17 +3304,14 @@
                 const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
                 const nameWithoutExt = rawName.normalize('NFC');
 
-                if (nameWithoutExt === 'もぐら') {
-                    loadedCount++;
-                    return;
-                }
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const newCard = {
                         id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
                         name: nameWithoutExt,
                         emoji: null,
+                        image: null,
+                        tts: null,
                         imageData: e.target.result,
                         audioData: null,
                         isActive: true
@@ -3121,6 +3342,8 @@
                 id: Date.now().toString(),
                 name: name,
                 emoji: tempImageBase64 ? null : '🎴',
+                image: null,
+                tts: null,
                 imageData: tempImageBase64,
                 audioData: null,
                 isActive: true
@@ -3169,10 +3392,14 @@
                         if (imported.setting.showTopWord === undefined && imported.setting.showWord !== undefined) {
                             imported.setting.showTopWord = imported.setting.showWord;
                         }
-                        setting = { ...setting, ...imported.setting };
+                        setting = {
+                            ...setting,
+                            ...imported.setting,
+                            allowedTypes: { ...setting.allowedTypes, ...(imported.setting.allowedTypes || {}) }
+                        };
                     }
                     if (imported.cards && Array.isArray(imported.cards)) {
-                        cards = imported.cards.filter(c => c.name !== 'もぐら');
+                        cards = imported.cards;
                         cards.forEach(c => {
                             if (c.name) c.name = c.name.normalize('NFC');
                         });
