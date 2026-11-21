@@ -602,6 +602,103 @@
       transform: scale(0.97);
     }
 
+    /* 文字の種類（清音・濁音・促音等）絞り込みボックス */
+    .word-type-filter-box {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .word-type-filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .word-type-filter-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .word-type-filter-count {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: #eff6ff;
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    .word-type-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+      gap: 8px;
+    }
+
+    .word-type-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .word-type-chip input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .word-type-filter-note {
+      font-size: 0.78rem;
+      color: var(--sub-text);
+    }
+
+    .word-type-select {
+      padding: 5px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #ffffff;
+      font-family: var(--font-family);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .word-type-badges {
+      display: inline-flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-left: 6px;
+    }
+
+    .word-type-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
     /* 単語リスト行 */
     .word-list-container {
       display: flex;
@@ -617,7 +714,12 @@
       background: #ffffff;
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .word-manage-row.disabled {
+      opacity: 0.48;
+      background-color: #f8fafc;
     }
 
     .word-manage-row:hover {
@@ -1748,15 +1850,41 @@
         </div>
       </div>
 
-      <!-- タブ2: 単語管理（カテゴリータブ＋単語リスト＋編集・追加） -->
+      <!-- タブ2: 単語管理（文字の種類絞り込み＋カテゴリータブ＋単語リスト＋編集・追加） -->
       <div id="tab-words" class="tab-content">
+        <!-- 文字の種類による絞り込み -->
+        <div class="word-type-filter-box">
+          <div class="word-type-filter-header">
+            <div class="word-type-filter-title">使用する文字の種類を指定</div>
+            <div class="word-type-filter-count" id="mgmt-type-total-badge">対象: 0 / 0語</div>
+          </div>
+          <div class="word-type-filter-grid">
+            <label class="word-type-chip"><input type="checkbox" id="f-seion" checked> 清音</label>
+            <label class="word-type-chip"><input type="checkbox" id="f-dakuon" checked> 濁音・半濁音</label>
+            <label class="word-type-chip"><input type="checkbox" id="f-yoon" checked> 拗音</label>
+            <label class="word-type-chip"><input type="checkbox" id="f-sokuon" checked> 促音</label>
+          </div>
+          <div class="word-type-filter-note">※チェックを外すと、その文字を含む単語が対象外になり出題されません。</div>
+        </div>
+
         <!-- カテゴリータブバー -->
         <div class="word-mgmt-cat-nav" id="mgmt-category-tabs">
           <!-- 動的生成 -->
         </div>
 
         <div class="word-mgmt-action-bar" style="flex-wrap: wrap; gap: 8px;">
-          <div style="font-weight: 600; font-size: 1.05rem;" id="mgmt-current-cat-title">くだもの</div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div style="font-weight: 600; font-size: 1.05rem;" id="mgmt-current-cat-title">くだもの</div>
+            <select id="mgmt-type-filter" class="word-type-select" title="表示を文字の種類で絞り込み">
+              <option value="all">表示: すべて</option>
+              <option value="seion">表示: 清音のみ</option>
+              <option value="dakuon_handakuon">表示: 濁音・半濁音</option>
+              <option value="dakuon">表示: 濁音</option>
+              <option value="handakuon">表示: 半濁音</option>
+              <option value="yoon">表示: 拗音</option>
+              <option value="sokuon">表示: 促音</option>
+            </select>
+          </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
             <button class="btn-secondary" id="btn-mgmt-only-this-cat" style="padding: 5px 12px; font-size: 0.85rem; font-weight: 600; background: #eff6ff; color: var(--primary); border-color: var(--primary);">このカテゴリーのみ選択</button>
             <button class="btn-secondary" id="btn-mgmt-select-all" style="padding: 5px 10px; font-size: 0.85rem;">このカテゴリ全選択</button>
@@ -2430,6 +2558,8 @@
       currentTool: 'pen', // 'pen' | 'eraser'
       words: [],
       selectedWordIds: new Set(),
+      allowedTypes: { seion: true, dakuon: true, yoon: true, sokuon: true },
+      mgmtTypeFilter: 'all',
       playQueue: [],
       currentWordIndex: 0,
       activeSlotIndex: 0,
@@ -2448,7 +2578,8 @@
         showCrossGuide: appState.showCrossGuide,
         showBackButton: appState.showBackButton,
         randomOrder: appState.randomOrder,
-        persistGallery: appState.persistGallery
+        persistGallery: appState.persistGallery,
+        allowedTypes: appState.allowedTypes
       };
       try {
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
@@ -2467,9 +2598,48 @@
         if (typeof data.showBackButton === 'boolean') appState.showBackButton = data.showBackButton;
         if (typeof data.randomOrder === 'boolean') appState.randomOrder = data.randomOrder;
         if (typeof data.persistGallery === 'boolean') appState.persistGallery = data.persistGallery;
+        if (data.allowedTypes && typeof data.allowedTypes === 'object') {
+          appState.allowedTypes = { ...appState.allowedTypes, ...data.allowedTypes };
+        }
       } catch (e) {
         console.warn('Failed to load settings', e);
       }
+    }
+
+    /* 単語の文字種判定（清音・濁音・半濁音・拗音・促音） */
+    function getWordTypes(wordName) {
+      const s = (wordName || '').normalize('NFC');
+      const types = [];
+      if (/[がぎぐげござじずぜぞだぢづでどばびぶべぼゔガギグゲゴザジズゼゾダヂヅデドバビブベボヴ]/.test(s)) types.push('濁音');
+      if (/[ぱぴぷぺぽパピプペポ]/.test(s)) types.push('半濁音');
+      if (/[ゃゅょぁぃぅぇぉャュョァィゥェォ]/.test(s)) types.push('拗音');
+      if (/[っッ]/.test(s)) types.push('促音');
+      if (types.length === 0) types.push('清音のみ');
+      return types;
+    }
+
+    function isWordAllowedByTypes(word) {
+      const types = getWordTypes(word && word.name);
+      const allowed = appState.allowedTypes || { seion: true, dakuon: true, yoon: true, sokuon: true };
+      return types.every(type => {
+        if (type === '清音のみ') return !!allowed.seion;
+        if (type === '濁音' || type === '半濁音') return !!allowed.dakuon;
+        if (type === '拗音') return !!allowed.yoon;
+        if (type === '促音') return !!allowed.sokuon;
+        return true;
+      });
+    }
+
+    function matchesListTypeFilter(word, filterValue = appState.mgmtTypeFilter) {
+      if (!filterValue || filterValue === 'all') return true;
+      const types = getWordTypes(word && word.name);
+      if (filterValue === 'seion') return types.includes('清音のみ');
+      if (filterValue === 'dakuon_handakuon') return types.includes('濁音') || types.includes('半濁音');
+      if (filterValue === 'dakuon') return types.includes('濁音');
+      if (filterValue === 'handakuon') return types.includes('半濁音');
+      if (filterValue === 'yoon') return types.includes('拗音');
+      if (filterValue === 'sokuon') return types.includes('促音');
+      return true;
     }
 
     /* カテゴリーの標準表示順序 */
@@ -2733,8 +2903,13 @@
       const allWords = await appState.db.getAllWords();
       appState.words = sortWordsByCategory(allWords);
 
-      // デフォルトですべて出題選択
-      appState.words.forEach(w => appState.selectedWordIds.add(w.id));
+      // 文字種設定に基づいて初期選択単語を決定
+      appState.selectedWordIds.clear();
+      appState.words.forEach(w => {
+        if (isWordAllowedByTypes(w)) {
+          appState.selectedWordIds.add(w.id);
+        }
+      });
 
       // 図鑑データの復元
       const savedGallery = await appState.db.getAllGallery();
@@ -2867,6 +3042,7 @@
           });
           document.getElementById(target).classList.add('active');
           if (target === 'tab-words') {
+            syncTypeFilterCheckboxesUI();
             renderManagementCategoryTabs();
             renderManagementWordsList();
           }
@@ -2963,44 +3139,135 @@
       });
     }
 
+    /* 文字種の絞り込みUI同期・適用 */
+    function syncTypeFilterCheckboxesUI() {
+      const fSeion = document.getElementById('f-seion');
+      const fDakuon = document.getElementById('f-dakuon');
+      const fYoon = document.getElementById('f-yoon');
+      const fSokuon = document.getElementById('f-sokuon');
+      if (fSeion) fSeion.checked = !!appState.allowedTypes.seion;
+      if (fDakuon) fDakuon.checked = !!appState.allowedTypes.dakuon;
+      if (fYoon) fYoon.checked = !!appState.allowedTypes.yoon;
+      if (fSokuon) fSokuon.checked = !!appState.allowedTypes.sokuon;
+      const totalBadge = document.getElementById('mgmt-type-total-badge');
+      if (totalBadge) {
+        totalBadge.textContent = `対象: ${appState.selectedWordIds.size} / ${appState.words.length}語`;
+      }
+    }
+
+    function syncFilterCheckboxesFromWords() {
+      const activeTypes = { seion: false, dakuon: false, yoon: false, sokuon: false };
+      appState.words.forEach(w => {
+        if (!appState.selectedWordIds.has(w.id)) return;
+        getWordTypes(w.name).forEach(type => {
+          if (type === '清音のみ') activeTypes.seion = true;
+          if (type === '濁音' || type === '半濁音') activeTypes.dakuon = true;
+          if (type === '拗音') activeTypes.yoon = true;
+          if (type === '促音') activeTypes.sokuon = true;
+        });
+      });
+      appState.allowedTypes = activeTypes;
+      saveSettingsToStorage();
+      syncTypeFilterCheckboxesUI();
+    }
+
+    function applyWordTypeFilters() {
+      appState.allowedTypes = {
+        seion: !!document.getElementById('f-seion').checked,
+        dakuon: !!document.getElementById('f-dakuon').checked,
+        yoon: !!document.getElementById('f-yoon').checked,
+        sokuon: !!document.getElementById('f-sokuon').checked
+      };
+      appState.selectedWordIds.clear();
+      appState.words.forEach(w => {
+        if (isWordAllowedByTypes(w)) {
+          appState.selectedWordIds.add(w.id);
+        }
+      });
+      saveSettingsToStorage();
+      syncTypeFilterCheckboxesUI();
+      renderManagementCategoryTabs();
+      renderManagementWordsList();
+    }
+
+    function getMgmtFilteredCategoryWords() {
+      return appState.words.filter(
+        w => w.category === appState.activeMgmtCategory && matchesListTypeFilter(w)
+      );
+    }
+
     /* 単語管理の実装 */
     function initWordManagementUI() {
+      syncTypeFilterCheckboxesUI();
       renderManagementCategoryTabs();
       renderManagementWordsList();
 
-      // このカテゴリーのみ選択（他の全選択を解除し、現在のカテゴリーのみ全選択）
-      const btnOnlyThis = document.getElementById('btn-mgmt-only-this-cat');
-      if (btnOnlyThis) {
-        btnOnlyThis.addEventListener('click', () => {
-          appState.selectedWordIds.clear();
-          const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
-          currentCatWords.forEach(w => appState.selectedWordIds.add(w.id));
+      ['f-seion', 'f-dakuon', 'f-yoon', 'f-sokuon'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', applyWordTypeFilters);
+      });
+
+      const typeFilterEl = document.getElementById('mgmt-type-filter');
+      if (typeFilterEl) {
+        typeFilterEl.value = appState.mgmtTypeFilter;
+        typeFilterEl.addEventListener('change', (e) => {
+          appState.mgmtTypeFilter = e.target.value;
           renderManagementCategoryTabs();
           renderManagementWordsList();
         });
       }
 
-      // このカテゴリ全選択（現在カテゴリーの全単語を追加）
+      // このカテゴリーのみ選択（文字種絞り込み・表示絞り込みと連動）
+      const btnOnlyThis = document.getElementById('btn-mgmt-only-this-cat');
+      if (btnOnlyThis) {
+        btnOnlyThis.addEventListener('click', () => {
+          appState.selectedWordIds.clear();
+          const targets = getMgmtFilteredCategoryWords();
+          targets.forEach(w => {
+            if (appState.mgmtTypeFilter !== 'all' || isWordAllowedByTypes(w)) {
+              appState.selectedWordIds.add(w.id);
+            }
+          });
+          if (appState.mgmtTypeFilter !== 'all') syncFilterCheckboxesFromWords();
+          else syncTypeFilterCheckboxesUI();
+          renderManagementCategoryTabs();
+          renderManagementWordsList();
+        });
+      }
+
+      // このカテゴリ全選択（表示絞り込み中の単語を対象に追加）
       document.getElementById('btn-mgmt-select-all').addEventListener('click', () => {
-        const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
-        currentCatWords.forEach(w => appState.selectedWordIds.add(w.id));
+        const targets = getMgmtFilteredCategoryWords();
+        targets.forEach(w => {
+          if (appState.mgmtTypeFilter !== 'all' || isWordAllowedByTypes(w)) {
+            appState.selectedWordIds.add(w.id);
+          }
+        });
+        if (appState.mgmtTypeFilter !== 'all') syncFilterCheckboxesFromWords();
+        else syncTypeFilterCheckboxesUI();
         renderManagementCategoryTabs();
         renderManagementWordsList();
       });
 
-      // このカテゴリ全解除（現在カテゴリーの全単語を解除）
+      // このカテゴリ全解除（表示絞り込み中の単語を解除）
       document.getElementById('btn-mgmt-deselect-all').addEventListener('click', () => {
-        const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
-        currentCatWords.forEach(w => appState.selectedWordIds.delete(w.id));
+        const targets = getMgmtFilteredCategoryWords();
+        targets.forEach(w => appState.selectedWordIds.delete(w.id));
+        syncTypeFilterCheckboxesUI();
         renderManagementCategoryTabs();
         renderManagementWordsList();
       });
 
-      // 全単語を選択（登録されているすべての単語を選択）
+      // 全単語を選択（文字種フィルタも全ONにリセット）
       const btnAllWords = document.getElementById('btn-mgmt-all-words-select');
       if (btnAllWords) {
         btnAllWords.addEventListener('click', () => {
+          appState.allowedTypes = { seion: true, dakuon: true, yoon: true, sokuon: true };
+          appState.mgmtTypeFilter = 'all';
+          if (typeFilterEl) typeFilterEl.value = 'all';
           appState.words.forEach(w => appState.selectedWordIds.add(w.id));
+          saveSettingsToStorage();
+          syncTypeFilterCheckboxesUI();
           renderManagementCategoryTabs();
           renderManagementWordsList();
         });
@@ -3046,19 +3313,34 @@
 
       const currentCatWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
       const currentSelectedCount = currentCatWords.filter(w => appState.selectedWordIds.has(w.id)).length;
-      document.getElementById('mgmt-current-cat-title').textContent = `${appState.activeMgmtCategory} (${currentSelectedCount}/${currentCatWords.length} 選択中)`;
+      const filteredWords = getMgmtFilteredCategoryWords();
+      const titleSuffix = appState.mgmtTypeFilter !== 'all' ? `・絞込${filteredWords.length}語` : '';
+      document.getElementById('mgmt-current-cat-title').textContent = `${appState.activeMgmtCategory} (${currentSelectedCount}/${currentCatWords.length} 選択中${titleSuffix})`;
       document.getElementById('label-add-word-btn').textContent = `【${appState.activeMgmtCategory}】に単語を追加`;
+      syncTypeFilterCheckboxesUI();
     }
 
     function renderManagementWordsList() {
       const container = document.getElementById('mgmt-words-list');
       container.innerHTML = '';
 
-      const currentWords = appState.words.filter(w => w.category === appState.activeMgmtCategory);
+      const currentWords = getMgmtFilteredCategoryWords();
+
+      if (currentWords.length === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.textAlign = 'center';
+        emptyMsg.style.padding = '28px 12px';
+        emptyMsg.style.color = '#64748b';
+        emptyMsg.style.fontSize = '0.95rem';
+        emptyMsg.textContent = 'この文字の種類に該当する単語はありません';
+        container.appendChild(emptyMsg);
+        return;
+      }
 
       currentWords.forEach(word => {
+        const isChecked = appState.selectedWordIds.has(word.id);
         const row = document.createElement('div');
-        row.className = 'word-manage-row';
+        row.className = 'word-manage-row' + (isChecked ? '' : ' disabled');
 
         const left = document.createElement('div');
         left.className = 'word-info-left';
@@ -3066,10 +3348,12 @@
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'word-check-input';
-        chk.checked = appState.selectedWordIds.has(word.id);
+        chk.checked = isChecked;
         chk.addEventListener('change', (e) => {
           if (e.target.checked) appState.selectedWordIds.add(word.id);
           else appState.selectedWordIds.delete(word.id);
+          row.classList.toggle('disabled', !e.target.checked);
+          syncFilterCheckboxesFromWords();
           renderManagementCategoryTabs();
         });
 
@@ -3087,9 +3371,19 @@
         name.className = 'word-name-text';
         name.textContent = word.name;
 
+        const badges = document.createElement('span');
+        badges.className = 'word-type-badges';
+        getWordTypes(word.name).forEach(t => {
+          const b = document.createElement('span');
+          b.className = 'word-type-badge';
+          b.textContent = t === '清音のみ' ? '清音' : t;
+          badges.appendChild(b);
+        });
+
         left.appendChild(chk);
         left.appendChild(thumb);
         left.appendChild(name);
+        left.appendChild(badges);
 
         const right = document.createElement('div');
         right.className = 'word-btns-right';
@@ -3121,6 +3415,8 @@
             await appState.db.deleteWord(word.id);
             appState.words = appState.words.filter(w => w.id !== word.id);
             appState.selectedWordIds.delete(word.id);
+            syncFilterCheckboxesFromWords();
+            renderManagementCategoryTabs();
             renderManagementWordsList();
           }
         });
@@ -3366,6 +3662,7 @@
 
         soundFX.playSuccess();
         modal.classList.remove('open');
+        syncFilterCheckboxesFromWords();
         renderManagementCategoryTabs();
         renderManagementWordsList();
       });
@@ -3995,7 +4292,10 @@
       });
 
       document.getElementById('btn-zukan-play-category').addEventListener('click', () => {
-        const catWords = appState.words.filter(w => w.category === appState.activeZukanCategory);
+        const selectedCatWords = appState.words.filter(w => w.category === appState.activeZukanCategory && appState.selectedWordIds.has(w.id));
+        const catWords = selectedCatWords.length > 0
+          ? selectedCatWords
+          : appState.words.filter(w => w.category === appState.activeZukanCategory);
         if (catWords.length > 0) {
           startPlaySession(catWords, 0);
         }
