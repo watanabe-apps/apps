@@ -169,6 +169,13 @@ window.switchParallelView = function(tabType) {
   renderParallelView();
 };
 
+function getStageBadgeInfo(stage) {
+  if (stage === "共通") {
+    return { cls: "tag-stage-common", label: "全段階共通" };
+  }
+  return { cls: `tag-stage-${stage}`, label: `${stage}段階` };
+}
+
 function getAspectTagInfo(aspect) {
   if (aspect === "知識及び技能") {
     return { cls: "tag-aspect-k", label: "知識・技能" };
@@ -248,7 +255,7 @@ window.renderParallelView = function() {
 
     const itemsBySub = {};
     ALL_SUBJECTS.forEach(sub => {
-      itemsBySub[sub] = FULL_CURRICULUM.filter(i => i.sub === sub && i.stage === targetStage);
+      itemsBySub[sub] = FULL_CURRICULUM.filter(i => i.sub === sub && (i.stage === targetStage || i.stage === "共通"));
     });
 
     const maxLen = Math.max(...ALL_SUBJECTS.map(sub => itemsBySub[sub].length));
@@ -306,7 +313,7 @@ function getFilteredItems() {
   const evalFilter = document.getElementById("evalFilter") ? document.getElementById("evalFilter").value : "all";
   return FULL_CURRICULUM.filter(item => {
     if (filterSub !== "all" && item.sub !== filterSub) return false;
-    if (filterStage !== "all" && item.stage != filterStage) return false;
+    if (filterStage !== "all" && item.stage != filterStage && item.stage !== "共通") return false;
     
     const val = cur.evalState[item.id];
     const memo = cur.memoState[item.id];
@@ -357,6 +364,7 @@ window.renderItemList = function() {
     const memo = cur.memoState[item.id] || "";
     const isFocused = (index === focusedIndex) && (currentMode === "input");
     const aspInfo = getAspectTagInfo(item.aspect);
+    const stgInfo = getStageBadgeInfo(item.stage);
 
     const tr = document.createElement("tr");
     tr.className = `eval-row ${val !== undefined ? 'lv-' + val : 'lv-none'} ${isFocused ? 'focused' : ''}`;
@@ -384,7 +392,7 @@ window.renderItemList = function() {
         <div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start;">
           <div style="display:flex; gap:3px;">
             <span class="tag tag-sub-${item.sub}">${item.sub}</span>
-            <span class="tag tag-stage tag-stage-${item.stage}">${item.stage}段階</span>
+            <span class="tag tag-stage ${stgInfo.cls}">${stgInfo.label}</span>
           </div>
           <span class="tag ${aspInfo.cls}">${aspInfo.label}</span>
           <span style="font-size:0.72rem; color:var(--text-muted);">${item.domLabel}</span>
@@ -494,7 +502,8 @@ function updateVisuals() {
 function updateSummaryCounts() {
   const cur = getCurrentStudent();
   const counts = { 3: 0, 2: 0, 1: 0, 0: 0 };
-  Object.values(cur.evalState).forEach(v => {
+  FULL_CURRICULUM.forEach(item => {
+    const v = cur.evalState[item.id];
     if (counts[v] !== undefined) counts[v]++;
   });
   const c3 = document.getElementById("cnt-3");
