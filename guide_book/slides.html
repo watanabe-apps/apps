@@ -110,7 +110,7 @@
     }
 
     button, .top-ctrl-bar, .draw-sub-bar, .theme-menu, #nav-bar, #overview-modal,
-    #deck.mode-pointer, #deck.mode-draw {
+    #deck.mode-draw {
       user-select: none;
       -webkit-user-select: none;
     }
@@ -136,6 +136,7 @@
       height: 100dvh;
       overflow: hidden;
       background: var(--bg-dark);
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='28%25' stop-color='%23ff2a4d'/%3E%3Cstop offset='58%25' stop-color='%23ff2a4d' stop-opacity='0.55'/%3E%3Cstop offset='100%25' stop-color='%23ff2a4d' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='url(%23g)'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23ff2a4d' stroke='%23ffffff' stroke-width='1.5'/%3E%3C/svg%3E") 16 16, auto;
     }
 
     @keyframes slideFadeIn {
@@ -1095,7 +1096,7 @@
       margin: 0 2px;
     }
 
-    /* ライン描画キャンバス ＆ レーザーポインター */
+    /* ライン描画キャンバス */
     #draw-canvas {
       position: fixed;
       top: 0;
@@ -1109,36 +1110,6 @@
     #draw-canvas.active {
       pointer-events: auto;
       cursor: crosshair;
-    }
-    #pointer-shield {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 89;
-      pointer-events: none;
-      display: none;
-    }
-    #pointer-shield.active {
-      display: block;
-      pointer-events: auto;
-      cursor: none;
-    }
-    #laser-dot {
-      position: fixed;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #ffffff 0%, #ff2a4d 42%, rgba(255, 42, 77, 0.35) 75%, transparent 100%);
-      box-shadow: 0 0 14px 4px rgba(255, 42, 77, 0.85);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 140;
-      display: none;
-    }
-    #laser-dot.visible {
-      display: block;
     }
 
     /* 下部ナビゲーション */
@@ -1454,7 +1425,6 @@
 
   <!-- プロジェクター・プレゼン用 右上コントロールバー（アイコンのみ） -->
   <div class="top-ctrl-bar">
-    <button id="pointer-mode-btn" class="top-ctrl-btn" onclick="toggleToolMode('pointer')" title="ポインター（P）">🔴</button>
     <button id="draw-mode-btn" class="top-ctrl-btn" onclick="toggleToolMode('draw')" title="ライン引き（L）">✏️</button>
     <div style="position:relative;">
       <button id="theme-menu-btn" class="top-ctrl-btn" onclick="toggleThemeMenu(event)" title="デザイン選択（T）">🎨</button>
@@ -1482,10 +1452,8 @@
     <button class="draw-mini-btn" onclick="clearSlideDraw()" title="消去">🗑</button>
   </div>
 
-  <!-- ライン描画・レーザーポインターレイヤー -->
+  <!-- ライン描画レイヤー -->
   <canvas id="draw-canvas"></canvas>
-  <div id="pointer-shield"></div>
-  <div id="laser-dot"></div>
 
   <div id="deck">
 
@@ -4096,9 +4064,9 @@
     }
 
     // ----------------------------------------------------
-    // ポインターモード ＆ ライン引きモード
+    // ライン引きモード
     // ----------------------------------------------------
-    let toolMode = 'none'; // 'none' | 'pointer' | 'draw'
+    let toolMode = 'none'; // 'none' | 'draw'
     let drawTool = 'free'; // 'free' | 'straight'
     let drawColor = 'red'; // 'red' | 'yellow'
     const drawingsBySlide = {}; // slideIndex -> array of strokes
@@ -4108,26 +4076,17 @@
     const deckEl = document.getElementById('deck');
     const drawCanvas = document.getElementById('draw-canvas');
     const drawCtx = drawCanvas.getContext('2d');
-    const pointerShield = document.getElementById('pointer-shield');
-    const laserDot = document.getElementById('laser-dot');
 
     function setToolMode(nextMode) {
       toolMode = nextMode;
-      const isPointer = toolMode === 'pointer';
       const isDraw = toolMode === 'draw';
 
-      document.getElementById('pointer-mode-btn').classList.toggle('active', isPointer);
       document.getElementById('draw-mode-btn').classList.toggle('active', isDraw);
       document.getElementById('draw-sub-bar').classList.toggle('open', isDraw);
 
-      pointerShield.classList.toggle('active', isPointer);
       drawCanvas.classList.toggle('active', isDraw);
-      deckEl.classList.toggle('mode-pointer', isPointer);
       deckEl.classList.toggle('mode-draw', isDraw);
 
-      if (!isPointer) {
-        laserDot.classList.remove('visible');
-      }
       if (!isDraw) {
         activeStroke = null;
         drawPointerId = null;
@@ -4217,17 +4176,6 @@
       }
     }
 
-    function updateLaserPos(clientX, clientY) {
-      if (toolMode !== 'pointer') return;
-      laserDot.style.left = clientX + 'px';
-      laserDot.style.top = clientY + 'px';
-      laserDot.classList.add('visible');
-    }
-
-    pointerShield.addEventListener('pointermove', (e) => updateLaserPos(e.clientX, e.clientY));
-    pointerShield.addEventListener('pointerdown', (e) => updateLaserPos(e.clientX, e.clientY));
-    pointerShield.addEventListener('pointerleave', () => laserDot.classList.remove('visible'));
-
     drawCanvas.addEventListener('pointerdown', (e) => {
       if (toolMode !== 'draw') return;
       e.preventDefault();
@@ -4304,8 +4252,6 @@
         toggleFullScreen();
       } else if (e.key === 't' || e.key === 'T') {
         toggleThemeMenu();
-      } else if (e.key === 'p' || e.key === 'P') {
-        toggleToolMode('pointer');
       } else if (e.key === 'l' || e.key === 'L') {
         toggleToolMode('draw');
       } else if (e.key === 'o' || e.key === 'O') {
