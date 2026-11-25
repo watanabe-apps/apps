@@ -1,5 +1,6 @@
 (function () {
   const STORAGE_KEY = 'guidebook_color_theme';
+  const BIGBANG_FLAG = 'GB_BIGBANG';
   const THEMES = [
     { id: 'light', label: '標準クリア', desc: '明るい余白とくっきり文字', swatchBg: '#ffffff', swatchFg: '#0369a1' },
     { id: 'paper', label: '生成り紙', desc: '暖色で目が疲れにくい紙風', swatchBg: '#fcfaf5', swatchFg: '#0f766e' },
@@ -9,7 +10,7 @@
     { id: 'dark', label: 'ナイト暗色', desc: '眩しさを抑えたダーク配色', swatchBg: '#19202e', swatchFg: '#67c8fa' },
     { id: 'neon', label: 'ネオン虹', desc: 'お遊び：極彩サイバーRGB発光', swatchBg: '#14082c', swatchFg: '#ff00cc' },
     { id: 'gold', label: 'きらびやか', desc: 'お遊び：黄金×宝石ゴージャス仕様', swatchBg: '#fef08a', swatchFg: '#d97706' },
-    { id: 'space', label: '🚀 宇宙（クリックで流れ星）', desc: 'お遊び全開：星空・無重力・流れ星演出', swatchBg: '#030414', swatchFg: '#38bdf8' }
+    { id: 'space', label: '宇宙', desc: '深宇宙モード', swatchBg: '#040711', swatchFg: '#93c5fd' }
   ];
   const VALID_IDS = new Set(THEMES.map((t) => t.id));
 
@@ -61,85 +62,349 @@
   }
 
   /* ----------------------------------------------------------------
-     宇宙テーマ専用エフェクト（他テーマ選択時はDOMごと完全削除）
+     宇宙テーマ専用 Canvas FX（他テーマ選択時は完全に削除・停止）
      ---------------------------------------------------------------- */
+  function clearBigBangDom() {
+    document.documentElement.classList.remove(
+      'space-bigbang-shake',
+      'space-bigbang-arrive-wrap',
+      'space-bigbang-prearrive',
+      'space-bh-suction'
+    );
+    document.querySelectorAll('.space-bigbang-veil').forEach((el) => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    document.querySelectorAll('[data-space-sucked="1"]').forEach((el) => {
+      el.removeAttribute('data-space-sucked');
+      el.style.transition = '';
+      el.style.transform = '';
+      el.style.opacity = '';
+      el.style.transformOrigin = '';
+    });
+  }
+
   function destroySpaceFx() {
     if (!spaceState) return;
     cancelAnimationFrame(spaceState.rafId);
+    if (spaceState.bangTimers) {
+      spaceState.bangTimers.forEach((id) => clearTimeout(id));
+    }
     window.removeEventListener('resize', spaceState.onResize);
+    window.removeEventListener('pagehide', spaceState.onPageHide);
+    window.removeEventListener('pageshow', spaceState.onPageShow);
     document.removeEventListener('pointerdown', spaceState.onPointerDown, true);
+    document.removeEventListener('click', spaceState.onLinkClick, true);
     if (spaceState.bgCanvas && spaceState.bgCanvas.parentNode) {
       spaceState.bgCanvas.parentNode.removeChild(spaceState.bgCanvas);
     }
     if (spaceState.fxCanvas && spaceState.fxCanvas.parentNode) {
       spaceState.fxCanvas.parentNode.removeChild(spaceState.fxCanvas);
     }
+    clearBigBangDom();
     spaceState = null;
   }
 
+  function drawFourPointStar(ctx, x, y, outerR, color, alpha, rotation) {
+    const innerR = outerR * 0.16;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    ctx.rotate(rotation || 0);
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = outerR * 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = (i * Math.PI) / 4;
+      if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   function spawnMeteorShower(state, originX, originY, count) {
-    const colors = ['#7dd3fc', '#fde047', '#f472b6', '#c084fc', '#6ee7b7', '#ffffff'];
-    const icons = ['🌠', '☄️', '✨', '🛸', '🪐'];
+    const colors = ['#ffffff', '#e0f2fe', '#bfdbfe', '#fde68a'];
     const w = state.width;
-    const h = state.height;
 
     for (let i = 0; i < count; i++) {
-      const startX = originX + (Math.random() - 0.5) * 90;
-      const startY = originY + (Math.random() - 0.5) * 60;
+      const startX = originX + (Math.random() - 0.5) * 60;
+      const startY = originY + (Math.random() - 0.5) * 40;
       const dirLeft = startX > w * 0.55;
-      const baseAngle = dirLeft ? (Math.PI * 0.72) : (Math.PI * 0.24);
-      const angle = baseAngle + (Math.random() - 0.5) * 0.35;
-      const speed = 13 + Math.random() * 11;
+      const baseAngle = dirLeft ? (Math.PI * 0.74) : (Math.PI * 0.23);
+      const angle = baseAngle + (Math.random() - 0.5) * 0.24;
+      const speed = 13 + Math.random() * 9;
       state.meteors.push({
         x: startX,
         y: startY,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        len: 120 + Math.random() * 110,
-        color: colors[(i + Math.floor(Math.random() * colors.length)) % colors.length],
+        len: 130 + Math.random() * 110,
+        color: colors[i % colors.length],
         life: 1,
-        decay: 0.018 + Math.random() * 0.012,
-        width: 2.2 + Math.random() * 2.2
+        decay: 0.015 + Math.random() * 0.008,
+        width: 1.8 + Math.random() * 1.4
       });
     }
 
-    // クリック地点に星屑バースト＋ごくたまに宇宙絵文字が飛び出す
-    for (let j = 0; j < 14; j++) {
+    state.flares.push({
+      x: originX,
+      y: originY,
+      vx: 0,
+      vy: 0,
+      r: 11,
+      color: '#f8fafc',
+      rot: Math.random() * Math.PI,
+      life: 1,
+      decay: 0.032
+    });
+
+    for (let j = 0; j < 8; j++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 2 + Math.random() * 5.5;
+      const sp = 1.4 + Math.random() * 3.4;
       state.sparks.push({
         x: originX,
         y: originY,
         vx: Math.cos(a) * sp,
         vy: Math.sin(a) * sp,
-        r: 1.5 + Math.random() * 2.6,
+        r: 0.9 + Math.random() * 1.5,
         color: colors[j % colors.length],
         life: 1,
-        decay: 0.024 + Math.random() * 0.018
+        decay: 0.022 + Math.random() * 0.014
       });
     }
+  }
 
-    state.rings.push({
-      x: originX,
-      y: originY,
-      r: 8,
-      maxR: 62,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      life: 1
+  function startLightConvergence(state, cx, cy) {
+    // 1. UI要素（枠・見出し・ナビ・リンク群）を一点へ静かに収束させる（blur不使用で60fps維持）
+    document.documentElement.classList.add('space-bh-suction');
+    const targets = document.querySelectorAll(
+      '.site-sidebar, .doc-header, .summary-box, .section-block, .portal-card, .nav-pager'
+    );
+    const vectors = [];
+    targets.forEach((el, idx) => {
+      const rect = el.getBoundingClientRect();
+      const ex = rect.left + rect.width * 0.5;
+      const ey = rect.top + rect.height * 0.5;
+      vectors.push({
+        el,
+        dx: cx - ex,
+        dy: cy - ey,
+        rot: (cx - ex >= 0 ? 1 : -1) * (4 + (idx % 3) * 2)
+      });
+      el.setAttribute('data-space-sucked', '1');
+      el.style.transformOrigin = 'center center';
+      el.style.transition = 'transform 1.32s cubic-bezier(0.7, 0.02, 0.88, 0.25), opacity 1.12s ease-in';
+      void el.offsetWidth;
     });
 
-    if (Math.random() < 0.55) {
-      state.floaters.push({
-        x: originX,
-        y: originY - 8,
-        vx: (Math.random() - 0.5) * 3.2,
-        vy: -2.2 - Math.random() * 2.2,
-        text: icons[Math.floor(Math.random() * icons.length)],
-        life: 1,
-        rot: (Math.random() - 0.5) * 0.4
+    requestAnimationFrame(() => {
+      if (!spaceState || !spaceState.bang) return;
+      vectors.forEach(({ el, dx, dy, rot }) => {
+        el.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(0.02) rotate(${rot}deg)`;
+        el.style.opacity = '0';
+      });
+    });
+
+    // 2. 背景の星すべてを中心点へ向かう流線軌道にする
+    for (const s of state.stars) {
+      s.sucking = true;
+    }
+
+    // 3. 周囲から一点へ吸い込まれる光の粒子群
+    const streamColors = ['#ffffff', '#e0f2fe', '#93c5fd', '#fef3c7', '#c7d2fe'];
+    for (let i = 0; i < 88; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 110 + Math.random() * Math.max(state.width, state.height) * 0.62;
+      state.inwardRays.push({
+        angle,
+        dist,
+        angularVel: 0.014 + Math.random() * 0.022,
+        pullSpeed: dist / 74 + 1.5 + Math.random() * 2.2,
+        r: 1.0 + Math.random() * 1.9,
+        color: streamColors[i % streamColors.length],
+        prevX: cx + Math.cos(angle) * dist,
+        prevY: cy + Math.sin(angle) * dist
       });
     }
-    void h;
+  }
+
+  function spawnBigBangDetonation(state, cx, cy, stage) {
+    const isMain = stage === 'depart';
+    const colors = isMain
+      ? ['#ffffff', '#e0f2fe', '#93c5fd', '#fef3c7', '#c7d2fe']
+      : ['#60a5fa', '#818cf8', '#f59e0b', '#38bdf8', '#ffffff'];
+    const rayCount = isMain ? 48 : 26;
+    const sparkCount = isMain ? 220 : 120;
+    const ringCount = isMain ? 5 : 3;
+
+    for (let i = 0; i < rayCount; i++) {
+      const angle = (Math.PI * 2 * i) / rayCount + (Math.random() - 0.5) * 0.1;
+      const speed = (isMain ? 14 : 9) + Math.random() * 14;
+      state.meteors.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        len: (isMain ? 240 : 190) + Math.random() * 200,
+        color: colors[i % colors.length],
+        life: 1,
+        decay: isMain ? 0.011 : 0.0085,
+        width: (isMain ? 2.6 : 2.2) + Math.random() * 1.8
+      });
+    }
+
+    for (let j = 0; j < sparkCount; j++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.0 + Math.random() * (isMain ? 16 : 11);
+      state.sparks.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 1.3 + Math.random() * 3.0,
+        color: colors[j % colors.length],
+        life: 1,
+        decay: isMain ? (0.0085 + Math.random() * 0.008) : (0.0065 + Math.random() * 0.0065)
+      });
+    }
+
+    for (let f = 0; f < (isMain ? 16 : 10); f++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 3 + Math.random() * 9;
+      state.flares.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        r: 10 + Math.random() * 18,
+        color: colors[f % colors.length],
+        rot: Math.random() * Math.PI,
+        life: 1,
+        decay: isMain ? 0.014 : 0.0095
+      });
+    }
+
+    for (let k = 0; k < ringCount; k++) {
+      state.rings.push({
+        x: cx,
+        y: cy,
+        r: 8 + k * 22,
+        maxR: Math.max(state.width, state.height) * 1.45,
+        grow: isMain ? (13 + k * 4.5) : (9 + k * 3.2),
+        lineWidth: 3.0 - k * 0.45,
+        color: colors[k % colors.length],
+        life: 1
+      });
+    }
+  }
+
+  function triggerArrivalBigBang(state) {
+    clearBigBangDom();
+    document.documentElement.classList.add('space-bigbang-arrive-wrap');
+
+    const veil = document.createElement('div');
+    veil.className = 'space-bigbang-veil';
+    document.body.appendChild(veil);
+
+    const cx = state.width * 0.5;
+    const cy = state.height * 0.44;
+    spawnBigBangDetonation(state, cx, cy, 'arrive');
+
+    const t1 = setTimeout(() => {
+      if (!spaceState) return;
+      spawnMeteorShower(state, state.width * 0.22, state.height * 0.2, 1);
+      spawnMeteorShower(state, state.width * 0.8, state.height * 0.24, 1);
+    }, 750);
+    const t2 = setTimeout(() => {
+      if (!spaceState) return;
+      spawnMeteorShower(state, state.width * 0.54, state.height * 0.16, 1);
+    }, 1450);
+    const t3 = setTimeout(() => {
+      document.documentElement.classList.remove('space-bigbang-arrive-wrap');
+      if (veil.parentNode) veil.parentNode.removeChild(veil);
+    }, 2400);
+
+    state.bangTimers.push(t1, t2, t3);
+  }
+
+  function drawConvergenceAndBloom(ctx, bang, now) {
+    const cx = bang.cx;
+    const cy = bang.cy;
+    const maxCornerDist = Math.max(
+      Math.hypot(cx, cy),
+      Math.hypot(bang.w - cx, cy),
+      Math.hypot(cx, bang.h - cy),
+      Math.hypot(bang.w - cx, bang.h - cy)
+    );
+
+    if (bang.stage === 'converge') {
+      const elapsed = now - bang.startTime;
+
+      // 光が中心へ奪われていく静かな暗転（0〜1350ms）
+      const dim = Math.min(0.65, (elapsed / 1350) * 0.65);
+      ctx.fillStyle = `rgba(2, 3, 10, ${dim.toFixed(3)})`;
+      ctx.fillRect(0, 0, bang.w, bang.h);
+
+      // 一点へ集まる極細の光点（ブラックホール円盤は描かず、光が凝縮した輝点のみ）
+      if (elapsed < 1350) {
+        const p = elapsed / 1350;
+        const haloR = 16 + Math.sin(p * Math.PI * 0.7) * 32;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, haloR);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${0.4 + p * 0.6})`);
+        grad.addColorStop(0.28, `rgba(186, 230, 253, ${0.24 + p * 0.45})`);
+        grad.addColorStop(1, 'rgba(186, 230, 253, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, haloR, 0, Math.PI * 2);
+        ctx.fill();
+
+        drawFourPointStar(ctx, cx, cy, 6 + p * 18, '#ffffff', 0.5 + p * 0.5, p * 1.1);
+      } else {
+        // 時間差の静寂（1350〜1680ms）：極小の一点へ極限凝縮して溜める
+        const holdP = Math.min(1, (elapsed - 1350) / 330);
+        const compressedR = 18 * (1 - holdP * 0.65) + 4;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, compressedR * 2.2);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.25, 'rgba(224, 242, 254, 0.92)');
+        grad.addColorStop(1, 'rgba(186, 230, 253, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, compressedR * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        drawFourPointStar(ctx, cx, cy, 24 * (1 - holdP * 0.65) + 5, '#ffffff', 1, 1.1 + holdP * 0.4);
+      }
+      return;
+    }
+
+    // ------------------------------------------------------------
+    // Stage 2: 放出・大爆発（真球光球は粒子や光条の背後で膨張し、決して粒子を隠さない）
+    // ------------------------------------------------------------
+    const blastElapsed = now - bang.blastStart;
+    const blastT = Math.min(1, blastElapsed / 1180);
+
+    // 爆発最初の0.45秒は暗い背景のままで光条・衝撃波をはっきり見せ、その後円球光が全体を満たす
+    const floodT = blastT < 0.34 ? 0 : (blastT - 0.34) / 0.66;
+    const eased = Math.pow(floodT, 1.75);
+    const sphereR = 26 + eased * (maxCornerDist * 1.9);
+    const fullFlood = sphereR > maxCornerDist * 1.08
+      ? Math.min(1, (sphereR - maxCornerDist * 1.08) / (maxCornerDist * 0.65))
+      : 0;
+
+    ctx.fillStyle = `rgba(2, 3, 10, ${(0.65 * (1 - blastT)).toFixed(3)})`;
+    ctx.fillRect(0, 0, bang.w, bang.h);
+
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, sphereR);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.22, 'rgba(241, 247, 255, 0.96)');
+    grad.addColorStop(0.54, `rgba(219, 234, 254, ${0.42 + fullFlood * 0.58})`);
+    grad.addColorStop(0.82, `rgba(226, 238, 252, ${fullFlood * 0.94})`);
+    grad.addColorStop(1, `rgba(230, 238, 249, ${fullFlood})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, bang.w, bang.h);
   }
 
   function mountSpaceFx(celebrateOnEnter) {
@@ -153,7 +418,7 @@
     const fxCanvas = document.createElement('canvas');
     fxCanvas.id = 'guidebook-space-fx';
     fxCanvas.setAttribute('aria-hidden', 'true');
-    fxCanvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9990;';
+    fxCanvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
 
     document.body.insertBefore(bgCanvas, document.body.firstChild);
     document.body.appendChild(fxCanvas);
@@ -168,39 +433,41 @@
       width: window.innerWidth,
       height: window.innerHeight,
       stars: [],
-      drifters: [],
+      inwardRays: [],
       meteors: [],
       sparks: [],
+      flares: [],
       rings: [],
-      floaters: [],
+      bang: null,
       rafId: 0,
+      navLock: false,
+      bangTimers: [],
       lastAmbient: performance.now(),
       onResize: null,
-      onPointerDown: null
+      onPointerDown: null,
+      onLinkClick: null,
+      onPageHide: null,
+      onPageShow: null
     };
 
     function seedStars() {
       state.stars = [];
-      const count = Math.min(180, Math.max(90, Math.floor((state.width * state.height) / 9500)));
-      const palette = ['#ffffff', '#bae6fd', '#fde68a', '#f5d0fe', '#a7f3d0'];
+      const count = Math.min(240, Math.max(120, Math.floor((state.width * state.height) / 7200)));
+      const palette = ['#ffffff', '#e2e8f0', '#dbeafe', '#fef3c7', '#cbd5e1'];
       for (let i = 0; i < count; i++) {
         state.stars.push({
           x: Math.random() * state.width,
           y: Math.random() * state.height,
-          r: 0.7 + Math.random() * 2.1,
+          r: 0.55 + Math.random() * 1.75,
           phase: Math.random() * Math.PI * 2,
-          speed: 0.015 + Math.random() * 0.035,
-          vx: (Math.random() - 0.5) * 0.14,
-          vy: (Math.random() - 0.5) * 0.08,
-          color: palette[i % palette.length]
+          speed: 0.01 + Math.random() * 0.025,
+          vx: (Math.random() - 0.5) * 0.09,
+          vy: (Math.random() - 0.5) * 0.04,
+          color: palette[i % palette.length],
+          sparkle: i % 18 === 0,
+          sucking: false
         });
       }
-      state.drifters = [
-        { emoji: '🪐', x: state.width * 0.18, y: state.height * 0.22, vx: 0.24, vy: 0.07, size: 32, spin: 0.004, angle: 0 },
-        { emoji: '🛸', x: state.width * 0.78, y: state.height * 0.16, vx: -0.36, vy: 0.11, size: 26, spin: -0.008, angle: 0 },
-        { emoji: '🚀', x: state.width * 0.62, y: state.height * 0.78, vx: 0.32, vy: -0.22, size: 24, spin: 0.003, angle: 0 },
-        { emoji: '🌙', x: state.width * 0.88, y: state.height * 0.52, vx: -0.12, vy: -0.06, size: 28, spin: 0.002, angle: 0 }
-      ];
     }
 
     function resize() {
@@ -212,68 +479,202 @@
       });
       bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      seedStars();
+      if (!state.navLock) {
+        seedStars();
+      }
     }
 
     state.onResize = resize;
     state.onPointerDown = (e) => {
-      spawnMeteorShower(state, e.clientX, e.clientY, 3);
+      if (state.navLock) return;
+      spawnMeteorShower(state, e.clientX, e.clientY, 2);
+    };
+
+    state.onLinkClick = (e) => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      const anchor = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!anchor) return;
+      if (anchor.target && anchor.target !== '_self') return;
+      if (anchor.hasAttribute('download')) return;
+
+      const raw = anchor.getAttribute('href');
+      if (!raw || raw.startsWith('#') || raw.endsWith('.txt')) return;
+      if (/^(https?:|mailto:|tel:|javascript:)/i.test(raw)) return;
+
+      e.preventDefault();
+      if (state.navLock) return;
+      state.navLock = true;
+
+      const cx = e.clientX > 0 ? e.clientX : state.width * 0.5;
+      const cy = e.clientY > 0 ? e.clientY : state.height * 0.5;
+
+      clearBigBangDom();
+      state.bang = {
+        cx,
+        cy,
+        startTime: 0,
+        blastStart: 0,
+        w: state.width,
+        h: state.height,
+        stage: 'converge',
+        navHref: anchor.href
+      };
+
+      // Stage 1: 光と星とUIが一点に静かに収束（以降の発火・遷移は tick() 内で確実に同期進行）
+      startLightConvergence(state, cx, cy);
+    };
+
+    state.onPageHide = () => {
+      state.navLock = false;
+      state.bang = null;
+      state.inwardRays = [];
+      state.bangTimers.forEach((id) => clearTimeout(id));
+      state.bangTimers = [];
+      clearBigBangDom();
+    };
+
+    state.onPageShow = (e) => {
+      if (e.persisted) {
+        state.navLock = false;
+        state.bang = null;
+        state.inwardRays = [];
+        seedStars();
+        clearBigBangDom();
+      }
     };
 
     window.addEventListener('resize', state.onResize);
+    window.addEventListener('pagehide', state.onPageHide);
+    window.addEventListener('pageshow', state.onPageShow);
     document.addEventListener('pointerdown', state.onPointerDown, true);
+    document.addEventListener('click', state.onLinkClick, true);
     resize();
 
-    if (celebrateOnEnter) {
-      spawnMeteorShower(state, state.width * 0.35, state.height * 0.28, 6);
-      spawnMeteorShower(state, state.width * 0.72, state.height * 0.22, 5);
+    if (window.name === BIGBANG_FLAG) {
+      window.name = '';
+      triggerArrivalBigBang(state);
+    } else if (celebrateOnEnter) {
+      spawnMeteorShower(state, state.width * 0.36, state.height * 0.24, 2);
+      spawnMeteorShower(state, state.width * 0.72, state.height * 0.2, 2);
     }
 
     function tick(now) {
-      bgCtx.clearRect(0, 0, state.width, state.height);
-
-      // 星空と漂う惑星・UFO
-      for (const s of state.stars) {
-        s.phase += s.speed;
-        s.x = (s.x + s.vx + state.width) % state.width;
-        s.y = (s.y + s.vy + state.height) % state.height;
-        const alpha = 0.28 + 0.72 * (0.5 + 0.5 * Math.sin(s.phase));
-        bgCtx.globalAlpha = alpha;
-        bgCtx.fillStyle = s.color;
-        bgCtx.beginPath();
-        bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        bgCtx.fill();
+      // ビッグバン状態遷移（タイマーのズレによる不発を完全に防止）
+      if (state.bang) {
+        if (!state.bang.startTime) state.bang.startTime = now;
+        const elapsed = now - state.bang.startTime;
+        if (state.bang.stage === 'converge' && elapsed >= 1680) {
+          state.bang.stage = 'detonated';
+          state.bang.blastStart = now;
+          state.inwardRays = [];
+          document.documentElement.classList.add('space-bigbang-shake');
+          spawnBigBangDetonation(state, state.bang.cx, state.bang.cy, 'depart');
+        } else if (state.bang.stage === 'detonated' && now - state.bang.blastStart >= 1220) {
+          state.bang.stage = 'navigating';
+          const href = state.bang.navHref;
+          try {
+            window.name = BIGBANG_FLAG;
+          } catch (_) {}
+          window.location.href = href;
+          return;
+        }
       }
 
-      bgCtx.globalAlpha = 0.55;
-      for (const d of state.drifters) {
-        d.x = (d.x + d.vx + state.width + 60) % (state.width + 60) - 30;
-        d.y = (d.y + d.vy + state.height + 60) % (state.height + 60) - 30;
-        d.angle += d.spin;
-        bgCtx.save();
-        bgCtx.translate(d.x, d.y);
-        bgCtx.rotate(d.angle);
-        bgCtx.font = `${d.size}px sans-serif`;
-        bgCtx.textAlign = 'center';
-        bgCtx.textBaseline = 'middle';
-        bgCtx.fillText(d.emoji, 0, 0);
-        bgCtx.restore();
+      bgCtx.clearRect(0, 0, state.width, state.height);
+
+      for (let i = state.stars.length - 1; i >= 0; i--) {
+        const s = state.stars[i];
+        s.phase += s.speed;
+
+        if (s.sucking && state.bang && state.bang.stage === 'converge') {
+          const dx = state.bang.cx - s.x;
+          const dy = state.bang.cy - s.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 10) {
+            state.stars.splice(i, 1);
+            continue;
+          }
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const tx = -ny;
+          const ty = nx;
+          const pull = Math.min(24, 2.5 + (2500 / (dist + 60)));
+          const spin = Math.min(6, 0.3 + (420 / (dist + 55)));
+          const prevX = s.x;
+          const prevY = s.y;
+          s.x += nx * pull + tx * spin;
+          s.y += ny * pull + ty * spin;
+
+          bgCtx.save();
+          bgCtx.strokeStyle = s.color;
+          bgCtx.lineWidth = s.r * 1.15;
+          bgCtx.lineCap = 'round';
+          bgCtx.globalAlpha = 0.85;
+          bgCtx.beginPath();
+          bgCtx.moveTo(prevX - nx * pull * 1.4, prevY - ny * pull * 1.4);
+          bgCtx.lineTo(s.x, s.y);
+          bgCtx.stroke();
+          bgCtx.restore();
+        } else {
+          s.x = (s.x + s.vx + state.width) % state.width;
+          s.y = (s.y + s.vy + state.height) % state.height;
+          const alpha = 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(s.phase));
+          if (s.sparkle && alpha > 0.76) {
+            drawFourPointStar(bgCtx, s.x, s.y, s.r * 2.7, s.color, alpha * 0.85, s.phase * 0.2);
+          } else {
+            bgCtx.globalAlpha = alpha;
+            bgCtx.fillStyle = s.color;
+            bgCtx.beginPath();
+            bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            bgCtx.fill();
+          }
+        }
       }
       bgCtx.globalAlpha = 1;
 
-      // 自動の気まぐれ流れ星
-      if (now - state.lastAmbient > 2600) {
+      if (!state.navLock && now - state.lastAmbient > 3600) {
         state.lastAmbient = now;
         spawnMeteorShower(
           state,
           Math.random() * state.width,
-          Math.random() * state.height * 0.45,
+          Math.random() * state.height * 0.42,
           1
         );
       }
 
-      // 前景：クリックで飛ぶ流れ星＆スターダスト
       fxCtx.clearRect(0, 0, state.width, state.height);
+
+      // まず背後に収束光／爆発真球光を描画（粒子・光条・波紋が手前で必ず輝くようにする）
+      if (state.bang) {
+        drawConvergenceAndBloom(fxCtx, state.bang, now);
+      }
+
+      // 収束中に中心へ流れる光粒子
+      if (state.bang && state.bang.stage === 'converge') {
+        for (let i = state.inwardRays.length - 1; i >= 0; i--) {
+          const ir = state.inwardRays[i];
+          ir.angle += ir.angularVel;
+          ir.dist -= ir.pullSpeed;
+          if (ir.dist <= 3) {
+            state.inwardRays.splice(i, 1);
+            continue;
+          }
+          const nx = state.bang.cx + Math.cos(ir.angle) * ir.dist;
+          const ny = state.bang.cy + Math.sin(ir.angle) * ir.dist;
+          fxCtx.save();
+          fxCtx.strokeStyle = ir.color;
+          fxCtx.lineWidth = ir.r;
+          fxCtx.lineCap = 'round';
+          fxCtx.globalAlpha = Math.min(1, ir.dist / 35) * 0.85;
+          fxCtx.beginPath();
+          fxCtx.moveTo(ir.prevX, ir.prevY);
+          fxCtx.lineTo(nx, ny);
+          fxCtx.stroke();
+          fxCtx.restore();
+          ir.prevX = nx;
+          ir.prevY = ny;
+        }
+      }
 
       for (let i = state.meteors.length - 1; i >= 0; i--) {
         const m = state.meteors[i];
@@ -289,7 +690,7 @@
         const tailY = m.y - (m.vy / mag) * m.len * m.life;
         const grad = fxCtx.createLinearGradient(m.x, m.y, tailX, tailY);
         grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.25, m.color);
+        grad.addColorStop(0.22, m.color);
         grad.addColorStop(1, 'rgba(0,0,0,0)');
 
         fxCtx.save();
@@ -298,7 +699,7 @@
         fxCtx.lineWidth = m.width;
         fxCtx.lineCap = 'round';
         fxCtx.shadowColor = m.color;
-        fxCtx.shadowBlur = 14;
+        fxCtx.shadowBlur = 12;
         fxCtx.beginPath();
         fxCtx.moveTo(m.x, m.y);
         fxCtx.lineTo(tailX, tailY);
@@ -306,7 +707,7 @@
 
         fxCtx.fillStyle = '#ffffff';
         fxCtx.beginPath();
-        fxCtx.arc(m.x, m.y, m.width * 0.9, 0, Math.PI * 2);
+        fxCtx.arc(m.x, m.y, m.width * 0.85, 0, Math.PI * 2);
         fxCtx.fill();
         fxCtx.restore();
       }
@@ -315,8 +716,8 @@
         const sp = state.sparks[i];
         sp.x += sp.vx;
         sp.y += sp.vy;
-        sp.vx *= 0.97;
-        sp.vy *= 0.97;
+        sp.vx *= 0.975;
+        sp.vy *= 0.975;
         sp.life -= sp.decay;
         if (sp.life <= 0) {
           state.sparks.splice(i, 1);
@@ -333,41 +734,38 @@
         fxCtx.restore();
       }
 
+      for (let i = state.flares.length - 1; i >= 0; i--) {
+        const fl = state.flares[i];
+        fl.x += fl.vx;
+        fl.y += fl.vy;
+        fl.vx *= 0.96;
+        fl.vy *= 0.96;
+        fl.rot += 0.025;
+        fl.life -= fl.decay;
+        if (fl.life <= 0) {
+          state.flares.splice(i, 1);
+          continue;
+        }
+        drawFourPointStar(fxCtx, fl.x, fl.y, fl.r * (0.4 + fl.life * 0.8), fl.color, fl.life, fl.rot);
+      }
+
       for (let i = state.rings.length - 1; i >= 0; i--) {
         const rg = state.rings[i];
-        rg.r += 2.6;
+        rg.r += rg.grow || 2.4;
         rg.life = 1 - rg.r / rg.maxR;
         if (rg.life <= 0) {
           state.rings.splice(i, 1);
           continue;
         }
         fxCtx.save();
-        fxCtx.globalAlpha = rg.life * 0.75;
+        fxCtx.globalAlpha = rg.life * 0.72;
         fxCtx.strokeStyle = rg.color;
-        fxCtx.lineWidth = 2;
+        fxCtx.shadowColor = rg.color;
+        fxCtx.shadowBlur = 10;
+        fxCtx.lineWidth = rg.lineWidth || 2;
         fxCtx.beginPath();
         fxCtx.arc(rg.x, rg.y, rg.r, 0, Math.PI * 2);
         fxCtx.stroke();
-        fxCtx.restore();
-      }
-
-      for (let i = state.floaters.length - 1; i >= 0; i--) {
-        const fl = state.floaters[i];
-        fl.x += fl.vx;
-        fl.y += fl.vy;
-        fl.life -= 0.022;
-        if (fl.life <= 0) {
-          state.floaters.splice(i, 1);
-          continue;
-        }
-        fxCtx.save();
-        fxCtx.globalAlpha = fl.life;
-        fxCtx.translate(fl.x, fl.y);
-        fxCtx.rotate(fl.rot * (1 - fl.life) * 4);
-        fxCtx.font = '22px sans-serif';
-        fxCtx.textAlign = 'center';
-        fxCtx.textBaseline = 'middle';
-        fxCtx.fillText(fl.text, 0, 0);
         fxCtx.restore();
       }
 
@@ -453,6 +851,13 @@
   // 描画前のフラッシュを防ぐため <head> 読み込み時に即座に適用
   const queryTheme = readQueryTheme();
   const initialTheme = queryTheme || readStoredTheme() || 'light';
+  if (initialTheme === 'space') {
+    try {
+      if (window.name === BIGBANG_FLAG) {
+        document.documentElement.classList.add('space-bigbang-prearrive');
+      }
+    } catch (_) {}
+  }
   applyTheme(initialTheme, Boolean(queryTheme), false);
 
   if (document.readyState === 'loading') {

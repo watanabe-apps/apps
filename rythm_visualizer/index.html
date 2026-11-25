@@ -223,7 +223,7 @@
       stroke: currentColor;
     }
 
-    /* 移動する滑らかな赤枠 */
+    /* 移動する赤枠 */
     .active-frame {
       position: absolute;
       border: 4px solid #ff0000;
@@ -231,7 +231,6 @@
       pointer-events: none;
       display: none;
       z-index: 100;
-      transition: left 0.1s linear, top 0.1s linear, width 0.1s linear, height 0.1s linear;
     }
 
     /* ◯表記用のスタイリング */
@@ -346,6 +345,10 @@
       background-color: var(--bg-color);
       z-index: 9999;
       padding: 20px;
+    }
+
+    body.is-playing .rhythm-container {
+      transition: none;
     }
 
     body.is-playing .count-in-container {
@@ -467,10 +470,22 @@
     let bpm = 80;
     let isPlaying = false;
     let isCountIn = false;
-    let countInStep = 0;
     let currentIndex = 0;
-    let timerId = null;
     let displayMode = 'note';
+
+    // Web Audio スケジューラ用状態
+    const LOOKAHEAD_MS = 25;
+    const SCHEDULE_AHEAD_SEC = 0.12;
+    let playbackSessionId = 0;
+    let schedulerTimerId = null;
+    let rafId = null;
+    let stopListenerTimerId = null;
+    let playbackStartTime = 0;
+    let totalBeatsScheduled = 0;
+    let scheduleCountInStep = 0;
+    let scheduleIndex = 0;
+    let playbackEndTime = null;
+    let visualQueue = [];
 
     // DOM要素
     const rhythmContainer = document.getElementById('rhythmContainer');
@@ -523,6 +538,7 @@
       const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'rhythmData');
       
       onSnapshot(userDocRef, (docSnap) => {
+        if (isPlaying) return;
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (Array.isArray(data.notes)) notes = data.notes;
@@ -575,6 +591,7 @@
 
     // Web Audio API
     let audioCtx = null;
+    let playbackGain = null;
 
     function initAudio() {
       if (!audioCtx) {
@@ -582,38 +599,33 @@
       }
     }
 
-    function playSound(type) {
-      if (!soundCheck.checked || !audioCtx) return;
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+    function scheduleSound(type, time) {
+      if (!soundCheck.checked || !audioCtx || !playbackGain) return;
+      if (type.startsWith('rest')) return;
 
-      const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(playbackGain);
 
       if (type === 'countin') {
-        osc.frequency.setValueAtTime(1000, now);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
+        osc.frequency.setValueAtTime(1000, time);
+        gain.gain.setValueAtTime(0.4, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+        osc.start(time);
+        osc.stop(time + 0.05);
         return;
       }
-
-      if (type.startsWith('rest')) return;
 
       const freq = 600;
       const duration = type === 'quarter' ? 0.1 : 0.07;
 
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0.3, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
 
-      osc.start(now);
-      osc.stop(now + duration);
+      osc.start(time);
+      osc.stop(time + duration);
     }
 
     // 音符（SVG）描画
@@ -837,66 +849,132 @@
       saveData();
     }
 
-    // 再生ステップ
-    function playStep() {
-      if (!isPlaying) return;
+    // オーディオ先読みスケジューラ（AudioContextのクロック基準でドリフトを防止）
+    function scheduleNextEvent(secPerBeat) {
+      const eventTime = playbackStartTime + totalBeatsScheduled * secPerBeat;
+      const isStale = eventTime < audioCtx.currentTime - 0.02;
 
-      const beatTime = (60 / bpm) * 1000;
-
-      // カウントイン処理
-      if (isCountIn) {
-        if (countInStep < 4) {
-          countCircles.forEach(c => c.classList.remove('active'));
-          countCircles[countInStep].classList.add('active');
-          countInStep++;
-          playSound('countin');
-          timerId = setTimeout(playStep, beatTime);
-          return;
-        } else {
-          isCountIn = false;
-          countInContainer.style.display = 'none';
-          countCircles.forEach(c => c.classList.remove('active'));
-          currentIndex = 0;
+      if (scheduleCountInStep < 4) {
+        if (!isStale) {
+          scheduleSound('countin', eventTime);
         }
+        visualQueue.push({ time: eventTime, kind: 'countin', step: scheduleCountInStep });
+        scheduleCountInStep++;
+        totalBeatsScheduled += 1.0;
+        return true;
       }
 
       if (notes.length === 0) {
+        playbackEndTime = eventTime;
+        return false;
+      }
+
+      if (scheduleIndex >= notes.length) {
+        if (loopCheck.checked) {
+          scheduleIndex = 0;
+        } else {
+          playbackEndTime = eventTime;
+          return false;
+        }
+      }
+
+      const currentType = notes[scheduleIndex];
+      if (!isStale) {
+        scheduleSound(currentType, eventTime);
+      }
+      visualQueue.push({ time: eventTime, kind: 'note', index: scheduleIndex });
+      totalBeatsScheduled += NOTE_TYPES[currentType].duration;
+      scheduleIndex++;
+      return true;
+    }
+
+    function scheduler() {
+      if (!isPlaying || !audioCtx || playbackEndTime !== null) return;
+
+      const secPerBeat = 60 / bpm;
+      const now = audioCtx.currentTime;
+
+      // バックグラウンド復帰などで大幅に遅延した場合、過去の音を連打せず位相を合わせる
+      let nextTime = playbackStartTime + totalBeatsScheduled * secPerBeat;
+      if (now - nextTime > 2.0) {
+        if (scheduleCountInStep < 4) {
+          const countInEndTime = playbackStartTime + 4 * secPerBeat;
+          if (now >= countInEndTime) {
+            scheduleCountInStep = 4;
+            totalBeatsScheduled = 4;
+            scheduleIndex = 0;
+            nextTime = countInEndTime;
+          }
+        }
+        if (scheduleCountInStep >= 4) {
+          if (!loopCheck.checked) {
+            playbackEndTime = now;
+            return;
+          }
+          const loopBeats = getTotalBeats();
+          if (loopBeats > 0) {
+            const loopDuration = loopBeats * secPerBeat;
+            const skipLoops = Math.floor((now - nextTime) / loopDuration);
+            if (skipLoops > 0) {
+              playbackStartTime += skipLoops * loopDuration;
+            }
+          }
+        }
+      }
+
+      while (playbackStartTime + totalBeatsScheduled * secPerBeat < now + SCHEDULE_AHEAD_SEC) {
+        if (!scheduleNextEvent(secPerBeat)) {
+          break;
+        }
+      }
+    }
+
+    // 映像同期ループ（AudioContextの現在時刻に合わせてUIを更新）
+    function visualLoop() {
+      if (!isPlaying || !audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      let latestEvent = null;
+
+      while (visualQueue.length > 0 && visualQueue[0].time <= now) {
+        latestEvent = visualQueue.shift();
+      }
+
+      if (latestEvent) {
+        if (latestEvent.kind === 'countin') {
+          isCountIn = true;
+          countCircles.forEach(c => c.classList.remove('active'));
+          countCircles[latestEvent.step].classList.add('active');
+          hideActiveFrame();
+        } else if (latestEvent.kind === 'note') {
+          if (isCountIn) {
+            isCountIn = false;
+            countInContainer.style.display = 'none';
+            countCircles.forEach(c => c.classList.remove('active'));
+          }
+          currentIndex = latestEvent.index;
+          updateActiveFramePosition();
+        }
+      }
+
+      if (playbackEndTime !== null && now >= playbackEndTime) {
         stopPlayback();
         return;
       }
 
-      if (currentIndex >= notes.length) {
-        if (loopCheck.checked) {
-          currentIndex = 0;
-        } else {
-          stopPlayback();
-          return;
-        }
-      }
-
-      render();
-
-      const currentType = notes[currentIndex];
-      const duration = NOTE_TYPES[currentType].duration * beatTime;
-
-      setTimeout(() => {
-        if (isPlaying && !isCountIn) {
-          playSound(currentType);
-        }
-      }, 100);
-
-      currentIndex++;
-      timerId = setTimeout(playStep, duration);
+      rafId = requestAnimationFrame(visualLoop);
     }
 
-    function startPlayback(e) {
+    async function startPlayback(e) {
       if (e) e.stopPropagation();
-      if (notes.length === 0) return;
+      if (isPlaying || notes.length === 0) return;
 
       initAudio();
+      const resumePromise = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
+
+      const sessionId = ++playbackSessionId;
       isPlaying = true;
       isCountIn = true;
-      countInStep = 0;
       currentIndex = 0;
 
       countCircles.forEach(c => c.classList.remove('active'));
@@ -905,14 +983,30 @@
       document.body.classList.add('is-playing');
       render();
 
-      setTimeout(() => {
-        if (isPlaying) {
+      stopListenerTimerId = setTimeout(() => {
+        stopListenerTimerId = null;
+        if (isPlaying && playbackSessionId === sessionId) {
           window.addEventListener('click', stopPlaybackOnTouch, { once: true });
           window.addEventListener('touchstart', stopPlaybackOnTouch, { once: true });
         }
       }, 100);
 
-      playStep();
+      await resumePromise;
+      if (!isPlaying || playbackSessionId !== sessionId) return;
+
+      playbackGain = audioCtx.createGain();
+      playbackGain.connect(audioCtx.destination);
+
+      playbackStartTime = audioCtx.currentTime + 0.05;
+      totalBeatsScheduled = 0;
+      scheduleCountInStep = 0;
+      scheduleIndex = 0;
+      playbackEndTime = null;
+      visualQueue = [];
+
+      scheduler();
+      schedulerTimerId = setInterval(scheduler, LOOKAHEAD_MS);
+      rafId = requestAnimationFrame(visualLoop);
     }
 
     function stopPlaybackOnTouch(e) {
@@ -922,9 +1016,23 @@
     }
 
     function stopPlayback() {
+      playbackSessionId++;
       isPlaying = false;
       isCountIn = false;
-      clearTimeout(timerId);
+      clearInterval(schedulerTimerId);
+      schedulerTimerId = null;
+      cancelAnimationFrame(rafId);
+      rafId = null;
+      clearTimeout(stopListenerTimerId);
+      stopListenerTimerId = null;
+
+      if (playbackGain) {
+        playbackGain.disconnect();
+        playbackGain = null;
+      }
+
+      visualQueue = [];
+      playbackEndTime = null;
       currentIndex = 0;
 
       countInContainer.style.display = 'none';
