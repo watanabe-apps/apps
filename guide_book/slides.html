@@ -3899,16 +3899,6 @@
       if (typeof renderSlideDrawings === 'function') {
         renderSlideDrawings();
       }
-
-      // 現在のスライド番号をURLハッシュとlocalStorageに常時保存（Live Server再読み込み対策）
-      try {
-        if (history.replaceState) {
-          history.replaceState(null, '', '#' + (currentSlide + 1));
-        }
-      } catch (e) {}
-      try {
-        localStorage.setItem('presentation-current-slide', String(currentSlide));
-      } catch (e) {}
     }
 
     function nextSlide() {
@@ -4270,7 +4260,10 @@
     });
 
     function restoreInitialSlide() {
-      // 1. URLハッシュ（例: #5）から復元
+      try {
+        localStorage.removeItem('presentation-current-slide');
+      } catch (e) {}
+      // URLハッシュが明示指定されている場合のみ該当スライドから開始
       const hash = window.location.hash.replace('#', '');
       const hashNum = parseInt(hash, 10);
       if (!isNaN(hashNum) && hashNum >= 1 && hashNum <= totalSlides) {
@@ -4278,18 +4271,6 @@
         updateSlide();
         return;
       }
-      // 2. localStorage から復元（Live Server再読み込み対策）
-      try {
-        const saved = localStorage.getItem('presentation-current-slide');
-        if (saved !== null) {
-          const savedNum = parseInt(saved, 10);
-          if (!isNaN(savedNum) && savedNum >= 0 && savedNum < totalSlides) {
-            currentSlide = savedNum;
-            updateSlide();
-            return;
-          }
-        }
-      } catch (e) {}
 
       updateSlide();
     }

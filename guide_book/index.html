@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>特別支援教育 アプリ開発ガイドブック</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
   <style>
     .portal-grid {
       display: grid;
@@ -13,17 +14,18 @@
       margin-top: 1.5rem;
     }
     .portal-card {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border-mid);
       border-radius: 10px;
       padding: 1.5rem;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       display: flex;
       flex-direction: column;
+      box-shadow: var(--card-shadow);
     }
     .portal-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.12);
       border-color: var(--primary);
     }
     .portal-card-badge {
@@ -35,7 +37,9 @@
       margin-bottom: 0.75rem;
       width: fit-content;
     }
-    .badge-chapter { background: var(--primary-soft); color: var(--primary-focus); }
+    .badge-chapter { background: var(--primary-soft); color: var(--link-color); }
+    .badge-slides { background: var(--danger-soft); color: var(--danger); }
+    .badge-source { background: var(--success-soft); color: var(--success); }
     .portal-card h3 {
       font-size: 1.2rem;
       color: var(--text-main);
@@ -147,14 +151,14 @@
         </div>
 
         <div class="portal-card">
-          <span class="portal-card-badge" style="background:#ffe4e6; color:#be123c;">スライド</span>
+          <span class="portal-card-badge badge-slides">スライド</span>
           <h3>研修・解説用プレゼンスライド</h3>
           <p>本ガイドブックの要点をまとめたプレゼンスライド（全88枚）です。各実動デモやQRコードを含めてそのまま画面提示できます。</p>
           <a href="slides.html" class="card-link">スライドを開く ➜</a>
         </div>
 
         <div class="portal-card">
-          <span class="portal-card-badge" style="background:#dcfce7; color:#15803d;">AIソース</span>
+          <span class="portal-card-badge badge-source">AIソース</span>
           <h3>Gemini Notebook用 統合テキスト</h3>
           <p>全5章の本文・設計思想・プロンプト解説を1ファイルにまとめた<code>.txt</code>です。URL登録またはダウンロードしてソース読み込みに使えます。</p>
           <div style="display:flex; gap:1rem; flex-wrap:wrap;">

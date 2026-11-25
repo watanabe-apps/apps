@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第4章：特別支援教育における学習用アプリ 設計・実装思想 - 特別支援教育 アプリ開発ガイドブック</title>
   <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/theme.js"></script>
   <style>
     .nav-pager {
       display: flex;
@@ -20,7 +21,7 @@
     .sub-section-title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--link-color);
       margin-top: 2rem;
       margin-bottom: 0.85rem;
       padding-bottom: 0.4rem;
@@ -56,12 +57,12 @@
       border: 1px solid var(--border-mid);
       border-radius: 10px;
       overflow: hidden;
-      background: #ffffff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      background: var(--bg-card);
+      box-shadow: var(--card-shadow);
     }
     .demo-embed-summary {
       background-color: var(--primary-soft);
-      color: var(--primary-focus);
+      color: var(--doc-intro-text);
       padding: 12px 18px;
       font-weight: 700;
       font-size: 0.95rem;
@@ -78,7 +79,7 @@
       display: none;
     }
     .demo-embed-summary:hover {
-      background-color: #bae6fd;
+      background-color: var(--primary-soft-hover);
     }
     .demo-toggle-icon {
       font-size: 0.8rem;
@@ -90,12 +91,12 @@
     .demo-iframe-container {
       border-top: 1px solid var(--border-mid);
       width: 100%;
-      background: #f8fafc;
+      background: var(--bg-canvas);
       position: relative;
     }
     .demo-iframe-toolbar {
       padding: 6px 14px;
-      background: #f1f5f9;
+      background: var(--bg-subtle);
       border-bottom: 1px solid var(--border-light);
       display: flex;
       justify-content: flex-end;
@@ -107,7 +108,7 @@
       font-weight: 600;
     }
     .demo-iframe-toolbar .external-link:hover {
-      color: var(--primary);
+      color: var(--link-color);
       text-decoration: underline;
     }
     .demo-iframe-container iframe {
@@ -571,7 +572,7 @@
 
           <!-- AIが生成するUIの傾向図解 -->
           <figure style="margin: 1.8rem 0; text-align: center;">
-            <img src="../images/ai_ui_tendency.svg" alt="AIが生成するUIの傾向（要調整と使い分けの実例図解）" style="width: 100%; max-width: 780px; height: auto; border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+            <img src="../images/ai_ui_tendency.svg" alt="AIが生成するUIの傾向（要調整と使い分けの実例図解）" style="width: 100%; max-width: 780px; height: auto; background: #ffffff; border: 1px solid var(--border-light); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
             <figcaption style="font-size: 0.82rem; color: var(--text-muted); margin-top: 8px; font-weight: 600;">
               ▲【実例図解】AIが生成するUIの4大傾向（①②は要調整・改善、③④は目的に応じた使い分け）
             </figcaption>

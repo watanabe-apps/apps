@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第5章：Geminiを活用したアプリ作り プロンプトについて - 特別支援教育 アプリ開発ガイドブック</title>
   <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/theme.js"></script>
   <style>
     /* プロンプト表示ボックス */
     .prompt-box {
-      background: #f8fafc;
+      background: var(--bg-subtle);
       border: 1.5px solid var(--border-mid);
       border-left: 5px solid var(--primary);
       border-radius: 8px;
@@ -20,7 +21,7 @@
       font-family: Consolas, "SF Mono", Monaco, "UD Digi Kyokasho NK-R", monospace;
       font-size: 0.88rem;
       line-height: 1.7;
-      color: #1e293b;
+      color: var(--text-main);
       white-space: pre-wrap;
       word-break: break-word;
       user-select: all;
@@ -30,7 +31,7 @@
       top: 12px;
       right: 12px;
       background: var(--primary);
-      color: #ffffff;
+      color: var(--on-primary);
       border: none;
       padding: 6px 14px;
       font-size: 0.78rem;
@@ -46,17 +47,17 @@
       background: var(--primary-focus);
     }
     .copy-btn.copied {
-      background: #10b981;
+      background: var(--success-solid);
     }
 
     /* オプションプロンプトカード */
     .option-card {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1.5px solid var(--border-light);
       border-radius: 8px;
       padding: 1.25rem 1.5rem;
       margin: 1.25rem 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: var(--card-shadow);
     }
     .option-title {
       font-size: 1.05rem;
@@ -73,12 +74,12 @@
       margin-bottom: 0.75rem;
     }
     .option-prompt {
-      background: #f1f5f9;
+      background: var(--bg-subtle);
       border-radius: 6px;
       padding: 0.85rem 1rem;
       font-family: Consolas, "SF Mono", Monaco, monospace;
       font-size: 0.84rem;
-      color: #0f172a;
+      color: var(--text-main);
       line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-word;
@@ -87,7 +88,7 @@
     }
     .option-note {
       font-size: 0.82rem;
-      color: #64748b;
+      color: var(--text-muted);
       margin-top: 0.75rem;
       line-height: 1.6;
     }
@@ -108,7 +109,7 @@
       line-height: 1.65;
     }
     .explanation-table th {
-      background: #f1f5f9;
+      background: var(--bg-subtle);
       font-weight: 700;
       color: var(--text-main);
     }
@@ -116,8 +117,8 @@
     .explanation-table td:first-child {
       width: 32%;
       font-weight: 700;
-      color: var(--primary-focus);
-      background: #f8fafc;
+      color: var(--link-color);
+      background: var(--bg-row-alt);
     }
 
     .nav-pager {
@@ -134,12 +135,12 @@
 
     /* 5.4 Notebook 作成手順ステッパー */
     .guide-stepper {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1.5px solid var(--border-light);
       border-radius: 14px;
       overflow: hidden;
       margin-top: 1.25rem;
-      box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.08);
+      box-shadow: var(--card-shadow);
     }
     .guide-stepper-progress {
       height: 4px;
@@ -157,11 +158,11 @@
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 6px;
       padding: 12px 14px;
-      background: #f8fafc;
+      background: var(--bg-subtle);
       border-bottom: 1px solid var(--border-light);
     }
     .guide-step-tab {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border-light);
       border-radius: 9px;
       padding: 8px 6px;
@@ -177,13 +178,13 @@
     }
     .guide-step-tab:hover {
       border-color: var(--primary);
-      color: var(--primary-focus);
+      color: var(--link-color);
       transform: translateY(-1px);
     }
     .guide-step-tab.active {
-      background: linear-gradient(135deg, var(--primary) 0%, #0369a1 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-focus) 100%);
       border-color: var(--primary-focus);
-      color: #ffffff;
+      color: var(--on-primary);
       box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
     }
     .guide-step-tab-num {
@@ -217,7 +218,7 @@
       align-items: center;
       gap: 6px;
       background: var(--primary-soft);
-      color: var(--primary-focus);
+      color: var(--link-color);
       font-size: 0.78rem;
       font-weight: 800;
       padding: 3px 10px;
@@ -241,7 +242,7 @@
     }
     .guide-step-media {
       position: relative;
-      background: #f1f5f9;
+      background: var(--bg-subtle);
       border: 1px solid var(--border-light);
       border-radius: 12px;
       padding: 14px;
@@ -258,7 +259,7 @@
       width: auto;
       height: auto;
       border-radius: 8px;
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.14);
       display: block;
       transition: transform 0.2s ease;
     }
@@ -269,7 +270,7 @@
       position: absolute;
       right: 10px;
       bottom: 10px;
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(15, 23, 42, 0.76);
       color: #ffffff;
       font-size: 0.72rem;
       font-weight: 700;
@@ -285,7 +286,7 @@
       flex-wrap: wrap;
       padding: 8px 12px;
       border-radius: 10px;
-      background: #f8fafc;
+      background: var(--bg-subtle);
       border: 1px solid var(--border-light);
       transition: background 0.18s ease, border-color 0.18s ease;
     }
@@ -297,7 +298,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #f8fafc;
+      background: var(--bg-card);
       border: 1px solid var(--border-mid);
       border-radius: 8px;
       padding: 6px 10px;
@@ -306,7 +307,7 @@
     }
     .guide-url-copy-btn {
       background: var(--primary);
-      color: #ffffff;
+      color: var(--on-primary);
       border: none;
       border-radius: 6px;
       padding: 5px 11px;
@@ -320,19 +321,19 @@
       background: var(--primary-focus);
     }
     .guide-url-copy-btn.copied {
-      background: #10b981;
+      background: var(--success-solid);
     }
     .guide-step-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      background: #f8fafc;
+      background: var(--bg-subtle);
       border-top: 1px solid var(--border-light);
       gap: 12px;
     }
     .guide-nav-btn {
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border-mid);
       color: var(--text-main);
       padding: 7px 14px;
@@ -345,7 +346,7 @@
     }
     .guide-nav-btn:hover:not(:disabled) {
       border-color: var(--primary);
-      color: var(--primary-focus);
+      color: var(--link-color);
       background: var(--primary-soft);
     }
     .guide-nav-btn:disabled {
@@ -355,11 +356,11 @@
     .guide-nav-btn.primary {
       background: var(--primary);
       border-color: var(--primary);
-      color: #ffffff;
+      color: var(--on-primary);
     }
     .guide-nav-btn.primary:hover:not(:disabled) {
       background: var(--primary-focus);
-      color: #ffffff;
+      color: var(--on-primary);
     }
     .guide-step-dots {
       display: flex;
