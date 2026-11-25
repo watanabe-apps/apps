@@ -13,8 +13,7 @@
                      "UD デジタル 教科書体 NK-R", "UD Digi Kyokasho NK-R",
                      "UD デジタル 教科書体 N", "UD Digi Kyokasho N",
                      "UD デジタル 教科書体", "UD Digi Kyokasho",
-                     "YuKyokasho", "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN",
-                     "Klee One", sans-serif;
+                     "Klee One", "YuKyokasho", sans-serif;
     }
 
     * {
@@ -475,6 +474,235 @@
       flex-direction: column;
     }
 
+    .image-box .emoji-art {
+      font-size: calc(min(var(--col-box-size, 90px), 86px) * 0.76);
+      line-height: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      user-select: none;
+    }
+
+    button.btn-manage {
+      background-color: #00897b;
+      color: white;
+    }
+    button.btn-manage:hover {
+      background-color: #00695c;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* 単語一覧・選択削除モーダル */
+    .word-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .word-modal-backdrop.open {
+      display: flex;
+    }
+    .word-modal {
+      background: #fff;
+      width: 100%;
+      max-width: 960px;
+      max-height: 88vh;
+      border-radius: 10px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .word-modal-header {
+      padding: 12px 18px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .word-modal-title {
+      font-size: 16px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .word-modal-count-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .word-modal-close {
+      background: transparent;
+      color: #64748b;
+      font-size: 20px;
+      padding: 2px 8px;
+      line-height: 1;
+    }
+    .word-modal-close:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .word-modal-toolbar {
+      padding: 10px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #ffffff;
+    }
+    .word-modal-search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .word-modal-search-row input[type="text"] {
+      flex: 1;
+      min-width: 180px;
+      padding: 5px 10px;
+    }
+    .word-cat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .word-cat-tab {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: normal;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .word-cat-tab:hover {
+      background: #e2e8f0;
+    }
+    .word-cat-tab.active {
+      background: #0288d1;
+      color: #fff;
+      border-color: #0288d1;
+      font-weight: bold;
+    }
+    .word-modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 18px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 12.5px;
+    }
+    .word-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      background: #f8fafc;
+    }
+    .word-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+      gap: 10px;
+    }
+    .word-card {
+      position: relative;
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+    }
+    .word-card:hover {
+      border-color: #64748b;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .word-card.selected {
+      border-color: #e53935;
+      background: #fff5f5;
+      box-shadow: 0 0 0 1px #e53935;
+    }
+    .word-card-check {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 16px;
+      height: 16px;
+      accent-color: #e53935;
+      pointer-events: none;
+    }
+    .word-card-thumb {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .word-card-thumb img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .word-card-thumb .card-emoji {
+      font-size: 38px;
+      line-height: 1;
+    }
+    .word-card-name {
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      word-break: break-all;
+      color: #1e293b;
+    }
+    .word-card-badge {
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    .word-card-badge.custom {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .word-modal-footer {
+      padding: 10px 18px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .word-empty-msg {
+      text-align: center;
+      padding: 40px 16px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
     /* 一括印刷用コンテナ */
     #printAllContainer {
       display: none;
@@ -573,16 +801,17 @@
       </div>
     </div>
 
-    <!-- 画像管理 -->
+    <!-- 画像・単語管理 -->
     <div class="control-row">
       <div class="control-group">
         <button class="btn-secondary" onclick="triggerInput('folderInput')">📂 フォルダを開く</button>
         <button class="btn-secondary" onclick="triggerInput('fileInput')">🖼️ ファイルを選択</button>
-        <button class="btn-danger" onclick="clearSavedImages()">🗑️ 画像クリア</button>
+        <button class="btn-manage" onclick="openWordManagerModal()">📋 単語一覧・削除 (<span id="wordTotalBadge">0</span>語)</button>
+        <button class="btn-danger" onclick="clearSavedImages()">🗑️ 追加画像クリア</button>
         <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleImageUpload(event)">
         <input type="file" id="fileInput" multiple accept="image/*" style="display:none" onchange="handleImageUpload(event)">
       </div>
-      <span class="privacy-note" id="statusMsg">※画像はブラウザ内に自動保存されます（外部送信はありません）。</span>
+      <span class="privacy-note" id="statusMsg">※初期単語＋追加画像が利用できます（追加画像はブラウザ内に保存）。</span>
     </div>
 
     <!-- プリント設定 -->
@@ -664,16 +893,325 @@
   <!-- 全員分印刷時にシートを展開する領域 -->
   <div id="printAllContainer"></div>
 
+  <!-- 単語一覧・選択削除モーダル -->
+  <div class="word-modal-backdrop no-print" id="wordManagerModal" onclick="if (event.target === this) closeWordManagerModal();">
+    <div class="word-modal" role="dialog" aria-modal="true" aria-labelledby="wordModalTitle">
+      <div class="word-modal-header">
+        <div class="word-modal-title" id="wordModalTitle">
+          <span>📋 登録単語一覧・削除</span>
+          <span class="word-modal-count-badge" id="wmTotalCountBadge">全 0 語</span>
+        </div>
+        <button class="word-modal-close" onclick="closeWordManagerModal()" title="閉じる">✕</button>
+      </div>
+
+      <div class="word-modal-toolbar">
+        <div class="word-modal-search-row">
+          <input type="text" id="wmSearchInput" placeholder="🔍 単語名で検索（例: りんご、ぱんだ）" oninput="renderWordManagerGrid()">
+          <select id="wmTypeFilter" onchange="renderWordManagerGrid()">
+            <option value="all">文字種: すべて</option>
+            <option value="seion">文字種: 清音</option>
+            <option value="dakuon">文字種: 濁音</option>
+            <option value="handakuon">文字種: 半濁音</option>
+            <option value="sokuon">文字種: 促音</option>
+            <option value="youon">文字種: 拗音</option>
+            <option value="choon">文字種: 長音</option>
+          </select>
+        </div>
+        <div class="word-cat-tabs" id="wmCategoryTabs"></div>
+      </div>
+
+      <div class="word-modal-actions">
+        <div class="control-group" style="gap:8px; font-weight:normal;">
+          <span>選択中: <b id="wmSelectedCount">0</b> 件</span>
+          <button class="btn-action" onclick="selectAllVisibleInModal()">表示中を全選択</button>
+          <button class="btn-outline-danger" style="color:#475569; border-color:#cbd5e1;" onclick="deselectAllInModal()">選択解除</button>
+        </div>
+        <button class="btn-danger" id="wmDeleteSelectedBtn" onclick="deleteSelectedWordsFromModal()" disabled>🗑️ 選択した単語を削除 (0件)</button>
+      </div>
+
+      <div class="word-modal-body">
+        <div class="word-grid" id="wmWordGrid"></div>
+      </div>
+
+      <div class="word-modal-footer">
+        <div class="control-group" style="gap:8px;">
+          <button class="btn-outline-danger" onclick="clearSavedImages()">🗑️ 追加画像のみ全消去</button>
+          <button class="btn-secondary" id="wmRestorePresetsBtn" onclick="restoreDeletedPresets()">🔄 削除した初期単語を復元</button>
+        </div>
+        <button class="btn-action" onclick="closeWordManagerModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let imageDatabase = [];
     let db = null;
+
+    function normalizeWordText(str) {
+      return (str || '').replace(/\u309B/g, '\u3099').replace(/\u309C/g, '\u309A').normalize('NFC');
+    }
+
+    /* 初期単語マスタ（ひらがな図鑑と同じ243語） */
+    const PRESET_WORDS = [
+      { category: "くだもの", name: "いちご", emoji: "🍓", image: "../common/images/t_ichigo.png" },
+      { category: "くだもの", name: "かき", emoji: "", image: "../common/images/t_kaki.png" },
+      { category: "くだもの", name: "くり", emoji: "", image: "../common/images/t_kuri.png" },
+      { category: "くだもの", name: "さくらんぼ", emoji: "", image: "../common/images/t_sakuranbo.png" },
+      { category: "くだもの", name: "すいか", emoji: "🍉", image: null },
+      { category: "くだもの", name: "なし", emoji: "", image: "../common/images/t_nashi.png" },
+      { category: "くだもの", name: "ぱいなっぷる", emoji: "", image: "../common/images/t_painappuru.png" },
+      { category: "くだもの", name: "ばなな", emoji: "🍌", image: null },
+      { category: "くだもの", name: "ぶどう", emoji: "🍇", image: "../common/images/t_budou.png" },
+      { category: "くだもの", name: "みかん", emoji: "🍊", image: null },
+      { category: "くだもの", name: "めろん", emoji: "🍈", image: "../common/images/t_meron.png" },
+      { category: "くだもの", name: "もも", emoji: "🍑", image: null },
+      { category: "くだもの", name: "りんご", emoji: "🍎", image: null },
+      { category: "くだもの", name: "れもん", emoji: "🍋", image: null },
+      { category: "やさい", name: "えだまめ", emoji: "", image: "../common/images/t_edamame.png" },
+      { category: "やさい", name: "かぼちゃ", emoji: "", image: "../common/images/t_kabocha.png" },
+      { category: "やさい", name: "きゃべつ", emoji: "", image: "../common/images/t_kyabetsu.png" },
+      { category: "やさい", name: "きゅうり", emoji: "🥒", image: "../common/images/t_kyuuri.png" },
+      { category: "やさい", name: "さつまいも", emoji: "", image: "../common/images/t_satsumaimo.png" },
+      { category: "やさい", name: "じゃがいも", emoji: "", image: "../common/images/t_jagaimo.png" },
+      { category: "やさい", name: "だいこん", emoji: "🥬", image: "../common/images/t_daikon.png" },
+      { category: "やさい", name: "たまねぎ", emoji: "🧅", image: "../common/images/t_tamanegi.png" },
+      { category: "やさい", name: "とうもろこし", emoji: "🌽", image: "../common/images/t_toumorokoshi.png" },
+      { category: "やさい", name: "とまと", emoji: "🍅", image: "../common/images/t_tomato.png" },
+      { category: "やさい", name: "なす", emoji: "🍆", image: null },
+      { category: "やさい", name: "にんじん", emoji: "🥕", image: null },
+      { category: "どうぶつ", name: "あおむし", emoji: "", image: "../common/images/d_aomushi.png" },
+      { category: "どうぶつ", name: "あり", emoji: "🐜", image: null },
+      { category: "どうぶつ", name: "いか", emoji: "🦑", image: null },
+      { category: "どうぶつ", name: "いぬ", emoji: "🐶", image: null },
+      { category: "どうぶつ", name: "いのしし", emoji: "", image: "../common/images/d_inoshishi.png" },
+      { category: "どうぶつ", name: "いるか", emoji: "", image: "../common/images/d_iruka.png" },
+      { category: "どうぶつ", name: "うさぎ", emoji: "🐰", image: "../common/images/d_usagi.png" },
+      { category: "どうぶつ", name: "うし", emoji: "🐮", image: null },
+      { category: "どうぶつ", name: "うま", emoji: "🐴", image: null },
+      { category: "どうぶつ", name: "えび", emoji: "", image: "../common/images/d_ebi.png" },
+      { category: "どうぶつ", name: "おたまじゃくし", emoji: "", image: "../common/images/d_otamajakushi.png" },
+      { category: "どうぶつ", name: "かえる", emoji: "🐸", image: null },
+      { category: "どうぶつ", name: "かたつむり", emoji: "", image: "../common/images/d_katatsumuri.png" },
+      { category: "どうぶつ", name: "かに", emoji: "", image: "../common/images/d_kani.png" },
+      { category: "どうぶつ", name: "かば", emoji: "", image: "../common/images/d_kaba.png" },
+      { category: "どうぶつ", name: "かぶとむし", emoji: "", image: "../common/images/d_kabutomushi.png" },
+      { category: "どうぶつ", name: "かまきり", emoji: "", image: "../common/images/d_kamakiri.png" },
+      { category: "どうぶつ", name: "かめ", emoji: "🐢", image: null },
+      { category: "どうぶつ", name: "からす", emoji: "", image: "../common/images/d_karasu.png" },
+      { category: "どうぶつ", name: "きつね", emoji: "🦊", image: null },
+      { category: "どうぶつ", name: "きりん", emoji: "🦒", image: null },
+      { category: "どうぶつ", name: "きんぎょ", emoji: "🐠", image: null },
+      { category: "どうぶつ", name: "くじら", emoji: "", image: "../common/images/d_kujira.png" },
+      { category: "どうぶつ", name: "くま", emoji: "🐻", image: "../common/images/d_kuma.png" },
+      { category: "どうぶつ", name: "くらげ", emoji: "", image: "../common/images/d_kurage.png" },
+      { category: "どうぶつ", name: "くわがた", emoji: "", image: "../common/images/d_kuwagata.png" },
+      { category: "どうぶつ", name: "こあら", emoji: "", image: "../common/images/d_koara.png" },
+      { category: "どうぶつ", name: "こうもり", emoji: "", image: "../common/images/d_koumori.png" },
+      { category: "どうぶつ", name: "ごりら", emoji: "", image: "../common/images/d_gorira.png" },
+      { category: "どうぶつ", name: "さい", emoji: "", image: "../common/images/d_sai.png" },
+      { category: "どうぶつ", name: "さかな", emoji: "🐟", image: null },
+      { category: "どうぶつ", name: "さめ", emoji: "", image: "../common/images/d_same.png" },
+      { category: "どうぶつ", name: "さる", emoji: "🐵", image: null },
+      { category: "どうぶつ", name: "しか", emoji: "🦌", image: null },
+      { category: "どうぶつ", name: "しまうま", emoji: "", image: "../common/images/d_shimauma.png" },
+      { category: "どうぶつ", name: "しろくま", emoji: "", image: "../common/images/d_shirokuma.png" },
+      { category: "どうぶつ", name: "すずめ", emoji: "", image: "../common/images/d_suzume.png" },
+      { category: "どうぶつ", name: "せみ", emoji: "", image: "../common/images/d_semi.png" },
+      { category: "どうぶつ", name: "ぞう", emoji: "🐘", image: "../common/images/d_zou.png" },
+      { category: "どうぶつ", name: "たこ", emoji: "🐙", image: null },
+      { category: "どうぶつ", name: "ちょうちょ", emoji: "🦋", image: null },
+      { category: "どうぶつ", name: "てんとうむし", emoji: "", image: "../common/images/d_tentoumushi.png" },
+      { category: "どうぶつ", name: "とら", emoji: "🐯", image: "../common/images/d_tora.png" },
+      { category: "どうぶつ", name: "とり", emoji: "🐦", image: null },
+      { category: "どうぶつ", name: "とんぼ", emoji: "", image: "../common/images/d_tonbo.png" },
+      { category: "どうぶつ", name: "にわとり", emoji: "🐔", image: null },
+      { category: "どうぶつ", name: "ねこ", emoji: "🐱", image: null },
+      { category: "どうぶつ", name: "ねずみ", emoji: "🐭", image: null },
+      { category: "どうぶつ", name: "はち", emoji: "🐝", image: null },
+      { category: "どうぶつ", name: "ばった", emoji: "", image: "../common/images/d_batta.png" },
+      { category: "どうぶつ", name: "はと", emoji: "", image: "../common/images/d_hato.png" },
+      { category: "どうぶつ", name: "はりねずみ", emoji: "", image: "../common/images/d_harinezumi.png" },
+      { category: "どうぶつ", name: "ぱんだ", emoji: "🐼", image: null },
+      { category: "どうぶつ", name: "ひつじ", emoji: "🐑", image: null },
+      { category: "どうぶつ", name: "ひとで", emoji: "", image: "../common/images/d_hitode.png" },
+      { category: "どうぶつ", name: "ひよこ", emoji: "", image: "../common/images/d_hiyoko.png" },
+      { category: "どうぶつ", name: "ふくろう", emoji: "", image: "../common/images/d_fukurou.png" },
+      { category: "どうぶつ", name: "ぶた", emoji: "", image: "../common/images/d_buta.png" },
+      { category: "どうぶつ", name: "へび", emoji: "🐍", image: null },
+      { category: "どうぶつ", name: "ぺんぎん", emoji: "", image: "../common/images/d_pengin.png" },
+      { category: "どうぶつ", name: "もぐら", emoji: "", image: "../common/images/d_mogura.png" },
+      { category: "どうぶつ", name: "やぎ", emoji: "", image: "../common/images/d_yagi.png" },
+      { category: "どうぶつ", name: "らいおん", emoji: "🦁", image: null },
+      { category: "どうぶつ", name: "らくだ", emoji: "🐪", image: null },
+      { category: "どうぶつ", name: "りす", emoji: "", image: "../common/images/d_risu.png" },
+      { category: "どうぶつ", name: "わに", emoji: "🐊", image: null },
+      { category: "のりもの", name: "きかんしゃ", emoji: "", image: "../common/images/n_kikansha.png" },
+      { category: "のりもの", name: "ききゅう", emoji: "", image: "../common/images/n_kikyuu.png" },
+      { category: "のりもの", name: "きゅうきゅうしゃ", emoji: "", image: "../common/images/n_kyuukyuusha.png" },
+      { category: "のりもの", name: "くるま", emoji: "🚗", image: "../common/images/n_kuruma.png" },
+      { category: "のりもの", name: "さんりんしゃ", emoji: "", image: "../common/images/n_sanrinsha.png" },
+      { category: "のりもの", name: "じてんしゃ", emoji: "", image: "../common/images/n_jitensha.png" },
+      { category: "のりもの", name: "しょうぼうしゃ", emoji: "🚒", image: "../common/images/n_shoubousha.png" },
+      { category: "のりもの", name: "しんかんせん", emoji: "🚅", image: "../common/images/n_shinkansen.png" },
+      { category: "のりもの", name: "せんすいかん", emoji: "", image: "../common/images/n_sensuikan.png" },
+      { category: "のりもの", name: "でんしゃ", emoji: "🚃", image: null },
+      { category: "のりもの", name: "とらっく", emoji: "", image: "../common/images/n_torakku.png" },
+      { category: "のりもの", name: "ばいく", emoji: "", image: "../common/images/n_baiku.png" },
+      { category: "のりもの", name: "ばす", emoji: "🚌", image: "../common/images/n_basu.png" },
+      { category: "のりもの", name: "ひこうき", emoji: "✈️", image: "../common/images/n_hikouki.png" },
+      { category: "のりもの", name: "ふね", emoji: "🚢", image: null },
+      { category: "のりもの", name: "よっと", emoji: "⛵", image: null },
+      { category: "のりもの", name: "ろけっと", emoji: "🚀", image: null },
+      { category: "たべもの", name: "あいす", emoji: "🍨", image: null },
+      { category: "たべもの", name: "うどん", emoji: "", image: "../common/images/t_udon.png" },
+      { category: "たべもの", name: "えびふらい", emoji: "", image: "../common/images/t_ebifurai.png" },
+      { category: "たべもの", name: "おでん", emoji: "", image: "../common/images/t_oden.png" },
+      { category: "たべもの", name: "おにぎり", emoji: "🍙", image: null },
+      { category: "たべもの", name: "おむらいす", emoji: "", image: "../common/images/t_omuraisu.png" },
+      { category: "たべもの", name: "かきごおり", emoji: "", image: "../common/images/t_kakigoori.png" },
+      { category: "たべもの", name: "からあげ", emoji: "", image: "../common/images/t_karaage.png" },
+      { category: "たべもの", name: "ぎゅうにゅう", emoji: "", image: "../common/images/t_gyuunyuu.png" },
+      { category: "たべもの", name: "ぎょうざ", emoji: "", image: "../common/images/t_gyouza.png" },
+      { category: "たべもの", name: "ぐみ", emoji: "", image: "../common/images/t_gumi.png" },
+      { category: "たべもの", name: "ごはん", emoji: "", image: "../common/images/t_gohan.png" },
+      { category: "たべもの", name: "さらだ", emoji: "", image: "../common/images/t_sarada.png" },
+      { category: "たべもの", name: "さんどいっち", emoji: "", image: "../common/images/t_sandoicchi.png" },
+      { category: "たべもの", name: "すし", emoji: "🍣", image: "../common/images/t_sushi.png" },
+      { category: "たべもの", name: "すぱげってぃ", emoji: "", image: "../common/images/t_supagetti.png" },
+      { category: "たべもの", name: "せんべい", emoji: "", image: "../common/images/t_senbei.png" },
+      { category: "たべもの", name: "たいやき", emoji: "", image: "../common/images/t_taiyaki.png" },
+      { category: "たべもの", name: "たこやき", emoji: "", image: "../common/images/t_takoyaki.png" },
+      { category: "たべもの", name: "たまご", emoji: "", image: "../common/images/t_tamago.png" },
+      { category: "たべもの", name: "だんご", emoji: "", image: "../common/images/t_dango.png" },
+      { category: "たべもの", name: "どらやき", emoji: "", image: "../common/images/t_dorayaki.png" },
+      { category: "たべもの", name: "ぱん", emoji: "🍞", image: null },
+      { category: "たべもの", name: "ぴざ", emoji: "", image: "../common/images/t_piza.png" },
+      { category: "たべもの", name: "ぷりん", emoji: "🍮", image: "../common/images/t_purin.png" },
+      { category: "たべもの", name: "ほっとどっぐ", emoji: "", image: "../common/images/t_hottodoggu.png" },
+      { category: "たべもの", name: "みそしる", emoji: "", image: "../common/images/t_misoshiru.png" },
+      { category: "たべもの", name: "めだまやき", emoji: "", image: "../common/images/t_medamayaki.png" },
+      { category: "たべもの", name: "わたあめ", emoji: "", image: "../common/images/t_wataame.png" },
+      { category: "みぢかなもの", name: "あし", emoji: "", image: "../common/images/m_ashi.png" },
+      { category: "みぢかなもの", name: "あたま", emoji: "", image: "../common/images/m_atama.png" },
+      { category: "みぢかなもの", name: "いす", emoji: "", image: "../common/images/m_isu.png" },
+      { category: "みぢかなもの", name: "いろえんぴつ", emoji: "", image: "../common/images/m_iroenpitsu.png" },
+      { category: "みぢかなもの", name: "えあこん", emoji: "", image: "../common/images/m_eakon.png" },
+      { category: "みぢかなもの", name: "えのぐ", emoji: "", image: "../common/images/m_enogu.png" },
+      { category: "みぢかなもの", name: "えんぴつ", emoji: "✏️", image: null },
+      { category: "みぢかなもの", name: "おなか", emoji: "", image: "../common/images/m_onaka.png" },
+      { category: "みぢかなもの", name: "おりがみ", emoji: "", image: "../common/images/m_origami.png" },
+      { category: "みぢかなもの", name: "かさ", emoji: "☂️", image: null },
+      { category: "みぢかなもの", name: "かばん", emoji: "", image: "../common/images/m_kaban.png" },
+      { category: "みぢかなもの", name: "かめら", emoji: "", image: "../common/images/m_kamera.png" },
+      { category: "みぢかなもの", name: "くち", emoji: "", image: "../common/images/m_kuchi.png" },
+      { category: "みぢかなもの", name: "くつ", emoji: "👞", image: null },
+      { category: "みぢかなもの", name: "くつした", emoji: "", image: "../common/images/m_kutsushita.png" },
+      { category: "みぢかなもの", name: "くも", emoji: "☁️", image: null },
+      { category: "みぢかなもの", name: "くれよん", emoji: "", image: "../common/images/m_kureyon.png" },
+      { category: "みぢかなもの", name: "けしごむ", emoji: "", image: "../common/images/m_keshigomu.png" },
+      { category: "みぢかなもの", name: "こっぷ", emoji: "🥛", image: null },
+      { category: "みぢかなもの", name: "こま", emoji: "", image: "../common/images/m_koma.png" },
+      { category: "みぢかなもの", name: "ごみばこ", emoji: "", image: "../common/images/m_gomibako.png" },
+      { category: "みぢかなもの", name: "さいふ", emoji: "", image: "../common/images/m_saifu.png" },
+      { category: "みぢかなもの", name: "さら", emoji: "", image: "../common/images/m_osara.png" },
+      { category: "みぢかなもの", name: "さんだる", emoji: "", image: "../common/images/m_sandaru.png" },
+      { category: "みぢかなもの", name: "しゃぼんだま", emoji: "", image: "../common/images/m_shabondama.png" },
+      { category: "みぢかなもの", name: "すいとう", emoji: "", image: "../common/images/m_suitou.png" },
+      { category: "みぢかなもの", name: "すなば", emoji: "", image: "../common/images/m_sunaba.png" },
+      { category: "みぢかなもの", name: "すべりだい", emoji: "", image: "../common/images/m_suberidai.png" },
+      { category: "みぢかなもの", name: "ずぼん", emoji: "", image: "../common/images/m_zubon.png" },
+      { category: "みぢかなもの", name: "せっけん", emoji: "🧼", image: null },
+      { category: "みぢかなもの", name: "せんたくき", emoji: "", image: "../common/images/m_sentakuki.png" },
+      { category: "みぢかなもの", name: "せんぷうき", emoji: "", image: "../common/images/m_senpuuki.png" },
+      { category: "みぢかなもの", name: "そうじき", emoji: "", image: "../common/images/m_soujiki.png" },
+      { category: "みぢかなもの", name: "たおる", emoji: "", image: "../common/images/m_taoru.png" },
+      { category: "みぢかなもの", name: "ちきゅう", emoji: "🌍", image: null },
+      { category: "みぢかなもの", name: "ちゃわん", emoji: "", image: "../common/images/m_ochawan.png" },
+      { category: "みぢかなもの", name: "つき", emoji: "🌙", image: null },
+      { category: "みぢかなもの", name: "つくえ", emoji: "", image: "../common/images/m_tsukue.png" },
+      { category: "みぢかなもの", name: "つみき", emoji: "", image: "../common/images/m_tsumiki.png" },
+      { category: "みぢかなもの", name: "つめきり", emoji: "", image: "../common/images/m_tsumekiri.png" },
+      { category: "みぢかなもの", name: "て", emoji: "", image: "../common/images/m_te.png" },
+      { category: "みぢかなもの", name: "てぃっしゅ", emoji: "", image: "../common/images/m_tisshu.png" },
+      { category: "みぢかなもの", name: "てがみ", emoji: "✉️", image: null },
+      { category: "みぢかなもの", name: "てつぼう", emoji: "", image: "../common/images/m_tetsubou.png" },
+      { category: "みぢかなもの", name: "てぶくろ", emoji: "", image: "../common/images/m_tebukuro.png" },
+      { category: "みぢかなもの", name: "てれび", emoji: "", image: "../common/images/m_terebi.png" },
+      { category: "みぢかなもの", name: "でんしれんじ", emoji: "", image: "../common/images/m_denshirenji.png" },
+      { category: "みぢかなもの", name: "でんわ", emoji: "", image: "../common/images/m_denwa.png" },
+      { category: "みぢかなもの", name: "といれ", emoji: "", image: "../common/images/s_toire.png" },
+      { category: "みぢかなもの", name: "とけい", emoji: "⌚", image: null },
+      { category: "みぢかなもの", name: "とらんぷ", emoji: "", image: "../common/images/m_toranpu.png" },
+      { category: "みぢかなもの", name: "ながぐつ", emoji: "", image: "../common/images/m_nagagutsu.png" },
+      { category: "みぢかなもの", name: "なべ", emoji: "", image: "../common/images/m_nabe.png" },
+      { category: "みぢかなもの", name: "なわとび", emoji: "", image: "../common/images/m_nawatobi.png" },
+      { category: "みぢかなもの", name: "にんぎょう", emoji: "", image: "../common/images/m_ningyou.png" },
+      { category: "みぢかなもの", name: "ぬいぐるみ", emoji: "", image: "../common/images/m_nuigurumi.png" },
+      { category: "みぢかなもの", name: "のこぎり", emoji: "🪚", image: null },
+      { category: "みぢかなもの", name: "のり", emoji: "", image: "../common/images/m_nori.png" },
+      { category: "みぢかなもの", name: "はし", emoji: "", image: "../common/images/m_ohashi.png" },
+      { category: "みぢかなもの", name: "はさみ", emoji: "", image: "../common/images/m_hasami.png" },
+      { category: "みぢかなもの", name: "ぱずる", emoji: "", image: "../common/images/m_pazuru.png" },
+      { category: "みぢかなもの", name: "ぱそこん", emoji: "", image: "../common/images/m_pasokon.png" },
+      { category: "みぢかなもの", name: "はな", emoji: "👃", image: null },
+      { category: "みぢかなもの", name: "はぶらし", emoji: "", image: "../common/images/m_haburashi.png" },
+      { category: "みぢかなもの", name: "はんかち", emoji: "", image: "../common/images/m_hankachi.png" },
+      { category: "みぢかなもの", name: "ばんそうこう", emoji: "", image: "../common/images/m_bandoeido.png" },
+      { category: "みぢかなもの", name: "ひまわり", emoji: "🌻", image: null },
+      { category: "みぢかなもの", name: "ふうせん", emoji: "", image: "../common/images/m_fuusen.png" },
+      { category: "みぢかなもの", name: "ふでばこ", emoji: "", image: "../common/images/m_fudebako.png" },
+      { category: "みぢかなもの", name: "ふとん", emoji: "", image: "../common/images/m_futon.png" },
+      { category: "みぢかなもの", name: "ふらいぱん", emoji: "", image: "../common/images/m_furaipan.png" },
+      { category: "みぢかなもの", name: "ぶらんこ", emoji: "", image: "../common/images/m_buranko.png" },
+      { category: "みぢかなもの", name: "ぶろっく", emoji: "", image: "../common/images/m_burokku.png" },
+      { category: "みぢかなもの", name: "べっど", emoji: "", image: "../common/images/m_beddo.png" },
+      { category: "みぢかなもの", name: "ほうき", emoji: "", image: "../common/images/m_houki.png" },
+      { category: "みぢかなもの", name: "ぼうし", emoji: "🧢", image: "../common/images/m_boushi.png" },
+      { category: "みぢかなもの", name: "ほうちょう", emoji: "", image: "../common/images/m_houchou.png" },
+      { category: "みぢかなもの", name: "ほし", emoji: "⭐", image: null },
+      { category: "みぢかなもの", name: "ほん", emoji: "📖", image: null },
+      { category: "みぢかなもの", name: "まくら", emoji: "", image: "../common/images/m_makura.png" },
+      { category: "みぢかなもの", name: "ますく", emoji: "", image: "../common/images/m_masuku.png" },
+      { category: "みぢかなもの", name: "まど", emoji: "🪟", image: null },
+      { category: "みぢかなもの", name: "まないた", emoji: "", image: "../common/images/m_manaita.png" },
+      { category: "みぢかなもの", name: "みみ", emoji: "👂", image: null },
+      { category: "みぢかなもの", name: "むしめがね", emoji: "🔍", image: null },
+      { category: "みぢかなもの", name: "め", emoji: "", image: "../common/images/m_me.png" },
+      { category: "みぢかなもの", name: "めがね", emoji: "👓", image: null },
+      { category: "みぢかなもの", name: "やかん", emoji: "", image: "../common/images/m_yakan.png" },
+      { category: "みぢかなもの", name: "やま", emoji: "⛰️", image: null },
+      { category: "みぢかなもの", name: "ゆきだるま", emoji: "⛄", image: null },
+      { category: "みぢかなもの", name: "らっぱ", emoji: "🎺", image: null },
+      { category: "みぢかなもの", name: "らんどせる", emoji: "", image: "../common/images/m_randoseru.png" },
+      { category: "みぢかなもの", name: "りもこん", emoji: "", image: "../common/images/m_rimokon.png" },
+      { category: "みぢかなもの", name: "りゅっく", emoji: "", image: "../common/images/m_ryukku.png" },
+      { category: "みぢかなもの", name: "れいぞうこ", emoji: "", image: "../common/images/m_reizouko.png" },
+      { category: "みぢかなもの", name: "ろうそく", emoji: "🕯️", image: null },
+      { category: "ひと", name: "あかちゃん", emoji: "", image: "../common/images/h_akachan.png" },
+      { category: "ひと", name: "おいしゃさん", emoji: "", image: "../common/images/h_oishasan.png" },
+      { category: "ひと", name: "おじいさん", emoji: "", image: "../common/images/h_ojiisan.png" },
+      { category: "ひと", name: "おに", emoji: "👹", image: null },
+      { category: "ひと", name: "おばあさん", emoji: "", image: "../common/images/h_obaasan.png" },
+      { category: "ひと", name: "おひめさま", emoji: "", image: "../common/images/h_ohimesama.png" },
+      { category: "ひと", name: "けいさつかん", emoji: "", image: "../common/images/h_keisatsukan.png" },
+      { category: "ひと", name: "しょうぼうし", emoji: "", image: "../common/images/h_shouboushi.png" },
+      { category: "ひと", name: "にんじゃ", emoji: "", image: "../common/images/h_ninja.png" }
+    ];
+
+    const PRESET_NAME_SET = new Set(PRESET_WORDS.map(p => p.name));
+    const WORD_CATEGORY_ORDER = ['すべて', '追加した単語', 'くだもの', 'やさい', 'どうぶつ', 'のりもの', 'たべもの', 'みぢかなもの', 'ひと'];
+
+    let customImagesMap = new Map();
+    let deletedPresetsSet = new Set();
+    let wmSelectedNames = new Set();
+    let wmActiveCategory = 'すべて';
 
     // カテゴリ定義
     const CATEGORY_DEFINITIONS = {
       seion: {
         label: "清音",
         test: (word) => {
-          return !/[がぎぐげござじずぜぞだぢづでどばびぶべぼガギグゲゴザジズゼゾダヂヅデドバビブベボ]/.test(word) &&
+          return !/[がぎぐげござじずぜぞだぢづでどばびぶべぼゔガギグゲゴザジズゼゾダヂヅデドバビブベボヴ]/.test(word) &&
                  !/[ぱぴぷぺぽパピプペポ]/.test(word) &&
                  !/[っッ]/.test(word) &&
                  !/[ゃゅょャュョ]/.test(word) &&
@@ -682,7 +1220,7 @@
       },
       dakuon: {
         label: "濁音",
-        test: (word) => /[がぎぐげござじずぜぞだぢづでどばびぶべぼガギグゲゴザジズゼゾダヂヅデドバビブベボ]/.test(word)
+        test: (word) => /[がぎぐげござじずぜぞだぢづでどばびぶべぼゔガギグゲゴザジズゼゾダヂヅデドバビブベボヴ]/.test(word)
       },
       handakuon: {
         label: "半濁音",
@@ -754,11 +1292,28 @@
 
     async function saveImagesToDB(images) {
       if (!db) return;
-      const tx = db.transaction("images", "readwrite");
-      const store = tx.objectStore("images");
-      for (let img of images) {
-        store.put(img);
-      }
+      return new Promise((resolve) => {
+        const tx = db.transaction("images", "readwrite");
+        const store = tx.objectStore("images");
+        for (let img of images) {
+          store.put(img);
+        }
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
+    }
+
+    async function deleteImagesFromDB(names) {
+      if (!db || !names || names.length === 0) return;
+      return new Promise((resolve) => {
+        const tx = db.transaction("images", "readwrite");
+        const store = tx.objectStore("images");
+        for (const name of names) {
+          store.delete(name);
+        }
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
     }
 
     async function loadImagesFromDB() {
@@ -772,26 +1327,350 @@
       });
     }
 
+    function loadDeletedPresets() {
+      deletedPresetsSet.clear();
+      try {
+        const raw = localStorage.getItem('WordPrintDeletedPresets');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            arr.forEach(n => deletedPresetsSet.add(normalizeWordText(n)));
+          }
+        }
+      } catch (e) {}
+    }
+
+    function saveDeletedPresets() {
+      try {
+        localStorage.setItem('WordPrintDeletedPresets', JSON.stringify(Array.from(deletedPresetsSet)));
+      } catch (e) {}
+    }
+
+    function rebuildImageDatabase() {
+      const merged = [];
+      const handledCustom = new Set();
+
+      // 追加したカスタム専用単語を先頭に配置（見つけやすくする）
+      customImagesMap.forEach((img, name) => {
+        if (!PRESET_NAME_SET.has(name)) {
+          merged.push({
+            name: name,
+            url: img.url,
+            emoji: '',
+            category: '追加した単語',
+            isCustom: true,
+            isPreset: false
+          });
+          handledCustom.add(name);
+        }
+      });
+
+      // 初期単語（削除済み以外）を追加（カスタム画像で上書きされていればそちらを優先）
+      PRESET_WORDS.forEach(p => {
+        if (deletedPresetsSet.has(p.name)) return;
+        const customOverride = customImagesMap.get(p.name);
+        merged.push({
+          name: p.name,
+          url: customOverride ? customOverride.url : p.image,
+          emoji: p.emoji || '',
+          category: p.category,
+          isCustom: !!customOverride,
+          isPreset: true
+        });
+        if (customOverride) handledCustom.add(p.name);
+      });
+
+      // 50音順にソート
+      merged.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+      imageDatabase = merged;
+
+      const badge = document.getElementById('wordTotalBadge');
+      if (badge) badge.innerText = imageDatabase.length;
+    }
+
+    function reconcileAllChildrenSelectedWords() {
+      const validNames = new Set(imageDatabase.map(img => img.name));
+      const filteredList = getFilteredImages();
+      const fallbackPool = filteredList.length > 0 ? filteredList : imageDatabase;
+
+      childrenData.forEach(child => {
+        if (!Array.isArray(child.selectedWords)) child.selectedWords = [];
+        for (let i = 0; i < child.selectedWords.length; i++) {
+          const wName = normalizeWordText(child.selectedWords[i]);
+          if (wName && !validNames.has(wName)) {
+            child.selectedWords[i] = fallbackPool.length > 0
+              ? fallbackPool[i % fallbackPool.length].name
+              : '';
+          } else {
+            child.selectedWords[i] = wName;
+          }
+        }
+      });
+    }
+
+    /* 追加画像のみ全消去（お子さん設定・印刷設定・初期単語は保持） */
     async function clearSavedImages() {
-      if (!confirm("保存されている画像データと設定をすべて消去しますか？")) return;
-      if (db) {
-        const tx = db.transaction("images", "readwrite");
-        tx.objectStore("images").clear();
+      if (customImagesMap.size === 0) {
+        alert("現在、追加された画像はありません。\n初期単語を消したい場合は「📋 単語一覧・削除」から選択して削除してください。");
+        return;
       }
-      localStorage.removeItem('WordPrintSettings');
-      localStorage.removeItem('WordPrintChildrenData');
-      localStorage.removeItem('WordPrintActiveChildId');
-      localStorage.removeItem('WordPrintCategorySettings');
 
-      imageDatabase = [];
-      childrenData = [createDefaultChild()];
-      currentChildId = childrenData[0].id;
+      if (!confirm(`追加した画像（${customImagesMap.size}件）をすべて消去しますか？\n※お子さんの名前やプリント設定、初期単語は消えません。`)) return;
 
-      updateChildSelectUI();
-      applyCurrentChildToControls();
+      if (db) {
+        await new Promise((resolve) => {
+          const tx = db.transaction("images", "readwrite");
+          tx.objectStore("images").clear();
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+      }
+
+      customImagesMap.clear();
+      rebuildImageDatabase();
+      reconcileAllChildrenSelectedWords();
       setupWordSelector();
       renderWorksheet();
-      document.getElementById('statusMsg').innerText = "※保存画像を消去しました。";
+      saveAllData();
+
+      const modal = document.getElementById('wordManagerModal');
+      if (modal && modal.classList.contains('open')) {
+        wmSelectedNames.clear();
+        renderWordManagerCategoryTabs();
+        renderWordManagerGrid();
+      }
+
+      document.getElementById('statusMsg').innerText = `※追加画像を消去しました（設定は保持・登録単語 ${imageDatabase.length}件）。`;
+    }
+
+    /* 指定した単語を削除（カスタム画像＆初期単語どちらにも対応） */
+    async function deleteWordsByNames(names) {
+      if (!names || names.length === 0) return;
+
+      const dbKeysToDelete = [];
+      let presetDeleted = false;
+
+      names.forEach(rawName => {
+        const name = normalizeWordText(rawName);
+        if (customImagesMap.has(name)) {
+          const customObj = customImagesMap.get(name);
+          if (customObj && customObj.rawDbKeys) {
+            dbKeysToDelete.push(...customObj.rawDbKeys);
+          } else {
+            dbKeysToDelete.push(name);
+          }
+          customImagesMap.delete(name);
+        }
+        if (PRESET_NAME_SET.has(name)) {
+          deletedPresetsSet.add(name);
+          presetDeleted = true;
+        }
+      });
+
+      if (dbKeysToDelete.length > 0) {
+        await deleteImagesFromDB(dbKeysToDelete);
+      }
+      if (presetDeleted) {
+        saveDeletedPresets();
+      }
+
+      rebuildImageDatabase();
+      reconcileAllChildrenSelectedWords();
+      setupWordSelector();
+      renderWorksheet();
+      saveAllData();
+
+      document.getElementById('statusMsg').innerText = `※${names.length}件の単語を削除しました（残り ${imageDatabase.length}件）。`;
+    }
+
+    function restoreDeletedPresets() {
+      if (deletedPresetsSet.size === 0) return;
+      const count = deletedPresetsSet.size;
+      deletedPresetsSet.clear();
+      localStorage.removeItem('WordPrintDeletedPresets');
+      rebuildImageDatabase();
+      setupWordSelector();
+      renderWorksheet();
+      renderWordManagerCategoryTabs();
+      renderWordManagerGrid();
+      document.getElementById('statusMsg').innerText = `※削除していた初期単語（${count}件）を復元しました。`;
+    }
+
+    /* 単語一覧・選択削除モーダル UI */
+    function openWordManagerModal() {
+      wmSelectedNames.clear();
+      document.getElementById('wmSearchInput').value = '';
+      document.getElementById('wmTypeFilter').value = 'all';
+      wmActiveCategory = 'すべて';
+      renderWordManagerCategoryTabs();
+      renderWordManagerGrid();
+      document.getElementById('wordManagerModal').classList.add('open');
+    }
+
+    function closeWordManagerModal() {
+      document.getElementById('wordManagerModal').classList.remove('open');
+    }
+
+    function renderWordManagerCategoryTabs() {
+      const container = document.getElementById('wmCategoryTabs');
+      container.innerHTML = '';
+
+      WORD_CATEGORY_ORDER.forEach(cat => {
+        let count = 0;
+        if (cat === 'すべて') {
+          count = imageDatabase.length;
+        } else if (cat === '追加した単語') {
+          count = imageDatabase.filter(img => img.isCustom).length;
+        } else {
+          count = imageDatabase.filter(img => img.category === cat).length;
+        }
+
+        const btn = document.createElement('button');
+        btn.className = 'word-cat-tab' + (wmActiveCategory === cat ? ' active' : '');
+        btn.innerText = `${cat} (${count})`;
+        btn.onclick = () => {
+          wmActiveCategory = cat;
+          renderWordManagerCategoryTabs();
+          renderWordManagerGrid();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function getModalFilteredWords() {
+      const query = normalizeWordText((document.getElementById('wmSearchInput').value || '').trim());
+      const typeFilter = document.getElementById('wmTypeFilter').value;
+
+      return imageDatabase.filter(img => {
+        if (wmActiveCategory === '追加した単語') {
+          if (!img.isCustom) return false;
+        } else if (wmActiveCategory !== 'すべて') {
+          if (img.category !== wmActiveCategory) return false;
+        }
+
+        if (typeFilter !== 'all') {
+          const def = CATEGORY_DEFINITIONS[typeFilter];
+          if (def && !def.test(normalizeWordText(img.name))) return false;
+        }
+
+        if (query && !normalizeWordText(img.name).includes(query)) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    function updateWordManagerSelectionUI() {
+      // 存在しない名前を整理
+      const existingSet = new Set(imageDatabase.map(i => i.name));
+      Array.from(wmSelectedNames).forEach(n => {
+        if (!existingSet.has(n)) wmSelectedNames.delete(n);
+      });
+
+      const count = wmSelectedNames.size;
+      document.getElementById('wmSelectedCount').innerText = count;
+      const delBtn = document.getElementById('wmDeleteSelectedBtn');
+      delBtn.innerText = `🗑️ 選択した単語を削除 (${count}件)`;
+      delBtn.disabled = (count === 0);
+
+      const restoreBtn = document.getElementById('wmRestorePresetsBtn');
+      if (restoreBtn) {
+        restoreBtn.disabled = (deletedPresetsSet.size === 0);
+        restoreBtn.innerText = deletedPresetsSet.size > 0
+          ? `🔄 削除した初期単語を復元 (${deletedPresetsSet.size}件)`
+          : '🔄 削除した初期単語を復元';
+      }
+    }
+
+    function renderWordManagerGrid() {
+      document.getElementById('wmTotalCountBadge').innerText = `全 ${imageDatabase.length} 語`;
+      const grid = document.getElementById('wmWordGrid');
+      grid.innerHTML = '';
+
+      const list = getModalFilteredWords();
+      updateWordManagerSelectionUI();
+
+      if (list.length === 0) {
+        grid.innerHTML = '<div class="word-empty-msg" style="grid-column:1/-1;">該当する単語がありません。</div>';
+        return;
+      }
+
+      list.forEach(imgObj => {
+        const isSelected = wmSelectedNames.has(imgObj.name);
+        const card = document.createElement('div');
+        card.className = 'word-card' + (isSelected ? ' selected' : '');
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'word-card-check';
+        chk.checked = isSelected;
+
+        const thumb = document.createElement('div');
+        thumb.className = 'word-card-thumb';
+        if (imgObj.url) {
+          const img = document.createElement('img');
+          img.src = imgObj.url;
+          img.loading = 'lazy';
+          thumb.appendChild(img);
+        } else if (imgObj.emoji) {
+          const em = document.createElement('span');
+          em.className = 'card-emoji';
+          em.innerText = imgObj.emoji;
+          thumb.appendChild(em);
+        }
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'word-card-name';
+        nameEl.innerText = imgObj.name;
+
+        const badge = document.createElement('div');
+        badge.className = 'word-card-badge' + (imgObj.isCustom ? ' custom' : '');
+        badge.innerText = imgObj.isCustom ? (imgObj.isPreset ? `${imgObj.category}・上書` : '追加') : imgObj.category;
+
+        card.appendChild(chk);
+        card.appendChild(thumb);
+        card.appendChild(nameEl);
+        card.appendChild(badge);
+
+        card.onclick = () => {
+          if (wmSelectedNames.has(imgObj.name)) {
+            wmSelectedNames.delete(imgObj.name);
+            card.classList.remove('selected');
+            chk.checked = false;
+          } else {
+            wmSelectedNames.add(imgObj.name);
+            card.classList.add('selected');
+            chk.checked = true;
+          }
+          updateWordManagerSelectionUI();
+        };
+
+        grid.appendChild(card);
+      });
+    }
+
+    function selectAllVisibleInModal() {
+      const list = getModalFilteredWords();
+      list.forEach(imgObj => wmSelectedNames.add(imgObj.name));
+      renderWordManagerGrid();
+    }
+
+    function deselectAllInModal() {
+      wmSelectedNames.clear();
+      renderWordManagerGrid();
+    }
+
+    async function deleteSelectedWordsFromModal() {
+      if (wmSelectedNames.size === 0) return;
+      if (!confirm(`選択した ${wmSelectedNames.size} 件の単語を削除しますか？`)) return;
+
+      const targets = Array.from(wmSelectedNames);
+      wmSelectedNames.clear();
+      await deleteWordsByNames(targets);
+      renderWordManagerCategoryTabs();
+      renderWordManagerGrid();
     }
 
     /* データ保存と復元 */
@@ -1026,42 +1905,61 @@
 
       document.getElementById('statusMsg').innerText = "画像を処理中...";
 
-      const existingNames = new Set(imageDatabase.map(img => img.name));
       const newImages = [];
+      let addedCount = 0;
+      let updatedCount = 0;
       let skippedCount = 0;
+      let presetRestored = false;
 
       for (let file of files) {
         if (file.type.startsWith('image/')) {
-          const wordName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-          if (existingNames.has(wordName)) {
+          const rawBase = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+          const wordName = normalizeWordText(rawBase);
+
+          if (customImagesMap.has(wordName)) {
             skippedCount++;
             continue;
           }
+
           const dataUrl = await readFileAsDataURL(file);
           const imgObj = { name: wordName, url: dataUrl };
           newImages.push(imgObj);
-          existingNames.add(wordName);
+          customImagesMap.set(wordName, { name: wordName, url: dataUrl, rawDbKeys: [wordName] });
+
+          if (deletedPresetsSet.has(wordName)) {
+            deletedPresetsSet.delete(wordName);
+            presetRestored = true;
+          }
+
+          if (PRESET_NAME_SET.has(wordName)) {
+            updatedCount++;
+          } else {
+            addedCount++;
+          }
         }
       }
 
       if (newImages.length > 0) {
-        imageDatabase.push(...newImages);
         await saveImagesToDB(newImages);
       }
+      if (presetRestored) {
+        saveDeletedPresets();
+      }
 
-      const addedCount = newImages.length;
-      if (addedCount > 0) {
-        let msg = `※${addedCount}件の画像を追加しました。`;
+      const totalLoaded = addedCount + updatedCount;
+      if (totalLoaded > 0) {
+        let msg = `※${totalLoaded}件の画像を追加しました。`;
         if (skippedCount > 0) msg += `（${skippedCount}件は重複のためスキップ）`;
         document.getElementById('statusMsg').innerText = msg;
       } else if (skippedCount > 0) {
         document.getElementById('statusMsg').innerText = `※選択された画像（${skippedCount}件）はすべて既に登録されています。`;
       } else {
         alert('画像ファイルが見つかりませんでした。');
-        document.getElementById('statusMsg').innerText = `※登録済み: ${imageDatabase.length}件`;
+        document.getElementById('statusMsg').innerText = `※登録単語: ${imageDatabase.length}件`;
         return;
       }
 
+      rebuildImageDatabase();
       setupWordSelector();
       renderWorksheet();
       saveAllData();
@@ -1078,10 +1976,11 @@
     /* 単語の種類（カテゴリ）判定 */
     function checkCategory(word, selectedCategories) {
       if (!selectedCategories || selectedCategories.length === 0) return true;
+      const normalized = normalizeWordText(word);
 
       return selectedCategories.some(cat => {
         const def = CATEGORY_DEFINITIONS[cat];
-        return def ? def.test(word) : false;
+        return def ? def.test(normalized) : false;
       });
     }
 
@@ -1152,8 +2051,9 @@
       const text = document.getElementById('nameText').value;
       child.printName = text;
 
-      if (child.nameType === 'split' && text.length > 0) {
-        const len = Math.max(Math.min(text.length, 10), 2);
+      const charLen = Array.from(normalizeWordText(text)).length;
+      if (child.nameType === 'split' && charLen > 0) {
+        const len = Math.max(Math.min(charLen, 10), 2);
         child.nameLength = len;
         document.getElementById('nameLength').value = len;
       }
@@ -1182,7 +2082,7 @@
       selector.innerHTML = '';
 
       if (imageDatabase.length === 0) {
-        selector.innerHTML = '<span style="font-size:12px; color:#666;">※画像を読み込むとここにリストが表示されます。</span>';
+        selector.innerHTML = '<span style="font-size:12px; color:#666;">※単語が0件です。「📋 単語一覧・削除」から初期単語を復元するか、画像を読み込んでください。</span>';
         return;
       }
 
@@ -1332,11 +2232,10 @@
         wordsArea.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">🖼️</div>
-            <div class="empty-state-title">単語画像が登録されていません</div>
+            <div class="empty-state-title">単語が登録されていません</div>
             <div class="empty-state-desc">
-              画面上の <b>「📂 フォルダを開く」</b> または <b>「🖼️ ファイルを選択」</b> ボタンから<br>
-              単語の画像（ファイル名が単語名になります）を読み込んでください。<br>
-              一度読み込むと、次回以降も自動で保存・追加読み込みされます。
+              画面上の <b>「📋 単語一覧・削除」</b> から初期単語を復元するか、<br>
+              <b>「📂 フォルダを開く」</b> または <b>「🖼️ ファイルを選択」</b> から単語画像を読み込んでください。
             </div>
           </div>
         `;
@@ -1349,14 +2248,14 @@
       const showGrid = child.showGrid;
 
       for (let i = 0; i < wordCount; i++) {
-        const wordName = child.selectedWords[i] || '';
+        const wordName = normalizeWordText(child.selectedWords[i] || '');
         const imgObj = imageDatabase.find(img => img.name === wordName) || null;
 
         const col = document.createElement('div');
         col.className = 'word-column';
 
-        const wordText = wordName;
-        const wordLen = Math.max(wordText.length, 1);
+        const wordChars = Array.from(wordName);
+        const wordLen = Math.max(wordChars.length, 1);
 
         const colBoxSize = calculateColBoxSize(wordLen);
         col.style.setProperty('--col-box-size', `${colBoxSize}px`);
@@ -1364,14 +2263,21 @@
         const imgBox = document.createElement('div');
         imgBox.className = 'image-box';
         if (imgObj) {
-          const img = document.createElement('img');
-          img.src = imgObj.url;
-          imgBox.appendChild(img);
+          if (imgObj.url) {
+            const img = document.createElement('img');
+            img.src = imgObj.url;
+            imgBox.appendChild(img);
+          } else if (imgObj.emoji) {
+            const emojiEl = document.createElement('span');
+            emojiEl.className = 'emoji-art';
+            emojiEl.innerText = imgObj.emoji;
+            imgBox.appendChild(emojiEl);
+          }
         }
         col.appendChild(imgBox);
 
-        for (let charIdx = 0; charIdx < wordText.length; charIdx++) {
-          const char = wordText[charIdx];
+        for (let charIdx = 0; charIdx < wordChars.length; charIdx++) {
+          const char = wordChars[charIdx];
           const traceKey = `w_${i}_${charIdx}`;
           const sampleKey = `ws_${i}_${charIdx}`;
 
@@ -1422,7 +2328,8 @@
       const showGrid = child.showGrid;
       const nameType = child.nameType;
       const nameLength = child.nameLength;
-      const nameText = child.printName || 'ひろしま太郎左衛門';
+      const nameText = normalizeWordText(child.printName || 'ひろしま太郎左衛門');
+      const nameChars = Array.from(nameText);
 
       const nameLabel = document.createElement('div');
       nameLabel.className = 'name-label';
@@ -1447,7 +2354,7 @@
         traceSpan.className = 'name-single-trace';
         traceSpan.innerText = nameText;
 
-        const nameLen = Math.max(nameText.length, 1);
+        const nameLen = Math.max(nameChars.length, 1);
         const traceFontSize = Math.min(50, Math.floor(500 / nameLen));
         const traceLetterSpacing = Math.min(10, Math.floor(traceFontSize * 0.2));
         traceSpan.style.fontSize = `${traceFontSize}px`;
@@ -1477,7 +2384,7 @@
         splitBox.style.setProperty('--col-box-size', `${nameBoxSize}px`);
 
         for (let i = 0; i < nameLength; i++) {
-          const char = nameText[i] || '';
+          const char = nameChars[i] || '';
           const traceKey = `name_split_${i}`;
           const sampleKey = `name_splits_${i}`;
 
@@ -1607,13 +2514,34 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       await initDB();
+      loadDeletedPresets();
+
       const savedImages = await loadImagesFromDB();
-      if (savedImages.length > 0) {
-        imageDatabase = savedImages;
-        document.getElementById('statusMsg').innerText = `※保存済みの画像${imageDatabase.length}件を自動読み込みしました。`;
-      }
+      customImagesMap.clear();
+      savedImages.forEach(img => {
+        const normName = normalizeWordText(img.name);
+        if (customImagesMap.has(normName)) {
+          customImagesMap.get(normName).rawDbKeys.push(img.name);
+        } else {
+          customImagesMap.set(normName, {
+            name: normName,
+            url: img.url,
+            rawDbKeys: [img.name]
+          });
+        }
+      });
 
       loadAllData();
+      rebuildImageDatabase();
+      reconcileAllChildrenSelectedWords();
+
+      const customCount = customImagesMap.size;
+      if (customCount > 0) {
+        document.getElementById('statusMsg').innerText = `※初期単語＋追加画像${customCount}件（計${imageDatabase.length}語）を読み込みました。`;
+      } else {
+        document.getElementById('statusMsg').innerText = `※初期単語${imageDatabase.length}語が利用できます（追加画像も登録可能）。`;
+      }
+
       updateChildSelectUI();
       applyCurrentChildToControls();
       setupWordSelector();

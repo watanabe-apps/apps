@@ -2275,7 +2275,6 @@
       { id: "w_m_enogu", category: "みぢかなもの", name: "えのぐ", emoji: "", image: "../common/images/m_enogu.png", tts: "絵の具", audio: null },
       { id: "w_m_enpitsu", category: "みぢかなもの", name: "えんぴつ", emoji: "✏️", image: null, audio: null },
       { id: "w_m_onaka", category: "みぢかなもの", name: "おなか", emoji: "", image: "../common/images/m_onaka.png", tts: "お腹", audio: null },
-      { id: "w_m_ohashi", category: "みぢかなもの", name: "おはし", emoji: "", image: "../common/images/m_ohashi.png", tts: "お箸", audio: null },
       { id: "w_m_origami", category: "みぢかなもの", name: "おりがみ", emoji: "", image: "../common/images/m_origami.png", tts: "折り紙", audio: null },
       { id: "w_umbrella", category: "みぢかなもの", name: "かさ", emoji: "☂️", image: null, audio: null },
       { id: "w_m_kaban", category: "みぢかなもの", name: "かばん", emoji: "", image: "../common/images/m_kaban.png", tts: "カバン", audio: null },
@@ -2326,6 +2325,7 @@
       { id: "w_m_nuigurumi", category: "みぢかなもの", name: "ぬいぐるみ", emoji: "", image: "../common/images/m_nuigurumi.png", audio: null },
       { id: "w_kq_166", category: "みぢかなもの", name: "のこぎり", emoji: "🪚", image: null, audio: null },
       { id: "w_m_nori", category: "みぢかなもの", name: "のり", emoji: "", image: "../common/images/m_nori.png", audio: null },
+      { id: "w_m_ohashi", category: "みぢかなもの", name: "はし", emoji: "", image: "../common/images/m_ohashi.png", tts: "箸", audio: null },
       { id: "w_m_hasami", category: "みぢかなもの", name: "はさみ", emoji: "", image: "../common/images/m_hasami.png", tts: "ハサミ", audio: null },
       { id: "w_m_pazuru", category: "みぢかなもの", name: "ぱずる", emoji: "", image: "../common/images/m_pazuru.png", tts: "パズル", audio: null },
       { id: "w_m_pasokon", category: "みぢかなもの", name: "ぱそこん", emoji: "", image: "../common/images/m_pasokon.png", tts: "パソコン", audio: null },
@@ -2885,12 +2885,15 @@
           const isCustomUploadedImg = typeof existing.image === 'string' && existing.image.startsWith('data:') && existing.image !== DAIKON_SVG;
           const nextImage = isCustomUploadedImg ? existing.image : pw.image;
           const nextTts = pw.tts || undefined;
+          const shouldRename = pw.id === 'w_m_ohashi' && existing.name === 'おはし';
           const changed =
+            shouldRename ||
             existing.category !== pw.category ||
             existing.emoji !== pw.emoji ||
             (existing.image || null) !== (nextImage || null) ||
             (existing.tts || undefined) !== nextTts;
           if (changed) {
+            if (shouldRename) existing.name = pw.name;
             existing.category = pw.category;
             existing.emoji = pw.emoji;
             existing.image = nextImage;
@@ -3622,7 +3625,7 @@
       btnSave.addEventListener('click', async () => {
         resetDialogRecordingState();
         const cat = document.getElementById('dialog-cat-input').value;
-        const name = document.getElementById('dialog-name-input').value.trim();
+        const name = document.getElementById('dialog-name-input').value.trim().normalize('NFC');
         const emoji = document.getElementById('dialog-emoji-input').value.trim();
         const fileInput = document.getElementById('dialog-file-input');
 
@@ -3864,7 +3867,7 @@
         if (!played) speakText(word.tts || word.name, 1.0, true);
       };
 
-      const chars = word.name.split('');
+      const chars = (word.name || '').normalize('NFC').split('');
       const charCount = chars.length;
       const boxSize = calculateBoxSize(charCount);
       appState.currentBoxSize = boxSize;

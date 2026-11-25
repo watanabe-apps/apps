@@ -2743,7 +2743,7 @@
     "image": "images/n_fune.png",
     "file": "n_fune.png",
     "prompt": "A realistic-leaning educational picture book illustration of cruising ship / ferry boat on gentle water (ふね). Style: Gentle warm Japanese picture book style with delicate watercolor and colored pencil textures, subtle clear contours (clean white hull, passenger deck, smoke stack, observation windows). Completely isolated on a solid pure white background (#ffffff) with no ground clutter, no background scenery, no props, no text, no watermarks, perfectly suited for a vocabulary flashcard for children. NOT a photograph, an illustration.",
-    "tts_text": "船",
+    "tts_text": "ふね",
     "subCategory": "umi",
     "subCategoryName": "うみののりもの"
   },
@@ -4069,13 +4069,13 @@
   },
   {
     "id": "m_ohashi",
-    "name": "おはし",
+    "name": "はし",
     "category": "midikanamono",
     "categoryName": "みぢかなもの",
     "image": "images/m_ohashi.png",
     "file": "m_ohashi.png",
     "prompt": "A realistic-leaning educational picture book illustration of a pair of smooth wooden Japanese eating chopsticks resting on a ceramic chopstick rest, clean crisp Japanese picture book style with fresh vibrant clear colors, delicate watercolor and clean pencil contours, completely isolated on a solid pure white background (#ffffff), pure white paper, no yellow tint, no scenery, no ground shadow, no clutter, no text, children vocabulary illustration",
-    "tts_text": "お箸",
+    "tts_text": "箸",
     "subCategory": "seikatsu_seiketsu",
     "subCategoryName": "せいかつ・せいけつ"
   },

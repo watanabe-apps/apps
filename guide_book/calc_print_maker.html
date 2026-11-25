@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>たしざんプリントメーカー</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --bg-color: #f8fafc;
+      --border-color: #1e293b;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", "BIZ UDPGothic", sans-serif;
+      background-color: var(--bg-color);
+      color: #0f172a;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* --- 設定パネル --- */
+    .control-panel {
+      max-width: 950px;
+      margin: 0 auto 30px auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .control-panel h1 {
+      font-size: 1.4rem;
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #475569;
+    }
+
+    .form-group select, 
+    .form-group input {
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background-color: #f8fafc;
+    }
+
+    .form-group select:focus, 
+    .form-group input:focus {
+      border-color: var(--primary-color);
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { 
+      background-color: var(--primary-color); 
+      color: white; 
+    }
+    .btn-primary:hover { 
+      background-color: #1d4ed8; 
+      transform: translateY(-1px);
+    }
+
+    .btn-print { 
+      background-color: #059669; 
+      color: white; 
+    }
+    .btn-print:hover { 
+      background-color: #047857; 
+      transform: translateY(-1px);
+    }
+
+    /* エラーメッセージバナー */
+    .error-banner {
+      background-color: #fef2f2;
+      border: 1.5px solid #f87171;
+      color: #991b1b;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* --- プリント用紙（A4縦） --- */
+    .sheet-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .sheet {
+      background: white;
+      width: 210mm;
+      height: 297mm;
+      padding: 18mm 16mm 15mm 16mm;
+      box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    /* 用紙ヘッダー */
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 3px double var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 8mm;
+      flex-shrink: 0;
+    }
+
+    .sheet-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .sheet-meta {
+      display: flex;
+      gap: 24px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      align-items: flex-end;
+    }
+
+    .meta-class {
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    .meta-name-label {
+      display: flex;
+      align-items: flex-end;
+      white-space: nowrap;
+    }
+
+    .meta-box {
+      display: inline-block;
+      border-bottom: 1.5px solid var(--border-color);
+      text-align: right;
+      padding: 0 5px;
+    }
+
+    .meta-box.class-box {
+      min-width: 60px; /* ゆったり書ける幅広の記入欄 */
+      text-align: center;
+      margin: 0 2px;
+    }
+
+    .meta-box.name-box {
+      min-width: 220px;
+    }
+
+    /* 問題エリア：2列配置 */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 24px;
+      flex-grow: 1;
+      height: 100%;
+    }
+
+    /* 各問題行：左詰めで数式と回答欄の距離を均一に保つ */
+    .problem-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px; /* ＝ と □ の間の余白を最適値（12px）に固定 */
+      font-family: "Courier New", Courier, monospace, "BIZ UDPGothic", sans-serif;
+      font-weight: 700;
+      padding: 0 2px;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .problem-left {
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .problem-num {
+      font-size: 0.65em;
+      color: #475569;
+      font-family: sans-serif;
+      margin-right: 6px;
+      min-width: 28px;
+      white-space: nowrap;
+    }
+
+    .problem-expr {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 数値ボックス：最大桁数に応じた幅を確保して右揃え */
+    .num-box {
+      display: inline-block;
+      text-align: right;
+      white-space: pre;
+    }
+
+    .op-symbol {
+      margin: 0 0.25em;
+    }
+
+    /* 回答欄（縦幅が横幅を超えないバランス） */
+    .answer-box {
+      border: 2.5px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .answer-box.answer-text {
+      color: #dc2626;
+      font-weight: 800;
+    }
+
+    /* --- 問題数(8〜20問)に応じたスタイル --- */
+    .sheet.count-8 .problems-grid { grid-template-rows: repeat(4, 1fr); }
+    .sheet.count-8 .problem-item { font-size: 1.65rem; }
+    .sheet.count-8 .answer-box { width: 130px; height: 80px; font-size: 1.65rem; }
+
+    .sheet.count-10 .problems-grid { grid-template-rows: repeat(5, 1fr); }
+    .sheet.count-10 .problem-item { font-size: 1.55rem; }
+    .sheet.count-10 .answer-box { width: 125px; height: 75px; font-size: 1.55rem; }
+
+    .sheet.count-12 .problems-grid { grid-template-rows: repeat(6, 1fr); }
+    .sheet.count-12 .problem-item { font-size: 1.50rem; }
+    .sheet.count-12 .answer-box { width: 120px; height: 70px; font-size: 1.50rem; }
+
+    .sheet.count-14 .problems-grid { grid-template-rows: repeat(7, 1fr); }
+    .sheet.count-14 .problem-item { font-size: 1.45rem; }
+    .sheet.count-14 .answer-box { width: 115px; height: 66px; font-size: 1.45rem; }
+
+    .sheet.count-16 .problems-grid { grid-template-rows: repeat(8, 1fr); }
+    .sheet.count-16 .problem-item { font-size: 1.40rem; }
+    .sheet.count-16 .answer-box { width: 110px; height: 62px; font-size: 1.40rem; }
+
+    .sheet.count-18 .problems-grid { grid-template-rows: repeat(9, 1fr); }
+    .sheet.count-18 .problem-item { font-size: 1.35rem; }
+    .sheet.count-18 .answer-box { width: 105px; height: 58px; font-size: 1.35rem; }
+
+    .sheet.count-20 .problems-grid { grid-template-rows: repeat(10, 1fr); }
+    .sheet.count-20 .problem-item { font-size: 1.30rem; }
+    .sheet.count-20 .answer-box { width: 100px; height: 55px; font-size: 1.30rem; }
+
+    /* --- 印刷専用 CSS --- */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        background-color: white;
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .sheet-container {
+        gap: 0;
+      }
+      .sheet {
+        box-shadow: none;
+        page-break-after: always;
+        page-break-inside: avoid;
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="control-panel no-print">
+    <h1>たしざんプリントメーカー</h1>
+
+    <!-- エラー表示エリア -->
+    <div id="errorBanner" class="error-banner" style="display: none;"></div>
+
+    <div class="form-grid">
+      
+      <div class="form-group">
+        <label for="problemCount">問題数</label>
+        <select id="problemCount">
+          <option value="8">8問</option>
+          <option value="10" selected>10問</option>
+          <option value="12">12問</option>
+          <option value="14">14問</option>
+          <option value="16">16問</option>
+          <option value="18">18問</option>
+          <option value="20">20問</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="digitA">被加数（左の数）の桁</label>
+        <select id="digitA">
+          <option value="1d" selected>1桁 (1〜9)</option>
+          <option value="2d">2桁 (10〜99)</option>
+          <option value="3d">3桁 (100〜999)</option>
+          <option value="1d2d">1〜2桁 (1〜99)</option>
+          <option value="1d3d">1〜3桁 (1〜999)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="maxA">被加数の最大値（任意）</label>
+        <input type="number" id="maxA" placeholder="指定なし" min="1" max="999">
+      </div>
+
+      <div class="form-group">
+        <label for="digitB">加数（右の数）の桁</label>
+        <select id="digitB">
+          <option value="1d" selected>1桁 (1〜9)</option>
+          <option value="2d">2桁 (10〜99)</option>
+          <option value="3d">3桁 (100〜999)</option>
+          <option value="1d2d">1〜2桁 (1〜99)</option>
+          <option value="1d3d">1〜3桁 (1〜999)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="maxB">加数の最大値（任意）</label>
+        <input type="number" id="maxB" placeholder="指定なし" min="1" max="999">
+      </div>
+
+      <div class="form-group">
+        <label for="maxSum">答え（和）の最大値（任意）</label>
+        <input type="number" id="maxSum" placeholder="指定なし" min="2" max="2000">
+      </div>
+
+      <div class="form-group">
+        <label for="carryType">繰り上がり</label>
+        <select id="carryType">
+          <option value="any">指定なし（どちらも）</option>
+          <option value="no" selected>繰り上がり なし</option>
+          <option value="yes">繰り上がり あり</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="includeAnswer">解答ページ</label>
+        <select id="includeAnswer">
+          <option value="no" selected>問題のみ</option>
+          <option value="yes">解答ページも作成</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="generatePrint()">✨ 問題をつくり直す</button>
+      <button class="btn btn-print" onclick="window.print()">🖨️ 印刷する (A4)</button>
+    </div>
+  </div>
+
+  <!-- 印刷用エリア -->
+  <div class="sheet-container" id="printArea"></div>
+
+  <script>
+    // 繰り上がり有無の判定
+    function hasCarry(a, b) {
+      while (a > 0 || b > 0) {
+        if ((a % 10) + (b % 10) >= 10) return true;
+        a = Math.floor(a / 10);
+        b = Math.floor(b / 10);
+      }
+      return false;
+    }
+
+    // 桁数指定から数値の最小値・最大値範囲を取得
+    function getRange(digitCode) {
+      switch (digitCode) {
+        case '1d':   return { min: 1, max: 9, label: '1桁(1〜9)' };
+        case '2d':   return { min: 10, max: 99, label: '2桁(10〜99)' };
+        case '3d':   return { min: 100, max: 999, label: '3桁(100〜999)' };
+        case '1d2d': return { min: 1, max: 99, label: '1〜2桁(1〜99)' };
+        case '1d3d': return { min: 1, max: 999, label: '1〜3桁(1〜999)' };
+        default:     return { min: 1, max: 9, label: '1桁(1〜9)' };
+      }
+    }
+
+    // 桁数指定から「発生し得る最大桁数」を取得
+    function getMaxDigits(digitCode) {
+      switch (digitCode) {
+        case '1d':   return 1;
+        case '2d':   return 2;
+        case '3d':   return 3;
+        case '1d2d': return 2;
+        case '1d3d': return 3;
+        default:     return 1;
+      }
+    }
+
+    // 問題の数値ペア生成
+    function generatePair(digitA, maxAInput, digitB, maxBInput, carry, maxSumVal) {
+      const rangeA = getRange(digitA);
+      const rangeB = getRange(digitB);
+
+      let effectiveMaxA = rangeA.max;
+      if (maxAInput && !isNaN(maxAInput)) {
+        effectiveMaxA = Math.min(rangeA.max, parseInt(maxAInput));
+      }
+
+      let effectiveMaxB = rangeB.max;
+      if (maxBInput && !isNaN(maxBInput)) {
+        effectiveMaxB = Math.min(rangeB.max, parseInt(maxBInput));
+      }
+
+      let a, b, isCarry;
+      let attempts = 0;
+
+      do {
+        a = Math.floor(Math.random() * (effectiveMaxA - rangeA.min + 1)) + rangeA.min;
+        b = Math.floor(Math.random() * (effectiveMaxB - rangeB.min + 1)) + rangeB.min;
+        
+        // 答えの最大値制限チェック
+        if (maxSumVal && (a + b) > maxSumVal) {
+          attempts++;
+          continue;
+        }
+
+        isCarry = hasCarry(a, b);
+        attempts++;
+
+        if (carry === 'yes' && isCarry) return { num1: a, num2: b };
+        if (carry === 'no' && !isCarry) return { num1: a, num2: b };
+        if (carry === 'any') return { num1: a, num2: b };
+      } while (attempts < 500);
+
+      return null; // 生成不可
+    }
+
+    // エラーバナーの表示・非表示
+    function showError(msg) {
+      const banner = document.getElementById('errorBanner');
+      if (msg) {
+        banner.innerHTML = `⚠️ <b>設定エラー:</b> ${msg}`;
+        banner.style.display = 'flex';
+      } else {
+        banner.style.display = 'none';
+        banner.innerHTML = '';
+      }
+    }
+
+    // メインのプリント生成処理
+    function generatePrint() {
+      showError(null); // エラー初期化
+
+      const count = parseInt(document.getElementById('problemCount').value);
+      const digitA = document.getElementById('digitA').value;
+      const maxAVal = document.getElementById('maxA').value;
+      const digitB = document.getElementById('digitB').value;
+      const maxBVal = document.getElementById('maxB').value;
+      const carryType = document.getElementById('carryType').value;
+      const maxSumInput = document.getElementById('maxSum').value;
+      const maxSumVal = maxSumInput ? parseInt(maxSumInput) : null;
+      const includeAnswer = document.getElementById('includeAnswer').value;
+
+      const rangeA = getRange(digitA);
+      const rangeB = getRange(digitB);
+
+      // --- バリデーション（矛盾チェック） ---
+      
+      // 1. 被加数の桁数と最大値の矛盾
+      if (maxAVal && !isNaN(maxAVal)) {
+        const valA = parseInt(maxAVal);
+        if (valA < rangeA.min) {
+          showError(`被加数（左の数）の桁数設定「${rangeA.label}」に対し、最大値（${valA}）が小さすぎます。${rangeA.min} 以上の数値を設定してください。`);
+          return;
+        }
+      }
+
+      // 2. 加数の桁数と最大値の矛盾
+      if (maxBVal && !isNaN(maxBVal)) {
+        const valB = parseInt(maxBVal);
+        if (valB < rangeB.min) {
+          showError(`加数（右の数）の桁数設定「${rangeB.label}」に対し、最大値（${valB}）が小さすぎます。${rangeB.min} 以上の数値を設定してください。`);
+          return;
+        }
+      }
+
+      // 3. 答え（和）の最大値と最小計算値の矛盾
+      if (maxSumVal) {
+        const minPossibleSum = rangeA.min + rangeB.min;
+        if (maxSumVal < minPossibleSum) {
+          showError(`設定された桁数（最小で ${rangeA.min} ＋ ${rangeB.min} ＝ ${minPossibleSum}）に対し、答えの最大値（${maxSumVal}）が小さすぎるため計算できません。`);
+          return;
+        }
+      }
+
+      // 問題データの作成
+      const problems = [];
+      for (let i = 0; i < count; i++) {
+        const pair = generatePair(digitA, maxAVal, digitB, maxBVal, carryType, maxSumVal);
+        if (!pair) {
+          showError('指定された条件（繰り上がり・桁数・最大値）の組み合わせが厳しすぎるため、問題を作成できませんでした。設定を緩めて再度お試しください。');
+          return;
+        }
+        problems.push(pair);
+      }
+
+      const printArea = document.getElementById('printArea');
+      printArea.innerHTML = '';
+
+      // 設定に応じた最大桁数を取得（数式の最大幅を算出するために使用）
+      const maxDigitsA = getMaxDigits(digitA);
+      const maxDigitsB = getMaxDigits(digitB);
+
+      // 1. 問題ページの作成
+      printArea.appendChild(createSheetHTML(problems, false, count, maxDigitsA, maxDigitsB));
+
+      // 2. 解答ページの作成（選択されている場合）
+      if (includeAnswer === 'yes') {
+        printArea.appendChild(createSheetHTML(problems, true, count, maxDigitsA, maxDigitsB));
+      }
+    }
+
+    // 用紙（1枚分）のHTML要素を動的生成
+    function createSheetHTML(problems, isAnswerPage, count, maxDigitsA, maxDigitsB) {
+      const sheet = document.createElement('div');
+      sheet.className = `sheet count-${count}`;
+
+      // ヘッダー領域
+      const header = document.createElement('div');
+      header.className = 'sheet-header';
+      header.innerHTML = `
+        <div class="sheet-title">たしざん ${isAnswerPage ? '（こたえ）' : ''}</div>
+        <div class="sheet-meta">
+          <div class="meta-class"><span class="meta-box class-box"></span> ねん <span class="meta-box class-box"></span> くみ</div>
+          <div class="meta-name-label">なまえ：<span class="meta-box name-box"></span></div>
+        </div>
+      `;
+      sheet.appendChild(header);
+
+      // 問題グリッド領域
+      const grid = document.createElement('div');
+      grid.className = 'problems-grid';
+
+      problems.forEach((p, index) => {
+        const item = document.createElement('div');
+        item.className = 'problem-item';
+        
+        const ans = p.num1 + p.num2;
+        const answerContent = isAnswerPage 
+          ? `<span class="answer-box answer-text">${ans}</span>` 
+          : `<span class="answer-box"></span>`;
+
+        // 各数値の桁数を指定の最大桁数（maxDigits）に合わせて桁揃え（スペース埋め）
+        const strA = p.num1.toString().padStart(maxDigitsA, ' ');
+        const strB = p.num2.toString().padStart(maxDigitsB, ' ');
+
+        item.innerHTML = `
+          <div class="problem-left">
+            <span class="problem-num">(${index + 1})</span>
+            <span class="problem-expr">
+              <span class="num-box">${strA}</span>
+              <span class="op-symbol">＋</span>
+              <span class="num-box">${strB}</span>
+              <span class="op-symbol">＝</span>
+            </span>
+          </div>
+          ${answerContent}
+        `;
+        grid.appendChild(item);
+      });
+
+      sheet.appendChild(grid);
+      return sheet;
+    }
+
+    // 初期化ロード
+    window.onload = generatePrint;
+  </script>
+</body>
+</html>
