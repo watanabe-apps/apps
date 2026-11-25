@@ -131,6 +131,304 @@
       font-weight: 700;
       font-size: 0.95rem;
     }
+
+    /* 5.4 Notebook 作成手順ステッパー */
+    .guide-stepper {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 1.25rem;
+      box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.08);
+    }
+    .guide-stepper-progress {
+      height: 4px;
+      background: var(--bg-subtle);
+      width: 100%;
+    }
+    .guide-stepper-progress-bar {
+      height: 100%;
+      width: 16.66%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 0.25s ease;
+    }
+    .guide-step-tabs {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 6px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .guide-step-tab {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 9px;
+      padding: 8px 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.18s ease;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: inherit;
+    }
+    .guide-step-tab:hover {
+      border-color: var(--primary);
+      color: var(--primary-focus);
+      transform: translateY(-1px);
+    }
+    .guide-step-tab.active {
+      background: linear-gradient(135deg, var(--primary) 0%, #0369a1 100%);
+      border-color: var(--primary-focus);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
+    }
+    .guide-step-tab-num {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      opacity: 0.9;
+    }
+    .guide-step-tab-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .guide-step-stage {
+      padding: 1.4rem 1.5rem 1.2rem;
+    }
+    .guide-step-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .guide-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-soft);
+      color: var(--primary-focus);
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .guide-step-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .guide-step-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.45rem;
+    }
+    .guide-step-desc {
+      font-size: 0.94rem;
+      color: var(--text-body);
+      line-height: 1.75;
+      margin-bottom: 0.9rem;
+    }
+    .guide-step-media {
+      position: relative;
+      background: #f1f5f9;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 360px;
+      cursor: zoom-in;
+      overflow: hidden;
+    }
+    .guide-step-media img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+      display: block;
+      transition: transform 0.2s ease;
+    }
+    .guide-step-media:hover img {
+      transform: scale(1.012);
+    }
+    .guide-step-zoom-hint {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      background: rgba(15, 23, 42, 0.72);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+    .guide-step-extra {
+      margin-top: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .guide-step-extra.is-highlighted {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+    }
+    .guide-url-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border-mid);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      color: var(--text-main);
+    }
+    .guide-url-copy-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 11px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease;
+    }
+    .guide-url-copy-btn:hover {
+      background: var(--primary-focus);
+    }
+    .guide-url-copy-btn.copied {
+      background: #10b981;
+    }
+    .guide-step-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border-light);
+      gap: 12px;
+    }
+    .guide-nav-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-mid);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .guide-nav-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary-focus);
+      background: var(--primary-soft);
+    }
+    .guide-nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .guide-nav-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+    .guide-nav-btn.primary:hover:not(:disabled) {
+      background: var(--primary-focus);
+      color: #ffffff;
+    }
+    .guide-step-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .guide-step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border-mid);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .guide-step-dot.active {
+      width: 22px;
+      border-radius: 999px;
+      background: var(--primary);
+    }
+    .guide-lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.84);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px;
+      z-index: 9999;
+      cursor: zoom-out;
+    }
+    .guide-lightbox.open {
+      display: flex;
+    }
+    .guide-lightbox-caption {
+      color: #f8fafc;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      max-width: 92vw;
+      text-align: center;
+    }
+    .guide-lightbox img {
+      width: min(92vw, 1040px, calc(82vh * var(--lb-ratio, 1.53)));
+      height: auto;
+      max-width: 92vw;
+      max-height: 82vh;
+      object-fit: contain;
+      border-radius: 10px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      background: #ffffff;
+    }
+    @media (max-width: 720px) {
+      .guide-step-tabs {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .guide-step-stage {
+        padding: 1rem;
+      }
+      .guide-step-media {
+        height: 220px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -405,6 +703,90 @@
         </div>
       </section>
 
+      <!-- 4 Gemini Notebookを使った作り方 -->
+      <section class="section-block no-notebook-export">
+        <div class="section-header">
+          <span class="section-badge">5.4</span>
+          <h2 class="section-title">Gemini Notebookを使った作り方（画面手順）</h2>
+        </div>
+        <div class="prose-block">
+          <p>
+            基本となる「ガイドブックの統合テキスト（<code>.txt</code>）を読み込ませてアプリを作る手順」です。番号ボタンまたは「前へ／次へ」でステップを切り替えながら確認できます（画像はクリックで拡大できます）。
+          </p>
+
+          <div class="guide-stepper" id="notebookStepper">
+            <div class="guide-stepper-progress">
+              <div class="guide-stepper-progress-bar" id="guideProgressBar"></div>
+            </div>
+
+            <div class="guide-step-tabs" role="tablist" aria-label="Notebook作成手順ステップ">
+              <button type="button" class="guide-step-tab active" onclick="selectGuideStep(0)">
+                <span class="guide-step-tab-num">STEP 1</span>
+                <span class="guide-step-tab-label">新規作成</span>
+              </button>
+              <button type="button" class="guide-step-tab" onclick="selectGuideStep(1)">
+                <span class="guide-step-tab-num">STEP 2</span>
+                <span class="guide-step-tab-label">ソース追加</span>
+              </button>
+              <button type="button" class="guide-step-tab" onclick="selectGuideStep(2)">
+                <span class="guide-step-tab-num">STEP 3</span>
+                <span class="guide-step-tab-label">URL取得</span>
+              </button>
+              <button type="button" class="guide-step-tab" onclick="selectGuideStep(3)">
+                <span class="guide-step-tab-num">STEP 4</span>
+                <span class="guide-step-tab-label">URL登録</span>
+              </button>
+              <button type="button" class="guide-step-tab" onclick="selectGuideStep(4)">
+                <span class="guide-step-tab-num">STEP 5</span>
+                <span class="guide-step-tab-label">概要入力</span>
+              </button>
+              <button type="button" class="guide-step-tab" onclick="selectGuideStep(5)">
+                <span class="guide-step-tab-num">STEP 6</span>
+                <span class="guide-step-tab-label">完成・調整</span>
+              </button>
+            </div>
+
+            <div class="guide-step-stage">
+              <div class="guide-step-head">
+                <span class="guide-step-badge" id="guideStepBadge">STEP 1 / 6</span>
+              </div>
+              <div class="guide-step-text" id="guideStepText">
+                <h3 class="guide-step-title" id="guideStepTitle">ノートブックを新規作成する</h3>
+                <p class="guide-step-desc" id="guideStepDesc">
+                  Gemini 左メニューの「ノートブックを新規作成」をクリックし、名前（例：「アプリ」）を入力します。「アイデアを整理する」が選ばれている状態で青い矢印（→）を押して作成します。
+                </p>
+              </div>
+
+              <div class="guide-step-media" onclick="openStepZoom()" title="クリックして拡大表示">
+                <img id="guideStepImg" src="../images/notebook_step1.png" alt="STEP 1 ノートブックを新規作成する">
+                <span class="guide-step-zoom-hint">🔍 クリックで拡大</span>
+              </div>
+
+              <div class="guide-step-extra" id="guideStepExtra">
+                <div class="guide-url-pill">
+                  <code>https://watanabe-apps.github.io/apps/guide_book/guidebook_notebook.txt</code>
+                  <button type="button" class="guide-url-copy-btn" onclick="copyNotebookUrl(this)">URLをコピー</button>
+                </div>
+                <a href="../guidebook_notebook.txt" download="guidebook_notebook.txt" style="font-size:0.84rem; font-weight:700;">.txt を直接ダウンロード ⬇</a>
+              </div>
+            </div>
+
+            <div class="guide-step-footer">
+              <button type="button" class="guide-nav-btn" id="guidePrevBtn" onclick="moveGuideStep(-1)" disabled>◀ 前へ</button>
+              <div class="guide-step-dots" id="guideStepDots">
+                <button type="button" class="guide-step-dot active" onclick="selectGuideStep(0)" aria-label="Step 1"></button>
+                <button type="button" class="guide-step-dot" onclick="selectGuideStep(1)" aria-label="Step 2"></button>
+                <button type="button" class="guide-step-dot" onclick="selectGuideStep(2)" aria-label="Step 3"></button>
+                <button type="button" class="guide-step-dot" onclick="selectGuideStep(3)" aria-label="Step 4"></button>
+                <button type="button" class="guide-step-dot" onclick="selectGuideStep(4)" aria-label="Step 5"></button>
+                <button type="button" class="guide-step-dot" onclick="selectGuideStep(5)" aria-label="Step 6"></button>
+              </div>
+              <button type="button" class="guide-nav-btn primary" id="guideNextBtn" onclick="moveGuideStep(1)">次へ ▶</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 前後の章へのナビゲーション -->
       <nav class="nav-pager">
         <a href="04_principles.html">◀ 第4章：学習用アプリの設計・実装思想へ</a>
@@ -413,6 +795,12 @@
 
     </div>
   </main>
+
+  <!-- スクリーンショット拡大モーダル -->
+  <div class="guide-lightbox" id="guideLightbox" onclick="closeStepZoom()" role="dialog" aria-modal="true" aria-label="スクリーンショット拡大表示">
+    <div class="guide-lightbox-caption" id="guideLightboxCaption">STEP 1 / 6：ノートブックを新規作成する（クリックまたは Esc で閉じる）</div>
+    <img id="guideLightboxImg" src="../images/notebook_step1.png" alt="拡大表示">
+  </div>
 
   <script>
     function copyMasterPrompt(btn) {
@@ -427,6 +815,153 @@
       }).catch(err => {
         alert('コピーに失敗しました。手動で選択してコピーしてください。');
       });
+    }
+
+    const GUIDE_STEPS = [
+      {
+        title: 'ノートブックを新規作成する',
+        desc: 'Gemini 左メニューの「ノートブックを新規作成」をクリックし、名前（例：「アプリ」）を入力します。「アイデアを整理する」が選ばれている状態で青い矢印（→）を押して作成します。',
+        img: '../images/notebook_step1.png',
+        showExtra: false
+      },
+      {
+        title: '「ソースを追加」を開く',
+        desc: '作成したノートブックが開いたら、タイトル右側の「ソースを追加」ボタンをクリックします。',
+        img: '../images/notebook_step2.png',
+        showExtra: false
+      },
+      {
+        title: '統合テキスト（.txt）のURLを用意する',
+        desc: 'トップページの「Gemini Notebook用 統合テキスト」カードからテキストURLを取得（またはファイルをダウンロード）します。下のボタンからURLを直接コピーすることもできます。',
+        img: '../images/notebook_step3.png',
+        showExtra: true
+      },
+      {
+        title: '「ウェブサイトの URL」に貼り付けて挿入する',
+        desc: 'ソース画面で「ウェブサイトの URL」を選び、ガイドブックの .txt URL を貼り付けて「挿入」をクリックします（※URL読み込みがうまくいかない場合は「ファイルをアップロード」からダウンロードした .txt を選んでください）。',
+        img: '../images/notebook_step4.png',
+        showExtra: true
+      },
+      {
+        title: '作りたいアプリの概要を入力して送信する',
+        desc: '右上に「1件のソース」と表示されたら準備完了です。ガイドブックの設計思想・仕様をAIが把握しているため、作りたいアプリのテーマや工夫したい条件を簡潔に入力して送信します。',
+        img: '../images/notebook_step5.png',
+        showExtra: false
+      },
+      {
+        title: 'Canvas プレビューで確認＆仕上げの点検をする',
+        desc: 'スタート画面や設定ボタン（⚙️）を備えたアプリが Canvas 上でそのまま動きます。出力後、「ガイドブックの必須仕様（拡大禁止・文字選択禁止・トリプルタップ・残留防止など）をすべて満たしているか確認し、漏れがあれば修正して」と追加指示するとさらに確実です。',
+        img: '../images/notebook_step6.png',
+        showExtra: false
+      }
+    ];
+    let currentGuideStep = 0;
+
+    function syncLightboxRatio() {
+      const lbImg = document.getElementById('guideLightboxImg');
+      const stepImg = document.getElementById('guideStepImg');
+      if (!lbImg) return;
+      const w = lbImg.naturalWidth || (stepImg && stepImg.naturalWidth) || 0;
+      const h = lbImg.naturalHeight || (stepImg && stepImg.naturalHeight) || 0;
+      if (w > 0 && h > 0) {
+        lbImg.style.setProperty('--lb-ratio', (w / h).toFixed(4));
+      }
+    }
+
+    function renderGuideStep() {
+      const step = GUIDE_STEPS[currentGuideStep];
+      document.getElementById('guideStepBadge').textContent = `STEP ${currentGuideStep + 1} / ${GUIDE_STEPS.length}`;
+      document.getElementById('guideStepTitle').textContent = step.title;
+      document.getElementById('guideStepDesc').textContent = step.desc;
+      const imgEl = document.getElementById('guideStepImg');
+      imgEl.src = step.img;
+      imgEl.alt = `STEP ${currentGuideStep + 1} ${step.title}`;
+      const lbImg = document.getElementById('guideLightboxImg');
+      lbImg.src = step.img;
+      lbImg.alt = `STEP ${currentGuideStep + 1} ${step.title} 拡大表示`;
+      document.getElementById('guideLightboxCaption').textContent =
+        `STEP ${currentGuideStep + 1} / ${GUIDE_STEPS.length}：${step.title}（クリックまたは Esc で閉じる）`;
+      syncLightboxRatio();
+      document.getElementById('guideStepExtra').classList.toggle('is-highlighted', Boolean(step.showExtra));
+      document.getElementById('guideProgressBar').style.width = `${((currentGuideStep + 1) / GUIDE_STEPS.length) * 100}%`;
+
+      document.querySelectorAll('.guide-step-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', i === currentGuideStep);
+      });
+      document.querySelectorAll('.guide-step-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentGuideStep);
+      });
+      document.getElementById('guidePrevBtn').disabled = currentGuideStep === 0;
+      document.getElementById('guideNextBtn').disabled = currentGuideStep === GUIDE_STEPS.length - 1;
+    }
+
+    function selectGuideStep(idx) {
+      if (idx >= 0 && idx < GUIDE_STEPS.length) {
+        currentGuideStep = idx;
+        renderGuideStep();
+      }
+    }
+
+    function moveGuideStep(delta) {
+      selectGuideStep(currentGuideStep + delta);
+    }
+
+    function openStepZoom() {
+      syncLightboxRatio();
+      document.getElementById('guideLightbox').classList.add('open');
+    }
+
+    function closeStepZoom() {
+      document.getElementById('guideLightbox').classList.remove('open');
+    }
+
+    function copyNotebookUrl(btn) {
+      const url = 'https://watanabe-apps.github.io/apps/guide_book/guidebook_notebook.txt';
+      navigator.clipboard.writeText(url).then(() => {
+        btn.classList.add('copied');
+        btn.textContent = '✅ コピーしました';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = 'URLをコピー';
+        }, 2000);
+      }).catch(() => {
+        alert('コピーに失敗しました。手動で選択してコピーしてください。');
+      });
+    }
+
+    function syncGuideTextHeight() {
+      const textBox = document.getElementById('guideStepText');
+      const titleEl = document.getElementById('guideStepTitle');
+      const descEl = document.getElementById('guideStepDesc');
+      if (!textBox || !titleEl || !descEl) return;
+
+      textBox.style.minHeight = '';
+      let maxHeight = 0;
+      for (const s of GUIDE_STEPS) {
+        titleEl.textContent = s.title;
+        descEl.textContent = s.desc;
+        maxHeight = Math.max(maxHeight, textBox.offsetHeight);
+      }
+
+      const active = GUIDE_STEPS[currentGuideStep];
+      titleEl.textContent = active.title;
+      descEl.textContent = active.desc;
+      textBox.style.minHeight = `${maxHeight}px`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeStepZoom();
+    });
+
+    document.getElementById('guideLightboxImg').addEventListener('load', syncLightboxRatio);
+    document.getElementById('guideStepImg').addEventListener('load', syncLightboxRatio);
+
+    renderGuideStep();
+    syncGuideTextHeight();
+    syncLightboxRatio();
+    window.addEventListener('resize', syncGuideTextHeight);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(syncGuideTextHeight);
     }
   </script>
 </body>
