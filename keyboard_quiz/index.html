@@ -1205,6 +1205,9 @@
         let currentInput = [];
         let cursorIndex = 0;
         let isFirstTry = true;
+        let isChecking = false;
+        let isQuestionSolved = false;
+        let checkToken = 0;
 
         // トリプルタップ (ホーム用)
         let tapCount = 0;
@@ -1253,6 +1256,10 @@
 
             currentQuestionIndex = 0;
             currentSessionLogs = [];
+            isChecking = false;
+            isQuestionSolved = false;
+            checkToken++;
+            document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('play-screen').classList.remove('hidden');
 
@@ -1266,7 +1273,11 @@
             currentWordObj = activeQuestions[currentQuestionIndex];
             currentInput = new Array(currentWordObj.word.length).fill(null);
             isFirstTry = true;
+            isChecking = false;
+            isQuestionSolved = false;
+            checkToken++;
             cursorIndex = 0;
+            document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
 
             const emojiEl = document.getElementById('emoji-display');
             if (currentWordObj.image) {
@@ -1303,7 +1314,7 @@
                     box.style.fontSize = `min(${(boxVw * 0.54).toFixed(2)}vw, 6vh)`;
                 }
                 box.addEventListener('click', () => {
-                    if (currentInput[i]?.locked) return;
+                    if (isChecking || isQuestionSolved || currentInput[i]?.locked) return;
                     cursorIndex = i;
                     updateBoxes();
                 });
@@ -1355,7 +1366,8 @@
         }
 
         function inputChar(char) {
-            if (cursorIndex >= currentWordObj.word.length) return;
+            if (isChecking || isQuestionSolved) return;
+            if (cursorIndex < 0 || cursorIndex >= currentWordObj.word.length) return;
             if (currentInput[cursorIndex]?.locked) return;
 
             currentInput[cursorIndex] = { char: char, locked: false };
@@ -1371,11 +1383,13 @@
 
         function del(e) {
             if (e) e.preventDefault();
+            if (isChecking || isQuestionSolved) return;
 
-            if (currentInput[cursorIndex]?.char && !currentInput[cursorIndex]?.locked) {
+            if (cursorIndex >= 0 && currentInput[cursorIndex]?.char && !currentInput[cursorIndex]?.locked) {
                 currentInput[cursorIndex] = null;
             } else {
-                for (let i = cursorIndex - 1; i >= 0; i--) {
+                const startIdx = cursorIndex >= 0 ? cursorIndex - 1 : currentWordObj.word.length - 1;
+                for (let i = startIdx; i >= 0; i--) {
                     if (!currentInput[i]?.locked) {
                         currentInput[i] = null;
                         cursorIndex = i;
@@ -1388,6 +1402,11 @@
 
         function checkDekita() {
             const btn = document.getElementById('btn-dekita');
+            if (isChecking || isQuestionSolved) {
+                btn.disabled = true;
+                btn.classList.remove('ready');
+                return;
+            }
             const allFilled = currentInput.every(c => c && c.char);
             btn.disabled = !allFilled;
             if (allFilled) btn.classList.add('ready');
@@ -1397,69 +1416,88 @@
         async function doCheck(e) {
             if (e) e.preventDefault();
             const btn = document.getElementById('btn-dekita');
-            if (btn.disabled) return;
+            if (isChecking || isQuestionSolved || btn.disabled) return;
 
-            btn.disabled = true; btn.classList.remove('ready');
+            isChecking = true;
+            const myToken = checkToken;
+            btn.disabled = true;
+            btn.classList.remove('ready');
             document.getElementById('keyboard-wrapper').style.pointerEvents = 'none';
 
-            cursorIndex = -1;
-            updateBoxes();
+            try {
+                cursorIndex = -1;
+                updateBoxes();
 
-            for (let i = 0; i < currentWordObj.word.length; i++) {
-                const box = document.getElementById(`box-${i}`);
-                box.classList.add('highlight');
-                await speakText(currentInput[i].char);
-                box.classList.remove('highlight');
-                await delay(150);
-            }
-
-            await delay(300);
-
-            const userInputStr = currentInput.map(c => c ? (c.char === "　" ? " " : c.char) : " ").join("");
-            await speakText(userInputStr);
-            await delay(300);
-
-            let isCorrect = true;
-            for (let i = 0; i < currentWordObj.word.length; i++) {
-                if (currentInput[i].char === currentWordObj.word[i]) {
-                    currentInput[i].locked = true;
-                } else {
-                    isCorrect = false;
-                    currentInput[i] = null;
-                }
-            }
-
-            if (isCorrect) {
-                playSound('correct');
-                recordStat(currentWordObj.word, true);
-                currentSessionLogs.push({ word: currentWordObj.word, input: userInputStr, correct: true });
-
-                document.getElementById('btn-dekita').classList.add('hidden');
-                document.getElementById('btn-next').classList.remove('hidden');
-
-                let limit = appSettings.questionCount === 'all' ? activeQuestions.length : parseInt(appSettings.questionCount);
-                if (currentQuestionIndex + 1 >= Math.min(limit, activeQuestions.length)) {
-                    document.getElementById('btn-next').innerText = "ホームへ";
-                } else {
-                    document.getElementById('btn-next').innerText = "つぎへ";
-                }
-            } else {
-                playSound('wrong');
-                recordStat(currentWordObj.word, false);
-                currentSessionLogs.push({ word: currentWordObj.word, input: userInputStr, correct: false });
-
-                isFirstTry = false;
                 for (let i = 0; i < currentWordObj.word.length; i++) {
-                    if (!currentInput[i]?.locked) { cursorIndex = i; break; }
+                    if (myToken !== checkToken) return;
+                    const box = document.getElementById(`box-${i}`);
+                    if (box) box.classList.add('highlight');
+                    await speakText(currentInput[i]?.char || "");
+                    if (box) box.classList.remove('highlight');
+                    if (myToken !== checkToken) return;
+                    await delay(150);
+                }
+
+                if (myToken !== checkToken) return;
+                await delay(300);
+                if (myToken !== checkToken) return;
+
+                const userInputStr = currentInput.map(c => c ? (c.char === "　" ? " " : c.char) : " ").join("");
+                await speakText(userInputStr);
+                if (myToken !== checkToken) return;
+                await delay(300);
+                if (myToken !== checkToken) return;
+
+                let isCorrect = true;
+                for (let i = 0; i < currentWordObj.word.length; i++) {
+                    if (currentInput[i] && currentInput[i].char === currentWordObj.word[i]) {
+                        currentInput[i].locked = true;
+                    } else {
+                        isCorrect = false;
+                        currentInput[i] = null;
+                    }
+                }
+
+                if (isCorrect) {
+                    isQuestionSolved = true;
+                    playSound('correct');
+                    recordStat(currentWordObj.word, true);
+                    currentSessionLogs.push({ word: currentWordObj.word, input: userInputStr, correct: true });
+
+                    document.getElementById('btn-dekita').classList.add('hidden');
+                    document.getElementById('btn-next').classList.remove('hidden');
+
+                    let limit = appSettings.questionCount === 'all' ? activeQuestions.length : parseInt(appSettings.questionCount);
+                    if (currentQuestionIndex + 1 >= Math.min(limit, activeQuestions.length)) {
+                        document.getElementById('btn-next').innerText = "ホームへ";
+                    } else {
+                        document.getElementById('btn-next').innerText = "つぎへ";
+                    }
+                } else {
+                    playSound('wrong');
+                    recordStat(currentWordObj.word, false);
+                    currentSessionLogs.push({ word: currentWordObj.word, input: userInputStr, correct: false });
+
+                    isFirstTry = false;
+                    for (let i = 0; i < currentWordObj.word.length; i++) {
+                        if (!currentInput[i]?.locked) { cursorIndex = i; break; }
+                    }
+                }
+            } finally {
+                if (myToken === checkToken) {
+                    isChecking = false;
+                    updateBoxes();
+                    document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
                 }
             }
-
-            updateBoxes();
-            document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
         }
 
         function nextQuestion(e) {
             if (e) e.preventDefault();
+            if (isChecking) return;
+            const btnNext = document.getElementById('btn-next');
+            const playScreen = document.getElementById('play-screen');
+            if (btnNext.classList.contains('hidden') || playScreen.classList.contains('hidden')) return;
 
             currentQuestionIndex++;
             let limit = appSettings.questionCount === 'all' ? activeQuestions.length : parseInt(appSettings.questionCount);
@@ -1477,6 +1515,11 @@
         }
 
         function saveSessionAndGoHome() {
+            checkToken++;
+            isChecking = false;
+            isQuestionSolved = false;
+            synth.cancel();
+            document.getElementById('keyboard-wrapper').style.pointerEvents = 'auto';
             if (currentSessionLogs.length > 0) {
                 const now = new Date();
                 const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -1509,6 +1552,7 @@
 
                 playHistory.unshift({ date: dateStr, records: [...currentSessionLogs], correctCount, wrongCount, total: currentSessionLogs.length });
                 if (playHistory.length > 30) playHistory.pop();
+                currentSessionLogs = [];
                 saveSettingsLocal();
             }
             document.getElementById('play-screen').classList.add('hidden');
@@ -1523,6 +1567,7 @@
 
         function spkCurrentWord(e) {
             if (e) e.preventDefault();
+            if (isChecking || !currentWordObj) return;
             speakText(currentWordObj.tts || currentWordObj.word);
         }
 
